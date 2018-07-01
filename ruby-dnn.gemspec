@@ -16,6 +16,7 @@ Gem::Specification.new do |spec|
   spec.extensions    = ["lib/dnn/ext/mnist/extconf.rb", "lib/dnn/ext/cifar10/extconf.rb", "lib/dnn/ext/image_io/extconf.rb"]
 
   spec.add_dependency "numo-narray"
+  spec.add_dependency "archive-tar-minitar"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.7
