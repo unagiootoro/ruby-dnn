@@ -13,6 +13,8 @@ Gem::Specification.new do |spec|
   spec.description   = %q{ruby-dnn is a ruby deep learning library.}
   spec.homepage      = "https://github.com/unagiootoro/dnn.git"
   spec.license       = "MIT"
+  spec.extensions    = ["lib/dnn/ext/mnist/extconf.rb", "lib/dnn/ext/cifar10/extconf.rb", "lib/dnn/ext/image_io/extconf.rb"]
+
   spec.add_dependency "numo-narray"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
