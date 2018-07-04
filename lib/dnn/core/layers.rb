@@ -119,7 +119,10 @@ module DNN
     end
     
     
+    #private module
     module Convert
+      private
+
       def im2col(img, out_h, out_w, fh, fw, strides)
         bs, fn = img.shape[0..1]
         col = SFloat.zeros(bs, fn, fh, fw, out_h, out_w)
@@ -303,7 +306,7 @@ module DNN
       private
     
       def ridge
-        @model.layers.select { |layer| layer.is_a?(Dense) }
+        @model.layers.select { |layer| layer.respond_to?(:weight_decay) }
                      .reduce(0) { |sum, layer| layer.weight_decay * (layer.params[:weight]**2).sum }
       end
     end

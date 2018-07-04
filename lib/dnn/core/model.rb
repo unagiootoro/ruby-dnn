@@ -16,6 +16,8 @@ module DNN
     end
   
     def save(file_name)
+      dir_name = file_name.match(%r`(.*)/.+$`)[1]
+      Dir.mkdir(dir_name) unless Dir.exist?(dir_name)
       File.binwrite(file_name, Marshal.dump(self))
     end
   
@@ -24,6 +26,7 @@ module DNN
         raise DNN_TypeError.new("layer is not an instance of the DNN::Layers::Layer class.")
       end
       @layers << layer
+      self
     end
   
     def compile(optimizer)
