@@ -50,13 +50,19 @@ module DNN
 
 
     class LeakyReLU < Layer
+      include Numo
+
       def initialize(alpha = 0.3)
         @alpha = alpha
       end
 
+      def self.load_hash(hash)
+        self.new(hash[:alpha])
+      end
+
       def forward(x)
         @x = x.clone
-        a = Numo::SFloat.ones(x.shape)
+        a = SFloat.ones(x.shape)
         a[x <= 0] = @alpha
         x * a
       end
@@ -65,6 +71,10 @@ module DNN
         @x[@x > 0] = 1
         @x[@x <= 0] = @alpha
         dout * @x
+      end
+
+      def to_hash
+        {name: self.class.name, alpha: alpha}
       end
     end
 
@@ -79,7 +89,8 @@ module DNN
       end
     
       def loss(y)
-        0.5 * ((@out - y) ** 2).sum / @model.batch_size + ridge
+        batch_size = y.shape[0]
+        0.5 * ((@out - y) ** 2).sum / batch_size + ridge
       end
     end
     
@@ -94,7 +105,8 @@ module DNN
       end
     
       def loss(y)
-        -(y * NMath.log(@out + 1e-7)).sum / @model.batch_size + ridge
+        batch_size = y.shape[0]
+        -(y * NMath.log(@out + 1e-7)).sum / batch_size + ridge
       end
     end
 
@@ -108,7 +120,8 @@ module DNN
       end
 
       def loss(y)
-        -(y * NMath.log(@out + 1e-7) + (1 - y) * NMath.log(1 - @out + 1e-7)).sum / @model.batch_size + ridge
+        batch_size = y.shape[0]
+        -(y * NMath.log(@out + 1e-7) + (1 - y) * NMath.log(1 - @out + 1e-7)).sum / batch_size + ridge
       end
     end
 

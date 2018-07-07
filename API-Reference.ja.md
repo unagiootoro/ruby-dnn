@@ -1,7 +1,15 @@
-## ruby-dnnのAPIリファレンスです。
+# APIリファレンス
+ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
+そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
+
+対応バージョン:0.1.6
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
+
+## 【Constants】
+## VERSION
+ruby-dnnのバージョン。
 
 
 # class Model
@@ -15,22 +23,55 @@ marshalファイルを読み込み、モデルを作成します。
 * String file_name  
   読み込むmarshalファイル名。
 ### return
-なし。
+Model  
+生成したモデル。
+
+## def self.load_json(json_str)
+json文字列からモデルを作成します。
+### arguments
+* String json_str
+  json文字列。
+### return
+Model  
+生成したモデル。
 
 ## 【Instance methods】
 
-## def initialize
-コンストラクタ。
+## def load_json_params(json_str)
+学習パラメータをjson文字列から取得し、モデルにセットします。
 ### arguments
+* String json_str
+学習パラメータを変換して生成したjson文字列。
+### return
 なし。
 
 ## def save(file_name)
 モデルをmarshalファイルに保存します。
+このmarshalファイルには、学習パラメータ及びOptimizerの状態が保存されるため、
+読み込んだ後、正確に学習を継続することができます。
 ### arguments
 * String file_name  
 書き込むファイル名。
 ### return
 なし。
+
+## def to_json
+モデルをjson文字列に変換します。
+変換したjson文字列には学習パラメータの情報は含まれません。
+学習パラメータの情報を取得したい場合は、params_to_jsonを使用してください。
+### arguments
+なし。
+### return
+String  
+モデルを変換して生成したjson文字列。
+
+## def params_to_json
+学習パラメータをjson文字列に変換します。
+### arguments
+なし。
+### return
+String  
+学習パラメータを変換して生成したjson文字列。
 
 ## def <<(layer)
 モデルにレイヤーを追加します。
@@ -168,34 +209,19 @@ SFloat
 Array  
 レイヤーの形状。Layerクラスのshapeメソッドでは、前レイヤーの形状を返却します。
 
-## def prev_layer
-前のレイヤーを取得します。
+## abstruct def to_hash
+レイヤーをハッシュに変換します。このメソッドは、モデルをjsonに変換するために使用されます。このメソッドが返すハッシュの要素には、{name: self.class.name}が含まれていなければなりません。
 ### arguments
 なし。
 ### return
-Layer  
-前のレイヤー。
+Hash  
+レイヤーを変換したハッシュ。
 
 
 # class HasParamLayer < Layer
 学習可能なパラメータを持つ全てのレイヤーのスーパークラスです。
 
 ## 【Instance methods】
-## def initialize
-コンストラクタ
-### arguments
-なし。
-
-## override def init(model)
-Layerクラスからオーバーライドされたメソッドです。
-init_paramの呼び出しを行います。
-
-## def update
-オプティマイザーを用いてパラメータの更新を行います。
-### arguments
-なし。
-### return
-なし。
 
 ## private abstruct def init_params
 更新可能なパラメータを初期化します。HasParamLayerクラスを継承するクラスは、このメソッドを実装する必要があります。
@@ -208,23 +234,12 @@ init_paramの呼び出しを行います。
 # class InputLayer < Layer
 入力層に該当するレイヤーです。モデルの先頭レイヤーは、必ずこのクラスのインスタンスでなければなりません。
 
-## 【Properties】
-## attr_reaedr :shape  
-SFloat shape  
-コンストラクタで設定されたshapeを取得します。
-
 ## 【Instance methods】
 ## def initialize(dim_or_shape)
 コンストラクタ
 ### arguments
 * Integer|Array dim_or_shape  
 入力層のdimentionまたはshapeを指定します。引数がIntegerだとdimentionとみなし、Arrayだとshapeとみなします。
-
-## override def forward(x)
-入力値をそのまま順方向に伝搬します。
-
-## override def backward(dout)
-逆方向から伝搬してきた微分値をそのまま逆方向に伝搬します。
 
 
 # class Dense
@@ -254,15 +269,6 @@ nilを指定すると、Zerosイニシャライザーが使用されます。
 * Float weight_decay: 0
 重み減衰の係数を設定します。
 
-## override def forward(x)
-ノードを順方向に伝搬します。
-
-## override def backward(dout)
-ノードを逆方向に伝搬します。
-
-## override def shape
-[ノード数]をshapeとして返却します。
-
 
 # class Conv2D < HasParamLayer
 畳み込みレイヤーを扱うクラスです。
@@ -289,18 +295,6 @@ nilを指定すると、RandomNormalイニシャライザーが使用されま�
 * Float weight_decay: 0  
 重み減衰を行うL2正則化項の強さを設定します。
 
-## override def init(model)
-モデルのコンパイル時に、レイヤーを初期化するために使用されます。
-
-## override def forward(x)
-イメージにフィルターを適用して順方向に伝搬します。
-
-## override def backward(dout)
-フィルターが適用されたイメージを変換して、逆方向に伝搬します。
-
-## override def shape
-畳み込み後のイメージの次元を返します。
-
 
 # class MaxPool2D < Layer
 maxプーリングを行うレイヤーです。
@@ -318,31 +312,9 @@ maxプーリングを行うレイヤーです。
 * Integer padding: 0
 イメージに対してゼロパディングを行う単位を指定します。
 
-## override def init(model)
-モデルのコンパイル時に、レイヤーを初期化するために使用されます。
-
-## override def forward(x)
-イメージにプーリングを行い、順方向に伝搬します。
-
-## override def backward(dout)
-プーリングされたイメージを変換し、逆方向に伝搬します。
-
-## override def shape
-プーリング後のイメージのshapeを返します。
-
 
 # class Flatten
 N次元のデータを平坦化します。
-
-## 【Instance methods】
-## override def forward(x)
-データを平坦化して、順方向に伝搬します。
-
-## override def backward(dout)
-データを元の形状に戻し、逆方向に伝搬します。
-
-## override def shape
-前レイヤーの形状を平坦化して返します。
 
 
 # class Reshape < Layer
@@ -355,11 +327,6 @@ N次元のデータを平坦化します。
 * Array<Integer> shape  
 データの形状を変更するshapeです。
 
-## override def forward(x)
-データをコンストラクタで指定したshapeにreshapeして、順方向に伝搬します。
-
-## override def backward(dout)
-データを元のshapeにreshapeして、逆方向に伝搬します。
 
 # class OutputLayer < Layer
 出力層に該当するレイヤーです。出力層の活性化関数は、全てこのクラスを継承する必要があります。
@@ -380,14 +347,6 @@ SFloat y
 ### return
 損失関数の値。
 
-## def ridge
-L2正則化係数を用いて、L2正則化項の値を計算して取得します。
-### arguments
-なし。
-### return
-SFloat  
-L2正則化項の値を取得します。
-
 
 # class Dropout
 学習の際に、一部のノードを非活性化させるクラスです。
@@ -398,135 +357,49 @@ L2正則化項の値を取得します。
 * Float dropout_ration  
 ノードを非活性にする割合。
 
-## abstruct def forward(x)
-一部のノードを非活性にした上で、順方向に伝搬します。
-
-## abstruct def backward(dout)
-一部の非活性のノード以外の全てのノードを逆方向に伝搬します。
 
 # class BatchNormalization < HasParamLayer
 ミニバッチ単位でのデータの正規化を行います。
 
-## override def forward(x)
-正規化したデータを順方向に伝搬します。
-
-## override def backward(dout)
-正規化したデータを微分して、逆方向に伝搬します。
 
 # module Activations
 活性化関数のレイヤーの名前空間をなすモジュールです。
 
-# module SigmoidFunction
-シグモイド関数を提供するモジュールです。
-
-## def forward(x)
-シグモイド関数の値を順方向に伝搬します。
-### arguments
-SFloat x  
-シグモイド関数の引数。
-### return
-SFloat  
-シグモイド関数の戻り値
-
 
 # class Sigmoid < Layer
-## include SigmoidFunction
 シグモイド関数のレイヤーです。
-
-## override def forward(x)
-シグモイド関数の値を順方向に伝搬します。
-
-## def backward(dout)
-### arguments
-SFloat dout  
-シグモイド関数の導関数を適用した値を逆伝搬する。
-### return
-SFloat  
-シグモイド関数の導関数を適用した逆伝搬の値。
 
 
 # class Tanh < Layer
 tanh関数のレイヤーです。
-## def forward(x)
-tanh関数の値を順方向に伝搬します。
-### arguments
-SFloat x  
-tanh関数の引数。
-### return
-SFloat  
-tanh関数の戻り値
-
-## def backward(dout)
-### arguments
-SFloat dout  
-tanh関数の導関数を適用した値を逆伝搬する。
-### return
-SFloat  
-tanh関数の導関数を適用した逆伝搬の値。
 
 
 # class ReLU < Layer
 ランプ関数のレイヤーです。
-## def forward(x)
-ランプ関数の値を順方向に伝搬します。
-### arguments
-SFloat x  
-ランプ関数の引数。
-### return
-SFloat  
-ランプ関数の戻り値
-
-## def backward(dout)
-### arguments
-SFloat dout  
-ランプ関数の導関数を適用した値を逆伝搬する。
-### return
-SFloat  
-ランプ関数の導関数を適用した逆伝搬の値。
 
 
 # class LeakyReLU < Layer
 LeakyReLU関数のレイヤーです。
-## def forward(x)
-LeakyReLU関数の値を順方向に伝搬します。
-### arguments
-SFloat x  
-LeakyReLU関数の引数。
-### return
-SFloat  
-LeakyReLU関数の戻り値
 
-## def backward(dout)
+## 【Instance methods】
+
+## def initialize(alpha)
+コンストラクタ。
 ### arguments
-SFloat dout  
-LeakyReLU関数の導関数を適用した値を逆伝搬する。
-### return
-SFloat  
-LeakyReLU関数の導関数を適用した逆伝搬の値。
+* Float alpha  
+出力値が負のときの傾き。
 
 
 # class IdentityWithLoss < OutputLayer
 恒等関数と二乗誤差関数を合わせた出力層のレイヤーです。
-## override def forward(x)
-データをそのまま順方向に伝搬します。
-## override def backward(y)
-恒等関数と二乗誤差関数を合わせたものを微分した導関数を用いて、教師データの出力データを逆方向に伝搬します。
 
 
 # class SoftmaxWithLoss < OutputLayer
 ソフトマックス関数とクロスエントロピー誤差関数を合わせた出力層のレイヤーです。
-## override def forward(x)
-ソフトマックス関数の値を順方向に伝搬します。
-## override def backward(y)
-ソフトマックス関数とクロスエントロピー誤差関数を合わせたものを微分した導関数を用いて、教師データの出力データを逆方向に伝搬します。
 
 
 # class SigmoidWithLoss < OutputLayer
 シグモイド関数とバイナリクロスエントロピー誤差関数を合わせた出力層のレイヤーです。
-## override def forward(x)
-シグモイド関数の値を順方向に伝搬します。
-## override def backward(y)
-シグモイド関数とバイナリクロスエントロピー誤差関数を合わせたものを微分した導関数を用いて、教師データの出力データを逆方向に伝搬します。
 
 
 # module Initializers
@@ -550,35 +423,24 @@ LeakyReLU関数の導関数を適用した逆伝搬の値。
 # class Zeros < Initializer
 パラメータを0で初期化します。
 
-## override def init_param(layer, param_key)
-レイヤーの持つパラメータを0で初期化します。
 
 # class RandomNormal < Initializer
 パラメータを正規分布による乱数で初期化します。
 
 ## def initialize(mean = 0, std = 0.05)
 ### arguments
-Float mean = 0  
-正規分布の平均。
-Float std = 0.05  
-正規分布の分散。
-
-## override def init_param(layer, param_key)
-レイヤーの持つパラメータを正規分布による乱数で初期化します。
+* Float mean = 0  
+  正規分布の平均。
+* Float std = 0.05  
+  正規分布の分散。
 
 
 # class Xavier < Initializer
 パラメータをXavierの初期値で初期化します。
 
-## override def init_param(layer, param_key)
-レイヤーの持つパラメータをXavierの初期値で初期化します。
-
 
 # class He < Initializer
 パラメータをHeの初期値で初期化します。
-
-## override def init_param(layer, param_key)
-レイヤーの持つパラメータをHeの初期値で初期化します。
 
 
 # module Optimizers
@@ -599,14 +461,14 @@ Float learning_rate
 ## def initialize(learning_rate)
 コンストラクタ。
 ### arguments
-Float learning_rate  
-Optimizerの学習率。
+* Float learning_rate  
+  Optimizerの学習率。
 
 ## abstruct def update(layer)
-layerのgradsを元に、layerのparamsを更新します。
+layerのgradsを元に、layerのparamsを更新します。全てのOptimizerを継承するクラスは、このメソッドを実装する必要があります。
 ### arguments
-Layer layer  
-paramsを更新するレイヤー。
+* Layer layer  
+  paramsを更新するレイヤー。
 ### return
 なし。
 
@@ -622,13 +484,13 @@ Float momentum
 
 ## 【Instance methods】
 
-## override def initialize(learning_rate = 0.01, momentum: 0)
+## def initialize(learning_rate = 0.01, momentum: 0)
 コンストラクタ。
 ### arguments
-Float learning_rate  
-学習率。
-Float momentum  
-モーメンタム係数。
+* Float learning_rate  
+  学習率。
+* Float momentum  
+  モーメンタム係数。
 
 
 # class AdaGrad < Optimizer
@@ -644,6 +506,16 @@ RMSPropによるオプティマイザです。
 Float muse  
 指数平均移動のための係数。
 
+## 【Instance methods】
+
+## def initialize(learning_rate = 0.001, muse = 0.9)
+コンストラクタ。
+### arguments
+* Float learning_rate  
+  学習率。
+* Float muse  
+  指数平均移動のための係数。
+
 
 # class Adam < Optimizer
 Adamによるオプティマイザです。
@@ -658,6 +530,16 @@ Float beta1
 Float beta2
 指数平均移動のための係数2。
 
+## 【Instance methods】
+
+## def initialize(learning_rate = 0.001, beta1 = 0.9, beta2 = 0.999)
+コンストラクタ。
+### arguments
+* Float beta1
+  指数平均移動のための係数1。
+* Float beta2
+  指数平均移動のための係数2。
+
 
 # module Util
 ユーティリティ関数を提供します。
@@ -667,12 +549,12 @@ Float beta2
 ## def self.get_minibatch(x, y, batch_size)
 batch_size分のミニバッチを取得します。
 ### arguments
-SFloat x  
-教師データの入力データ。
-SFloat y  
-教師データの出力データ。
-Integer batch_size  
-ミニバッチのサイズ。
+* SFloat x  
+  教師データの入力データ。
+* SFloat y  
+  教師データの出力データ。
+* Integer batch_size  
+  ミニバッチのサイズ。
 ### return
 Array  
 [xのミニバッチ, yのミニバッチ]の形式の配列を返します。
@@ -680,23 +562,12 @@ Array
 ## def self.to_categorical(y, num_classes, type = nil)
 ラベルをnum_classesのベクトルにカテゴライズします。
 ### arguments
-SFloat y  
-教師データの出力データ。
-Integer num_classes  
-カテゴライズするクラス数。
-NArray narray_type = nil  
-カテゴライズしたNArrayデータの型。nilを指定すると、yの型を使用します。
+* SFloat y  
+  教師データの出力データ。
+*  Integer num_classes  
+  カテゴライズするクラス数。
+*  NArray narray_type = nil  
+  カテゴライズしたNArrayデータの型。nilを指定すると、yの型を使用します。
 ### return
 NArray  
 カテゴライズされたNArrayのインスタンス。
-
-## def self.numerical_grad(x, func)
-引数で渡された関数を数値微分します。
-### arguments
-SFloat x  
-funcの引数。
-Proc|Method func  
-数値微分を行う対象の関数。
-### return
-SFloat  
-数値微分した結果の値。

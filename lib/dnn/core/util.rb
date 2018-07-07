@@ -20,5 +20,14 @@ module DNN
     def self.numerical_grad(x, func)
       (func.(x + 1e-7) - func.(x)) / 1e-7
     end
+
+    #Convert hash to an object.
+    def self.load_hash(hash)
+      dnn_class = DNN.const_get(hash[:name])
+      if dnn_class.respond_to?(:load_hash)
+        return dnn_class.load_hash(hash)
+      end
+      dnn_class.new
+    end
   end
 end

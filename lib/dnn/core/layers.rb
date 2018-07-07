@@ -20,6 +20,11 @@ module DNN
       def shape
         prev_layer.shape
       end
+
+      #Layer to a hash.
+      def to_hash
+        {name: self.class.name}
+      end
     
       #Get the previous layer.
       def prev_layer
@@ -56,7 +61,11 @@ module DNN
     
     class InputLayer < Layer
       attr_reader :shape
-    
+
+      def self.load_hash(hash)
+        self.new(hash[:shape])
+      end
+
       def initialize(dim_or_shape)
         @shape = dim_or_shape.is_a?(Array) ? dim_or_shape : [dim_or_shape]
       end
@@ -67,6 +76,10 @@ module DNN
     
       def backward(dout)
         dout
+      end
+
+      def to_hash
+        {name: self.class.name, shape: @shape}
       end
     end
     
@@ -87,6 +100,13 @@ module DNN
         @bias_initializer = (bias_initializer || Zeros.new)
         @weight_decay = weight_decay
       end
+
+      def self.load_hash(hash)
+        self.new(hash[:num_nodes],
+                 weight_initializer: Util.load_hash(hash[:weight_initializer]),
+                 bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                 weight_decay: hash[:weight_decay])
+      end
     
       def forward(x)
         @x = x
@@ -105,6 +125,16 @@ module DNN
     
       def shape
         [@num_nodes]
+      end
+
+      def to_hash
+        {
+          name: self.class.name,
+          num_nodes: @num_nodes,
+          weight_initializer: @weight_initializer.to_hash,
+          bias_initializer: @bias_initializer.to_hash,
+          weight_decay: @weight_decay,
+        }
       end
     
       private
@@ -178,8 +208,17 @@ module DNN
         @weight_initializer = (weight_initializer || RandomNormal.new)
         @bias_initializer = (bias_initializer || Zeros.new)
         @strides = strides
-        @weight_decay = weight_decay
         @padding = padding
+        @weight_decay = weight_decay
+      end
+
+      def self.load_hash(hash)
+        Conv2D.new(hash[:num_filters], hash[:filter_height], hash[:filter_width],
+                   weight_initializer: Util.load_hash(hash[:weight_initializer]),
+                   bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                   strides: hash[:strides],
+                   padding: hash[:padding],
+                   weight_decay: hash[:weight_decay])
       end
     
       def init(model)
@@ -212,6 +251,20 @@ module DNN
     
       def shape
         [@num_filters, @out_height, @out_width]
+      end
+
+      def to_hash
+        {
+          name: self.class.name,
+          num_filters: @num_filters,
+          filter_height: @filter_height,
+          filter_width: @filter_width,
+          weight_initializer: @weight_initializer.to_hash,
+          bias_initializer: @bias_initializer.to_hash,
+          strides: @strides,
+          padding: @padding,
+          weight_decay: @weight_decay,
+        }
       end
     
       private
@@ -264,6 +317,16 @@ module DNN
       def shape
         [@num_channel, @out_height, @out_width]
       end
+
+      def to_hash
+        {
+          name: self.class.name,
+          pool_height: @pool_height,
+          pool_width: @pool_width,
+          strides: @strides,
+          padding: @padding,
+        }
+      end
     end
     
     
@@ -291,6 +354,10 @@ module DNN
         @x_shape = nil
       end
 
+      def self.load_hash(hash)
+        self.new(hash[:shape])
+      end
+
       def forward(x)
         @x_shape = x.shape
         x.reshape(*@shape)
@@ -298,6 +365,10 @@ module DNN
 
       def backward(dout)
         dout.reshape(@x_shape)
+      end
+
+      def to_hash
+        {name: self.class.name, shape: @shape}
       end
     end
 
@@ -316,6 +387,10 @@ module DNN
       def initialize(dropout_ratio)
         @dropout_ratio = dropout_ratio
         @mask = nil
+      end
+
+      def self.load(hash)
+        self.new(hash[:dropout_ratio])
       end
     
       def forward(x)
@@ -346,22 +421,23 @@ module DNN
       end
     
       def backward(dout)
+        batch_size = dout.shape[0]
         @grads[:beta] = dout.sum(0)
         @grads[:gamma] = (@xn * dout).sum(0)
         dxn = @params[:gamma] * dout
         dxc = dxn / @std
         dstd = -((dxn * @xc) / (@std**2)).sum(0)
         dvar = 0.5 * dstd / @std
-        dxc += (2.0 / @model.batch_size) * @xc * dvar
+        dxc += (2.0 / batch_size) * @xc * dvar
         dmean = dxc.sum(0)
-        dxc - dmean / @model.batch_size
+        dxc - dmean / batch_size 
       end
     
       private
     
       def init_params
-        @params[:gamma] = 1
-        @params[:beta] = 0
+        @params[:gamma] = SFloat.ones(*shape)
+        @params[:beta] = SFloat.zeros(*shape)
       end
     end
   end

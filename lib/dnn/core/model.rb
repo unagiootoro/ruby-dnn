@@ -1,24 +1,64 @@
+require "json"
+require "base64"
+
 module DNN
   class Model
-    attr_reader :layers
+    include Numo
+    
+    attr_accessor :layers
     attr_reader :optimizer
     attr_reader :batch_size
     attr_reader :training
-  
-    def self.load(file_name)
-      Marshal.load(File.binread(file_name))
-    end
   
     def initialize
       @layers = []
       @optimizer = nil
       @batch_size = nil
     end
+
+    def self.load(file_name)
+      Marshal.load(File.binread(file_name))
+    end
+
+    def self.load_json(json_str)
+      hash = JSON.parse(json_str, symbolize_names: true)
+      model = self.new
+      model.layers = hash[:layers].map { |hash_layer| Util.load_hash(hash_layer) }
+      model.compile(Util.load_hash(hash[:optimizer]))
+      model
+    end
+
+    def load_json_params(json_str)
+      has_param_layers_params = JSON.parse(json_str, symbolize_names: true)
+      has_param_layers_index = 0
+      @layers.each do |layer|
+        next unless layer.is_a?(HasParamLayer)
+        hash_params = has_param_layers_params[has_param_layers_index]
+        hash_params.each do |key, param|
+          layer.params[key] = SFloat.cast(param)
+        end
+        has_param_layers_index += 1
+      end
+    end
   
     def save(file_name)
       dir_name = file_name.match(%r`(.*)/.+$`)[1]
       Dir.mkdir(dir_name) unless Dir.exist?(dir_name)
       File.binwrite(file_name, Marshal.dump(self))
+    end
+
+    def to_json
+      hash_layers = @layers.map { |layer| layer.to_hash }
+      hash = {version: VERSION, layers: hash_layers, optimizer: @optimizer.to_hash}
+      JSON.dump(hash)
+    end
+    
+    def params_to_json
+      has_param_layers = @layers.select { |layer| layer.is_a?(HasParamLayer) }
+      has_param_layers_params = has_param_layers.map do |layer|
+        layer.params.map { |key, param| [key, param.to_a] }.to_h
+      end
+      JSON.dump(has_param_layers_params)
     end
   
     def <<(layer)

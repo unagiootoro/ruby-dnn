@@ -11,6 +11,10 @@ module DNN
 
       #Update layer has params.
       def update(layer) end
+
+      def to_hash
+        {name: self.class.name, learning_rate: @learning_rate}
+      end
     end
 
 
@@ -21,6 +25,10 @@ module DNN
         super(learning_rate)
         @momentum = momentum
         @amounts = {}
+      end
+
+      def self.load_hash(hash)
+        self.new(hash[:learning_rate], hash[:momentum])
       end
     
       def update(layer)
@@ -39,6 +47,14 @@ module DNN
           layer.params[key] -= amount[key]
         end
       end
+
+      def to_hash
+        {
+          name: self.class.name,
+          learning_rate: @learning_rate,
+          momentum: @momentum,
+        }
+      end
     end
     
     
@@ -46,6 +62,10 @@ module DNN
       def initialize(learning_rate = 0.01)
         super(learning_rate)
         @g = {}
+      end
+
+      def self.load_hash(hash)
+        @learning_rate = hash[:learning_rate]
       end
     
       def update(layer)
@@ -67,6 +87,10 @@ module DNN
         @muse = muse
         @g = {}
       end
+
+      def self.load_hash(hash)
+        self.new(hash[:learning_rate], hash[:muse])
+      end
     
       def update(layer)
         @g[layer] ||= {}
@@ -75,6 +99,14 @@ module DNN
           @g[layer][key] = @muse * @g[layer][key] + (1 - @muse) * layer.grads[key]**2
           layer.params[key] -= (@learning_rate / NMath.sqrt(@g[layer][key] + 1e-7)) * layer.grads[key]
         end
+      end
+
+      def to_hash
+        {
+          name: self.class.name,
+          learning_rate: @learning_rate,
+          muse: @muse,
+        }
       end
     end
 
@@ -94,6 +126,10 @@ module DNN
         @v = {}
       end
 
+      def self.load_hash(hash)
+        self.new(hash[:learning_rate], hash[:beta1], hash[:beta2])
+      end
+
       def update(layer)
         @iter += 1
         @m[layer] ||= {}
@@ -106,6 +142,15 @@ module DNN
           @v[layer][key] += (1 - @beta2) * (layer.grads[key]**2 - @v[layer][key])
           layer.params[key] -= lr * @m[layer][key] / NMath.sqrt(@v[layer][key] + 1e-7)
         end
+      end
+
+      def to_hash
+        {
+          name: self.class.name,
+          learning_rate: @learning_rate,
+          beta1: @beta1,
+          beta2: @beta2,
+        }
       end
     end
 
