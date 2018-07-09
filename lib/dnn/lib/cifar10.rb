@@ -1,5 +1,5 @@
 require "dnn"
-require "dnn/ext/cifar10/cifar10_ext"
+require "dnn/ext/dataset_loader/dataset_loader"
 require "open-uri"
 require "zlib"
 require "archive/tar/minitar"
@@ -21,11 +21,14 @@ module DNN
       puts "Now downloading..."
       open(URL_CIFAR10, "rb") do |f|
         File.binwrite(cifar10_binary_file_name, f.read)
-        Zlib::GzipReader.open(cifar10_binary_file_name) do |gz|
-          Archive::Tar::Minitar::unpack(gz, __dir__)
+        begin
+          Zlib::GzipReader.open(cifar10_binary_file_name) do |gz|
+            Archive::Tar::Minitar::unpack(gz, __dir__)
+          end
+        ensure
+          File.unlink(cifar10_binary_file_name)
         end
       end
-      File.delete(cifar10_binary_file_name)
       puts "The download has ended."
     rescue => ex
       raise DNN_CIFAR10_DownloadError.new(ex.message)

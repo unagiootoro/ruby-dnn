@@ -1,7 +1,7 @@
 require "open-uri"
 require "zlib"
 require "dnn/core/error"
-require "dnn/ext/mnist/mnist_ext"
+require "dnn/ext/dataset_loader/dataset_loader"
 
 module DNN
   module MNIST

@@ -22,6 +22,8 @@ module DNN
       when /\.jpg$/
         _write_jpg(file_name, nary, quality)
       end
+    rescue => ex
+      raise ImageIO::WriteError.new(ex.message)
     end
   end
 
