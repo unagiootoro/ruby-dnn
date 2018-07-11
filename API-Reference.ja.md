@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-対応バージョン:0.1.7
+対応バージョン:0.2.0
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -90,7 +90,15 @@ Model
 ### return
 なし。
 
-## def train(x, y, epochs, batch_size: 1, batch_proc: nil, verbose: true, &epoch_proc)
+## def compiled?
+モデルがコンパイル済みであるか否かを取得します。
+### arguments
+なし。
+### return
+bool  
+モデルがコンパイル済みであるか否か。
+
+## def train(x, y, epochs, batch_size: 1, test: nil, verbose: true, batch_proc: nil, &epoch_proc)
 コンパイルしたモデルを用いて学習を行います。
 ### arguments
 * SFloat x  
@@ -101,10 +109,12 @@ Model
 学習回数。
 * Integer batch_size: 1  
 学習に使用するミニバッチの数。
-* Proc batch_proc: nil  
-一度のバッチ学習が行われる前に呼び出されるprocを登録します。
+* Array test: nil  
+[テスト用入力データ, テスト用出力データ]の形式で設定すると、1エポックごとにテストを行います。
 * bool verbose: true
 trueを設定すると、学習ログを出力します。
+* Proc batch_proc: nil  
+一度のバッチ学習が行われる前に呼び出されるprocを登録します。
 ### block
 epoch_proc  
 1エポックの学習が終了するたびに呼び出されます。
@@ -126,23 +136,8 @@ epoch_proc
 Integer  
 損失関数の値を返します。
 
-## def test(x, y, batch_size = nil, &batch_proc)
-学習結果をもとにテストを行います。
-### arguments
-* SFloat x  
-テスト用入力データ。
-* SFloat y  
-テスト用出力データ。
-* batch_size  
-ミニバッチの数。学習を行っていないモデルのテストを行いたい場合等に使用します。
-### block
-一度のバッチ学習が行われる前に呼び出されます。
-### return
-Float  
-テスト結果の認識率を返します。
-
 ## def accurate(x, y, batch_size = nil, &batch_proc)
-学習結果をもとに認識を返します。
+学習結果をもとに認識率を返します。
 ### arguments
 * SFloat x  
 テスト用入力データ。
@@ -175,13 +170,21 @@ SFloat
 
 ## 【Instance methods】
 
-## def init(model)
-モデルのコンパイル時に、レイヤーを初期化するために使用されます。
+## def build(model)
+モデルのコンパイル時に、レイヤーをビルドするために使用されます。
 ### arguments
 * Model model  
 レイヤーを持つモデルを登録します。
 ### return
 なし。
+
+## def builded?
+レイヤーがビルド済みであるか否かを取得します。
+### arguments
+なし。
+### return
+bool  
+レイヤーがビルド済みであるか否か。
 
 ## abstruct def forward(x)  
 順方向伝搬を行うメソッドです。Layerクラスを継承するクラスは、このメソッドを実装する必要があります。
@@ -274,15 +277,15 @@ nilを指定すると、Zerosイニシャライザーが使用されます。
 畳み込みレイヤーを扱うクラスです。
 
 ## 【Instance methods】
-## def initialize(num_filters, filter_height, filter_width, weight_initializer: nil, bias_initializer: nil, strides: [1, 1], padding 0, weight_decay: 0)
+## def initialize(num_filters, filter_width, filter_height, weight_initializer: nil, bias_initializer: nil, strides: [1, 1], padding false, weight_decay: 0)
 コンストラクタ。
 ### arguments
 * Integer num_filters  
 出力するフィルターの枚数
-* Integer filter_height  
-フィルターの縦の長さ
 * Integer filter_width
 フィルターの横の長さ
+* Integer filter_height  
+フィルターの縦の長さ
 * Initializer weight_initializer: nil  
 重みの初期化に使用するイニシャライザーを設定します
 nilを指定すると、RandomNormalイニシャライザーが使用されます。  
@@ -290,8 +293,9 @@ nilを指定すると、RandomNormalイニシャライザーが使用されま�
 バイアスの初期化に使用するイニシャライザーを設定します。
 * Array<Integer> strides: [1, 1]  
 畳み込みを行う際のストライドの単位を指定します。配列の要素0でy軸方向のストライドを設定し、要素1でx軸方向のストライドを設定します。
-* Integer padding: 0  
-イメージに対してゼロパディングを行う単位を指定します。
+* bool padding: true  
+イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
+ゼロパディングを行います。
 * Float weight_decay: 0  
 重み減衰を行うL2正則化項の強さを設定します。
 
@@ -300,17 +304,18 @@ nilを指定すると、RandomNormalイニシャライザーが使用されま�
 maxプーリングを行うレイヤーです。
 
 ## 【Instance methods】
-## def initialize(pool_height, pool_width, strides: nil, padding: 0)
+## def initialize(pool_width, pool_height, strides: nil, padding: false)
 コンストラクタ。
 ### arguments
-* Integer pool_height  
-プーリングを行う縦の長さ。
 * Integer pool_width  
 プーリングを行う横の長さ。
+* Integer pool_height  
+プーリングを行う縦の長さ。
 * Array<Integer> strides: nil  
-畳み込みを行う際のストライドの単位を指定します。配列の要素0でy軸方向のストライドを設定し、要素1でx軸方向のストライドを設定します。なお、nilが設定された場合は、[pool_height, pool_width]がstridesの値となります。
-* Integer padding: 0
-イメージに対してゼロパディングを行う単位を指定します。
+畳み込みを行う際のストライドの単位を指定します。配列の要素0でy軸方向のストライドを設定し、要素1でx軸方向のストライドを設定します。なお、nilが設定された場合は、[pool_width, pool_height]がstridesの値となります。
+* bool padding: true  
+イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
+ゼロパディングを行います。
 
 
 # class Flatten

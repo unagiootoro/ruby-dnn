@@ -14,6 +14,7 @@ module DNN
       @layers = []
       @optimizer = nil
       @batch_size = nil
+      @compiled = false
     end
 
     def self.load(file_name)
@@ -73,18 +74,24 @@ module DNN
       unless optimizer.is_a?(Optimizers::Optimizer)
         raise DNN_TypeError.new("optimizer is not an instance of the DNN::Optimizers::Optimizer class.")
       end
+      @compiled = true
       layers_check
       @optimizer = optimizer
       @layers.each do |layer|
-        layer.init(self)
+        layer.build(self)
       end
       layers_shape_check
+    end
+
+    def compiled?
+      @compiled
     end
   
     def train(x, y, epochs,
               batch_size: 1,
-              batch_proc: nil,
+              test: nil,
               verbose: true,
+              batch_proc: nil,
               &epoch_proc)
       @batch_size = batch_size
       num_train_data = x.shape[0]
@@ -110,6 +117,10 @@ module DNN
           log << "  #{num_trained_data}/#{num_train_data} loss: #{loss}"
           print log if verbose
         end
+        if verbose && test
+          acc = accurate(test[0], test[1], batch_size,&batch_proc)
+          print "  accurate: #{acc}"
+        end
         puts "" if verbose
         epoch_proc.call(epoch) if epoch_proc
       end
@@ -122,13 +133,6 @@ module DNN
       backward(y)
       @layers.each { |layer| layer.update if layer.respond_to?(:update) }
       @layers[-1].loss(y)
-    end
-  
-    def test(x, y, batch_size = nil, &batch_proc)
-      @batch_size = batch_size if batch_size
-      acc = accurate(x, y, @batch_size, &batch_proc)
-      puts "accurate: #{acc}"
-      acc
     end
   
     def accurate(x, y, batch_size = nil, &batch_proc)
@@ -156,8 +160,6 @@ module DNN
       forward(x, false)
     end
   
-    private
-  
     def forward(x, training)
       @training = training
       @layers.each do |layer|
@@ -171,7 +173,10 @@ module DNN
       @layers[0..-1].reverse.each do |layer|
         dout = layer.backward(dout)
       end
+      dout
     end
+
+    private
 
     def layers_check
       unless @layers.first.is_a?(Layers::InputLayer)

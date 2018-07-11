@@ -38,6 +38,4 @@ model << SoftmaxWithLoss.new
 
 model.compile(RMSProp.new)
 
-model.train(x_train, y_train, 10, batch_size: 100) do
-  model.test(x_test, y_test)
-end
+model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
