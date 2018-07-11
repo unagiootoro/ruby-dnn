@@ -188,6 +188,12 @@ module DNN
         img2[true, true, pad...(ih + pad), pad...(iw + pad)] = img
         img2
       end
+
+      def back_padding(img, pad)
+        i_end = img.shape[2] - pad
+        j_end = img.shape[3] - pad
+        img[true, true, pad...i_end, pad...j_end]
+      end
     end
     
     
@@ -246,7 +252,8 @@ module DNN
         end
         @grads[:bias] = dout.sum(0)
         dcol = dout.dot(@params[:weight].transpose)
-        col2im(dcol, @x_shape, @out_height, @out_width, @filter_height, @filter_width, @strides)
+        dx = col2im(dcol, @x_shape, @out_height, @out_width, @filter_height, @filter_width, @strides)
+        @padding ? back_padding(dx, @padding) : dx
       end
     
       def shape
@@ -293,11 +300,12 @@ module DNN
         super
         prev_height, prev_width = prev_layer.shape[1], prev_layer.shape[2]
         @num_channel = prev_layer.shape[0]
-        @out_height = (prev_height - @pool_height) / @strides[0] + 1
-        @out_width = (prev_width - @pool_width) / @strides[1] + 1
+        @out_height = (prev_height + @padding * 2 - @pool_height) / @strides[0] + 1
+        @out_width = (prev_width + @padding * 2 - @pool_width) / @strides[1] + 1
       end
     
       def forward(x)
+        x = padding(x, 2) if @padding > 0
         @x_shape = x.shape
         col = im2col(x, @out_height, @out_width, @pool_height, @pool_width, @strides)
         col = col.reshape(x.shape[0] * @out_height * @out_width * x.shape[1], @pool_height * @pool_width)
@@ -311,7 +319,8 @@ module DNN
         dmax = SFloat.zeros(dout.size * pool_size)
         dmax[@max_index] = dout.flatten
         dcol = dmax.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * pool_size)
-        col2im(dcol, @x_shape, @out_height, @out_width, @pool_height, @pool_width, @strides)
+        dx = col2im(dcol, @x_shape, @out_height, @out_width, @pool_height, @pool_width, @strides)
+        @padding ? back_padding(dx, @padding) : dx
       end
     
       def shape
