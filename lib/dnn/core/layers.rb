@@ -314,11 +314,16 @@ module DNN
       include Convert
 
       def initialize(pool_width, pool_height, strides: nil, padding: false)
+        super()
         @pool_width = pool_width
         @pool_height = pool_height
         @strides = strides ? strides : [@pool_width, @pool_height]
         @padding = padding
-      end 
+      end
+
+      def self.load_hash(hash)
+        MaxPool2D.new(hash[:pool_width], hash[:pool_height], strides: hash[:strides], padding: hash[:padding])
+      end
 
       def build(model)
         super
@@ -386,6 +391,7 @@ module DNN
       attr_reader :shape
       
       def initialize(shape)
+        super()
         @shape = shape
         @x_shape = nil
       end
@@ -421,8 +427,13 @@ module DNN
     
     class Dropout < Layer
       def initialize(dropout_ratio)
+        super()
         @dropout_ratio = dropout_ratio
         @mask = nil
+      end
+
+      def self.load_hash(hash)
+        self.new(hash[:dropout_ratio])
       end
 
       def self.load(hash)
@@ -430,7 +441,7 @@ module DNN
       end
     
       def forward(x)
-        if @model.training
+        if @model.training?
           @mask = SFloat.ones(*x.shape).rand < @dropout_ratio
           x[@mask] = 0
         else
@@ -443,17 +454,48 @@ module DNN
         dout[@mask] = 0 if @model.training
         dout
       end
+
+      def to_hash
+        {name: self.class.name, dropout_ratio: @dropout_ratio}
+      end
     end
     
     
     class BatchNormalization < HasParamLayer
+      def initialize(momentum: 0.9, running_mean: nil, running_var: nil)
+        super()
+        @momentum = momentum
+        @running_mean = running_mean
+        @running_var = running_var
+      end
+
+      def self.load_hash(hash)
+        running_mean = SFloat.cast(hash[:running_mean])
+        running_var = SFloat.cast(hash[:running_var])
+        self.new(momentum: hash[:momentum], running_mean: running_mean, running_var: running_var)
+      end
+
+      def build(model)
+        super
+        @running_mean ||= SFloat.zeros(*shape)
+        @running_var ||= SFloat.zeros(*shape)
+      end
+
       def forward(x)
-        @mean = x.mean(0)
-        @xc = x - @mean
-        @var = (@xc**2).mean(0)
-        @std = NMath.sqrt(@var + 1e-7)
-        @xn = @xc / @std
-        @params[:gamma] * @xn + @params[:beta]
+        if @model.training?
+          mean = x.mean(0)
+          @xc = x - mean
+          var = (@xc**2).mean(0)
+          @std = NMath.sqrt(var + 1e-7)
+          xn = @xc / @std
+          @xn = xn
+          @running_mean = @momentum * @running_mean + (1 - @momentum) * mean
+          @running_var = @momentum * @running_var + (1 - @momentum) * var
+        else
+          xc = x - @running_mean
+          xn = xc / NMath.sqrt(@running_var + 1e-7)
+        end
+        @params[:gamma] * xn + @params[:beta]
       end
     
       def backward(dout)
@@ -466,7 +508,16 @@ module DNN
         dvar = 0.5 * dstd / @std
         dxc += (2.0 / batch_size) * @xc * dvar
         dmean = dxc.sum(0)
-        dxc - dmean / batch_size 
+        dxc - dmean / batch_size
+      end
+
+      def to_hash
+        {
+          name: self.class.name,
+          momentum: @momentum,
+          running_mean: @running_mean.to_a,
+          running_var: @running_var.to_a,
+        }
       end
     
       private

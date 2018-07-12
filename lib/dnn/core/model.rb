@@ -8,7 +8,6 @@ module DNN
     attr_accessor :layers
     attr_reader :optimizer
     attr_reader :batch_size
-    attr_reader :training
   
     def initialize
       @layers = []
@@ -86,6 +85,10 @@ module DNN
     def compiled?
       @compiled
     end
+
+    def training?
+      @training
+    end
   
     def train(x, y, epochs,
               batch_size: 1,
@@ -136,7 +139,13 @@ module DNN
     end
   
     def accurate(x, y, batch_size = nil, &batch_proc)
-      @batch_size = batch_size if batch_size
+      unless batch_size
+        if @batch_size
+          batch_size = @batch_size >= x.shape[0] ? @batch_size : x.shape[0]
+        else
+          batch_size = 1
+        end
+      end
       correct = 0
       (x.shape[0].to_f / @batch_size).ceil.times do |i|
         x_batch = SFloat.zeros(@batch_size, *x.shape[1..-1])
