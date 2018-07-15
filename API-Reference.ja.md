@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-対応バージョン:0.2.0
+対応バージョン:0.2.2
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -178,7 +178,7 @@ SFloat
 ### return
 なし。
 
-## def builded?
+## def built?
 レイヤーがビルド済みであるか否かを取得します。
 ### arguments
 なし。
@@ -316,6 +316,19 @@ maxプーリングを行うレイヤーです。
 * bool padding: true  
 イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
 ゼロパディングを行います。
+
+
+# class UnPool2D < Layer
+逆プーリングを行うレイヤーです。
+
+## 【Instance methods】
+## def initialize(unpool_width, unpool_height)
+コンストラクタ。
+### arguments
+* Integer unpool_width  
+逆プーリングを行う横の長さ。
+* Integer unpool_height
+逆プーリングを行う縦の長さ。
 
 
 # class Flatten

@@ -6,17 +6,18 @@ module DNN
       include Numo
 
       def initialize
-        @builded = false
+        @built = false
       end
 
-      #Initialize layer when model is compiled.
+      #Build the layer.
       def build(model)
         @builded = true
         @model = model
       end
-
-      def builded?
-        @builded
+      
+      #Does the layer have already been built?
+      def built?
+        @built
       end
 
       #Forward propagation.
@@ -343,7 +344,7 @@ module DNN
         col = im2col(x, @out_width, @out_height, @pool_width, @pool_height, @strides)
         col = col.reshape(x.shape[0] * @out_width * @out_height * x.shape[3], @pool_width * @pool_height)
         @max_index = col.max_index(1)
-        col.max(1).reshape(x.shape[0], @out_width, @out_height, x.shape[3])#.transpose(0, 3, 1, 2)
+        col.max(1).reshape(x.shape[0], @out_width, @out_height, x.shape[3])
       end
 
       def backward(dout)
@@ -369,8 +370,56 @@ module DNN
         }
       end
     end
+
+
+    class UnPool2D < Layer
+      include Convert
+
+      def initialize(unpool_width, unpool_height)
+        super()
+        @unpool_width = unpool_width
+        @unpool_height = unpool_height
+      end
+
+      def self.load_hash(hash)
+        UnPool2D.new(hash[:unpool_width], hash[:unpool_height])
+      end
+
+      def build(model)
+        super
+        @origin_width = prev_layer.shape[0]
+        @origin_height = prev_layer.shape[1]
+        @out_width = @origin_width * @unpool_width
+        @out_height = @origin_height * @unpool_height
+        @num_channel = prev_layer.shape[2]
+      end
+
+      def forward(x)
+        unpool_size = @unpool_width * @unpool_height
+        x2 = SFloat.zeros(x.shape[0], x.shape[1], @unpool_width, x.shape[2], @unpool_height, x.shape[3])
+        x2[true, true, 0, true, 0, true] = x
+        x2.reshape(x.shape[0], @out_width, @out_height, x.shape[3])
+      end
+
+      def backward(dout)
+        dout = dout.reshape(dout.shape[0], @origin_width, @unpool_width, @origin_height, @unpool_height, dout.shape[3])
+        dout[true, true, 0, true, 0, true].clone
+      end
+
+      def shape
+        [@out_width, @out_height, @num_channel]
+      end
+
+      def to_hash
+        {
+          name: self.class.name,
+          unpool_width: @unpool_width,
+          unpool_height: @unpool_height,
+        }
+      end
+    end
     
-    
+
     class Flatten < Layer
       def forward(x)
         @shape = x.shape
