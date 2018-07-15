@@ -8,7 +8,7 @@ Currently, you can get 99% accuracy with MNIST and 74% with CIFAR 10.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'dnn'
+gem 'ruby-dnn'
 ```
 
 And then execute:
@@ -17,7 +17,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install dnn
+    $ gem install ruby-dnn
 
 ## Usage
 
