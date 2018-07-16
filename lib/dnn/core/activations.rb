@@ -3,16 +3,10 @@ module DNN
     Layer = Layers::Layer
     OutputLayer = Layers::OutputLayer
 
-
-    module SigmoidFunction
+    class Sigmoid < Layer
       def forward(x)
         @out = 1.0 / (1 + NMath.exp(-x))
       end
-    end
-
-
-    class Sigmoid < Layer
-      include SigmoidFunction
     
       def backward(dout)
         dout * (1.0 - @out) * @out
@@ -21,7 +15,7 @@ module DNN
 
 
     class Tanh < Layer
-      include Numo
+      include Xumo
 
       def forward(x)
         @x = x
@@ -50,7 +44,7 @@ module DNN
 
 
     class LeakyReLU < Layer
-      include Numo
+      include Xumo
 
       def initialize(alpha = 0.3)
         @alpha = alpha
@@ -112,8 +106,15 @@ module DNN
 
 
     class SigmoidWithLoss < OutputLayer
-      include Numo
-      include SigmoidFunction
+      include Xumo
+
+      def initialize
+        @sigmoid = Sigmoid.new
+      end
+
+      def forward(x)
+        @out = @sigmoid.forward(x)
+      end
 
       def backward(y)
         @out - y

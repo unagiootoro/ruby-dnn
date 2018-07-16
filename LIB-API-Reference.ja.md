@@ -1,6 +1,6 @@
 # LIB-APIリファレンス
 ruby-dnnの付属ライブラリのリファレンスです。  
-対応バージョン:0.1.6
+最終更新バージョン:0.3.0
 
 
 # dnn/lib/mnist
@@ -72,26 +72,26 @@ Array
 
 
 # dnn/lib/image_io
-画像のin/outを行うライブラリです。内部でstb_imageとstb_image_writeを使用しています。
+画像のin/outを行うライブラリです。内部でstb_image.hとstb_image_write.hを使用しています。
 
 
 # module ImageIO
 
 ## def self.read(file_name)
-画像をNumo::UInt8形式で読み込みます。
+画像をXumo::UInt8形式で読み込みます。
 ### arguments
 * String file_name  
 読み込む画像のファイル名。
 ### return
-Numo::UInt8  
-[width, height, rgb]のNumo::UInt8配列。
+Xumo::UInt8  
+[width, height, rgb]のXumo::UInt8配列。
 
 ## def self.write(file_name, nary, quality: 100)
-Numo::UInt8形式の画像を書き込みます。
+Xumo::UInt8形式の画像を書き込みます。
 ### arguments
 * String file_name  
 書き込む画像のファイル名。
-* Numo::UInt8  
-[width, height, rgb]のNumo::UInt8配列。
+* Xumo::UInt8  
+[width, height, rgb]のXumo::UInt8配列。
 * Integer quality: 100
 画像をJPEGで書き込む場合のクオリティ。

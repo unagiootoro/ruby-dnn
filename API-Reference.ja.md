@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-対応バージョン:0.2.2
+最終更新バージョン:0.3.0
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -238,6 +238,7 @@ Hash
 入力層に該当するレイヤーです。モデルの先頭レイヤーは、必ずこのクラスのインスタンスでなければなりません。
 
 ## 【Instance methods】
+
 ## def initialize(dim_or_shape)
 コンストラクタ
 ### arguments
@@ -258,6 +259,7 @@ Float
 重み減衰の係数を取得します。
 
 ## 【Instance methods】
+
 ## def initialize(num_nodes, weight_initializer: nil, bias_initializer: nil, weight_decay: 0)
 コンストラクタ。
 ### arguments
@@ -277,22 +279,23 @@ nilを指定すると、Zerosイニシャライザーが使用されます。
 畳み込みレイヤーを扱うクラスです。
 
 ## 【Instance methods】
-## def initialize(num_filters, filter_width, filter_height, weight_initializer: nil, bias_initializer: nil, strides: [1, 1], padding false, weight_decay: 0)
+
+## def initialize(num_filters, filter_size, weight_initializer: nil, bias_initializer: nil, strides: 1, padding false, weight_decay: 0)
 コンストラクタ。
 ### arguments
 * Integer num_filters  
-出力するフィルターの枚数
-* Integer filter_width
-フィルターの横の長さ
-* Integer filter_height  
-フィルターの縦の長さ
+出力するフィルターの枚数。
+* Integer | Array filter_size  
+フィルターの横と縦の長さ。
+Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
 * Initializer weight_initializer: nil  
 重みの初期化に使用するイニシャライザーを設定します
 nilを指定すると、RandomNormalイニシャライザーが使用されます。  
 * Initializer bias_initializer: nil  
 バイアスの初期化に使用するイニシャライザーを設定します。
-* Array<Integer> strides: [1, 1]  
-畳み込みを行う際のストライドの単位を指定します。配列の要素0でy軸方向のストライドを設定し、要素1でx軸方向のストライドを設定します。
+* Array<Integer> strides: 1  
+畳み込みを行う際のストライドの単位を指定します。
+Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
 * bool padding: true  
 イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
 ゼロパディングを行います。
@@ -304,15 +307,17 @@ nilを指定すると、RandomNormalイニシャライザーが使用されま�
 maxプーリングを行うレイヤーです。
 
 ## 【Instance methods】
-## def initialize(pool_width, pool_height, strides: nil, padding: false)
+
+## def initialize(pool_size, strides: nil, padding: false)
 コンストラクタ。
 ### arguments
-* Integer pool_width  
-プーリングを行う横の長さ。
-* Integer pool_height  
-プーリングを行う縦の長さ。
+* Integer | Array pool_size  
+プーリングを行う横と縦の長さ。
+Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
 * Array<Integer> strides: nil  
-畳み込みを行う際のストライドの単位を指定します。配列の要素0でy軸方向のストライドを設定し、要素1でx軸方向のストライドを設定します。なお、nilが設定された場合は、[pool_width, pool_height]がstridesの値となります。
+畳み込みを行う際のストライドの単位を指定します。
+Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
+なお、nilが設定された場合は、pool_sizeがstridesの値となります。
 * bool padding: true  
 イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
 ゼロパディングを行います。
@@ -322,13 +327,13 @@ maxプーリングを行うレイヤーです。
 逆プーリングを行うレイヤーです。
 
 ## 【Instance methods】
-## def initialize(unpool_width, unpool_height)
+
+## def initialize(unpool_size)
 コンストラクタ。
 ### arguments
-* Integer unpool_width  
-逆プーリングを行う横の長さ。
-* Integer unpool_height
-逆プーリングを行う縦の長さ。
+* Integer unpool_size  
+逆プーリングを行う横と縦の長さ。
+Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
 
 
 # class Flatten
@@ -339,6 +344,7 @@ N次元のデータを平坦化します。
 データの形状を変更します。
 
 ## 【Instance methods】
+
 ## def initialize(shape)
 コンストラクタ。
 ### arguments
@@ -348,6 +354,8 @@ N次元のデータを平坦化します。
 
 # class OutputLayer < Layer
 出力層に該当するレイヤーです。出力層の活性化関数は、全てこのクラスを継承する必要があります。
+
+## 【Instance methods】
 
 ## abstruct def backward(y)
 出力層の活性化関数と損失関数を合わせたものを微分した導関数を用いて、教師データの出力データを逆方向に伝搬します。
@@ -369,6 +377,7 @@ SFloat y
 # class Dropout
 学習の際に、一部のノードを非活性化させるクラスです。
 
+## 【Instance methods】
 ## def initialize(dropout_ratio)
 コンストラクタ。
 ### arguments
@@ -427,6 +436,8 @@ LeakyReLU関数のレイヤーです。
 # class Initializer
 全てのInitializeクラスのスーパークラスです。
 
+## 【Instance methods】
+
 ## def init_param(layer, param_key, param)
 レイヤーの持つパラメータを更新します。
 ### arguments
@@ -445,6 +456,7 @@ LeakyReLU関数のレイヤーです。
 # class RandomNormal < Initializer
 パラメータを正規分布による乱数で初期化します。
 
+## 【Instance methods】
 ## def initialize(mean = 0, std = 0.05)
 ### arguments
 * Float mean = 0  

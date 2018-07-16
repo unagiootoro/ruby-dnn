@@ -3,7 +3,7 @@ module DNN
 
     #Super class of all optimizer classes.
     class Layer
-      include Numo
+      include Xumo
 
       def initialize
         @built = false
@@ -212,8 +212,8 @@ module DNN
       end
 
       def out_size(prev_w, prev_h, fil_w, fil_h, strides)
-        out_w = (prev_w - fil_w) / strides[1] + 1
-        out_h = (prev_h - fil_h) / strides[0] + 1
+        out_w = (prev_w - fil_w) / strides[0] + 1
+        out_h = (prev_h - fil_h) / strides[1] + 1
         [out_w, out_h]
       end
     end
@@ -223,25 +223,24 @@ module DNN
       include Initializers
       include Convert
     
-      def initialize(num_filters, filter_width, filter_height,
+      def initialize(num_filters, filter_size,
                      weight_initializer: nil,
                      bias_initializer: nil,
-                     strides: [1, 1],
+                     strides: 1,
                      padding: false,
                      weight_decay: 0)
         super()
         @num_filters = num_filters
-        @filter_width = filter_width
-        @filter_height = filter_height
+        @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
         @weight_initializer = (weight_initializer || RandomNormal.new)
         @bias_initializer = (bias_initializer || Zeros.new)
-        @strides = strides
+        @strides = strides.is_a?(Integer) ? [strides, strides] : strides
         @padding = padding
         @weight_decay = weight_decay
       end
 
       def self.load_hash(hash)
-        Conv2D.new(hash[:num_filters], hash[:filter_width], hash[:filter_height],
+        Conv2D.new(hash[:num_filters], hash[:filter_size],
                    weight_initializer: Util.load_hash(hash[:weight_initializer]),
                    bias_initializer: Util.load_hash(hash[:bias_initializer]),
                    strides: hash[:strides],
@@ -251,21 +250,21 @@ module DNN
 
       def build(model)
         super
-        prev_width, prev_height = prev_layer.shape[0..1]
-        @out_width, @out_height = out_size(prev_width, prev_height, @filter_width, @filter_height, @strides)
+        prev_w, prev_h = prev_layer.shape[0..1]
+        @out_size = out_size(prev_w, prev_h, *@filter_size, @strides)
+        out_w, out_h = @out_size
         if @padding
-          @pad = [prev_width - @out_width, prev_height - @out_height]
-          @out_width = prev_width
-          @out_height = prev_height
+          @pad = [prev_w - out_w, prev_h - out_h]
+          @out_size = [prev_w, prev_h]
         end
       end
 
       def forward(x)
         x = padding(x, @pad) if @padding
         @x_shape = x.shape
-        @col = im2col(x, @out_width, @out_height, @filter_width, @filter_height, @strides)
+        @col = im2col(x, *@out_size, *@filter_size, @strides)
         out = @col.dot(@params[:weight])
-        out.reshape(x.shape[0], @out_width, @out_height, out.shape[3])
+        out.reshape(x.shape[0], *@out_size, out.shape[3])
       end
 
       def backward(dout)
@@ -277,20 +276,19 @@ module DNN
         end
         @grads[:bias] = dout.sum(0)
         dcol = dout.dot(@params[:weight].transpose)
-        dx = col2im(dcol, @x_shape, @out_width, @out_height, @filter_width, @filter_height, @strides)
+        dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
         @padding ? back_padding(dx, @pad) : dx
       end
 
       def shape
-        [@out_width, @out_height, @num_filters]
+        [*@out_size, @num_filters]
       end
 
       def to_hash
         {
           name: self.class.name,
           num_filters: @num_filters,
-          filter_width: @filter_width,
-          filter_height: @filter_height,
+          filter_size: @filter_size,
           weight_initializer: @weight_initializer.to_hash,
           bias_initializer: @bias_initializer.to_hash,
           strides: @strides,
@@ -303,7 +301,7 @@ module DNN
     
       def init_params
         num_prev_filter = prev_layer.shape[2]
-        @params[:weight] = SFloat.new(num_prev_filter * @filter_width * @filter_height, @num_filters)
+        @params[:weight] = SFloat.new(num_prev_filter * @filter_size.reduce(:*), @num_filters)
         @params[:bias] = SFloat.new(@num_filters)
         @weight_initializer.init_param(self, :weight)
         @bias_initializer.init_param(self, :bias)
@@ -314,50 +312,52 @@ module DNN
     class MaxPool2D < Layer
       include Convert
 
-      def initialize(pool_width, pool_height, strides: nil, padding: false)
+      def initialize(pool_size, strides: nil, padding: false)
         super()
-        @pool_width = pool_width
-        @pool_height = pool_height
-        @strides = strides ? strides : [@pool_width, @pool_height]
+        @pool_size = pool_size.is_a?(Integer) ? [pool_size, pool_size] : pool_size
+        @strides = if strides
+          strides.is_a?(Integer) ? [strides, strides] : strides
+        else
+          @pool_size.clone
+        end
         @padding = padding
       end
 
       def self.load_hash(hash)
-        MaxPool2D.new(hash[:pool_width], hash[:pool_height], strides: hash[:strides], padding: hash[:padding])
+        MaxPool2D.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
       end
 
       def build(model)
         super
-        prev_width, prev_height = prev_layer.shape[0..1]
+        prev_w, prev_h = prev_layer.shape[0..1]
         @num_channel = prev_layer.shape[2]
-        @out_width, @out_height = out_size(prev_width, prev_height, @pool_width, @pool_height, @strides)
+        @out_size = out_size(prev_w, prev_h, *@pool_size, @strides)
+        out_w, out_h = @out_size
         if @padding
-          @pad = [prev_width - @out_width, prev_height - @out_height]
-          @out_width = prev_width
-          @out_height = prev_height
+          @pad = [prev_w - out_w, prev_h - out_h]
+          @out_size = [prev_w, prev_h]
         end
       end
 
       def forward(x)
         x = padding(x, @pad) if @padding
         @x_shape = x.shape
-        col = im2col(x, @out_width, @out_height, @pool_width, @pool_height, @strides)
-        col = col.reshape(x.shape[0] * @out_width * @out_height * x.shape[3], @pool_width * @pool_height)
+        col = im2col(x, *@out_size, *@pool_size, @strides)
+        col = col.reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
         @max_index = col.max_index(1)
-        col.max(1).reshape(x.shape[0], @out_width, @out_height, x.shape[3])
+        col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
       def backward(dout)
-        pool_size = @pool_width * @pool_height
-        dmax = SFloat.zeros(dout.size * pool_size)
+        dmax = SFloat.zeros(dout.size * @pool_size.reduce(:*))
         dmax[@max_index] = dout.flatten
-        dcol = dmax.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * pool_size)
-        dx = col2im(dcol, @x_shape, @out_width, @out_height, @pool_width, @pool_height, @strides)
+        dcol = dmax.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
+        dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
         @padding ? back_padding(dx, @pad) : dx
       end
 
       def shape
-        [@out_width, @out_height, @num_channel]
+        [*@out_size, @num_channel]
       end
 
       def to_hash
@@ -375,34 +375,36 @@ module DNN
     class UnPool2D < Layer
       include Convert
 
-      def initialize(unpool_width, unpool_height)
+      def initialize(unpool_size)
         super()
-        @unpool_width = unpool_width
-        @unpool_height = unpool_height
+        @unpool_size = unpool_size.is_a?(Integer) ? [unpool_size, unpool_size] : unpool_size
       end
 
       def self.load_hash(hash)
-        UnPool2D.new(hash[:unpool_width], hash[:unpool_height])
+        UnPool2D.new(hash[:unpool_size])
       end
 
       def build(model)
         super
-        @origin_width = prev_layer.shape[0]
-        @origin_height = prev_layer.shape[1]
-        @out_width = @origin_width * @unpool_width
-        @out_height = @origin_height * @unpool_height
+        prev_w, prev_h = prev_layer.shape[0..1]
+        unpool_w, unpool_h = @unpool_size
+        out_w = prev_w * unpool_w
+        out_h = prev_h * unpool_h
+        @out_size = [out_w, out_h]
         @num_channel = prev_layer.shape[2]
       end
 
       def forward(x)
-        unpool_size = @unpool_width * @unpool_height
-        x2 = SFloat.zeros(x.shape[0], x.shape[1], @unpool_width, x.shape[2], @unpool_height, x.shape[3])
+        @x_shape = x.shape
+        unpool_w, unpool_h = @unpool_size
+        x2 = SFloat.zeros(x.shape[0], x.shape[1], unpool_w, x.shape[2], unpool_h, @num_channel)
         x2[true, true, 0, true, 0, true] = x
-        x2.reshape(x.shape[0], @out_width, @out_height, x.shape[3])
+        x2.reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
       def backward(dout)
-        dout = dout.reshape(dout.shape[0], @origin_width, @unpool_width, @origin_height, @unpool_height, dout.shape[3])
+        unpool_w, unpool_h = @unpool_size
+        dout = dout.reshape(dout.shape[0], @x_shape[0], unpool_w, @x_shape[1], unpool_h, @num_channel)
         dout[true, true, 0, true, 0, true].clone
       end
 
@@ -413,8 +415,7 @@ module DNN
       def to_hash
         {
           name: self.class.name,
-          unpool_width: @unpool_width,
-          unpool_height: @unpool_height,
+          unpool_size: @unpool_size,
         }
       end
     end
@@ -500,7 +501,7 @@ module DNN
       end
     
       def backward(dout)
-        dout[@mask] = 0 if @model.training
+        dout[@mask] = 0 if @model.training?
         dout
       end
 

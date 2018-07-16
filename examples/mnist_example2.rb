@@ -25,13 +25,13 @@ model = Model.new
 
 model << InputLayer.new([28, 28, 1])
 
-model << Conv2D.new(16, 5, 5)
+model << Conv2D.new(16, 5)
 model << BatchNormalization.new
 model << ReLU.new
 
-model << MaxPool2D.new(2, 2)
+model << MaxPool2D.new(2)
 
-model << Conv2D.new(32, 5, 5)
+model << Conv2D.new(32, 5)
 model << BatchNormalization.new
 model << ReLU.new
 

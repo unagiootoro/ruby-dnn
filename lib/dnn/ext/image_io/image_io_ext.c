@@ -17,7 +17,7 @@ VALUE image_io_read(VALUE self, VALUE rb_file_name) {
   VALUE rb_na;
   narray_data_t* na_data;
   pixels = stbi_load(file_name, &width, &height, &bpp, 3);
-  sprintf(script, "Numo::UInt8.zeros(%d, %d, 3)", width, height);
+  sprintf(script, "Xumo::UInt8.zeros(%d, %d, 3)", width, height);
   rb_na = rb_eval_string((char*)script);
   na_data = RNARRAY_DATA(rb_na);
   memcpy(na_data->ptr, pixels, na_data->base.size);

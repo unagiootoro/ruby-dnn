@@ -112,7 +112,7 @@ module DNN
 
 
     class Adam < Optimizer
-      include Numo
+      include Xumo
       
       attr_accessor :beta1
       attr_accessor :beta2

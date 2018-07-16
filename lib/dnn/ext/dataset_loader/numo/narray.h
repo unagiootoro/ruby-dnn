@@ -128,7 +128,7 @@ extern int na_debug_flag;
 
 #ifndef NARRAY_C
 extern VALUE numo_cNArray;
-extern VALUE rb_mNumo;
+extern VALUE rb_mXumo;
 extern VALUE nary_eCastError;
 extern VALUE nary_eShapeError;
 extern VALUE nary_eOperationError;
@@ -140,7 +140,7 @@ extern const rb_data_type_t na_data_type;
 #endif
 
 #define cNArray numo_cNArray
-#define mNumo rb_mNumo
+#define mXumo rb_mXumo
 //#define na_upcast(x,y) numo_na_upcast(x,y)
 
 /* global variables within this module */

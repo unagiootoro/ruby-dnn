@@ -3,7 +3,7 @@ require "dnn"
 
 require "minitest/autorun"
 
-class Numo::DFloat
+class Xumo::DFloat
   alias _round round
   def round(ndigits = nil)
     return self.map { |f| f.round(ndigits)} if ndigits

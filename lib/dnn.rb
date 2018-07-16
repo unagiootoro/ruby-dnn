@@ -1,6 +1,8 @@
 require "numo/narray"
 
-Numo::SFloat.srand(rand(2**64))
+Xumo = Numo
+
+Xumo::SFloat.srand(rand(2**64))
 
 module DNN; end
 

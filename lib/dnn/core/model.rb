@@ -3,7 +3,7 @@ require "base64"
 
 module DNN
   class Model
-    include Numo
+    include Xumo
     
     attr_accessor :layers
     attr_reader :optimizer
