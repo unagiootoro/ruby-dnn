@@ -11,7 +11,7 @@ module DNN
 
       #Build the layer.
       def build(model)
-        @builded = true
+        @built = true
         @model = model
       end
       
@@ -48,6 +48,7 @@ module DNN
       attr_reader :grads  #Differential value of parameter of layer.
     
       def initialize
+        super
         @params = {}
         @grads = {}
       end
@@ -77,6 +78,7 @@ module DNN
       end
 
       def initialize(dim_or_shape)
+        super()
         @shape = dim_or_shape.is_a?(Array) ? dim_or_shape : [dim_or_shape]
       end
 
@@ -99,6 +101,13 @@ module DNN
 
       attr_reader :num_nodes
       attr_reader :weight_decay
+
+      def self.load_hash(hash)
+        self.new(hash[:num_nodes],
+                 weight_initializer: Util.load_hash(hash[:weight_initializer]),
+                 bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                 weight_decay: hash[:weight_decay])
+      end
     
       def initialize(num_nodes,
                      weight_initializer: nil,
@@ -109,13 +118,6 @@ module DNN
         @weight_initializer = (weight_initializer || RandomNormal.new)
         @bias_initializer = (bias_initializer || Zeros.new)
         @weight_decay = weight_decay
-      end
-
-      def self.load_hash(hash)
-        self.new(hash[:num_nodes],
-                 weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                 bias_initializer: Util.load_hash(hash[:bias_initializer]),
-                 weight_decay: hash[:weight_decay])
       end
     
       def forward(x)
@@ -222,6 +224,11 @@ module DNN
     class Conv2D < HasParamLayer
       include Initializers
       include Convert
+
+      attr_reader :num_filters
+      attr_reader :filter_size
+      attr_reader :strides
+      attr_reader :weight_decay
     
       def initialize(num_filters, filter_size,
                      weight_initializer: nil,
@@ -312,6 +319,13 @@ module DNN
     class MaxPool2D < Layer
       include Convert
 
+      attr_reader :pool_size
+      attr_reader :strides
+
+      def self.load_hash(hash)
+        MaxPool2D.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
+      end
+
       def initialize(pool_size, strides: nil, padding: false)
         super()
         @pool_size = pool_size.is_a?(Integer) ? [pool_size, pool_size] : pool_size
@@ -321,10 +335,6 @@ module DNN
           @pool_size.clone
         end
         @padding = padding
-      end
-
-      def self.load_hash(hash)
-        MaxPool2D.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
       end
 
       def build(model)
@@ -374,6 +384,8 @@ module DNN
 
     class UnPool2D < Layer
       include Convert
+
+      attr_reader :unpool_size
 
       def initialize(unpool_size)
         super()
@@ -476,6 +488,8 @@ module DNN
     
     
     class Dropout < Layer
+      attr_reader :dropoit_ratio
+
       def initialize(dropout_ratio)
         super()
         @dropout_ratio = dropout_ratio
@@ -512,6 +526,8 @@ module DNN
     
     
     class BatchNormalization < HasParamLayer
+      attr_reader :momentum
+
       def initialize(momentum: 0.9, running_mean: nil, running_var: nil)
         super()
         @momentum = momentum

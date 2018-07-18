@@ -84,7 +84,7 @@ module DNN
     
       def loss(y)
         batch_size = y.shape[0]
-        0.5 * ((@out - y) ** 2).sum / batch_size + ridge
+        0.5 * ((@out - y)**2).sum / batch_size + ridge
       end
     end
     

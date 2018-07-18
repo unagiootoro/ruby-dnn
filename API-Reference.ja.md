@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.3.0
+最終更新バージョン:0.3.1
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -249,7 +249,8 @@ Hash
 # class Dense
 全結合レイヤーを扱うクラスです。
 
-## 【propaty】
+## 【Properties】
+
 ## attr_reader :num_nodes
 Integer  
 レイヤーのノード数を取得します。
@@ -277,6 +278,26 @@ nilを指定すると、Zerosイニシャライザーが使用されます。
 
 # class Conv2D < HasParamLayer
 畳み込みレイヤーを扱うクラスです。
+
+## 【Properties】
+
+## attr_reader :num_filters
+Integer  
+出力するフィルターの枚数。
+
+## attr_reader :filter_size
+Array   
+フィルターの横と縦の長さ。  
+[Integer width, Integer height]の形式で取得します。
+
+## attr_reader :strides
+Array  
+畳み込みを行う際のストライドの単位。  
+[Integer width, Integer height]の形式で取得します。
+
+## attr_reader :weight_decay
+Float  
+重み減衰を行うL2正則化項の強さを取得します。
 
 ## 【Instance methods】
 
@@ -306,6 +327,18 @@ Arrayで指定する場合、[Integer width, Integer height]の形式で指定�
 # class MaxPool2D < Layer
 maxプーリングを行うレイヤーです。
 
+## 【Properties】
+
+## attr_reader :pool_size
+Array   
+プーリングを行う横と縦の長さ。
+[Integer width, Integer height]の形式で取得します。
+
+## attr_reader :strides
+Array  
+畳み込みを行う際のストライドの単位。  
+[Integer width, Integer height]の形式で取得します。
+
 ## 【Instance methods】
 
 ## def initialize(pool_size, strides: nil, padding: false)
@@ -325,6 +358,13 @@ Arrayで指定する場合、[Integer width, Integer height]の形式で指定�
 
 # class UnPool2D < Layer
 逆プーリングを行うレイヤーです。
+
+## 【Properties】
+
+## attr_reader :unpool_size
+Array   
+逆プーリングを行う横と縦の長さ。
+[Integer width, Integer height]の形式で取得します。
 
 ## 【Instance methods】
 
@@ -377,7 +417,13 @@ SFloat y
 # class Dropout
 学習の際に、一部のノードを非活性化させるクラスです。
 
+## 【Properties】
+
+## attr_reader :dropout_ratio
+ノードを非活性にする割合を取得します。
+
 ## 【Instance methods】
+
 ## def initialize(dropout_ratio)
 コンストラクタ。
 ### arguments
@@ -387,6 +433,23 @@ SFloat y
 
 # class BatchNormalization < HasParamLayer
 ミニバッチ単位でのデータの正規化を行います。
+
+## 【Properties】
+
+## attr_reader :momentum
+推論時に使用する平均と分散を求めるための指数平均移動の係数。
+
+## 【Instance methods】
+
+## def initialize(momentum: 0.9, running_mean: nil, running_var: nil)
+コンストラクタ。
+### arguments
+* Float momenum: 0.9  
+推論時に使用する平均と分散を求めるための指数平均移動の係数。
+* Float running_mean: nil  
+推論時に使用する平均。
+* Float running_var: nil  
+推論時に使用する分散。
 
 
 # module Activations
