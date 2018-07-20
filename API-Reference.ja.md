@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.3.1
+最終更新バージョン:0.3.2
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -518,6 +518,14 @@ LeakyReLU関数のレイヤーです。
 
 # class RandomNormal < Initializer
 パラメータを正規分布による乱数で初期化します。
+
+## 【Properties】
+## attr_reader :mean
+Float mean  
+正規分布の平均。
+## attr_reader :std
+Float std  
+正規分布の分散。
 
 ## 【Instance methods】
 ## def initialize(mean = 0, std = 0.05)

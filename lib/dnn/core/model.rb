@@ -1,5 +1,4 @@
 require "json"
-require "base64"
 
 module DNN
   class Model

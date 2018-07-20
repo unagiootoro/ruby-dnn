@@ -20,6 +20,9 @@ module DNN
     
     
     class RandomNormal < Initializer
+      attr_reader :mean
+      attr_reader :std
+      
       def self.load_hash(hash)
         self.new(hash[:mean], hash[:std])
       end
