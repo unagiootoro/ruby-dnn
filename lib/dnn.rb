@@ -6,7 +6,7 @@ Xumo::SFloat.srand(rand(2**64))
 
 module DNN; end
 
-require "dnn/core/version"
+require "dnn/version"
 require "dnn/core/error"
 require "dnn/core/model"
 require "dnn/core/initializers"
