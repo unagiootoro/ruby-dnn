@@ -12,8 +12,8 @@ CIFAR10 = DNN::CIFAR10
 x_train, y_train = CIFAR10.load_train
 x_test, y_test = CIFAR10.load_test
 
-x_train = SFloat.cast(x_train).transpose(0, 2, 3, 1)
-x_test = SFloat.cast(x_test).transpose(0, 2, 3, 1)
+x_train = SFloat.cast(x_train)
+x_test = SFloat.cast(x_test)
 
 x_train /= 255
 x_test /= 255
@@ -40,6 +40,16 @@ model << BatchNormalization.new
 model << ReLU.new
 
 model << Conv2D.new(32, 5, padding: true)
+model << BatchNormalization.new
+model << ReLU.new
+
+model << MaxPool2D.new(2)
+
+model << Conv2D.new(64, 5, padding: true)
+model << BatchNormalization.new
+model << ReLU.new
+
+model << Conv2D.new(64, 5, padding: true)
 model << BatchNormalization.new
 model << ReLU.new
 

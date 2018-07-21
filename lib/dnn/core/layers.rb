@@ -161,69 +161,69 @@ module DNN
     end
     
     
-    #private module
-    module Convert
+    #This module is used for convolution.
+    module Conv2DModule
       private
 
-      def im2col(img, out_w, out_h, fil_w, fil_h, strides)
+      def im2col(img, out_h, out_w, fil_h, fil_w, strides)
         bsize = img.shape[0]
         ch = img.shape[3]
-        col = SFloat.zeros(bsize, ch, fil_w, fil_h, out_w, out_h)
+        col = SFloat.zeros(bsize, ch, fil_h, fil_w, out_h, out_w)
         img = img.transpose(0, 3, 1, 2)
         (0...fil_h).each do |i|
-          i_range = (i...(i + strides[1] * out_h)).step(strides[1]).to_a
+          i_range = (i...(i + strides[0] * out_h)).step(strides[0]).to_a
           (0...fil_w).each do |j|
-            j_range = (j...(j + strides[0] * out_w)).step(strides[0]).to_a
-            col[true, true, j, i, true, true] = img[true, true, j_range, i_range]
+            j_range = (j...(j + strides[1] * out_w)).step(strides[1]).to_a
+            col[true, true, i, j, true, true] = img[true, true, i_range, j_range]
           end
         end
-        col.transpose(0, 4, 5, 2, 3, 1).reshape(bsize * out_w * out_h, fil_w * fil_h * ch)
+        col.transpose(0, 4, 5, 2, 3, 1).reshape(bsize * out_h * out_w, fil_h * fil_w * ch)
       end
 
-      def col2im(col, img_shape, out_w, out_h, fil_w, fil_h, strides)
-        bsize, img_w, img_h, ch = img_shape
-        col = col.reshape(bsize, out_w, out_h, fil_w, fil_h, ch).transpose(0, 5, 3, 4, 1, 2)
-        img = SFloat.zeros(bsize, ch, img_w, img_h)
+      def col2im(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
+        bsize, img_h, img_w, ch = img_shape
+        col = col.reshape(bsize, out_h, out_w, fil_h, fil_w, ch).transpose(0, 5, 3, 4, 1, 2)
+        img = SFloat.zeros(bsize, ch, img_h, img_w)
         (0...fil_h).each do |i|
-          i_range = (i...(i + strides[1] * out_h)).step(strides[1]).to_a
+          i_range = (i...(i + strides[0] * out_h)).step(strides[0]).to_a
           (0...fil_w).each do |j|
-            j_range = (j...(j + strides[0] * out_w)).step(strides[0]).to_a
-            img[true, true, j_range, i_range] += col[true, true, j, i, true, true]
+            j_range = (j...(j + strides[1] * out_w)).step(strides[1]).to_a
+            img[true, true, i_range, j_range] += col[true, true, i, j, true, true]
           end
         end
         img.transpose(0, 2, 3, 1)
       end
 
       def padding(img, pad)
-        bsize, img_w, img_h, ch = img.shape
-        img2 = SFloat.zeros(bsize, img_w + pad[0], img_h + pad[1], ch)
-        i_begin = pad[1] / 2
+        bsize, img_h, img_w, ch = img.shape
+        img2 = SFloat.zeros(bsize, img_h + pad[0], img_w + pad[1], ch)
+        i_begin = pad[0] / 2
         i_end = i_begin + img_h
-        j_begin = pad[0] / 2
+        j_begin = pad[1] / 2
         j_end = j_begin + img_w
-        img2[true, j_begin...j_end, i_begin...i_end, true] = img
+        img2[true, i_begin...i_end, j_begin...j_end, true] = img
         img2
       end
 
       def back_padding(img, pad)
-        i_begin = pad[1] / 2
-        i_end = img.shape[2] - (pad[1] / 2.0).round
-        j_begin = pad[0] / 2
-        j_end = img.shape[1] - (pad[0] / 2.0).round
-        img[true, j_begin...j_end, i_begin...i_end, true]
+        i_begin = pad[0] / 2
+        i_end = img.shape[1] - (pad[0] / 2.0).round
+        j_begin = pad[1] / 2
+        j_end = img.shape[2] - (pad[1] / 2.0).round
+        img[true, i_begin...i_end, j_begin...j_end, true]
       end
 
-      def out_size(prev_w, prev_h, fil_w, fil_h, strides)
-        out_w = (prev_w - fil_w) / strides[0] + 1
-        out_h = (prev_h - fil_h) / strides[1] + 1
-        [out_w, out_h]
+      def out_size(prev_h, prev_w, fil_h, fil_w, strides)
+        out_h = (prev_h - fil_h) / strides[0] + 1
+        out_w = (prev_w - fil_w) / strides[1] + 1
+        [out_h, out_w]
       end
     end
     
     
     class Conv2D < HasParamLayer
       include Initializers
-      include Convert
+      include Conv2DModule
 
       attr_reader :num_filters
       attr_reader :filter_size
@@ -257,12 +257,12 @@ module DNN
 
       def build(model)
         super
-        prev_w, prev_h = prev_layer.shape[0..1]
-        @out_size = out_size(prev_w, prev_h, *@filter_size, @strides)
+        prev_h, prev_w = prev_layer.shape[0..1]
+        @out_size = out_size(prev_h, prev_w, *@filter_size, @strides)
         out_w, out_h = @out_size
         if @padding
-          @pad = [prev_w - out_w, prev_h - out_h]
-          @out_size = [prev_w, prev_h]
+          @pad = [prev_h - out_h, prev_w - out_w]
+          @out_size = [prev_h, prev_w]
         end
       end
 
@@ -317,7 +317,7 @@ module DNN
     
     
     class MaxPool2D < Layer
-      include Convert
+      include Conv2DModule
 
       attr_reader :pool_size
       attr_reader :strides
@@ -341,11 +341,11 @@ module DNN
         super
         prev_w, prev_h = prev_layer.shape[0..1]
         @num_channel = prev_layer.shape[2]
-        @out_size = out_size(prev_w, prev_h, *@pool_size, @strides)
+        @out_size = out_size(prev_h, prev_w, *@pool_size, @strides)
         out_w, out_h = @out_size
         if @padding
-          @pad = [prev_w - out_w, prev_h - out_h]
-          @out_size = [prev_w, prev_h]
+          @pad = [prev_h - out_h, prev_w - out_w]
+          @out_size = [prev_h, prev_w]
         end
       end
 
@@ -383,8 +383,6 @@ module DNN
 
 
     class UnPool2D < Layer
-      include Convert
-
       attr_reader :unpool_size
 
       def initialize(unpool_size)
@@ -398,25 +396,25 @@ module DNN
 
       def build(model)
         super
-        prev_w, prev_h = prev_layer.shape[0..1]
-        unpool_w, unpool_h = @unpool_size
-        out_w = prev_w * unpool_w
+        prev_h, prev_w = prev_layer.shape[0..1]
+        unpool_h, unpool_w = @unpool_size
         out_h = prev_h * unpool_h
-        @out_size = [out_w, out_h]
+        out_w = prev_w * unpool_w
+        @out_size = [out_h, out_w]
         @num_channel = prev_layer.shape[2]
       end
 
       def forward(x)
         @x_shape = x.shape
-        unpool_w, unpool_h = @unpool_size
-        x2 = SFloat.zeros(x.shape[0], x.shape[1], unpool_w, x.shape[2], unpool_h, @num_channel)
+        unpool_h, unpool_w = @unpool_size
+        x2 = SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
         x2[true, true, 0, true, 0, true] = x
         x2.reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
       def backward(dout)
-        unpool_w, unpool_h = @unpool_size
-        dout = dout.reshape(dout.shape[0], @x_shape[0], unpool_w, @x_shape[1], unpool_h, @num_channel)
+        unpool_h, unpool_w = @unpool_size
+        dout = dout.reshape(dout.shape[0], @x_shape[0], unpool_h, @x_shape[1], unpool_w, @num_channel)
         dout[true, true, 0, true, 0, true].clone
       end
 

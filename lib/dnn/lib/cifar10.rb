@@ -42,7 +42,9 @@ module DNN
         raise DNN_CIFAR10_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
         bin << File.binread(fname)
       end
-      _cifar10_load(bin, 50000)
+      x_train, y_train = _cifar10_load(bin, 50000)
+      x_train = x_train.transpose(0, 2, 3, 1).clone
+      [x_train, y_train]
     end
 
     def self.load_test
@@ -50,7 +52,9 @@ module DNN
       fname = __dir__ + "/#{CIFAR10_DIR}/test_batch.bin"
       raise DNN_CIFAR10_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
       bin = File.binread(fname)
-      _cifar10_load(bin, 10000)
+      x_test, y_test = _cifar10_load(bin, 10000)
+      x_test = x_test.transpose(0, 2, 3, 1).clone
+      [x_test, y_test]
     end
   end
 end

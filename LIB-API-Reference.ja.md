@@ -1,6 +1,6 @@
 # LIB-APIリファレンス
 ruby-dnnの付属ライブラリのリファレンスです。  
-最終更新バージョン:0.3.0
+最終更新バージョン:0.4.0
 
 
 # dnn/lib/mnist
@@ -66,7 +66,7 @@ Array
 Array  
 [イメージデータ, ラベルデータ]の形式で取得します。
 * イメージデータ
-  UInt8の[10000, 3, 32, 32]の形式
+  UInt8の[10000, 32, 32, 3]の形式
 * テストデータ
   UInt8の[10000]の形式
 
@@ -78,20 +78,20 @@ Array
 # module ImageIO
 
 ## def self.read(file_name)
-画像をXumo::UInt8形式で読み込みます。
+画像をUInt8形式で読み込みます。
 ### arguments
 * String file_name  
 読み込む画像のファイル名。
 ### return
-Xumo::UInt8  
-[width, height, rgb]のXumo::UInt8配列。
+UInt8  
+[height, width, rgb]のUInt8配列。
 
-## def self.write(file_name, nary, quality: 100)
-Xumo::UInt8形式の画像を書き込みます。
+## def self.write(file_name, img, quality: 100)
+UInt8形式の画像を書き込みます。
 ### arguments
 * String file_name  
 書き込む画像のファイル名。
-* Xumo::UInt8  
-[width, height, rgb]のXumo::UInt8配列。
+* UInt8 img
+[height, width, rgb]のUInt8配列。
 * Integer quality: 100
 画像をJPEGで書き込む場合のクオリティ。

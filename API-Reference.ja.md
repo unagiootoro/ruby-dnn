@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.3.2
+最終更新バージョン:0.4.0
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -287,13 +287,13 @@ Integer
 
 ## attr_reader :filter_size
 Array   
-フィルターの横と縦の長さ。  
-[Integer width, Integer height]の形式で取得します。
+フィルターの縦と横の長さ。  
+[Integer height, Integer width]の形式で取得します。
 
 ## attr_reader :strides
 Array  
 畳み込みを行う際のストライドの単位。  
-[Integer width, Integer height]の形式で取得します。
+[Integer height, Integer width]の形式で取得します。
 
 ## attr_reader :weight_decay
 Float  
@@ -307,8 +307,8 @@ Float
 * Integer num_filters  
 出力するフィルターの枚数。
 * Integer | Array filter_size  
-フィルターの横と縦の長さ。
-Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
+フィルターの縦と横の長さ。
+Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
 * Initializer weight_initializer: nil  
 重みの初期化に使用するイニシャライザーを設定します
 nilを指定すると、RandomNormalイニシャライザーが使用されます。  
@@ -316,7 +316,7 @@ nilを指定すると、RandomNormalイニシャライザーが使用されま�
 バイアスの初期化に使用するイニシャライザーを設定します。
 * Array<Integer> strides: 1  
 畳み込みを行う際のストライドの単位を指定します。
-Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
+Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
 * bool padding: true  
 イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
 ゼロパディングを行います。
@@ -331,13 +331,13 @@ maxプーリングを行うレイヤーです。
 
 ## attr_reader :pool_size
 Array   
-プーリングを行う横と縦の長さ。
-[Integer width, Integer height]の形式で取得します。
+プーリングを行う縦と横の長さ。
+[Integer height, Integer width]の形式で取得します。
 
 ## attr_reader :strides
 Array  
 畳み込みを行う際のストライドの単位。  
-[Integer width, Integer height]の形式で取得します。
+[Integer height, Integer width]の形式で取得します。
 
 ## 【Instance methods】
 
@@ -345,11 +345,11 @@ Array
 コンストラクタ。
 ### arguments
 * Integer | Array pool_size  
-プーリングを行う横と縦の長さ。
-Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
+プーリングを行う縦と横の長さ。
+Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
 * Array<Integer> strides: nil  
 畳み込みを行う際のストライドの単位を指定します。
-Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
+Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
 なお、nilが設定された場合は、pool_sizeがstridesの値となります。
 * bool padding: true  
 イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
@@ -363,8 +363,8 @@ Arrayで指定する場合、[Integer width, Integer height]の形式で指定�
 
 ## attr_reader :unpool_size
 Array   
-逆プーリングを行う横と縦の長さ。
-[Integer width, Integer height]の形式で取得します。
+逆プーリングを行う縦と横の長さ。
+[Integer height, Integer width]の形式で取得します。
 
 ## 【Instance methods】
 
@@ -372,8 +372,8 @@ Array
 コンストラクタ。
 ### arguments
 * Integer unpool_size  
-逆プーリングを行う横と縦の長さ。
-Arrayで指定する場合、[Integer width, Integer height]の形式で指定します。
+逆プーリングを行う縦と横の長さ。
+Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
 
 
 # class Flatten
