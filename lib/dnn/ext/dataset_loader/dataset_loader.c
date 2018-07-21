@@ -17,7 +17,7 @@ VALUE mnist_load_images(VALUE self, VALUE rb_bin, VALUE rb_num_images, VALUE rb_
   VALUE rb_na;
   narray_data_t* na_data;
 
-  sprintf(script, "Xumo::UInt8.zeros(%d, %d, %d)", num_images, cols, rows);
+  sprintf(script, "Numo::UInt8.zeros(%d, %d, %d)", num_images, cols, rows);
   rb_na = rb_eval_string(&script[0]);
   na_data = RNARRAY_DATA(rb_na);
 
@@ -35,7 +35,7 @@ VALUE mnist_load_labels(VALUE self, VALUE rb_bin, VALUE rb_num_labels) {
   VALUE rb_na;
   narray_data_t* na_data;
 
-  sprintf(script, "Xumo::UInt8.zeros(%d)", num_labels);
+  sprintf(script, "Numo::UInt8.zeros(%d)", num_labels);
   rb_na = rb_eval_string(&script[0]);
   na_data = RNARRAY_DATA(rb_na);
 
@@ -57,13 +57,13 @@ VALUE cifar10_load(VALUE self, VALUE rb_bin, VALUE rb_num_datas) {
   int k = 0;
   int size = CIFAR10_WIDTH * CIFAR10_HEIGHT * CIFAR10_CHANNEL;
 
-  sprintf(script, "Xumo::UInt8.zeros(%d, %d, %d, %d)", num_datas, CIFAR10_CHANNEL, CIFAR10_WIDTH, CIFAR10_HEIGHT);
+  sprintf(script, "Numo::UInt8.zeros(%d, %d, %d, %d)", num_datas, CIFAR10_CHANNEL, CIFAR10_WIDTH, CIFAR10_HEIGHT);
   rb_na_x = rb_eval_string(&script[0]);
   na_data_x = RNARRAY_DATA(rb_na_x);
   for(i = 0; i < 64; i++) {
     script[i] = 0;
   }
-  sprintf(script, "Xumo::UInt8.zeros(%d)", num_datas);
+  sprintf(script, "Numo::UInt8.zeros(%d)", num_datas);
   rb_na_y = rb_eval_string(&script[0]);
   na_data_y = RNARRAY_DATA(rb_na_y);
 
