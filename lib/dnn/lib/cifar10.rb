@@ -1,5 +1,5 @@
 require "dnn"
-require "dnn/ext/dataset_loader/dataset_loader"
+require "dnn/ext/cifar10_loader/cifar10_loader"
 require "open-uri"
 require "zlib"
 require "archive/tar/minitar"
@@ -13,7 +13,7 @@ module DNN
 
     class DNN_CIFAR10_DownloadError < DNN_Error; end
 
-    private_class_method :_cifar10_load
+    private_class_method :load_binary
 
     def self.downloads
       return if Dir.exist?(__dir__ + "/" + CIFAR10_DIR)
@@ -42,8 +42,9 @@ module DNN
         raise DNN_CIFAR10_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
         bin << File.binread(fname)
       end
-      x_train, y_train = _cifar10_load(bin, 50000)
-      x_train = x_train.transpose(0, 2, 3, 1).clone
+      x_bin, y_bin = load_binary(bin, 50000)
+      x_train = Numo::UInt8.from_binary(x_bin).reshape(50000, 3, 32, 32).transpose(0, 2, 3, 1).clone
+      y_train = Numo::UInt8.from_binary(y_bin)
       [x_train, y_train]
     end
 
@@ -52,8 +53,9 @@ module DNN
       fname = __dir__ + "/#{CIFAR10_DIR}/test_batch.bin"
       raise DNN_CIFAR10_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
       bin = File.binread(fname)
-      x_test, y_test = _cifar10_load(bin, 10000)
-      x_test = x_test.transpose(0, 2, 3, 1).clone
+      x_bin, y_bin = load_binary(bin, 10000)
+      x_test = Numo::UInt8.from_binary(x_bin).reshape(10000, 3, 32, 32).transpose(0, 2, 3, 1).clone
+      y_test = Numo::UInt8.from_binary(y_bin)
       [x_test, y_test]
     end
   end

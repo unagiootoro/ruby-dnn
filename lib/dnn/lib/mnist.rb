@@ -73,7 +73,8 @@ module DNN
       Zlib::GzipReader.open(file_name) do |f|
         magic, num_images = f.read(8).unpack("N2")
         rows, cols = f.read(8).unpack("N2")
-        images = _mnist_load_images(f.read, num_images, cols, rows)
+        images = Numo::UInt8.from_binary(f.read)
+        images = images.reshape(num_images, cols, rows)
       end
       images
     end
@@ -82,7 +83,7 @@ module DNN
       labels = nil
       Zlib::GzipReader.open(file_name) do |f|
         magic, num_labels = f.read(8).unpack("N2")
-        labels = _mnist_load_labels(f.read, num_labels)
+        labels = Numo::UInt8.from_binary(f.read)
       end
       labels
     end
