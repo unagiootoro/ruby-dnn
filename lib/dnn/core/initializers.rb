@@ -6,8 +6,8 @@ module DNN
         layer.params[param_key] = param
       end
 
-      def to_hash
-        {name: self.class.name}
+      def to_hash(hash)
+        {name: self.class.name}.merge(hash)
       end
     end
 
@@ -37,7 +37,7 @@ module DNN
       end
 
       def to_hash
-        {name: self.class.name, mean: @mean, std: @std}
+        super({mean: @mean, std: @std})
       end
     end
     

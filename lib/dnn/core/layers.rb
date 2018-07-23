@@ -1,7 +1,7 @@
 module DNN
   module Layers
 
-    #Super class of all optimizer classes.
+    # Super class of all optimizer classes.
     class Layer
       include Xumo
 
@@ -9,43 +9,44 @@ module DNN
         @built = false
       end
 
-      #Build the layer.
+      # Build the layer.
       def build(model)
         @built = true
         @model = model
       end
       
-      #Does the layer have already been built?
+      # Does the layer have already been built?
       def built?
         @built
       end
 
-      #Forward propagation.
+      # Forward propagation.
       def forward() end
 
-      #Backward propagation.
+      # Backward propagation.
       def backward() end
     
-      #Get the shape of the layer.
+      # Get the shape of the layer.
       def shape
         prev_layer.shape
       end
 
-      #Layer to a hash.
-      def to_hash
-        {name: self.class.name}
+      # Layer to a hash.
+      def to_hash(hash)
+        {name: self.class.name}.merge(hash)
       end
     
-      #Get the previous layer.
+      # Get the previous layer.
       def prev_layer
         @model.layers[@model.layers.index(self) - 1]
       end
     end
     
     
+    # This class is a superclass of all classes with learning parameters.
     class HasParamLayer < Layer
-      attr_reader :params #The parameters of the layer.
-      attr_reader :grads  #Differential value of parameter of layer.
+      attr_reader :params # The parameters of the layer.
+      attr_reader :grads  # Differential value of parameter of layer.
     
       def initialize
         super
@@ -58,14 +59,14 @@ module DNN
         init_params
       end
     
-      #Update the parameters.
+      # Update the parameters.
       def update
         @model.optimizer.update(self)
       end
     
       private
       
-      #Initialize of the parameters.
+      # Initialize of the parameters.
       def init_params() end
     end
     
@@ -91,7 +92,7 @@ module DNN
       end
 
       def to_hash
-        {name: self.class.name, shape: @shape}
+        super({shape: @shape})
       end
     end
     
@@ -140,13 +141,10 @@ module DNN
       end
 
       def to_hash
-        {
-          name: self.class.name,
-          num_nodes: @num_nodes,
-          weight_initializer: @weight_initializer.to_hash,
-          bias_initializer: @bias_initializer.to_hash,
-          weight_decay: @weight_decay,
-        }
+        super({num_nodes: @num_nodes,
+               weight_initializer: @weight_initializer.to_hash,
+               bias_initializer: @bias_initializer.to_hash,
+               weight_decay: @weight_decay})
       end
     
       private
@@ -292,16 +290,13 @@ module DNN
       end
 
       def to_hash
-        {
-          name: self.class.name,
-          num_filters: @num_filters,
-          filter_size: @filter_size,
-          weight_initializer: @weight_initializer.to_hash,
-          bias_initializer: @bias_initializer.to_hash,
-          strides: @strides,
-          padding: @padding,
-          weight_decay: @weight_decay,
-        }
+        super({num_filters: @num_filters,
+               filter_size: @filter_size,
+               weight_initializer: @weight_initializer.to_hash,
+               bias_initializer: @bias_initializer.to_hash,
+               strides: @strides,
+               padding: @padding,
+               weight_decay: @weight_decay})
       end
     
       private
@@ -371,13 +366,10 @@ module DNN
       end
 
       def to_hash
-        {
-          name: self.class.name,
-          pool_width: @pool_width,
-          pool_height: @pool_height,
-          strides: @strides,
-          padding: @padding,
-        }
+        super({pool_width: @pool_width,
+               pool_height: @pool_height,
+               strides: @strides,
+               padding: @padding})
       end
     end
 
@@ -423,10 +415,7 @@ module DNN
       end
 
       def to_hash
-        {
-          name: self.class.name,
-          unpool_size: @unpool_size,
-        }
+        super({unpool_size: @unpool_size})
       end
     end
     
@@ -470,7 +459,7 @@ module DNN
       end
 
       def to_hash
-        {name: self.class.name, shape: @shape}
+        super({shape: @shape})
       end
     end
 
@@ -518,7 +507,7 @@ module DNN
       end
 
       def to_hash
-        {name: self.class.name, dropout_ratio: @dropout_ratio}
+        super({dropout_ratio: @dropout_ratio})
       end
     end
     
@@ -576,12 +565,9 @@ module DNN
       end
 
       def to_hash
-        {
-          name: self.class.name,
-          momentum: @momentum,
-          running_mean: @running_mean.to_a,
-          running_var: @running_var.to_a,
-        }
+        super({momentum: @momentum,
+               running_mean: @running_mean.to_a,
+               running_var: @running_var.to_a})
       end
     
       private

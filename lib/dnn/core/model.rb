@@ -1,6 +1,7 @@
 require "json"
 
 module DNN
+  # This class deals with the model of the network.
   class Model
     include Xumo
     

@@ -5,11 +5,11 @@ module DNN
 
     class Sigmoid < Layer
       def forward(x)
-        @out = 1.0 / (1 + NMath.exp(-x))
+        @out = 1 / (1 + NMath.exp(-x))
       end
     
       def backward(dout)
-        dout * (1.0 - @out) * @out
+        dout * (1 - @out) * @out
       end
     end
 
@@ -45,6 +45,8 @@ module DNN
 
     class LeakyReLU < Layer
       include Xumo
+
+      attr_reader :alpha
 
       def initialize(alpha = 0.3)
         @alpha = alpha

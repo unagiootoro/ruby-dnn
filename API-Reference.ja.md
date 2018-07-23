@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.4.0
+最終更新バージョン:0.4.2
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -470,6 +470,11 @@ tanh関数のレイヤーです。
 
 # class LeakyReLU < Layer
 LeakyReLU関数のレイヤーです。
+
+## 【Properties】
+## attr_reader :alpha
+Float alpha  
+出力値が負のときの傾き。
 
 ## 【Instance methods】
 
