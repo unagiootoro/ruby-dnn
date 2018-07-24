@@ -50,14 +50,14 @@ module DNN
     end
     
     
-    class AdaGrad    
+    class AdaGrad < Optimizer
       def initialize(learning_rate = 0.01)
         super(learning_rate)
         @g = {}
       end
 
       def self.load_hash(hash)
-        @learning_rate = hash[:learning_rate]
+        self.new(hash[:learning_rate])
       end
     
       def update(layer)
@@ -73,15 +73,15 @@ module DNN
     
     class RMSProp < Optimizer
       attr_accessor :muse
+
+      def self.load_hash(hash)
+        self.new(hash[:learning_rate], hash[:muse])
+      end
     
       def initialize(learning_rate = 0.001, muse = 0.9)
         super(learning_rate)
         @muse = muse
         @g = {}
-      end
-
-      def self.load_hash(hash)
-        self.new(hash[:learning_rate], hash[:muse])
       end
     
       def update(layer)
