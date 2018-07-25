@@ -468,8 +468,8 @@ module DNN
       private
     
       def ridge
-        @model.layers.select { |layer| layer.respond_to?(:weight_decay) }
-                     .reduce(0) { |sum, layer| layer.weight_decay * (layer.params[:weight]**2).sum }
+        0.5 * @model.layers.select { |layer| layer.respond_to?(:weight_decay) }
+                           .reduce(0) { |sum, layer| layer.weight_decay * (layer.params[:weight]**2).sum }
       end
     end
     

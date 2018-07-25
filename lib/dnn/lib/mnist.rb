@@ -1,7 +1,6 @@
 require "open-uri"
 require "zlib"
 require "dnn/core/error"
-require "dnn/ext/dataset_loader/dataset_loader"
 
 module DNN
   module MNIST
@@ -13,9 +12,6 @@ module DNN
     URL_TRAIN_LABELS = "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz"
     URL_TEST_IMAGES = "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz"
     URL_TEST_LABELS = "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"
-
-    private_class_method :_mnist_load_images
-    private_class_method :_mnist_load_labels
 
     def self.downloads
       return if Dir.exist?(mnist_dir)
