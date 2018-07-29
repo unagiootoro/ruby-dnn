@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.4.2
+最終更新バージョン:0.5.0
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -121,7 +121,7 @@ epoch_proc
 ### return
 なし。
 
-## def train_on_batch
+## def train_on_batch(x, y, batch_size, &batch_proc)
 入力されたバッチデータをもとに、一度だけ学習を行います。
 ### arguments
 * SFloat x
@@ -485,7 +485,7 @@ Float alpha
 出力値が負のときの傾き。
 
 
-# class IdentityWithLoss < OutputLayer
+# class IdentityMSE < OutputLayer
 恒等関数と二乗誤差関数を合わせた出力層のレイヤーです。
 
 

@@ -100,10 +100,10 @@ class TestLeakyReLU < MiniTest::Unit::TestCase
 end
 
 
-class TestIdentityWithLoss < MiniTest::Unit::TestCase
+class TestIdentityMSE < MiniTest::Unit::TestCase
   # f = ->x { x }
   def test_forward
-    identity = IdentityWithLoss.new
+    identity = IdentityMSE.new
     out = identity.forward(DFloat[0, 1])
     assert_equal out, DFloat[0, 1]
   end
@@ -113,7 +113,7 @@ class TestIdentityWithLoss < MiniTest::Unit::TestCase
     model = Model.new
     model << InputLayer.new(2)
     model << Dense.new(2)
-    identity = IdentityWithLoss.new
+    identity = IdentityMSE.new
     model << identity
     model.compile(SGD.new)
     out = identity.forward(DFloat[[0, 1]])
@@ -125,7 +125,7 @@ class TestIdentityWithLoss < MiniTest::Unit::TestCase
     model = Model.new
     model << InputLayer.new(2)
     model << Dense.new(2)
-    identity = IdentityWithLoss.new
+    identity = IdentityMSE.new
     model << identity
     model.compile(SGD.new)
     x = DFloat[[0, 1]]

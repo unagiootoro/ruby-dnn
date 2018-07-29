@@ -47,7 +47,7 @@ class TestSGD < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     sgd = SGD.new(0.1)
     model.compile(sgd)
     dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
@@ -66,7 +66,7 @@ class TestSGD < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     sgd = SGD.new(0.1, momentum: 1)
     model.compile(sgd)
     dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
@@ -108,7 +108,7 @@ class TestAdaGrad < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     adagrad = AdaGrad.new
     model.compile(adagrad)
     dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
@@ -141,7 +141,7 @@ class TestRMSProp < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     rmsprop = RMSProp.new(0.01, 0.5)
     model.compile(rmsprop)
     dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
@@ -195,7 +195,7 @@ class TestAdam < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     adam = Adam.new(0.01, 0.8, 0.9)
     model.compile(adam)
     dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)

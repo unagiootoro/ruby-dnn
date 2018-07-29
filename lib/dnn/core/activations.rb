@@ -75,7 +75,7 @@ module DNN
     end
 
 
-    class IdentityWithLoss < OutputLayer
+    class IdentityMSE < OutputLayer
       def forward(x)
         @out = x
       end

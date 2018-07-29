@@ -8,13 +8,6 @@ module DNN
     attr_accessor :layers
     attr_reader :optimizer
     attr_reader :batch_size
-  
-    def initialize
-      @layers = []
-      @optimizer = nil
-      @batch_size = nil
-      @compiled = false
-    end
 
     def self.load(file_name)
       Marshal.load(File.binread(file_name))
@@ -26,6 +19,14 @@ module DNN
       model.layers = hash[:layers].map { |hash_layer| Util.load_hash(hash_layer) }
       model.compile(Util.load_hash(hash[:optimizer]))
       model
+    end
+  
+    def initialize
+      @layers = []
+      @optimizer = nil
+      @batch_size = nil
+      @training = false
+      @compiled = false
     end
 
     def load_json_params(json_str)
@@ -118,6 +119,47 @@ module DNN
             end
           end
           log << "  #{num_trained_data}/#{num_train_data} loss: #{loss}"
+          print log if verbose
+        end
+        if verbose && test
+          acc = accurate(test[0], test[1], batch_size,&batch_proc)
+          print "  accurate: #{acc}"
+        end
+        puts "" if verbose
+        epoch_proc.call(epoch) if epoch_proc
+      end
+    end
+
+    def train(x, y, epochs,
+              batch_size: 1,
+              test: nil,
+              verbose: true,
+              batch_proc: nil,
+              &epoch_proc)
+      @batch_size = batch_size
+      num_train_data = x.shape[0]
+      (1..epochs).each do |epoch|
+        puts "【 epoch #{epoch}/#{epochs} 】" if verbose
+        (num_train_data.to_f / @batch_size).ceil.times do |index|
+          x_batch, y_batch = Util.get_minibatch(x, y, @batch_size)
+          loss = train_on_batch(x_batch, y_batch, @batch_size, &batch_proc)
+          if loss.nan?
+            puts "\nloss is nan" if verbose
+            return
+          end
+          num_trained_data = (index + 1) * batch_size
+          num_trained_data = num_trained_data > num_train_data ? num_train_data : num_trained_data
+          log = "\r"
+          40.times do |i|
+            if i < num_trained_data * 40 / num_train_data
+              log << "="
+            elsif i == num_trained_data * 40 / num_train_data
+              log << ">"
+            else
+              log << "_"
+            end
+          end
+          log << "  #{num_trained_data}/#{num_train_data} loss: #{sprintf('%.8f', loss)}"
           print log if verbose
         end
         if verbose && test

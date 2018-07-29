@@ -15,7 +15,7 @@ class TestInitializer < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     model.compile(SGD.new)
     zeros = SFloat.zeros(dense.params[:weight].shape)
     initializer.init_param(dense, :weight, zeros)
@@ -42,7 +42,7 @@ class TestZeros < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     model.compile(SGD.new)
     zeros = SFloat.zeros(dense.params[:weight].shape)
     initializer.init_param(dense, :weight)
@@ -71,7 +71,7 @@ class TestRandomNorm < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     model.compile(SGD.new)
     initializer.init_param(dense, :weight)
     assert_kind_of SFloat, dense.params[:weight]
@@ -96,7 +96,7 @@ class TestXavier < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     model.compile(SGD.new)
     initializer.init_param(dense, :weight)
     assert_kind_of SFloat, dense.params[:weight]
@@ -111,7 +111,7 @@ class TestHe < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(10)
     model << dense
-    model << IdentityWithLoss.new
+    model << IdentityMSE.new
     model.compile(SGD.new)
     initializer.init_param(dense, :weight)
     assert_kind_of SFloat, dense.params[:weight]
