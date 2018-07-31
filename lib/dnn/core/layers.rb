@@ -190,11 +190,12 @@ module DNN
 
       def forward(x)
         @x_shape = x.shape
-        x.reshape(*@shape)
+        x.reshape(x.shape[0], *@shape)
       end
 
       def backward(dout)
-        dout.reshape(@x_shape)
+        p dout.shape, @x_shape
+        dout.reshape(*@x_shape)
       end
 
       def to_hash
