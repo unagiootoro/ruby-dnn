@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.0
+最終更新バージョン:0.5.1
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -153,6 +153,17 @@ Float
 
 ## def predict(x)
 モデルを使用して、結果の推論を行います。
+入力データは、バッチデータである必要があります。
+### arguments
+* SFloat x  
+推論用入力データ。
+### return
+SFloat
+推論結果を返します。
+
+## def predict1(x)
+モデルを使用して、結果の推論を行います。
+predictとは異なり、一つの入力データに対して、一つの出力データを返します。
 ### arguments
 * SFloat x  
 推論用入力データ。
@@ -487,6 +498,10 @@ Float alpha
 
 # class IdentityMSE < OutputLayer
 恒等関数と二乗誤差関数を合わせた出力層のレイヤーです。
+
+
+# class IdentityMAE < OutputLayer
+恒等関数と平均絶対誤差関数を合わせた出力層のレイヤーです。
 
 
 # class SoftmaxWithLoss < OutputLayer

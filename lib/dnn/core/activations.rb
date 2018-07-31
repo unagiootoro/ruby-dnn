@@ -89,6 +89,25 @@ module DNN
         0.5 * ((@out - y)**2).sum / batch_size + ridge
       end
     end
+
+
+    class IdentityMAE < OutputLayer
+      def forward(x)
+        @out = x
+      end
+    
+      def backward(y)
+        dout = @out - y
+        dout[dout >= 0] = 1
+        dout[dout < 0] = -1
+        dout
+      end
+    
+      def loss(y)
+        batch_size = y.shape[0]
+        (@out - y).abs.sum / batch_size + ridge
+      end
+    end
     
     
     class SoftmaxWithLoss < OutputLayer

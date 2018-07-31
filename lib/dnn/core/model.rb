@@ -90,45 +90,6 @@ module DNN
     def training?
       @training
     end
-  
-    def train(x, y, epochs,
-              batch_size: 1,
-              test: nil,
-              verbose: true,
-              batch_proc: nil,
-              &epoch_proc)
-      @batch_size = batch_size
-      num_train_data = x.shape[0]
-      (1..epochs).each do |epoch|
-        puts "【 epoch #{epoch}/#{epochs} 】" if verbose
-        (num_train_data.to_f / @batch_size).ceil.times do |index|
-          x_batch, y_batch = Util.get_minibatch(x, y, @batch_size)
-          loss = train_on_batch(x_batch, y_batch, @batch_size, &batch_proc)
-          if loss.nan?
-            puts "\nloss is nan" if verbose
-            return
-          end
-          num_trained_data = (index + 1) * batch_size
-          num_trained_data = num_trained_data > num_train_data ? num_train_data : num_trained_data
-          log = "\r"
-          20.times do |i|
-            if i < num_trained_data * 20 / num_train_data
-              log << "■"
-            else
-              log << "・"
-            end
-          end
-          log << "  #{num_trained_data}/#{num_train_data} loss: #{loss}"
-          print log if verbose
-        end
-        if verbose && test
-          acc = accurate(test[0], test[1], batch_size,&batch_proc)
-          print "  accurate: #{acc}"
-        end
-        puts "" if verbose
-        epoch_proc.call(epoch) if epoch_proc
-      end
-    end
 
     def train(x, y, epochs,
               batch_size: 1,
@@ -175,9 +136,10 @@ module DNN
       @batch_size = batch_size
       x, y = batch_proc.call(x, y) if batch_proc
       forward(x, true)
+      loss = @layers[-1].loss(y)
       backward(y)
       @layers.each { |layer| layer.update if layer.respond_to?(:update) }
-      @layers[-1].loss(y)
+      loss
     end
   
     def accurate(x, y, batch_size = nil, &batch_proc)
@@ -209,6 +171,10 @@ module DNN
   
     def predict(x)
       forward(x, false)
+    end
+
+    def predict1(x)
+      predict(SFloat.cast([x]))[0, false]
     end
   
     def forward(x, training)
