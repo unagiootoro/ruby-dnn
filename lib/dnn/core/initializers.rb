@@ -6,8 +6,10 @@ module DNN
         layer.params[param_key] = param
       end
 
-      def to_hash(hash)
-        {name: self.class.name}.merge(hash)
+      def to_hash(merge_hash = nil)
+        hash = {name: self.class.name}
+        hash.merge!(merge_hash) if merge_hash
+        hash
       end
     end
 

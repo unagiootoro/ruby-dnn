@@ -1,7 +1,6 @@
 module DNN
   module Activations
     Layer = Layers::Layer
-    OutputLayer = Layers::OutputLayer
 
     class Sigmoid < Layer
       def forward(x)
@@ -75,7 +74,7 @@ module DNN
     end
 
 
-    class IdentityMSE < OutputLayer
+    class IdentityMSE < Layers::OutputLayer
       def forward(x)
         @out = x
       end
@@ -91,7 +90,7 @@ module DNN
     end
 
 
-    class IdentityMAE < OutputLayer
+    class IdentityMAE < Layers::OutputLayer
       def forward(x)
         @out = x
       end
@@ -110,7 +109,7 @@ module DNN
     end
     
     
-    class SoftmaxWithLoss < OutputLayer
+    class SoftmaxWithLoss < Layers::OutputLayer
       def forward(x)
         @out = NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
       end
@@ -126,7 +125,7 @@ module DNN
     end
 
 
-    class SigmoidWithLoss < OutputLayer
+    class SigmoidWithLoss < Layers::OutputLayer
       include Xumo
 
       def initialize

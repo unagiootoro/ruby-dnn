@@ -12,8 +12,10 @@ module DNN
       # Update layer has params.
       def update(layer) end
 
-      def to_hash(hash)
-        {name: self.class.name, learning_rate: @learning_rate}.merge(hash)
+      def to_hash(merge_hash = nil)
+        hash = {name: self.class.name, learning_rate: @learning_rate}
+        hash.merge!(merge_hash) if merge_hash
+        hash
       end
     end
 

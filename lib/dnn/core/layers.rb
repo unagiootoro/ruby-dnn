@@ -32,8 +32,10 @@ module DNN
       end
 
       # Layer to a hash.
-      def to_hash(hash)
-        {name: self.class.name}.merge(hash)
+      def to_hash(merge_hash = nil)
+        hash = {name: self.class.name}
+        hash.merge!(merge_hash) if merge_hash
+        hash
       end
     
       # Get the previous layer.
@@ -194,7 +196,6 @@ module DNN
       end
 
       def backward(dout)
-        p dout.shape, @x_shape
         dout.reshape(*@x_shape)
       end
 
