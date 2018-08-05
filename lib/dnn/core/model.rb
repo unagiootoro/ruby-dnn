@@ -43,9 +43,14 @@ module DNN
     end
   
     def save(file_name)
-      dir_name = file_name.match(%r`(.*)/.+$`)[1]
-      Dir.mkdir(dir_name) unless Dir.exist?(dir_name)
-      File.binwrite(file_name, Marshal.dump(self))
+      marshal = Marshal.dump(self)
+      begin
+        File.binwrite(file_name, marshal)
+      rescue Errno::ENOENT => ex
+        dir_name = file_name.match(%r`(.*)/.+$`)[1]
+        Dir.mkdir(dir_name)
+        File.binwrite(file_name, marshal)
+      end
     end
 
     def to_json
