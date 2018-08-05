@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.1
+最終更新バージョン:0.5.3
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -435,10 +435,10 @@ SFloat y
 
 ## 【Instance methods】
 
-## def initialize(dropout_ratio)
+## def initialize(dropout_ratio = 0.5)
 コンストラクタ。
 ### arguments
-* Float dropout_ration  
+* Float dropout_ratio  
 ノードを非活性にする割合。
 
 

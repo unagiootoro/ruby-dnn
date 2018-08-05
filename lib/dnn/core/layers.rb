@@ -216,20 +216,16 @@ module DNN
     
     
     class Dropout < Layer
-      attr_reader :dropoit_ratio
-
-      def initialize(dropout_ratio)
-        super()
-        @dropout_ratio = dropout_ratio
-        @mask = nil
-      end
+      attr_reader :dropout_ratio
 
       def self.load_hash(hash)
         self.new(hash[:dropout_ratio])
       end
 
-      def self.load(hash)
-        self.new(hash[:dropout_ratio])
+      def initialize(dropout_ratio = 0.5)
+        super()
+        @dropout_ratio = dropout_ratio
+        @mask = nil
       end
     
       def forward(x)
@@ -256,17 +252,17 @@ module DNN
     class BatchNormalization < HasParamLayer
       attr_reader :momentum
 
+      def self.load_hash(hash)
+        running_mean = SFloat.cast(hash[:running_mean])
+        running_var = SFloat.cast(hash[:running_var])
+        self.new(momentum: hash[:momentum], running_mean: running_mean, running_var: running_var)
+      end
+
       def initialize(momentum: 0.9, running_mean: nil, running_var: nil)
         super()
         @momentum = momentum
         @running_mean = running_mean
         @running_var = running_var
-      end
-
-      def self.load_hash(hash)
-        running_mean = SFloat.cast(hash[:running_mean])
-        running_var = SFloat.cast(hash[:running_var])
-        self.new(momentum: hash[:momentum], running_mean: running_mean, running_var: running_var)
       end
 
       def build(model)
