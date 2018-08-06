@@ -130,6 +130,14 @@ module DNN
         [*@out_size, @num_filters]
       end
 
+      def ridge
+        if @weight_decay > 0
+          0.5 * @weight_decay * (@params[:weight]**2).sum
+        else
+          0
+        end
+      end
+
       def to_hash
         super({num_filters: @num_filters,
                filter_size: @filter_size,

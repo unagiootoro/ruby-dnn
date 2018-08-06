@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.3
+最終更新バージョン:0.5.6
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -385,6 +385,45 @@ Array
 * Integer unpool_size  
 逆プーリングを行う縦と横の長さ。
 Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
+
+
+# class SimpleRNN < HasParamLayer
+リカレントニューラルネットワークのレイヤーを扱うクラスです。
+
+## 【Properties】
+
+## attr_reader :num_nodes
+Integer  
+レイヤーのノード数を取得します。
+
+## attr_reader :stateful
+bool  
+レイヤーがステートフルであるか否かを返します。
+
+## attr_reader :weight_decay
+Float  
+重み減衰の係数を取得します。
+
+## 【Instance methods】
+
+## def initialize(num_nodes, stateful: false, weight_initializer: nil, bias_initializer: nil, weight_decay: 0)
+コンストラクタ。
+### arguments
+* Integer num_nodes  
+レイヤーのノード数を設定します。
+* bool stateful
+trueを設定すると、一つ前に計算した中間層の値を使用して学習を行うことができます。
+* Layer activation
+リカレントニューラルネットワークにおいて、使用する活性化関数を設定します。
+nilを指定すると、Tanhが使用されます。
+* Initializer weight_initializer: nil  
+重みの初期化に使用するイニシャライザーを設定します。
+nilを指定すると、RandomNormalイニシャライザーが使用されます。  
+* Initializer bias_initializer: nil  
+バイアスの初期化に使用するイニシャライザーを設定します。
+nilを指定すると、Zerosイニシャライザーが使用されます。
+* Float weight_decay: 0
+重み減衰の係数を設定します。
 
 
 # class Flatten

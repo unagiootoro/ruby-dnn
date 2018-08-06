@@ -142,6 +142,14 @@ module DNN
         [@num_nodes]
       end
 
+      def ridge
+        if @weight_decay > 0
+          0.5 * @weight_decay * (@params[:weight]**2).sum
+        else
+          0
+        end
+      end
+
       def to_hash
         super({num_nodes: @num_nodes,
                weight_initializer: @weight_initializer.to_hash,
@@ -209,8 +217,8 @@ module DNN
       private
     
       def ridge
-        0.5 * @model.layers.select { |layer| layer.respond_to?(:weight_decay) }
-                           .reduce(0) { |sum, layer| layer.weight_decay * (layer.params[:weight]**2).sum }
+        @model.layers.select { |layer| layer.respond_to?(:ridge) }
+                     .reduce(0) { |sum, layer| sum + layer.ridge }
       end
     end
     

@@ -161,6 +161,17 @@ class TestDense < MiniTest::Unit::TestCase
     assert_equal [10], dense.shape
   end
 
+  def test_ridge
+    model = Model.new
+    model << InputLayer.new(10)
+    dense = Dense.new(1, weight_decay: 1)
+    model << dense
+    model << IdentityMSE.new
+    model.compile(SGD.new)
+    dense.params[:weight] = SFloat.ones(*dense.params[:weight].shape)
+    assert_equal 5.0, dense.ridge.round(1)
+  end
+
   def test_to_hash
     expected_hash = {
       name: "DNN::Layers::Dense",
@@ -222,11 +233,14 @@ class TestOutputLayer < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     dense = Dense.new(1, weight_decay: 1)
     model << dense
+    dense2 = Dense.new(10, weight_decay: 1)
+    model << dense2
     output_layer = OutputLayer.new
     model << output_layer
     model.compile(SGD.new)
     dense.params[:weight] = SFloat.ones(*dense.params[:weight].shape)
-    assert_equal 5.0, output_layer.send(:ridge).round(1)
+    dense2.params[:weight] = SFloat.ones(*dense2.params[:weight].shape)
+    assert_equal 10.0, output_layer.send(:ridge).round(1)
   end
 end
 

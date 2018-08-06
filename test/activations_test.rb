@@ -108,7 +108,7 @@ class TestIdentityMSE < MiniTest::Unit::TestCase
     assert_equal out, DFloat[0, 1]
   end
 
-  # loss = ->x, y { (f.(x) - y)**2 / 2.0 }
+  # loss = ->x, y { 0.5 * (f.(x) - y)**2 }
   def test_loss
     model = Model.new
     model << InputLayer.new(2)
@@ -150,7 +150,7 @@ class TestIdentityMAE < MiniTest::Unit::TestCase
     assert_equal out, DFloat[0, 1]
   end
 
-  # loss = ->x, y { (f.(x) - y).abs / 2.0 }
+  # loss = ->x, y { (f.(x) - y).abs }
   def test_loss
     model = Model.new
     model << InputLayer.new(2)
@@ -167,11 +167,84 @@ class TestIdentityMAE < MiniTest::Unit::TestCase
     model = Model.new
     model << InputLayer.new(2)
     model << Dense.new(2)
-    identity = IdentityMSE.new
+    identity = IdentityMAE.new
     model << identity
     model.compile(SGD.new)
     x = DFloat[[-1, 2]]
     y = DFloat[[2, 4]]
+    identity.forward(x)
+    grad = identity.backward(y).round(4)
+    func = ->x do
+      identity.forward(x)
+      identity.loss(y)
+    end
+    n_grad = Util.numerical_grad(x, func).round(4)
+    assert_equal n_grad, grad.sum
+  end
+end
+
+
+class TestIdentityHuber < MiniTest::Unit::TestCase
+  # f = ->x { x }
+  def test_forward
+    identity = IdentityMAE.new
+    out = identity.forward(DFloat[0, 1])
+    assert_equal out, DFloat[0, 1]
+  end
+
+  # loss = ->x, y { (f.(x) - y).abs > 1.0 ? (f.(x) - y).abs : 0.5 * (f.(x) - y)**2 }
+  def test_loss
+    model = Model.new
+    model << InputLayer.new(2)
+    model << Dense.new(2)
+    identity = IdentityHuber.new
+    model << identity
+    model.compile(SGD.new)
+    out = identity.forward(DFloat[[0, 1]])
+    loss = identity.loss(DFloat[[2, 4]])
+    assert_equal 5, loss.round(3)
+  end
+
+  def test_loss2
+    model = Model.new
+    model << InputLayer.new(2)
+    model << Dense.new(2)
+    identity = IdentityHuber.new
+    model << identity
+    model.compile(SGD.new)
+    out = identity.forward(DFloat[[0, 1.0]])
+    loss = identity.loss(DFloat[[0.5, 1.25]])
+    assert_equal 0.15625, loss.round(5)
+  end
+
+  def test_backward
+    model = Model.new
+    model << InputLayer.new(2)
+    model << Dense.new(2)
+    identity = IdentityMSE.new
+    model << identity
+    model.compile(SGD.new)
+    x = DFloat[[-1, 2]]
+    y = DFloat[[-3, 4]]
+    identity.forward(x)
+    grad = identity.backward(y).round(4)
+    func = ->x do
+      identity.forward(x)
+      identity.loss(y)
+    end
+    n_grad = Util.numerical_grad(x, func).round(4)
+    assert_equal n_grad, grad.sum
+  end
+
+  def test_backward2
+    model = Model.new
+    model << InputLayer.new(2)
+    model << Dense.new(2)
+    identity = IdentityMSE.new
+    model << identity
+    model.compile(SGD.new)
+    x = DFloat[[-1, 2]]
+    y = DFloat[[-0.5, 1.7]]
     identity.forward(x)
     grad = identity.backward(y).round(4)
     func = ->x do
