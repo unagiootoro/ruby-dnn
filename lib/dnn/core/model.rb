@@ -69,7 +69,7 @@ module DNN
   
     def <<(layer)
       unless layer.is_a?(Layers::Layer)
-        raise DNN_TypeError.new("layer is not an instance of the DNN::Layers::Layer class.")
+        raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class.")
       end
       @layers << layer
       self
@@ -77,7 +77,7 @@ module DNN
   
     def compile(optimizer)
       unless optimizer.is_a?(Optimizers::Optimizer)
-        raise DNN_TypeError.new("optimizer is not an instance of the DNN::Optimizers::Optimizer class.")
+        raise TypeError.new("optimizer is not an instance of the DNN::Optimizers::Optimizer class.")
       end
       @compiled = true
       layers_check
@@ -202,10 +202,10 @@ module DNN
 
     def layers_check
       unless @layers.first.is_a?(Layers::InputLayer)
-        raise DNN_Error.new("The first layer is not an InputLayer.")
+        raise TypeError.new("The first layer is not an InputLayer.")
       end
       unless @layers.last.is_a?(Layers::OutputLayer)
-        raise DNN_Error.new("The last layer is not an OutputLayer.")
+        raise TypeError.new("The last layer is not an OutputLayer.")
       end
     end
 
@@ -214,12 +214,12 @@ module DNN
         if layer.is_a?(Layers::Dense)
           prev_shape = layer.prev_layer.shape
           if prev_shape.length != 1
-            raise DNN_SharpError.new("layer index(#{i}) Dense:  The shape of the previous layer is #{prev_shape}. The shape of the previous layer must be 1 dimensional.")
+            raise DNN_ShapeError.new("layer index(#{i}) Dense:  The shape of the previous layer is #{prev_shape}. The shape of the previous layer must be 1 dimensional.")
           end
         elsif layer.is_a?(Layers::Conv2D) || layer.is_a?(Layers::MaxPool2D)
           prev_shape = layer.prev_layer.shape
           if prev_shape.length != 3
-            raise DNN_SharpError.new("layer index(#{i}) Conv2D:  The shape of the previous layer is #{prev_shape}. The shape of the previous layer must be 3 dimensional.")
+            raise DNN_ShapeError.new("layer index(#{i}) Conv2D:  The shape of the previous layer is #{prev_shape}. The shape of the previous layer must be 3 dimensional.")
           end
         end
       end
