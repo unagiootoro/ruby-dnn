@@ -158,16 +158,16 @@ module DNN
         @bias_initializer.init_param(self, :bias)
       end
     end
-    
-    
-    class MaxPool2D < Layer
+
+    #Super class of all pooling2D class.
+    class Pool2D < Layer
       include Conv2DModule
 
       attr_reader :pool_size
       attr_reader :strides
 
-      def self.load_hash(hash)
-        MaxPool2D.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
+      def self.load_hash(pool2d_class, hash)
+        pool2d_class.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
       end
 
       def initialize(pool_size, strides: nil, padding: false)
@@ -197,15 +197,10 @@ module DNN
         x = padding(x, @pad) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
-        col = col.reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
-        @max_index = col.max_index(1)
-        col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
+        col.reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
       end
 
-      def backward(dout)
-        dmax = SFloat.zeros(dout.size * @pool_size.reduce(:*))
-        dmax[@max_index] = dout.flatten
-        dcol = dmax.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
+      def backward(dcol)
         dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
         @padding ? back_padding(dx, @pad) : dx
       end
@@ -219,6 +214,49 @@ module DNN
                pool_height: @pool_height,
                strides: @strides,
                padding: @padding})
+      end
+    end
+    
+    
+    class MaxPool2D < Pool2D
+      def self.load_hash(hash)
+        Pool2D.load_hash(self, hash)
+      end
+
+      def forward(x)
+        col = super(x)
+        @max_index = col.max_index(1)
+        col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
+      end
+
+      def backward(dout)
+        dmax = SFloat.zeros(dout.size * @pool_size.reduce(:*))
+        dmax[@max_index] = dout.flatten
+        dcol = dmax.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
+        super(dcol)
+      end
+    end
+
+
+    class AvgPool2D < Pool2D
+      def self.load_hash(hash)
+        Pool2D.load_hash(self, hash)
+      end
+
+      def forward(x)
+        col = super(x)
+        col.mean(1).reshape(x.shape[0], *@out_size, x.shape[3])
+      end
+
+      def backward(dout)
+        row_length = @pool_size.reduce(:*)
+        dout /= row_length
+        davg = SFloat.zeros(dout.size, row_length)
+        row_length.times do |i|
+          davg[true, i] = dout.flatten
+        end
+        dcol = davg.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
+        super(dcol)
       end
     end
 

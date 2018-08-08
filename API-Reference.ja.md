@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.6
+最終更新バージョン:0.5.7
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -335,8 +335,8 @@ Arrayで指定する場合、[Integer height, Integer width]の形式で指定�
 重み減衰を行うL2正則化項の強さを設定します。
 
 
-# class MaxPool2D < Layer
-maxプーリングを行うレイヤーです。
+# class Pool2D < Layer
+全ての2Dプーリングレイヤーのスーパークラスです。
 
 ## 【Properties】
 
@@ -365,6 +365,14 @@ Arrayで指定する場合、[Integer height, Integer width]の形式で指定�
 * bool padding: true  
 イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
 ゼロパディングを行います。
+
+
+# class MaxPool2D < Pool2D
+maxプーリングを行うレイヤーです。
+
+
+# class AvgPool2D < Pool2D
+averageプーリングを行うレイヤーです。
 
 
 # class UnPool2D < Layer
