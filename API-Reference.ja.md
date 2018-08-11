@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.7
+最終更新バージョン:0.5.9
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -653,6 +653,20 @@ Float momentum
 ## 【Instance methods】
 
 ## def initialize(learning_rate = 0.01, momentum: 0)
+コンストラクタ。
+### arguments
+* Float learning_rate  
+  学習率。
+* Float momentum  
+  モーメンタム係数。
+
+
+# class Nesterov < SGD
+Nesterovによるオプティマイザです。
+
+## 【Instance methods】
+
+## def initialize(learning_rate = 0.01, momentum: 0.9)
 コンストラクタ。
 ### arguments
 * Float learning_rate  

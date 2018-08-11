@@ -88,6 +88,43 @@ class TestSGD < MiniTest::Unit::TestCase
 end
 
 
+class TestNesterov < MiniTest::Unit::TestCase
+  def test_load_hash
+    hash = {
+      name: "DNN::Optimizers::Nesterov",
+      learning_rate: 0.1,
+      momentum: 0.8,
+    }
+    nesterov = Nesterov.load_hash(hash)
+    assert_equal 0.1, nesterov.learning_rate
+    assert_equal 0.8, nesterov.momentum
+  end
+
+  # f = ->lr, dw, m, v, w {
+  #   v = v * m - lr * dw
+  #   w = (w + m**2 * v) - (1 + m) * (lr * dw)
+  #   return v, w
+  # }
+  # w = 0; v = 0
+  # v, w = f.(0.1, 1, 0.9, v, w) # v => -0.1,  w => -0.271
+  # v, w = f.(0.1, 1, 0.9, v, w) # v => -0.19, w => -0.6149
+  def test_update2
+    model = Model.new
+    model << InputLayer.new(10)
+    dense = Dense.new(10, weight_initializer: Zeros.new)
+    model << dense
+    model << IdentityMSE.new
+    nesterov = Nesterov.new(0.1, momentum: 0.9)
+    model.compile(nesterov)
+    dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
+    dense.grads[:bias] = SFloat.ones(*dense.params[:bias].shape)
+    nesterov.update(dense)
+    nesterov.update(dense)
+    assert_equal -0.6149, dense.params[:weight].mean.round(5)
+  end
+end
+
+
 class TestAdaGrad < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {

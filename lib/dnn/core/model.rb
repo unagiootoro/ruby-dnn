@@ -102,6 +102,9 @@ module DNN
               verbose: true,
               batch_proc: nil,
               &epoch_proc)
+      unless compiled?
+        raise DNN_Error.new("The model is not compiled.")
+      end
       @batch_size = batch_size
       num_train_data = x.shape[0]
       (1..epochs).each do |epoch|
@@ -168,7 +171,11 @@ module DNN
         x_batch, y_batch = batch_proc.call(x_batch, y_batch) if batch_proc
         out = forward(x_batch, false)
         @batch_size.times do |j|
-         correct += 1 if out[j, true].max_index == y_batch[j, true].max_index
+          if @layers[-1].shape == [1]
+            correct += 1 if out[j, 0].round == y_batch[j, 0].round
+          else
+            correct += 1 if out[j, true].max_index == y_batch[j, true].max_index
+          end
         end
       end
       correct.to_f / x.shape[0]
@@ -183,6 +190,9 @@ module DNN
     end
   
     def forward(x, training)
+      unless compiled?
+        raise DNN_Error.new("The model is not compiled.")
+      end
       @training = training
       @layers.each do |layer|
         x = layer.forward(x)

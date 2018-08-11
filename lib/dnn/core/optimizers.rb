@@ -50,6 +50,27 @@ module DNN
         super({momentum: @momentum})
       end
     end
+
+
+    class Nesterov < SGD
+      def self.load_hash(hash)
+        self.new(hash[:learning_rate], momentum: hash[:momentum])
+      end
+
+      def initialize(learning_rate = 0.01, momentum: 0.9)
+        super(learning_rate, momentum: momentum)
+      end
+    
+      def update(layer)
+        @v[layer] ||= {}
+        layer.params.each_key do |key|
+          @v[layer][key] ||= 0
+          amount = layer.grads[key] * @learning_rate
+          @v[layer][key] = @v[layer][key] * @momentum - amount
+          layer.params[key] = (layer.params[key] + @momentum**2 * @v[layer][key]) - (1 + @momentum) * amount
+        end
+      end
+    end
     
     
     class AdaGrad < Optimizer
