@@ -1,6 +1,32 @@
 module DNN
   module Layers
 
+    class SimpleRNN_Dense
+      def initialize(params, grads, activation)
+        @params = params
+        @grads = grads
+        @activation = activation
+      end
+
+      def forward(x, h)
+        @x = x
+        @h = h
+        h2 = x.dot(@params[:weight]) + h.dot(@params[:weight2]) + @params[:bias]
+        @activation.forward(h2)
+      end
+
+      def backward(dh2)
+        dh2 = @activation.backward(dh2)
+        @grads[:weight] += @x.transpose.dot(dh2)
+        @grads[:weight2] += @h.transpose.dot(dh2)
+        @grads[:bias] += dh2.sum(0)
+        dx = dh2.dot(@params[:weight].transpose)
+        dh = dh2.dot(@params[:weight2].transpose)
+        [dx, dh]
+      end
+    end
+
+
     class SimpleRNN < HasParamLayer
       include Initializers
       include Activations
@@ -31,37 +57,34 @@ module DNN
         @weight_initializer = (weight_initializer || RandomNormal.new)
         @bias_initializer = (bias_initializer || Zeros.new)
         @weight_decay = weight_decay
+        @layers = []
         @h = nil
       end
 
       def forward(xs)
-        @xs = xs
-        @hs = SFloat.zeros(xs.shape[0], *shape)
+        @xs_shape = xs.shape
+        hs = SFloat.zeros(xs.shape[0], *shape)
         h = (@stateful && @h) ? @h : SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
-          h = x.dot(@params[:weight]) + h.dot(@params[:weight2]) + @params[:bias]
-          h = @activation.forward(h)
-          @hs[true, t, false] = h
+          h = @layers[t].forward(x, h)
+          hs[true, t, false] = h
         end
         @h = h
-        @hs
+        hs
       end
 
-      def backward(douts)
+      def backward(dh2s)
         @grads[:weight] = SFloat.zeros(*@params[:weight].shape)
         @grads[:weight2] = SFloat.zeros(*@params[:weight2].shape)
-        dxs = SFloat.zeros(@xs.shape)
-        (0...douts.shape[1]).to_a.reverse.each do |t|
-          dout = douts[true, t, false]
-          x = @xs[true, t, false]
-          h = @hs[true, t, false]
-          dout = @activation.backward(dout)
-          @grads[:weight] += x.transpose.dot(dout)
-          @grads[:weight2] += h.transpose.dot(dout)
-          dxs[true, t, false] = dout.dot(@params[:weight].transpose)
+        @grads[:bias] = SFloat.zeros(*@params[:bias].shape)
+        dxs = SFloat.zeros(@xs_shape)
+        dh = 0
+        (0...dh2s.shape[1]).to_a.reverse.each do |t|
+          dh2 = dh2s[true, t, false]
+          dx, dh = @layers[t].backward(dh2 + dh)
+          dxs[true, t, false] = dx
         end
-        @grads[:bias] = douts.sum(0).sum(0)
         dxs
       end
 
@@ -97,6 +120,9 @@ module DNN
         @weight_initializer.init_param(self, :weight)
         @weight_initializer.init_param(self, :weight2)
         @bias_initializer.init_param(self, :bias)
+        @time_length.times do |t|
+          @layers << SimpleRNN_Dense.new(@params, @grads, @activation.clone)
+        end
       end
     end
 
