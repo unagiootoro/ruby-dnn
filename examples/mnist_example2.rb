@@ -12,8 +12,8 @@ MNIST = DNN::MNIST
 x_train, y_train = MNIST.load_train
 x_test, y_test = MNIST.load_test
 
-x_train = SFloat.cast(x_train).reshape(x_train.shape[0], 28, 28, 1)
-x_test = SFloat.cast(x_test).reshape(x_test.shape[0], 28, 28, 1)
+x_train = Numo::SFloat.cast(x_train).reshape(x_train.shape[0], 28, 28, 1)
+x_test = Numo::SFloat.cast(x_test).reshape(x_test.shape[0], 28, 28, 1)
 
 x_train /= 255
 x_test /= 255

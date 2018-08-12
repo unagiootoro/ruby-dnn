@@ -2,7 +2,6 @@ require "dnn"
 require "dnn/lib/cifar10"
 #require "numo/linalg/autoloader"
 
-include Numo
 include DNN::Layers
 include DNN::Activations
 include DNN::Optimizers
@@ -12,8 +11,8 @@ CIFAR10 = DNN::CIFAR10
 x_train, y_train = CIFAR10.load_train
 x_test, y_test = CIFAR10.load_test
 
-x_train = SFloat.cast(x_train)
-x_test = SFloat.cast(x_test)
+x_train = Numo::SFloat.cast(x_train)
+x_test = Numo::SFloat.cast(x_test)
 
 x_train /= 255
 x_test /= 255

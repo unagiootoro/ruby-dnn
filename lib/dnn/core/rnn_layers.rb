@@ -63,8 +63,8 @@ module DNN
 
       def forward(xs)
         @xs_shape = xs.shape
-        hs = SFloat.zeros(xs.shape[0], *shape)
-        h = (@stateful && @h) ? @h : SFloat.zeros(xs.shape[0], @num_nodes)
+        hs = Xumo::SFloat.zeros(xs.shape[0], *shape)
+        h = (@stateful && @h) ? @h : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
           h = @layers[t].forward(x, h)
@@ -75,10 +75,10 @@ module DNN
       end
 
       def backward(dh2s)
-        @grads[:weight] = SFloat.zeros(*@params[:weight].shape)
-        @grads[:weight2] = SFloat.zeros(*@params[:weight2].shape)
-        @grads[:bias] = SFloat.zeros(*@params[:bias].shape)
-        dxs = SFloat.zeros(@xs_shape)
+        @grads[:weight] = Xumo::SFloat.zeros(*@params[:weight].shape)
+        @grads[:weight2] = Xumo::SFloat.zeros(*@params[:weight2].shape)
+        @grads[:bias] = Xumo::SFloat.zeros(*@params[:bias].shape)
+        dxs = Xumo::SFloat.zeros(@xs_shape)
         dh = 0
         (0...dh2s.shape[1]).to_a.reverse.each do |t|
           dh2 = dh2s[true, t, false]
@@ -114,9 +114,9 @@ module DNN
       def init_params
         @time_length = prev_layer.shape[0] 
         num_prev_nodes = prev_layer.shape[1]
-        @params[:weight] = SFloat.new(num_prev_nodes, @num_nodes)
-        @params[:weight2] = SFloat.new(@num_nodes, @num_nodes)
-        @params[:bias] = SFloat.new(@num_nodes)
+        @params[:weight] = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
+        @params[:weight2] = Xumo::SFloat.new(@num_nodes, @num_nodes)
+        @params[:bias] = Xumo::SFloat.new(@num_nodes)
         @weight_initializer.init_param(self, :weight)
         @weight_initializer.init_param(self, :weight2)
         @bias_initializer.init_param(self, :bias)
@@ -167,7 +167,7 @@ module DNN
         dg = @g_tanh.backward(dcell2_tmp * @in)
         dforget = @forget_sigmoid.backward(dcell2_tmp * @cell)
 
-        da = SFloat.hstack([dforget, dg, din, dout])
+        da = Xumo::SFloat.hstack([dforget, dg, din, dout])
 
         @grads[:weight] += @x.transpose.dot(da)
         @grads[:weight2] += @h.transpose.dot(da)
@@ -215,15 +215,15 @@ module DNN
 
       def forward(xs)
         @xs_shape = xs.shape
-        hs = SFloat.zeros(xs.shape[0], *shape)
+        hs = Xumo::SFloat.zeros(xs.shape[0], *shape)
         h = nil
         cell = nil
         if @stateful
           h = @h if @h
           cell = @cell if @cell
         end
-        h ||= SFloat.zeros(xs.shape[0], @num_nodes)
-        cell ||= SFloat.zeros(xs.shape[0], @num_nodes)
+        h ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
+        cell ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
           h, cell = @layers[t].forward(x, h, cell)
@@ -235,10 +235,10 @@ module DNN
       end
 
       def backward(dh2s)
-        @grads[:weight] = SFloat.zeros(*@params[:weight].shape)
-        @grads[:weight2] = SFloat.zeros(*@params[:weight2].shape)
-        @grads[:bias] = SFloat.zeros(*@params[:bias].shape)
-        dxs = SFloat.zeros(@xs_shape)
+        @grads[:weight] = Xumo::SFloat.zeros(*@params[:weight].shape)
+        @grads[:weight2] = Xumo::SFloat.zeros(*@params[:weight2].shape)
+        @grads[:bias] = Xumo::SFloat.zeros(*@params[:bias].shape)
+        dxs = Xumo::SFloat.zeros(@xs_shape)
         dh = 0
         dcell = 0
         (0...dh2s.shape[1]).to_a.reverse.each do |t|
@@ -274,9 +274,9 @@ module DNN
       def init_params
         @time_length = prev_layer.shape[0] 
         num_prev_nodes = prev_layer.shape[1]
-        @params[:weight] = SFloat.new(num_prev_nodes, @num_nodes * 4)
-        @params[:weight2] = SFloat.new(@num_nodes, @num_nodes * 4)
-        @params[:bias] = SFloat.new(@num_nodes * 4)
+        @params[:weight] = Xumo::SFloat.new(num_prev_nodes, @num_nodes * 4)
+        @params[:weight2] = Xumo::SFloat.new(@num_nodes, @num_nodes * 4)
+        @params[:bias] = Xumo::SFloat.new(@num_nodes * 4)
         @weight_initializer.init_param(self, :weight)
         @weight_initializer.init_param(self, :weight2)
         @bias_initializer.init_param(self, :bias)

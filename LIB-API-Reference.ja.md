@@ -1,6 +1,6 @@
 # LIB-APIリファレンス
 ruby-dnnの付属ライブラリのリファレンスです。  
-最終更新バージョン:0.4.0
+最終更新バージョン:0.5.10
 
 
 # dnn/lib/mnist
@@ -20,9 +20,9 @@ MNISTを扱うモジュールです。
 Array  
 [イメージデータ, ラベルデータ]の形式で取得します。
 * イメージデータ
-  UInt8の[60000, 28, 28]の形式
+  Numo::UInt8の[60000, 28, 28]の形式
 * テストデータ
-  UInt8の[60000]の形式
+  Numo::UInt8の[60000]の形式
 
 ## def self.load_test
 テスト用データを取得します。
@@ -32,9 +32,9 @@ Array
 Array  
 [イメージデータ, ラベルデータ]の形式で取得します。
 * イメージデータ
-  UInt8の[10000, 28, 28]の形式
+  Numo::UInt8の[10000, 28, 28]の形式
 * テストデータ
-  UInt8の[10000]の形式
+  Numo::UInt8の[10000]の形式
 
 
 # dnn/lib/cifar10
@@ -54,9 +54,9 @@ CIFAR-10を扱うモジュールです。
 Array  
 [イメージデータ, ラベルデータ]の形式で取得します。
 * イメージデータ
-  UInt8の[50000, 3, 32, 32]の形式
+  Numo::UInt8の[50000, 3, 32, 32]の形式
 * テストデータ
-  UInt8の[50000]の形式
+  Numo::UInt8の[50000]の形式
 
 ## def self.load_test
 テスト用データを取得します。
@@ -66,9 +66,9 @@ Array
 Array  
 [イメージデータ, ラベルデータ]の形式で取得します。
 * イメージデータ
-  UInt8の[10000, 32, 32, 3]の形式
+  Numo::UInt8の[10000, 32, 32, 3]の形式
 * テストデータ
-  UInt8の[10000]の形式
+  Numo::UInt8の[10000]の形式
 
 
 # dnn/lib/image_io
@@ -78,20 +78,20 @@ Array
 # module ImageIO
 
 ## def self.read(file_name)
-画像をUInt8形式で読み込みます。
+画像をNumo::UInt8形式で読み込みます。
 ### arguments
 * String file_name  
 読み込む画像のファイル名。
 ### return
-UInt8  
-[height, width, rgb]のUInt8配列。
+Numo::UInt8  
+[height, width, rgb]のNumo::UInt8配列。
 
 ## def self.write(file_name, img, quality: 100)
-UInt8形式の画像を書き込みます。
+Numo::UInt8形式の画像を書き込みます。
 ### arguments
 * String file_name  
 書き込む画像のファイル名。
-* UInt8 img
-[height, width, rgb]のUInt8配列。
+* Numo::UInt8 img
+[height, width, rgb]のNumo::UInt8配列。
 * Integer quality: 100
 画像をJPEGで書き込む場合のクオリティ。

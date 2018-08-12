@@ -4,7 +4,7 @@ module DNN
 
     class Sigmoid < Layer
       def forward(x)
-        @out = 1 / (1 + NMath.exp(-x))
+        @out = 1 / (1 + Xumo::NMath.exp(-x))
       end
     
       def backward(dout)
@@ -14,15 +14,13 @@ module DNN
 
 
     class Tanh < Layer
-      include Xumo
-
       def forward(x)
         @x = x
-        NMath.tanh(x)
+        Xumo::NMath.tanh(x)
       end
       
       def backward(dout)
-        dout * (1.0 / NMath.cosh(@x)**2)
+        dout * (1.0 / Xumo::NMath.cosh(@x)**2)
       end
     end
     
@@ -43,8 +41,6 @@ module DNN
 
 
     class LeakyReLU < Layer
-      include Xumo
-
       attr_reader :alpha
 
       def initialize(alpha = 0.3)
@@ -57,7 +53,7 @@ module DNN
 
       def forward(x)
         @x = x.clone
-        a = SFloat.ones(x.shape)
+        a = Xumo::SFloat.ones(x.shape)
         a[x <= 0] = @alpha
         x * a
       end
@@ -144,7 +140,7 @@ module DNN
     
     class SoftmaxWithLoss < Layers::OutputLayer
       def forward(x)
-        @out = NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
+        @out = Xumo::NMath.exp(x) / Xumo::NMath.exp(x).sum(1).reshape(x.shape[0], 1)
       end
     
       def backward(y)
@@ -153,14 +149,12 @@ module DNN
     
       def loss(y)
         batch_size = y.shape[0]
-        -(y * NMath.log(@out + 1e-7)).sum / batch_size + ridge
+        -(y * Xumo::NMath.log(@out + 1e-7)).sum / batch_size + ridge
       end
     end
 
 
     class SigmoidWithLoss < Layers::OutputLayer
-      include Xumo
-
       def initialize
         @sigmoid = Sigmoid.new
       end
@@ -175,7 +169,7 @@ module DNN
 
       def loss(y)
         batch_size = y.shape[0]
-        -(y * NMath.log(@out + 1e-7) + (1 - y) * NMath.log(1 - @out + 1e-7)).sum / batch_size + ridge
+        -(y * Xumo::NMath.log(@out + 1e-7) + (1 - y) * Xumo::NMath.log(1 - @out + 1e-7)).sum / batch_size + ridge
       end
     end
 

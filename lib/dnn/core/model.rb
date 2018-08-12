@@ -3,8 +3,6 @@ require "json"
 module DNN
   # This class deals with the model of the network.
   class Model
-    include Xumo
-    
     attr_accessor :layers
     attr_reader :optimizer
     attr_reader :batch_size
@@ -36,7 +34,7 @@ module DNN
         next unless layer.is_a?(HasParamLayer)
         hash_params = has_param_layers_params[has_param_layers_index]
         hash_params.each do |key, param|
-          layer.params[key] = SFloat.cast(param)
+          layer.params[key] = Xumo::SFloat.cast(param)
         end
         has_param_layers_index += 1
       end
@@ -160,8 +158,8 @@ module DNN
       end
       correct = 0
       (x.shape[0].to_f / @batch_size).ceil.times do |i|
-        x_batch = SFloat.zeros(@batch_size, *x.shape[1..-1])
-        y_batch = SFloat.zeros(@batch_size, *y.shape[1..-1])
+        x_batch = Xumo::SFloat.zeros(@batch_size, *x.shape[1..-1])
+        y_batch = Xumo::SFloat.zeros(@batch_size, *y.shape[1..-1])
         @batch_size.times do |j|
           k = i * @batch_size + j
           break if k >= x.shape[0]
@@ -186,7 +184,7 @@ module DNN
     end
 
     def predict1(x)
-      predict(SFloat.cast([x]))[0, false]
+      predict(Xumo::SFloat.cast([x]))[0, false]
     end
   
     def forward(x, training)

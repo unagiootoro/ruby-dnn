@@ -7,7 +7,7 @@ module DNN
       def im2col(img, out_h, out_w, fil_h, fil_w, strides)
         bsize = img.shape[0]
         ch = img.shape[3]
-        col = SFloat.zeros(bsize, ch, fil_h, fil_w, out_h, out_w)
+        col = Xumo::SFloat.zeros(bsize, ch, fil_h, fil_w, out_h, out_w)
         img = img.transpose(0, 3, 1, 2)
         (0...fil_h).each do |i|
           i_range = (i...(i + strides[0] * out_h)).step(strides[0]).to_a
@@ -22,7 +22,7 @@ module DNN
       def col2im(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         bsize, img_h, img_w, ch = img_shape
         col = col.reshape(bsize, out_h, out_w, fil_h, fil_w, ch).transpose(0, 5, 3, 4, 1, 2)
-        img = SFloat.zeros(bsize, ch, img_h, img_w)
+        img = Xumo::SFloat.zeros(bsize, ch, img_h, img_w)
         (0...fil_h).each do |i|
           i_range = (i...(i + strides[0] * out_h)).step(strides[0]).to_a
           (0...fil_w).each do |j|
@@ -35,7 +35,7 @@ module DNN
 
       def padding(img, pad)
         bsize, img_h, img_w, ch = img.shape
-        img2 = SFloat.zeros(bsize, img_h + pad[0], img_w + pad[1], ch)
+        img2 = Xumo::SFloat.zeros(bsize, img_h + pad[0], img_w + pad[1], ch)
         i_begin = pad[0] / 2
         i_end = i_begin + img_h
         j_begin = pad[1] / 2
@@ -152,8 +152,8 @@ module DNN
     
       def init_params
         num_prev_filter = prev_layer.shape[2]
-        @params[:weight] = SFloat.new(num_prev_filter * @filter_size.reduce(:*), @num_filters)
-        @params[:bias] = SFloat.new(@num_filters)
+        @params[:weight] = Xumo::SFloat.new(num_prev_filter * @filter_size.reduce(:*), @num_filters)
+        @params[:bias] = Xumo::SFloat.new(@num_filters)
         @weight_initializer.init_param(self, :weight)
         @bias_initializer.init_param(self, :bias)
       end
@@ -230,7 +230,7 @@ module DNN
       end
 
       def backward(dout)
-        dmax = SFloat.zeros(dout.size * @pool_size.reduce(:*))
+        dmax = Xumo::SFloat.zeros(dout.size * @pool_size.reduce(:*))
         dmax[@max_index] = dout.flatten
         dcol = dmax.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
         super(dcol)
@@ -251,7 +251,7 @@ module DNN
       def backward(dout)
         row_length = @pool_size.reduce(:*)
         dout /= row_length
-        davg = SFloat.zeros(dout.size, row_length)
+        davg = Xumo::SFloat.zeros(dout.size, row_length)
         row_length.times do |i|
           davg[true, i] = dout.flatten
         end
@@ -286,7 +286,7 @@ module DNN
       def forward(x)
         @x_shape = x.shape
         unpool_h, unpool_w = @unpool_size
-        x2 = SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
+        x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
         x2[true, true, 0, true, 0, true] = x
         x2.reshape(x.shape[0], *@out_size, x.shape[3])
       end

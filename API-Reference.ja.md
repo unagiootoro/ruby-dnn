@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.9
+最終更新バージョン:0.5.10
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -101,9 +101,9 @@ bool
 ## def train(x, y, epochs, batch_size: 1, test: nil, verbose: true, batch_proc: nil, &epoch_proc)
 コンパイルしたモデルを用いて学習を行います。
 ### arguments
-* SFloat x  
+* Numo::SFloat x  
 トレーニング用入力データ。
-* SFloat y  
+* Numo::SFloat y  
 トレーニング用出力データ。
 * epochs  
 学習回数。
@@ -124,9 +124,9 @@ epoch_proc
 ## def train_on_batch(x, y, batch_size, &batch_proc)
 入力されたバッチデータをもとに、一度だけ学習を行います。
 ### arguments
-* SFloat x
+* Numo::SFloat x
 トレーニング用入力バッチデータ。
-* SFloat y
+* Numo::SFloat y
 トレーニング用出力バッチデータ。
 * Integer batch_size
 学習に使用するミニバッチの数。
@@ -139,9 +139,9 @@ Integer
 ## def accurate(x, y, batch_size = nil, &batch_proc)
 学習結果をもとに認識率を返します。
 ### arguments
-* SFloat x  
+* Numo::SFloat x  
 テスト用入力データ。
-* SFloat y  
+* Numo::SFloat y  
 テスト用出力データ。
 * batch_size  
 ミニバッチの数。学習を行っていないモデルのテストを行いたい場合等に使用します。
@@ -155,20 +155,20 @@ Float
 モデルを使用して、結果の推論を行います。
 入力データは、バッチデータである必要があります。
 ### arguments
-* SFloat x  
+* Numo::SFloat x  
 推論用入力データ。
 ### return
-SFloat
+Numo::SFloat
 推論結果を返します。
 
 ## def predict1(x)
 モデルを使用して、結果の推論を行います。
 predictとは異なり、一つの入力データに対して、一つの出力データを返します。
 ### arguments
-* SFloat x  
+* Numo::SFloat x  
 推論用入力データ。
 ### return
-SFloat
+Numo::SFloat
 推論結果を返します。
 
 
@@ -200,19 +200,19 @@ bool
 ## abstruct def forward(x)  
 順方向伝搬を行うメソッドです。Layerクラスを継承するクラスは、このメソッドを実装する必要があります。
 ### arguments
-* SFloat x  
+* Numo::SFloat x  
 入力データ。
 ### return
-SFloat  
+Numo::SFloat  
 出力データ。
 
 ## abstruct def backward(dout)
 逆方向伝搬を行うメソッドです。Layerクラスを継承するクラスは、このメソッドを実装する必要があります。
 ### arguments
-* SFloat dout  
+* Numo::SFloat dout  
 逆方向から伝搬してきた微分値。
 ### return
-SFloat  
+Numo::SFloat  
 逆方向に伝搬する微分値。
 
 ## def shape
@@ -458,7 +458,7 @@ N次元のデータを平坦化します。
 ## abstruct def backward(y)
 出力層の活性化関数と損失関数を合わせたものを微分した導関数を用いて、教師データの出力データを逆方向に伝搬します。
 ### arguments
-SFloat y
+Numo::SFloat y
 出力データ。
 ### return
 出力層の活性化関数と損失関数の微分値。
@@ -466,7 +466,7 @@ SFloat y
 ## abstruct def loss
 損失関数の値を取得します。
 ### arguments
-SFloat y  
+Numo::SFloat y  
 出力データ。
 ### return
 損失関数の値。
@@ -575,7 +575,7 @@ Float alpha
 更新対象のパラメータを持つレイヤーを指定します。
 * Symbol param_key  
 更新す対象のパラメータの名前を指定します。
-* SFloat param  
+* Numo::SFloat param  
 更新するパラメータです。
 
 
@@ -731,9 +731,9 @@ Float beta2
 ## def self.get_minibatch(x, y, batch_size)
 batch_size分のミニバッチを取得します。
 ### arguments
-* SFloat x  
+* Numo::SFloat x  
   教師データの入力データ。
-* SFloat y  
+* Numo::SFloat y  
   教師データの出力データ。
 * Integer batch_size  
   ミニバッチのサイズ。
@@ -744,7 +744,7 @@ Array
 ## def self.to_categorical(y, num_classes, type = nil)
 ラベルをnum_classesのベクトルにカテゴライズします。
 ### arguments
-* SFloat y  
+* Numo::SFloat y  
   教師データの出力データ。
 *  Integer num_classes  
   カテゴライズするクラス数。

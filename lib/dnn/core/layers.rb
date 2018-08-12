@@ -3,8 +3,6 @@ module DNN
 
     # Super class of all optimizer classes.
     class Layer
-      include Xumo
-
       def initialize
         @built = false
       end
@@ -161,8 +159,8 @@ module DNN
     
       def init_params
         num_prev_nodes = prev_layer.shape[0]
-        @params[:weight] = SFloat.new(num_prev_nodes, @num_nodes)
-        @params[:bias] = SFloat.new(@num_nodes)
+        @params[:weight] = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
+        @params[:bias] = Xumo::SFloat.new(@num_nodes)
         @weight_initializer.init_param(self, :weight)
         @bias_initializer.init_param(self, :bias)
       end
@@ -238,7 +236,7 @@ module DNN
     
       def forward(x)
         if @model.training?
-          @mask = SFloat.ones(*x.shape).rand < @dropout_ratio
+          @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
           x[@mask] = 0
         else
           x *= (1 - @dropout_ratio)
@@ -261,8 +259,8 @@ module DNN
       attr_reader :momentum
 
       def self.load_hash(hash)
-        running_mean = SFloat.cast(hash[:running_mean])
-        running_var = SFloat.cast(hash[:running_var])
+        running_mean = Xumo::SFloat.cast(hash[:running_mean])
+        running_var = Xumo::SFloat.cast(hash[:running_var])
         self.new(momentum: hash[:momentum], running_mean: running_mean, running_var: running_var)
       end
 
@@ -275,8 +273,8 @@ module DNN
 
       def build(model)
         super
-        @running_mean ||= SFloat.zeros(*shape)
-        @running_var ||= SFloat.zeros(*shape)
+        @running_mean ||= Xumo::SFloat.zeros(*shape)
+        @running_var ||= Xumo::SFloat.zeros(*shape)
       end
 
       def forward(x)
@@ -284,14 +282,14 @@ module DNN
           mean = x.mean(0)
           @xc = x - mean
           var = (@xc**2).mean(0)
-          @std = NMath.sqrt(var + 1e-7)
+          @std = Xumo::NMath.sqrt(var + 1e-7)
           xn = @xc / @std
           @xn = xn
           @running_mean = @momentum * @running_mean + (1 - @momentum) * mean
           @running_var = @momentum * @running_var + (1 - @momentum) * var
         else
           xc = x - @running_mean
-          xn = xc / NMath.sqrt(@running_var + 1e-7)
+          xn = xc / Xumo::NMath.sqrt(@running_var + 1e-7)
         end
         @params[:gamma] * xn + @params[:beta]
       end
@@ -318,8 +316,8 @@ module DNN
       private
     
       def init_params
-        @params[:gamma] = SFloat.ones(*shape)
-        @params[:beta] = SFloat.zeros(*shape)
+        @params[:gamma] = Xumo::SFloat.ones(*shape)
+        @params[:beta] = Xumo::SFloat.zeros(*shape)
       end
     end
   end

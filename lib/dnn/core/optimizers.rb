@@ -88,7 +88,7 @@ module DNN
         layer.params.each_key do |key|
           @g[layer][key] ||= 0
           @g[layer][key] += layer.grads[key]**2
-          layer.params[key] -= (@learning_rate / NMath.sqrt(@g[layer][key] + 1e-7)) * layer.grads[key]
+          layer.params[key] -= (@learning_rate / Xumo::NMath.sqrt(@g[layer][key] + 1e-7)) * layer.grads[key]
         end
       end
     end
@@ -112,7 +112,7 @@ module DNN
         layer.params.each_key do |key|
           @g[layer][key] ||= 0
           @g[layer][key] = @muse * @g[layer][key] + (1 - @muse) * layer.grads[key]**2
-          layer.params[key] -= (@learning_rate / NMath.sqrt(@g[layer][key] + 1e-7)) * layer.grads[key]
+          layer.params[key] -= (@learning_rate / Xumo::NMath.sqrt(@g[layer][key] + 1e-7)) * layer.grads[key]
         end
       end
 
@@ -123,8 +123,6 @@ module DNN
 
 
     class Adam < Optimizer
-      include Xumo
-      
       attr_accessor :beta1
       attr_accessor :beta2
 
@@ -151,7 +149,7 @@ module DNN
           @v[layer][key] ||= 0
           @m[layer][key] += (1 - @beta1) * (layer.grads[key] - @m[layer][key])
           @v[layer][key] += (1 - @beta2) * (layer.grads[key]**2 - @v[layer][key])
-          layer.params[key] -= lr * @m[layer][key] / NMath.sqrt(@v[layer][key] + 1e-7)
+          layer.params[key] -= lr * @m[layer][key] / Xumo::NMath.sqrt(@v[layer][key] + 1e-7)
         end
       end
 

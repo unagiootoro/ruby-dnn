@@ -6,8 +6,8 @@ include DNN::Activations
 include DNN::Optimizers
 Model = DNN::Model
 
-x = SFloat[[0, 0], [1, 0], [0, 1], [1, 1]]
-y = SFloat[[0], [1], [1], [0]]
+x = Numo::SFloat[[0, 0], [1, 0], [0, 1], [1, 1]]
+y = Numo::SFloat[[0], [1], [1], [0]]
 
 model = Model.new
 
