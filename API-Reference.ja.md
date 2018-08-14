@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.10
+最終更新バージョン:0.5.11
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -414,13 +414,16 @@ Float
 
 ## 【Instance methods】
 
-## def initialize(num_nodes, stateful: false, weight_initializer: nil, bias_initializer: nil, weight_decay: 0)
+## def initialize(num_nodes, stateful: false, return_sequences: true, weight_initializer: nil, bias_initializer: nil, weight_decay: 0)
 コンストラクタ。
 ### arguments
 * Integer num_nodes  
 レイヤーのノード数を設定します。
 * bool stateful
 trueを設定すると、一つ前に計算した中間層の値を使用して学習を行うことができます。
+* bool return_sequences
+trueを設定すると、時系列ネットワークの中間層全てを出力します。  
+falseを設定すると、時系列ネットワークの中間層の最後のみを出力します。
 * Layer activation
 リカレントニューラルネットワークにおいて、使用する活性化関数を設定します。
 nilを指定すると、Tanhが使用されます。

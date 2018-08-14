@@ -15,12 +15,11 @@ module DNN
 
     class Tanh < Layer
       def forward(x)
-        @x = x
-        Xumo::NMath.tanh(x)
+        @out = Xumo::NMath.tanh(x)
       end
       
       def backward(dout)
-        dout * (1.0 / Xumo::NMath.cosh(@x)**2)
+        dout * (1 - @out**2)
       end
     end
     

@@ -38,6 +38,7 @@ module DNN
       def self.load_hash(hash)
         self.new(hash[:num_nodes],
                  stateful: hash[:stateful],
+                 return_sequences: hash[:return_sequences],
                  activation: Util.load_hash(hash[:activation]),
                  weight_initializer: Util.load_hash(hash[:weight_initializer]),
                  bias_initializer: Util.load_hash(hash[:bias_initializer]),
@@ -46,6 +47,7 @@ module DNN
 
       def initialize(num_nodes,
                      stateful: false,
+                     return_sequences: true,
                      activation: nil,
                      weight_initializer: nil,
                      bias_initializer: nil,
@@ -53,6 +55,7 @@ module DNN
         super()
         @num_nodes = num_nodes
         @stateful = stateful
+        @return_sequences = return_sequences
         @activation = (activation || Tanh.new)
         @weight_initializer = (weight_initializer || RandomNormal.new)
         @bias_initializer = (bias_initializer || Zeros.new)
@@ -63,7 +66,7 @@ module DNN
 
       def forward(xs)
         @xs_shape = xs.shape
-        hs = Xumo::SFloat.zeros(xs.shape[0], *shape)
+        hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
         h = (@stateful && @h) ? @h : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
@@ -71,13 +74,18 @@ module DNN
           hs[true, t, false] = h
         end
         @h = h
-        hs
+        @return_sequences ? hs : h
       end
 
       def backward(dh2s)
         @grads[:weight] = Xumo::SFloat.zeros(*@params[:weight].shape)
         @grads[:weight2] = Xumo::SFloat.zeros(*@params[:weight2].shape)
         @grads[:bias] = Xumo::SFloat.zeros(*@params[:bias].shape)
+        unless @return_sequences
+          dh = dh2s
+          dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
+          dh2s[true, -1, false] = dh
+        end
         dxs = Xumo::SFloat.zeros(@xs_shape)
         dh = 0
         (0...dh2s.shape[1]).to_a.reverse.each do |t|
@@ -89,7 +97,7 @@ module DNN
       end
 
       def shape
-        [@time_length, @num_nodes]
+        @return_sequences ? [@time_length, @num_nodes] : [@num_nodes]
       end
 
       def ridge
@@ -103,6 +111,7 @@ module DNN
       def to_hash
         super({num_nodes: @num_nodes,
                stateful: @stateful,
+               return_sequences: @return_sequences,
                activation: @activation.to_hash,
                weight_initializer: @weight_initializer.to_hash,
                bias_initializer: @bias_initializer.to_hash,
@@ -112,7 +121,7 @@ module DNN
       private
     
       def init_params
-        @time_length = prev_layer.shape[0] 
+        @time_length = prev_layer.shape[0]
         num_prev_nodes = prev_layer.shape[1]
         @params[:weight] = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
         @params[:weight2] = Xumo::SFloat.new(@num_nodes, @num_nodes)
@@ -128,8 +137,6 @@ module DNN
 
 
     class LSTM_Dense
-      include Xumo
-
       def initialize(params, grads)
         @params = params
         @grads = grads
@@ -148,8 +155,8 @@ module DNN
         a = x.dot(@params[:weight]) + h.dot(@params[:weight2]) + @params[:bias]
 
         @forget = @forget_sigmoid.forward(a[true, 0...num_nodes])
-        @g = @g_tanh.forward(a[(num_nodes * 2)...(num_nodes * 3)])
-        @in = @in_sigmoid.forward(a[true, num_nodes...(num_nodes * 2)])
+        @g = @g_tanh.forward(a[true, num_nodes...(num_nodes * 2)])
+        @in = @in_sigmoid.forward(a[true, (num_nodes * 2)...(num_nodes * 3)])
         @out = @out_sigmoid.forward(a[true, (num_nodes * 3)..-1])
 
         @cell2 = @forget * cell + @g * @in
@@ -192,6 +199,7 @@ module DNN
       def self.load_hash(hash)
         self.new(hash[:num_nodes],
                  stateful: hash[:stateful],
+                 return_sequences: hash[:return_sequences],
                  weight_initializer: Util.load_hash(hash[:weight_initializer]),
                  bias_initializer: Util.load_hash(hash[:bias_initializer]),
                  weight_decay: hash[:weight_decay])
@@ -199,12 +207,14 @@ module DNN
 
       def initialize(num_nodes,
                      stateful: false,
+                     return_sequences: true,
                      weight_initializer: nil,
                      bias_initializer: nil,
                      weight_decay: 0)
         super()
         @num_nodes = num_nodes
         @stateful = stateful
+        @return_sequences = return_sequences
         @weight_initializer = (weight_initializer || RandomNormal.new)
         @bias_initializer = (bias_initializer || Zeros.new)
         @weight_decay = weight_decay
@@ -215,7 +225,7 @@ module DNN
 
       def forward(xs)
         @xs_shape = xs.shape
-        hs = Xumo::SFloat.zeros(xs.shape[0], *shape)
+        hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
         h = nil
         cell = nil
         if @stateful
@@ -231,13 +241,18 @@ module DNN
         end
         @h = h
         @cell = cell
-        hs
+        @return_sequences ? hs : h
       end
 
       def backward(dh2s)
         @grads[:weight] = Xumo::SFloat.zeros(*@params[:weight].shape)
         @grads[:weight2] = Xumo::SFloat.zeros(*@params[:weight2].shape)
         @grads[:bias] = Xumo::SFloat.zeros(*@params[:bias].shape)
+        unless @return_sequences
+          dh = dh2s
+          dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
+          dh2s[true, -1, false] = dh
+        end
         dxs = Xumo::SFloat.zeros(@xs_shape)
         dh = 0
         dcell = 0
@@ -250,7 +265,7 @@ module DNN
       end
 
       def shape
-        [@time_length, @num_nodes]
+        @return_sequences ? [@time_length, @num_nodes] : [@num_nodes]
       end
 
       def ridge
@@ -264,6 +279,7 @@ module DNN
       def to_hash
         super({num_nodes: @num_nodes,
                stateful: @stateful,
+               return_sequences: @return_sequences,
                weight_initializer: @weight_initializer.to_hash,
                bias_initializer: @bias_initializer.to_hash,
                weight_decay: @weight_decay})
