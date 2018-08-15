@@ -1,6 +1,65 @@
 module DNN
   module Layers
 
+    # Super class of all RNN classes.
+    class RNN < HasParamLayer
+      include Initializers
+      include Activations
+
+      attr_reader :num_nodes
+      attr_reader :stateful
+      attr_reader :weight_decay
+
+      def initialize(num_nodes,
+                     stateful: false,
+                     return_sequences: true,
+                     weight_initializer: nil,
+                     bias_initializer: nil,
+                     weight_decay: 0)
+      super()
+      @num_nodes = num_nodes
+      @stateful = stateful
+      @return_sequences = return_sequences
+      @weight_initializer = (weight_initializer || RandomNormal.new)
+      @bias_initializer = (bias_initializer || Zeros.new)
+      @weight_decay = weight_decay
+      @layers = []
+      @h = nil
+      end
+
+      def to_hash(merge_hash = nil)
+        hash = {
+          name: self.class.name,
+          num_nodes: @num_nodes,
+          stateful: @stateful,
+          return_sequences: @return_sequences,
+          activation: @activation.to_hash,
+          weight_initializer: @weight_initializer.to_hash,
+          bias_initializer: @bias_initializer.to_hash,
+          weight_decay: @weight_decay,
+        }
+        hash.merge!(merge_hash) if merge_hash
+        hash
+      end
+
+      def shape
+        @return_sequences ? [@time_length, @num_nodes] : [@num_nodes]
+      end
+
+      def ridge
+        if @weight_decay > 0
+          0.5 * (@weight_decay * (@params[:weight]**2).sum + @weight_decay * (@params[:weight]**2).sum)
+        else
+          0
+        end
+      end
+
+      def init_params
+        @time_length = prev_layer.shape[0]
+      end
+    end
+
+
     class SimpleRNN_Dense
       def initialize(params, grads, activation)
         @params = params
@@ -27,14 +86,7 @@ module DNN
     end
 
 
-    class SimpleRNN < HasParamLayer
-      include Initializers
-      include Activations
-
-      attr_reader :num_nodes
-      attr_reader :stateful
-      attr_reader :weight_decay
-
+    class SimpleRNN < RNN
       def self.load_hash(hash)
         self.new(hash[:num_nodes],
                  stateful: hash[:stateful],
@@ -52,16 +104,13 @@ module DNN
                      weight_initializer: nil,
                      bias_initializer: nil,
                      weight_decay: 0)
-        super()
-        @num_nodes = num_nodes
-        @stateful = stateful
-        @return_sequences = return_sequences
+        super(num_nodes,
+              stateful: stateful,
+              return_sequences: return_sequences,
+              weight_initializer: weight_initializer,
+              bias_initializer: bias_initializer,
+              weight_decay: weight_decay)
         @activation = (activation || Tanh.new)
-        @weight_initializer = (weight_initializer || RandomNormal.new)
-        @bias_initializer = (bias_initializer || Zeros.new)
-        @weight_decay = weight_decay
-        @layers = []
-        @h = nil
       end
 
       def forward(xs)
@@ -96,32 +145,14 @@ module DNN
         dxs
       end
 
-      def shape
-        @return_sequences ? [@time_length, @num_nodes] : [@num_nodes]
-      end
-
-      def ridge
-        if @weight_decay > 0
-          0.5 * (@weight_decay * (@params[:weight]**2).sum + @weight_decay * (@params[:weight]**2).sum)
-        else
-          0
-        end
-      end
-
       def to_hash
-        super({num_nodes: @num_nodes,
-               stateful: @stateful,
-               return_sequences: @return_sequences,
-               activation: @activation.to_hash,
-               weight_initializer: @weight_initializer.to_hash,
-               bias_initializer: @bias_initializer.to_hash,
-               weight_decay: @weight_decay})
+        super({activation: @activation.to_hash})
       end
 
       private
     
       def init_params
-        @time_length = prev_layer.shape[0]
+        super()
         num_prev_nodes = prev_layer.shape[1]
         @params[:weight] = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
         @params[:weight2] = Xumo::SFloat.new(@num_nodes, @num_nodes)
@@ -187,15 +218,7 @@ module DNN
     end
 
 
-    # In development
-    class LSTM < HasParamLayer
-      include Initializers
-      include Activations
-
-      attr_reader :num_nodes
-      attr_reader :stateful
-      attr_reader :weight_decay
-
+    class LSTM < RNN
       def self.load_hash(hash)
         self.new(hash[:num_nodes],
                  stateful: hash[:stateful],
@@ -211,16 +234,7 @@ module DNN
                      weight_initializer: nil,
                      bias_initializer: nil,
                      weight_decay: 0)
-        super()
-        @num_nodes = num_nodes
-        @stateful = stateful
-        @return_sequences = return_sequences
-        @weight_initializer = (weight_initializer || RandomNormal.new)
-        @bias_initializer = (bias_initializer || Zeros.new)
-        @weight_decay = weight_decay
-        @layers = []
-        @h = nil
-        @cell = nil
+        super
       end
 
       def forward(xs)
@@ -264,31 +278,10 @@ module DNN
         dxs
       end
 
-      def shape
-        @return_sequences ? [@time_length, @num_nodes] : [@num_nodes]
-      end
-
-      def ridge
-        if @weight_decay > 0
-          0.5 * (@weight_decay * (@params[:weight]**2).sum + @weight_decay * (@params[:weight]**2).sum)
-        else
-          0
-        end
-      end
-
-      def to_hash
-        super({num_nodes: @num_nodes,
-               stateful: @stateful,
-               return_sequences: @return_sequences,
-               weight_initializer: @weight_initializer.to_hash,
-               bias_initializer: @bias_initializer.to_hash,
-               weight_decay: @weight_decay})
-      end
-
       private
     
       def init_params
-        @time_length = prev_layer.shape[0] 
+        super()
         num_prev_nodes = prev_layer.shape[1]
         @params[:weight] = Xumo::SFloat.new(num_prev_nodes, @num_nodes * 4)
         @params[:weight2] = Xumo::SFloat.new(@num_nodes, @num_nodes * 4)

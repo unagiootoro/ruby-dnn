@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.11
+最終更新バージョン:0.5.12
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -395,8 +395,8 @@ Array
 Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
 
 
-# class SimpleRNN < HasParamLayer
-リカレントニューラルネットワークのレイヤーを扱うクラスです。
+# class RNN < HasParamLayer
+全てのリカレントニューラルネットワークのレイヤーのスーパークラスです。
 
 ## 【Properties】
 
@@ -419,6 +419,31 @@ Float
 ### arguments
 * Integer num_nodes  
 レイヤーのノード数を設定します。
+* bool stateful  
+trueを設定すると、一つ前に計算した中間層の値を使用して学習を行うことができます。
+* bool return_sequences
+trueを設定すると、時系列ネットワークの中間層全てを出力します。  
+falseを設定すると、時系列ネットワークの中間層の最後のみを出力します。
+* Initializer weight_initializer: nil  
+重みの初期化に使用するイニシャライザーを設定します。
+nilを指定すると、RandomNormalイニシャライザーが使用されます。  
+* Initializer bias_initializer: nil  
+バイアスの初期化に使用するイニシャライザーを設定します。
+nilを指定すると、Zerosイニシャライザーが使用されます。
+* Float weight_decay: 0
+重み減衰の係数を設定します。
+
+
+# class SimpleRNN < RNN
+シンプルなRNNレイヤーを扱うクラスです。
+
+## 【Instance methods】
+
+## def initialize(num_nodes, stateful: false, return_sequences: true,  activation: nil, weight_initializer: nil, bias_initializer: nil, weight_decay: 0)
+コンストラクタ。
+### arguments
+* Integer num_nodes  
+レイヤーのノード数を設定します。
 * bool stateful
 trueを設定すると、一つ前に計算した中間層の値を使用して学習を行うことができます。
 * bool return_sequences
@@ -435,6 +460,10 @@ nilを指定すると、RandomNormalイニシャライザーが使用されま�
 nilを指定すると、Zerosイニシャライザーが使用されます。
 * Float weight_decay: 0
 重み減衰の係数を設定します。
+
+
+# class LSTM < RNN
+LSTMレイヤーを扱うクラスです。
 
 
 # class Flatten
