@@ -2,15 +2,23 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.5.12
+最終更新バージョン:0.6.1
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
 
 ## 【Constants】
+
 ## VERSION
 ruby-dnnのバージョン。
 
+## 【Properties】
+
+## attr_accessor :layer
+モデルに追加されたレイヤーの配列を取得します。
+
+## attr_reader :optimize
+モデルのオプティマイザーを取得します。
 
 # class Model
  ニューラルネットワークのモデルを作成するクラスです。
@@ -121,22 +129,20 @@ epoch_proc
 ### return
 なし。
 
-## def train_on_batch(x, y, batch_size, &batch_proc)
+## def train_on_batch(x, y, &batch_proc)
 入力されたバッチデータをもとに、一度だけ学習を行います。
 ### arguments
 * Numo::SFloat x
 トレーニング用入力バッチデータ。
 * Numo::SFloat y
 トレーニング用出力バッチデータ。
-* Integer batch_size
-学習に使用するミニバッチの数。
 ### block
 一度のバッチ学習が行われる前に呼び出されます。
 ### return
 Integer  
 損失関数の値を返します。
 
-## def accurate(x, y, batch_size = nil, &batch_proc)
+## def accurate(x, y, batch_size = 1, &batch_proc)
 学習結果をもとに認識率を返します。
 ### arguments
 * Numo::SFloat x  
@@ -144,7 +150,7 @@ Integer
 * Numo::SFloat y  
 テスト用出力データ。
 * batch_size  
-ミニバッチの数。学習を行っていないモデルのテストを行いたい場合等に使用します。
+ミニバッチの数。
 ### block
 一度のバッチ学習が行われる前に呼び出されます。
 ### return
@@ -400,6 +406,11 @@ Arrayで指定する場合、[Integer height, Integer width]の形式で指定�
 
 ## 【Properties】
 
+## attr_accessor :h
+Numo::SFloat  
+中間層の現在のステートを取得します。
+nilを設定することで、中間層のステートをリセットすることができます。
+
 ## attr_reader :num_nodes
 Integer  
 レイヤーのノード数を取得します。
@@ -464,6 +475,13 @@ nilを指定すると、Zerosイニシャライザーが使用されます。
 
 # class LSTM < RNN
 LSTMレイヤーを扱うクラスです。
+
+## 【Properties】
+
+## attr_accessor :cell
+Numo::SFloat  
+中間層の現在のセルステートを取得します。
+nilを設定することで、中間層のセルステートをリセットすることができます。
 
 
 # class Flatten
