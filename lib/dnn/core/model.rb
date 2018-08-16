@@ -5,7 +5,6 @@ module DNN
   class Model
     attr_accessor :layers
     attr_reader :optimizer
-    attr_reader :batch_size
 
     def self.load(file_name)
       Marshal.load(File.binread(file_name))
