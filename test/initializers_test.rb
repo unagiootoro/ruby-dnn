@@ -1,12 +1,10 @@
 require "test_helper"
 
-include Numo
-include DNN::Layers
-include DNN::Activations
-include DNN::Optimizers
-include DNN::Initializers
-Util = DNN::Util
-Model = DNN::Model
+include DNN
+include Layers
+include Activations
+include Optimizers
+include Initializers
 
 class TestInitializer < MiniTest::Unit::TestCase
   def test_init_param
@@ -17,7 +15,7 @@ class TestInitializer < MiniTest::Unit::TestCase
     model << dense
     model << IdentityMSE.new
     model.compile(SGD.new)
-    zeros = SFloat.zeros(dense.params[:weight].shape)
+    zeros = Numo::SFloat.zeros(dense.params[:weight].shape)
     initializer.init_param(dense, :weight, zeros)
     assert_equal zeros, dense.params[:weight]
   end
@@ -26,7 +24,7 @@ class TestInitializer < MiniTest::Unit::TestCase
     initializer = Initializer.new
     hash = initializer.to_hash({mean: 0, std: 0.05})
     expected_hash = {
-      name: "DNN::Initializers::Initializer",
+      class: "DNN::Initializers::Initializer",
       mean: 0,
       std: 0.05,
     }
@@ -44,7 +42,7 @@ class TestZeros < MiniTest::Unit::TestCase
     model << dense
     model << IdentityMSE.new
     model.compile(SGD.new)
-    zeros = SFloat.zeros(dense.params[:weight].shape)
+    zeros = Numo::SFloat.zeros(dense.params[:weight].shape)
     initializer.init_param(dense, :weight)
     assert_equal zeros, dense.params[:weight]
   end
@@ -74,13 +72,13 @@ class TestRandomNorm < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     initializer.init_param(dense, :weight)
-    assert_kind_of SFloat, dense.params[:weight]
+    assert_kind_of Numo::SFloat, dense.params[:weight]
   end
 
   def test_to_hash
     initializer = RandomNormal.new
     expected_hash = {
-      name: "DNN::Initializers::RandomNormal",
+      class: "DNN::Initializers::RandomNormal",
       mean: 0,
       std: 0.05,
     }
@@ -99,7 +97,7 @@ class TestXavier < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     initializer.init_param(dense, :weight)
-    assert_kind_of SFloat, dense.params[:weight]
+    assert_kind_of Numo::SFloat, dense.params[:weight]
   end
 end
 
@@ -114,6 +112,6 @@ class TestHe < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     initializer.init_param(dense, :weight)
-    assert_kind_of SFloat, dense.params[:weight]
+    assert_kind_of Numo::SFloat, dense.params[:weight]
   end
 end

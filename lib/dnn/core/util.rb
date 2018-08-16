@@ -24,7 +24,7 @@ module DNN
 
     # Convert hash to an object.
     def self.load_hash(hash)
-      dnn_class = DNN.const_get(hash[:name])
+      dnn_class = DNN.const_get(hash[:class])
       if dnn_class.respond_to?(:load_hash)
         return dnn_class.load_hash(hash)
       end

@@ -13,7 +13,7 @@ module DNN
       def update(layer) end
 
       def to_hash(merge_hash = nil)
-        hash = {name: self.class.name, learning_rate: @learning_rate}
+        hash = {class: self.class.name, learning_rate: @learning_rate}
         hash.merge!(merge_hash) if merge_hash
         hash
       end

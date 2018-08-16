@@ -6,6 +6,7 @@ module DNN
       include Initializers
       include Activations
 
+      attr_accessor :h
       attr_reader :num_nodes
       attr_reader :stateful
       attr_reader :weight_decay
@@ -29,7 +30,7 @@ module DNN
 
       def to_hash(merge_hash = nil)
         hash = {
-          name: self.class.name,
+          class: self.class.name,
           num_nodes: @num_nodes,
           stateful: @stateful,
           return_sequences: @return_sequences,
@@ -48,7 +49,7 @@ module DNN
 
       def ridge
         if @weight_decay > 0
-          0.5 * (@weight_decay * (@params[:weight]**2).sum + @weight_decay * (@params[:weight]**2).sum)
+          0.5 * (@weight_decay * ((@params[:weight]**2).sum + (@params[:weight2]**2).sum))
         else
           0
         end
@@ -219,6 +220,8 @@ module DNN
 
 
     class LSTM < RNN
+      attr_accessor :cell
+
       def self.load_hash(hash)
         self.new(hash[:num_nodes],
                  stateful: hash[:stateful],
@@ -235,6 +238,7 @@ module DNN
                      bias_initializer: nil,
                      weight_decay: 0)
         super
+        @cell = nil
       end
 
       def forward(xs)

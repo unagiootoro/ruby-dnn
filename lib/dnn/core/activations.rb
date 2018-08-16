@@ -1,8 +1,7 @@
 module DNN
   module Activations
-    Layer = Layers::Layer
 
-    class Sigmoid < Layer
+    class Sigmoid < Layers::Layer
       def forward(x)
         @out = 1 / (1 + Xumo::NMath.exp(-x))
       end
@@ -13,7 +12,7 @@ module DNN
     end
 
 
-    class Tanh < Layer
+    class Tanh < Layers::Layer
       def forward(x)
         @out = Xumo::NMath.tanh(x)
       end
@@ -24,7 +23,7 @@ module DNN
     end
     
     
-    class ReLU < Layer
+    class ReLU < Layers::Layer
       def forward(x)
         @x = x.clone
         x[x < 0] = 0
@@ -39,7 +38,7 @@ module DNN
     end
 
 
-    class LeakyReLU < Layer
+    class LeakyReLU < Layers::Layer
       attr_reader :alpha
 
       def initialize(alpha = 0.3)
@@ -64,7 +63,7 @@ module DNN
       end
 
       def to_hash
-        {name: self.class.name, alpha: alpha}
+        {class: self.class.name, alpha: alpha}
       end
     end
 

@@ -22,7 +22,6 @@ module DNN
     def initialize
       @layers = []
       @optimizer = nil
-      @batch_size = nil
       @training = false
       @compiled = false
     end
@@ -103,13 +102,12 @@ module DNN
       unless compiled?
         raise DNN_Error.new("The model is not compiled.")
       end
-      @batch_size = batch_size
       num_train_data = x.shape[0]
       (1..epochs).each do |epoch|
         puts "【 epoch #{epoch}/#{epochs} 】" if verbose
-        (num_train_data.to_f / @batch_size).ceil.times do |index|
-          x_batch, y_batch = Util.get_minibatch(x, y, @batch_size)
-          loss = train_on_batch(x_batch, y_batch, @batch_size, &batch_proc)
+        (num_train_data.to_f / batch_size).ceil.times do |index|
+          x_batch, y_batch = Util.get_minibatch(x, y, batch_size)
+          loss = train_on_batch(x_batch, y_batch, &batch_proc)
           if loss.nan?
             puts "\nloss is nan" if verbose
             return
@@ -130,7 +128,7 @@ module DNN
           print log if verbose
         end
         if verbose && test
-          acc = accurate(test[0], test[1], batch_size,&batch_proc)
+          acc = accurate(test[0], test[1], batch_size, &batch_proc)
           print "  accurate: #{acc}"
         end
         puts "" if verbose
@@ -138,8 +136,7 @@ module DNN
       end
     end
   
-    def train_on_batch(x, y, batch_size, &batch_proc)
-      @batch_size = batch_size
+    def train_on_batch(x, y, &batch_proc)
       x, y = batch_proc.call(x, y) if batch_proc
       forward(x, true)
       loss = @layers[-1].loss(y)
@@ -148,27 +145,21 @@ module DNN
       loss
     end
   
-    def accurate(x, y, batch_size = nil, &batch_proc)
-      unless batch_size
-        if @batch_size
-          batch_size = @batch_size >= x.shape[0] ? @batch_size : x.shape[0]
-        else
-          batch_size = 1
-        end
-      end
+    def accurate(x, y, batch_size = 1, &batch_proc)
+      batch_size = batch_size >= x.shape[0] ? batch_size : x.shape[0]
       correct = 0
-      (x.shape[0].to_f / @batch_size).ceil.times do |i|
-        x_batch = Xumo::SFloat.zeros(@batch_size, *x.shape[1..-1])
-        y_batch = Xumo::SFloat.zeros(@batch_size, *y.shape[1..-1])
-        @batch_size.times do |j|
-          k = i * @batch_size + j
+      (x.shape[0].to_f / batch_size).ceil.times do |i|
+        x_batch = Xumo::SFloat.zeros(batch_size, *x.shape[1..-1])
+        y_batch = Xumo::SFloat.zeros(batch_size, *y.shape[1..-1])
+        batch_size.times do |j|
+          k = i * batch_size + j
           break if k >= x.shape[0]
           x_batch[j, false] = x[k, false]
           y_batch[j, false] = y[k, false]
         end
         x_batch, y_batch = batch_proc.call(x_batch, y_batch) if batch_proc
         out = forward(x_batch, false)
-        @batch_size.times do |j|
+        batch_size.times do |j|
           if @layers[-1].shape == [1]
             correct += 1 if out[j, 0].round == y_batch[j, 0].round
           else

@@ -31,7 +31,7 @@ module DNN
 
       # Layer to a hash.
       def to_hash(merge_hash = nil)
-        hash = {name: self.class.name}
+        hash = {class: self.class.name}
         hash.merge!(merge_hash) if merge_hash
         hash
       end

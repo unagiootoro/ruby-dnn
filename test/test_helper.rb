@@ -3,7 +3,16 @@ require "dnn"
 
 require "minitest/autorun"
 
-class Xumo::DFloat
+class Numo::SFloat
+  alias _round round
+  def round(ndigits = nil)
+    return self.map { |f| f.round(ndigits)} if ndigits
+    _round
+  end
+end
+
+
+class Numo::DFloat
   alias _round round
   def round(ndigits = nil)
     return self.map { |f| f.round(ndigits)} if ndigits

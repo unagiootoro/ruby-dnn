@@ -1,11 +1,9 @@
 require "test_helper"
 
-include Numo
-include DNN::Layers
-include DNN::Activations
-include DNN::Optimizers
-Util = DNN::Util
-Model = DNN::Model
+include DNN
+include Layers
+include Activations
+include Optimizers
 
 class TestLayer < MiniTest::Unit::TestCase
   def test_initialize
@@ -40,7 +38,7 @@ class TestLayer < MiniTest::Unit::TestCase
 
   def test_to_hash
     layer = Layer.new
-    expected_hash = {name: "DNN::Layers::Layer", shape: [10]}
+    expected_hash = {class: "DNN::Layers::Layer", shape: [10]}
     hash = layer.to_hash({shape: [10]})
     assert_equal expected_hash, hash
   end
@@ -82,7 +80,7 @@ end
 
 class TestInputLayer < MiniTest::Unit::TestCase
   def test_load_hash
-    hash = {name: "DNN::Layers::InputLayer", shape: [10]}
+    hash = {class: "DNN::Layers::InputLayer", shape: [10]}
     layer = InputLayer.load_hash(hash)
     assert_equal [10], layer.shape
   end
@@ -100,19 +98,19 @@ class TestInputLayer < MiniTest::Unit::TestCase
 
   def test_forward
     layer = InputLayer.new(10)
-    x = DFloat[0, 1]
+    x = Numo::DFloat[0, 1]
     assert_equal x, layer.forward(x)
   end
 
   def test_backward
     layer = InputLayer.new(10)
-    dout = DFloat[0, 1]
+    dout = Numo::DFloat[0, 1]
     assert_equal dout, layer.backward(dout)
   end
 
   def test_to_hash
     layer = InputLayer.new(10)
-    hash = {name: "DNN::Layers::InputLayer", shape: [10]}
+    hash = {class: "DNN::Layers::InputLayer", shape: [10]}
     assert_equal hash, layer.to_hash
   end
 end
@@ -121,14 +119,14 @@ end
 class TestDense < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
-      name: "DNN::Layers::Dense",
+      class: "DNN::Layers::Dense",
       num_nodes: 100,
       weight_initializer: {
-        name: "DNN::Initializers::RandomNormal",
+        class: "DNN::Initializers::RandomNormal",
         mean: 0,
         std: 0.05,
       },
-      bias_initializer: {name: "DNN::Initializers::Zeros"},
+      bias_initializer: {class: "DNN::Initializers::Zeros"},
       weight_decay: 0,
     }
     dense = Dense.load_hash(hash)
@@ -138,20 +136,20 @@ class TestDense < MiniTest::Unit::TestCase
   def test_forward
     # y = x.dot(w) + b
     dense = Dense.new(2)
-    x = DFloat[[1, 2, 3], [4, 5, 6]]
-    dense.params[:weight] = DFloat[[10, 20], [10, 20], [10, 20]]
-    dense.params[:bias] = DFloat[5, 10]
+    x = Numo::DFloat[[1, 2, 3], [4, 5, 6]]
+    dense.params[:weight] = Numo::DFloat[[10, 20], [10, 20], [10, 20]]
+    dense.params[:bias] = Numo::DFloat[5, 10]
     out = dense.forward(x)
-    assert_equal DFloat[[65, 130], [155, 310]], out
+    assert_equal Numo::DFloat[[65, 130], [155, 310]], out
   end
 
   def test_backward
     dense = Dense.new(2)
-    x = DFloat[[1, 2, 3]]
-    dense.params[:weight] = DFloat[[5], [10], [15]]
-    dense.params[:bias] = DFloat[20]
+    x = Numo::DFloat[[1, 2, 3]]
+    dense.params[:weight] = Numo::DFloat[[5], [10], [15]]
+    dense.params[:bias] = Numo::DFloat[20]
     dense.forward(x)
-    grad = dense.backward(DFloat[1]).round(3)
+    grad = dense.backward(Numo::DFloat[1]).round(3)
     n_grad = Util.numerical_grad(x, dense.method(:forward)).round(3)
     assert_equal n_grad.sum, grad.sum
   end
@@ -168,20 +166,20 @@ class TestDense < MiniTest::Unit::TestCase
     model << dense
     model << IdentityMSE.new
     model.compile(SGD.new)
-    dense.params[:weight] = SFloat.ones(*dense.params[:weight].shape)
+    dense.params[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
     assert_equal 5.0, dense.ridge.round(1)
   end
 
   def test_to_hash
     expected_hash = {
-      name: "DNN::Layers::Dense",
+      class: "DNN::Layers::Dense",
       num_nodes: 100,
       weight_initializer: {
-        name: "DNN::Initializers::RandomNormal",
+        class: "DNN::Initializers::RandomNormal",
         mean: 0,
         std: 0.05,
       },
-      bias_initializer: {name: "DNN::Initializers::Zeros"},
+      bias_initializer: {class: "DNN::Initializers::Zeros"},
       weight_decay: 0,
     }
     dense = Dense.new(100)
@@ -193,7 +191,7 @@ end
 class TestReshape < MiniTest::Unit::TestCase
   def test_load
     hash = {
-      name: "DNN::Layers::Reshape",
+      class: "DNN::Layers::Reshape",
       shape: [32, 32, 3],
     }
     reshape = Reshape.load_hash(hash)
@@ -202,22 +200,22 @@ class TestReshape < MiniTest::Unit::TestCase
 
   def test_forward
     reshape = Reshape.new([32, 32, 3])
-    x = SFloat.zeros(10, 3072)
+    x = Numo::SFloat.zeros(10, 3072)
     out = reshape.forward(x)
     assert_equal [10, 32, 32, 3], out.shape
   end
 
   def test_backward
     reshape = Reshape.new([32, 32, 3])
-    x = SFloat.zeros(10, 3072)
+    x = Numo::SFloat.zeros(10, 3072)
     reshape.forward(x)
-    dout = SFloat.zeros(10, 32, 32, 3)
+    dout = Numo::SFloat.zeros(10, 32, 32, 3)
     assert_equal [10, 3072], reshape.backward(dout).shape
   end
 
   def test_to_hash
     expected_hash = {
-      name: "DNN::Layers::Reshape",
+      class: "DNN::Layers::Reshape",
       shape: [32, 32, 3],
     }
     reshape = Reshape.new([32, 32, 3])
@@ -238,8 +236,8 @@ class TestOutputLayer < MiniTest::Unit::TestCase
     output_layer = OutputLayer.new
     model << output_layer
     model.compile(SGD.new)
-    dense.params[:weight] = SFloat.ones(*dense.params[:weight].shape)
-    dense2.params[:weight] = SFloat.ones(*dense2.params[:weight].shape)
+    dense.params[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
+    dense2.params[:weight] = Numo::SFloat.ones(*dense2.params[:weight].shape)
     assert_equal 10.0, output_layer.send(:ridge).round(1)
   end
 end
@@ -248,7 +246,7 @@ end
 class TestDropout < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
-      name: "DNN::Layers::Dropout",
+      class: "DNN::Layers::Dropout",
       dropout_ratio: 0.3,
     }
     dropout = Dropout.load_hash(hash)
@@ -263,7 +261,7 @@ class TestDropout < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, true)
-    num = dropout.forward(DFloat.ones(100)).sum.round
+    num = dropout.forward(Numo::DFloat.ones(100)).sum.round
     assert num.between?(30, 70)
   end
 
@@ -275,7 +273,7 @@ class TestDropout < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, false)
-    num = dropout.forward(DFloat.ones(10)).sum.round(1)
+    num = dropout.forward(Numo::DFloat.ones(10)).sum.round(1)
     assert_equal 5.0, num
   end
 
@@ -286,8 +284,8 @@ class TestDropout < MiniTest::Unit::TestCase
     model << dropout
     model << IdentityMSE.new
     model.compile(SGD.new)
-    out = dropout.forward(DFloat.ones(10))
-    dout = dropout.backward(DFloat.ones(10))
+    out = dropout.forward(Numo::DFloat.ones(10))
+    dout = dropout.backward(Numo::DFloat.ones(10))
     assert_equal out.round, dout.round
   end
 
@@ -299,14 +297,14 @@ class TestDropout < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, false)
-    dropout.forward(DFloat.ones(10))
-    dout = dropout.backward(DFloat.ones(10))
+    dropout.forward(Numo::DFloat.ones(10))
+    dout = dropout.backward(Numo::DFloat.ones(10))
     assert_equal 10.0, dout.sum.round(1)
   end
 
   def test_to_hash
     expected_hash = {
-      name: "DNN::Layers::Dropout",
+      class: "DNN::Layers::Dropout",
       dropout_ratio: 0.5
     }
     dropout = Dropout.new
@@ -318,15 +316,15 @@ end
 class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
-      name: "DNN::Layers::BatchNormalization",
+      class: "DNN::Layers::BatchNormalization",
       momentum: 0.8,
-      running_mean: SFloat.ones(10),
-      running_var: SFloat.ones(10),
+      running_mean: Numo::SFloat.ones(10),
+      running_var: Numo::SFloat.ones(10),
     }
     batch_norm = BatchNormalization.load_hash(hash)
     assert_equal 0.8, batch_norm.momentum
-    assert_equal SFloat.ones(10), batch_norm.instance_variable_get(:@running_mean)
-    assert_equal SFloat.ones(10), batch_norm.instance_variable_get(:@running_var)
+    assert_equal Numo::SFloat.ones(10), batch_norm.instance_variable_get(:@running_mean)
+    assert_equal Numo::SFloat.ones(10), batch_norm.instance_variable_get(:@running_var)
   end
 
   def test_build
@@ -335,8 +333,8 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     model << batch_norm
     batch_norm.build(model)
-    assert_equal SFloat.zeros(10), batch_norm.instance_variable_get(:@running_mean)
-    assert_equal SFloat.zeros(10), batch_norm.instance_variable_get(:@running_var)
+    assert_equal Numo::SFloat.zeros(10), batch_norm.instance_variable_get(:@running_mean)
+    assert_equal Numo::SFloat.zeros(10), batch_norm.instance_variable_get(:@running_var)
   end
 
   # mean = ->x { x.mean(0) }
@@ -354,10 +352,10 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, true)
-    batch_norm.params[:gamma] = SFloat.new(10).fill(3)
-    batch_norm.params[:beta] = SFloat.new(10).fill(10)
-    x = DFloat.cast([DFloat.new(10).fill(10), DFloat.new(10).fill(20)])
-    expected = DFloat.cast([DFloat.new(10).fill(7), DFloat.new(10).fill(13)])
+    batch_norm.params[:gamma] = Numo::SFloat.new(10).fill(3)
+    batch_norm.params[:beta] = Numo::SFloat.new(10).fill(10)
+    x = Numo::DFloat.cast([Numo::DFloat.new(10).fill(10), Numo::DFloat.new(10).fill(20)])
+    expected = Numo::DFloat.cast([Numo::DFloat.new(10).fill(7), Numo::DFloat.new(10).fill(13)])
     assert_equal expected, batch_norm.forward(x).round(4)
   end
 
@@ -366,16 +364,16 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model << InputLayer.new(1)
     model << Dense.new(10)
     
-    batch_norm = BatchNormalization.new(running_mean: DFloat.new(10).fill(15),
-                                        running_var: DFloat.new(10).fill(25))
+    batch_norm = BatchNormalization.new(running_mean: Numo::DFloat.new(10).fill(15),
+                                        running_var: Numo::DFloat.new(10).fill(25))
     model << batch_norm
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, false)
-    batch_norm.params[:gamma] = SFloat.new(10).fill(3)
-    batch_norm.params[:beta] = SFloat.new(10).fill(10)
-    x = DFloat.cast([DFloat.new(10).fill(10), DFloat.new(10).fill(20)])
-    expected = DFloat.cast([DFloat.new(10).fill(7), DFloat.new(10).fill(13)])
+    batch_norm.params[:gamma] = Numo::SFloat.new(10).fill(3)
+    batch_norm.params[:beta] = Numo::SFloat.new(10).fill(10)
+    x = Numo::DFloat.cast([Numo::DFloat.new(10).fill(10), Numo::DFloat.new(10).fill(20)])
+    expected = Numo::DFloat.cast([Numo::DFloat.new(10).fill(7), Numo::DFloat.new(10).fill(13)])
     assert_equal expected, batch_norm.forward(x).round(4)
   end
 
@@ -388,16 +386,16 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, true)
-    x = DFloat.cast([DFloat.new(10).fill(10), DFloat.new(10).fill(20)])
+    x = Numo::DFloat.cast([Numo::DFloat.new(10).fill(10), Numo::DFloat.new(10).fill(20)])
     batch_norm.forward(x)
-    grad = batch_norm.backward(DFloat.ones(*x.shape)).round(4)
+    grad = batch_norm.backward(Numo::DFloat.ones(*x.shape)).round(4)
     n_grad = Util.numerical_grad(x, batch_norm.method(:forward)).round(4)
     assert_equal n_grad, grad
   end
 
   def test_to_hash
     expected_hash = {
-      name: "DNN::Layers::BatchNormalization",
+      class: "DNN::Layers::BatchNormalization",
       momentum: 0.9,
       running_mean: [0] * 10,
       running_var: [0] * 10,

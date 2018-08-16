@@ -1,12 +1,10 @@
 require "test_helper"
 
-include Numo
-include DNN::Activations
-include DNN::Layers
-include DNN::Initializers
-include DNN::Optimizers
-Model = DNN::Model
-Util = DNN::Util
+include DNN
+include Activations
+include Layers
+include Initializers
+include Optimizers
 
 class TestOptimizer < MiniTest::Unit::TestCase
   def test_initialize
@@ -18,7 +16,7 @@ class TestOptimizer < MiniTest::Unit::TestCase
     optimizer = Optimizer.new(0.1)
     hash = optimizer.to_hash({momentum: 0.9})
     expected_hash = {
-      name: "DNN::Optimizers::Optimizer",
+      class: "DNN::Optimizers::Optimizer",
       learning_rate: 0.1,
       momentum: 0.9,
     }
@@ -30,7 +28,7 @@ end
 class TestSGD < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
-      name: "DNN::Optimizers::SGD",
+      class: "DNN::Optimizers::SGD",
       learning_rate: 0.1,
       momentum: 0.9,
     }
@@ -50,8 +48,8 @@ class TestSGD < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     sgd = SGD.new(0.1)
     model.compile(sgd)
-    dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = SFloat.ones(*dense.params[:bias].shape)
+    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
+    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
     sgd.update(dense)
     assert_equal -0.1, dense.params[:weight].mean.round(2)
   end
@@ -69,8 +67,8 @@ class TestSGD < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     sgd = SGD.new(0.1, momentum: 1)
     model.compile(sgd)
-    dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = SFloat.ones(*dense.params[:bias].shape)
+    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
+    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
     sgd.update(dense)
     sgd.update(dense)
     assert_equal -0.3, dense.params[:weight].mean.round(2)
@@ -78,7 +76,7 @@ class TestSGD < MiniTest::Unit::TestCase
 
   def test_to_hash
     expected_hash = {
-      name: "DNN::Optimizers::SGD",
+      class: "DNN::Optimizers::SGD",
       learning_rate: 0.01,
       momentum: 0,
     }
@@ -91,7 +89,7 @@ end
 class TestNesterov < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
-      name: "DNN::Optimizers::Nesterov",
+      class: "DNN::Optimizers::Nesterov",
       learning_rate: 0.1,
       momentum: 0.8,
     }
@@ -116,8 +114,8 @@ class TestNesterov < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     nesterov = Nesterov.new(0.1, momentum: 0.9)
     model.compile(nesterov)
-    dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = SFloat.ones(*dense.params[:bias].shape)
+    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
+    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
     nesterov.update(dense)
     nesterov.update(dense)
     assert_equal -0.6149, dense.params[:weight].mean.round(5)
@@ -128,7 +126,7 @@ end
 class TestAdaGrad < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
-      name: "DNN::Optimizers::AdaGrad",
+      class: "DNN::Optimizers::AdaGrad",
       learning_rate: 0.001,
     }
     adagrad = AdaGrad.load_hash(hash)
@@ -148,8 +146,8 @@ class TestAdaGrad < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     adagrad = AdaGrad.new
     model.compile(adagrad)
-    dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = SFloat.ones(*dense.params[:bias].shape)
+    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
+    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
     adagrad.update(dense)
     assert_equal -0.01, dense.params[:weight].mean.round(3)
   end
@@ -159,7 +157,7 @@ end
 class TestRMSProp < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
-      name: "DNN::Optimizers::RMSProp",
+      class: "DNN::Optimizers::RMSProp",
       learning_rate: 0.01,
       muse: 0.8,
     }
@@ -181,15 +179,15 @@ class TestRMSProp < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     rmsprop = RMSProp.new(0.01, 0.5)
     model.compile(rmsprop)
-    dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = SFloat.ones(*dense.params[:bias].shape)
+    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
+    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
     rmsprop.update(dense)
     assert_equal -0.0141, dense.params[:weight].mean.round(4)
   end
 
   def test_to_hash
     expected_hash = {
-      name: "DNN::Optimizers::RMSProp",
+      class: "DNN::Optimizers::RMSProp",
       learning_rate: 0.001,
       muse: 0.9,
     }
@@ -202,7 +200,7 @@ end
 class TestAdam < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
-      name: "DNN::Optimizers::Adam",
+      class: "DNN::Optimizers::Adam",
       learning_rate: 0.01,
       beta1: 0.8,
       beta2: 0.9,
@@ -235,8 +233,8 @@ class TestAdam < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     adam = Adam.new(0.01, 0.8, 0.9)
     model.compile(adam)
-    dense.grads[:weight] = SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = SFloat.ones(*dense.params[:bias].shape)
+    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
+    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
     adam.update(dense)
     adam.update(dense)
     assert_equal -0.02, dense.params[:weight].mean.round(3)
@@ -244,7 +242,7 @@ class TestAdam < MiniTest::Unit::TestCase
 
   def test_to_hash
     expected_hash = {
-      name: "DNN::Optimizers::Adam",
+      class: "DNN::Optimizers::Adam",
       learning_rate: 0.001,
       beta1: 0.9,
       beta2: 0.999,
