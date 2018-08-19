@@ -43,6 +43,42 @@ class TestTanh < MiniTest::Unit::TestCase
 end
 
 
+class TestSoftsign < MiniTest::Unit::TestCase
+  def test_forward
+    softsign = Softsign.new
+    out = softsign.forward(Numo::DFloat[1, 2])
+    assert_equal Numo::DFloat[0.5, 0.6667], out.round(4)
+  end
+
+  def test_backward
+    softsign = Softsign.new
+    x = Numo::DFloat[1, 2]
+    softsign.forward(x)
+    grad = softsign.backward(1).round(4)
+    n_grad = Util.numerical_grad(x, softsign.method(:forward)).round(4)
+    assert_equal n_grad, grad
+  end
+end
+
+
+class TestSoftplus < MiniTest::Unit::TestCase
+  def test_forward
+    softplus = Softplus.new
+    out = softplus.forward(Numo::DFloat[1, 2])
+    assert_equal Numo::DFloat[1.3133, 2.1269], out.round(4)
+  end
+
+  def test_backward
+    softplus = Softplus.new
+    x = Numo::DFloat[1, 2]
+    softplus.forward(x)
+    grad = softplus.backward(1).round(4)
+    n_grad = Util.numerical_grad(x, softplus.method(:forward)).round(4)
+    assert_equal n_grad, grad
+  end
+end
+
+
 class TestReLU < MiniTest::Unit::TestCase
   # f = ->x { x > 0 ? x : 0 }
   def test_forward
