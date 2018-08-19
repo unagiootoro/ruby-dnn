@@ -68,6 +68,30 @@ module DNN
     end
 
 
+    class Softsign < Layers::Layer
+      def forward(x)
+        @x = x
+        x / (1 + x.abs)
+      end
+
+      def backward(dout)
+        dout * (1 / (1 + @x.abs)**2)
+      end
+    end
+
+
+    class Softplus < Layers::Layer
+      def forward(x)
+        @x = x
+        Xumo::NMath.log(1 + Xumo::NMath.exp(x))
+      end
+
+      def backward(dout)
+        dout * (1 / (1 + Xumo::NMath.exp(-@x)))
+      end
+    end
+
+
     class IdentityMSE < Layers::OutputLayer
       def forward(x)
         @out = x
