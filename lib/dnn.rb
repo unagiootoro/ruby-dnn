@@ -1,6 +1,9 @@
-require "numo/narray"
-
-Xumo = Numo
+if defined? Cumo
+  Xumo = Cumo
+else
+  require "numo/narray"
+  Xumo = Numo
+end
 
 Xumo::SFloat.srand(rand(2**64))
 
