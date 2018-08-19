@@ -21,7 +21,9 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Currently, only simple Japanese documents are available.
+Please refer to examples for basic usage.
+If you want to know more detailed information, please refer to the source code.
 
 ## Development
 
