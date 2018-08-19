@@ -17,15 +17,47 @@ module DNN
                      weight_initializer: nil,
                      bias_initializer: nil,
                      weight_decay: 0)
-      super()
-      @num_nodes = num_nodes
-      @stateful = stateful
-      @return_sequences = return_sequences
-      @weight_initializer = (weight_initializer || RandomNormal.new)
-      @bias_initializer = (bias_initializer || Zeros.new)
-      @weight_decay = weight_decay
-      @layers = []
-      @h = nil
+        super()
+        @num_nodes = num_nodes
+        @stateful = stateful
+        @return_sequences = return_sequences
+        @weight_initializer = (weight_initializer || RandomNormal.new)
+        @bias_initializer = (bias_initializer || Zeros.new)
+        @weight_decay = weight_decay
+        @layers = []
+        @h = nil
+      end
+
+      def forward(xs)
+        @xs_shape = xs.shape
+        hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
+        h = (@stateful && @h) ? @h : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
+        xs.shape[1].times do |t|
+          x = xs[true, t, false]
+          h = @layers[t].forward(x, h)
+          hs[true, t, false] = h
+        end
+        @h = h
+        @return_sequences ? hs : h
+      end
+
+      def backward(dh2s)
+        @grads[:weight] = Xumo::SFloat.zeros(*@params[:weight].shape)
+        @grads[:weight2] = Xumo::SFloat.zeros(*@params[:weight2].shape)
+        @grads[:bias] = Xumo::SFloat.zeros(*@params[:bias].shape)
+        unless @return_sequences
+          dh = dh2s
+          dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
+          dh2s[true, -1, false] = dh
+        end
+        dxs = Xumo::SFloat.zeros(@xs_shape)
+        dh = 0
+        (0...dh2s.shape[1]).to_a.reverse.each do |t|
+          dh2 = dh2s[true, t, false]
+          dx, dh = @layers[t].backward(dh2 + dh)
+          dxs[true, t, false] = dx
+        end
+        dxs
       end
 
       def to_hash(merge_hash = nil)
@@ -34,7 +66,6 @@ module DNN
           num_nodes: @num_nodes,
           stateful: @stateful,
           return_sequences: @return_sequences,
-          activation: @activation.to_hash,
           weight_initializer: @weight_initializer.to_hash,
           bias_initializer: @bias_initializer.to_hash,
           weight_decay: @weight_decay,
@@ -112,38 +143,6 @@ module DNN
               bias_initializer: bias_initializer,
               weight_decay: weight_decay)
         @activation = (activation || Tanh.new)
-      end
-
-      def forward(xs)
-        @xs_shape = xs.shape
-        hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
-        h = (@stateful && @h) ? @h : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
-        xs.shape[1].times do |t|
-          x = xs[true, t, false]
-          h = @layers[t].forward(x, h)
-          hs[true, t, false] = h
-        end
-        @h = h
-        @return_sequences ? hs : h
-      end
-
-      def backward(dh2s)
-        @grads[:weight] = Xumo::SFloat.zeros(*@params[:weight].shape)
-        @grads[:weight2] = Xumo::SFloat.zeros(*@params[:weight2].shape)
-        @grads[:bias] = Xumo::SFloat.zeros(*@params[:bias].shape)
-        unless @return_sequences
-          dh = dh2s
-          dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
-          dh2s[true, -1, false] = dh
-        end
-        dxs = Xumo::SFloat.zeros(@xs_shape)
-        dh = 0
-        (0...dh2s.shape[1]).to_a.reverse.each do |t|
-          dh2 = dh2s[true, t, false]
-          dx, dh = @layers[t].backward(dh2 + dh)
-          dxs[true, t, false] = dx
-        end
-        dxs
       end
 
       def to_hash
@@ -372,38 +371,6 @@ module DNN
                      bias_initializer: nil,
                      weight_decay: 0)
         super
-      end
-
-      def forward(xs)
-        @xs_shape = xs.shape
-        hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
-        h = (@stateful && @h) ? @h : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
-        xs.shape[1].times do |t|
-          x = xs[true, t, false]
-          h = @layers[t].forward(x, h)
-          hs[true, t, false] = h
-        end
-        @h = h
-        @return_sequences ? hs : h
-      end
-
-      def backward(dh2s)
-        @grads[:weight] = Xumo::SFloat.zeros(*@params[:weight].shape)
-        @grads[:weight2] = Xumo::SFloat.zeros(*@params[:weight2].shape)
-        @grads[:bias] = Xumo::SFloat.zeros(*@params[:bias].shape)
-        unless @return_sequences
-          dh = dh2s
-          dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
-          dh2s[true, -1, false] = dh
-        end
-        dxs = Xumo::SFloat.zeros(@xs_shape)
-        dh = 0
-        (0...dh2s.shape[1]).to_a.reverse.each do |t|
-          dh2 = dh2s[true, t, false]
-          dx, dh = @layers[t].backward(dh2 + dh)
-          dxs[true, t, false] = dx
-        end
-        dxs
       end
 
       private
