@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.6.2
+最終更新バージョン:0.6.4
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -12,16 +12,19 @@ ruby-dnnの名前空間をなすモジュールです。
 ## VERSION
 ruby-dnnのバージョン。
 
+# class Model
+ ニューラルネットワークのモデルを作成するクラスです。
+
 ## 【Properties】
 
 ## attr_accessor :layer
 モデルに追加されたレイヤーの配列を取得します。
 
+## attr_accessor :trainable
+falseを設定すると、パラメータの学習を禁止します。
+
 ## attr_reader :optimize
 モデルのオプティマイザーを取得します。
-
-# class Model
- ニューラルネットワークのモデルを作成するクラスです。
 
 ## 【Singleton methods】
 
