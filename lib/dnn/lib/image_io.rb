@@ -20,12 +20,12 @@ module DNN
       h, w, ch = img.shape
       bin = img.to_binary
       case file_name
-      when /\.png$/
+      when /\.png$/i
         stride_in_bytes = w * ch
         Stb.stbi_write_png(file_name, w, h, ch, bin, stride_in_bytes)
-      when /\.bmp$/
+      when /\.bmp$/i
         Stb.stbi_write_bmp(file_name, w, h, ch, bin)
-      when /\.jpg$/
+      when /\.jpg$/i, /\.jpeg/i
         Stb.stbi_write_jpg(file_name, w, h, ch, bin, quality)
       end
     rescue => ex
