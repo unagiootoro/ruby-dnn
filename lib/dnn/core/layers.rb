@@ -45,13 +45,15 @@ module DNN
     
     # This class is a superclass of all classes with learning parameters.
     class HasParamLayer < Layer
-      attr_reader :params # The parameters of the layer.
-      attr_reader :grads  # Differential value of parameter of layer.
+      attr_accessor :trainable # Setting false prevents learning of parameters.
+      attr_reader :params      # The parameters of the layer.
+      attr_reader :grads       # Differential value of parameter of layer.
     
       def initialize
         super
         @params = {}
         @grads = {}
+        @trainable = true
       end
     
       def build(model)
@@ -61,7 +63,7 @@ module DNN
     
       # Update the parameters.
       def update
-        @model.optimizer.update(self)
+        @model.optimizer.update(self) if @trainable
       end
     
       private
