@@ -3,8 +3,9 @@ require "json"
 module DNN
   # This class deals with the model of the network.
   class Model
-    attr_accessor :layers
-    attr_reader :optimizer
+    attr_accessor :layers    # All layers possessed by the model
+    attr_accessor :trainable # Setting false prevents learning of parameters.
+    attr_reader :optimizer   # Optimizer possessed by the model
 
     def self.load(file_name)
       Marshal.load(File.binread(file_name))
@@ -20,6 +21,7 @@ module DNN
   
     def initialize
       @layers = []
+      @trainable = true
       @optimizer = nil
       @training = false
       @compiled = false
@@ -140,7 +142,7 @@ module DNN
       forward(x, true)
       loss = @layers[-1].loss(y)
       backward(y)
-      @layers.each { |layer| layer.update if layer.respond_to?(:update) }
+      @layers.each { |layer| layer.update if @trainable && layer.is_a?(HasParamLayer) }
       loss
     end
   
