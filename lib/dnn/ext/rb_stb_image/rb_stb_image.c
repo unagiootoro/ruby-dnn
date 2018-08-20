@@ -37,7 +37,6 @@ VALUE rb_stbi_write_png(VALUE self, VALUE rb_filename, VALUE rb_w, VALUE rb_h, V
   int result;
 
   result = stbi_write_png(filename, w, h, comp, data, stride_in_bytes);
-  stbi_image_free(data);
   return INT2FIX(result);
 }
 
@@ -51,7 +50,6 @@ VALUE rb_stbi_write_bmp(VALUE self, VALUE rb_filename, VALUE rb_w, VALUE rb_h, V
   int result;
 
   result = stbi_write_bmp(filename, w, h, comp, data);
-  stbi_image_free(data);
   return INT2FIX(result);
 }
 
@@ -66,7 +64,6 @@ VALUE rb_stbi_write_jpg(VALUE self, VALUE rb_filename, VALUE rb_w, VALUE rb_h, V
   int result;
 
   result = stbi_write_jpg(filename, w, h, comp, data, quality);
-  stbi_image_free(data);
   return INT2FIX(result);
 }
 
