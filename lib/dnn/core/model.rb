@@ -147,7 +147,7 @@ module DNN
     end
   
     def accurate(x, y, batch_size = 1, &batch_proc)
-      batch_size = batch_size >= x.shape[0] ? batch_size : x.shape[0]
+      batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
       correct = 0
       (x.shape[0].to_f / batch_size).ceil.times do |i|
         x_batch = Xumo::SFloat.zeros(batch_size, *x.shape[1..-1])
