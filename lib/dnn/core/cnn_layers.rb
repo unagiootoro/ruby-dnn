@@ -109,7 +109,7 @@ module DNN
         x = padding(x, @pad) if @padding
         @x_shape = x.shape
         @col = im2col(x, *@out_size, *@filter_size, @strides)
-        out = @col.dot(@params[:weight])
+        out = @col.dot(@params[:weight]) + @params[:bias]
         out.reshape(x.shape[0], *@out_size, out.shape[3])
       end
 
