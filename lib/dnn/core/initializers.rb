@@ -46,16 +46,16 @@ module DNN
     
     class Xavier < Initializer
       def init_param(layer, param_key)
-        prev_dim = layer.prev_layer.shape.reduce(:*)
-        super(layer, param_key, layer.params[param_key].rand_norm / Math.sqrt(prev_dim))
+        num_prev_nodes = layer.prev_layer.shape.reduce(:*)
+        super(layer, param_key, layer.params[param_key].rand_norm / Math.sqrt(num_prev_nodes))
       end
     end
     
     
     class He < Initializer
       def init_param(layer, param_key)
-        prev_dim = layer.prev_layer.shape.reduce(:*)
-        super(layer, param_key, layer.params[param_key].rand_norm / Math.sqrt(prev_dim) * Math.sqrt(2))
+        num_prev_nodes = layer.prev_layer.shape.reduce(:*)
+        super(layer, param_key, layer.params[param_key].rand_norm / Math.sqrt(num_prev_nodes) * Math.sqrt(2))
       end
     end
 
