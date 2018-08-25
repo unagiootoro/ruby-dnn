@@ -43,7 +43,7 @@ class TestLayer < MiniTest::Unit::TestCase
     assert_equal expected_hash, hash
   end
 
-  def prev_layer
+  def test_prev_layer
     model = Model.new
     input_layer = InputLayer.new(10)
     layer = Layer.new
