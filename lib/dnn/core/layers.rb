@@ -9,8 +9,8 @@ module DNN
 
       # Build the layer.
       def build(model)
-        @built = true
         @model = model
+        @built = true
       end
       
       # Does the layer have already been built?
@@ -38,7 +38,7 @@ module DNN
     
       # Get the previous layer.
       def prev_layer
-        @model.layers[@model.layers.index(self) - 1]
+        @model.get_prev_layer(self)
       end
     end
     
@@ -57,8 +57,11 @@ module DNN
       end
     
       def build(model)
-        super
-        init_params
+        @model = model
+        unless @built
+          @built = true
+          init_params
+        end
       end
     
       # Update the parameters.
