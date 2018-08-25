@@ -5,7 +5,6 @@ module DNN
   class Model
     attr_accessor :layers    # All layers possessed by the model
     attr_accessor :trainable # Setting false prevents learning of parameters.
-    attr_reader :optimizer   # Optimizer possessed by the model
 
     def self.load(file_name)
       Marshal.load(File.binread(file_name))
@@ -66,8 +65,8 @@ module DNN
     end
   
     def <<(layer)
-      unless layer.is_a?(Layers::Layer)
-        raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class.")
+      if !layer.is_a?(Layers::Layer) && !layer.is_a?(Model)
+        raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Model class.")
       end
       @layers << layer
       self
@@ -80,10 +79,19 @@ module DNN
       @compiled = true
       layers_check
       @optimizer = optimizer
+      build
+      layers_shape_check
+    end
+
+    def build(super_model = nil)
+      @super_model = super_model
       @layers.each do |layer|
         layer.build(self)
       end
-      layers_shape_check
+    end
+
+    def optimizer
+      @optimizer ? @optimizer : @super_model.optimizer
     end
 
     def compiled?
@@ -140,10 +148,10 @@ module DNN
     def train_on_batch(x, y, &batch_proc)
       x, y = batch_proc.call(x, y) if batch_proc
       forward(x, true)
-      loss = @layers[-1].loss(y)
+      loss_value = loss(y)
       backward(y)
-      @layers.each { |layer| layer.update if @trainable && layer.is_a?(HasParamLayer) }
-      loss
+      update
+      loss_value
     end
   
     def accurate(x, y, batch_size = 1, &batch_proc)
@@ -178,24 +186,53 @@ module DNN
     def predict1(x)
       predict(Xumo::SFloat.cast([x]))[0, false]
     end
+
+    def copy
+      Marshal.load(Marshal.dump(self))
+    end
   
     def forward(x, training)
-      unless compiled?
-        raise DNN_Error.new("The model is not compiled.")
-      end
       @training = training
       @layers.each do |layer|
-        x = layer.forward(x)
+        x = if layer.is_a?(Layers::Layer)
+          layer.forward(x)
+        elsif layer.is_a?(Model)
+          layer.forward(x, training)
+        end
       end
       x
+    end
+
+    def loss(y)
+      @layers[-1].loss(y)
     end
   
     def backward(y)
       dout = y
-      @layers[0..-1].reverse.each do |layer|
+      @layers.reverse.each do |layer|
         dout = layer.backward(dout)
       end
       dout
+    end
+
+    def update
+      @layers.each do |layer|
+        layer.update if @trainable && (layer.is_a?(Layers::HasParamLayer) || layer.is_a?(Model))
+      end
+    end
+
+    def get_prev_layer(layer)
+      layer_index = @layers.index(layer)
+      prev_layer = if layer_index == 0
+        @super_model.layers[@super_model.layers.index(self) - 1]
+      else
+        @layers[layer_index - 1]
+      end
+      if prev_layer.is_a?(Layers::Layer)
+        prev_layer
+      elsif prev_layer.is_a?(Model)
+        prev_layer.layers[-1]
+      end
     end
 
     private
