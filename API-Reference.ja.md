@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.6.4
+最終更新バージョン:0.6.7
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -23,8 +23,6 @@ ruby-dnnのバージョン。
 ## attr_accessor :trainable
 falseを設定すると、パラメータの学習を禁止します。
 
-## attr_reader :optimize
-モデルのオプティマイザーを取得します。
 
 ## 【Singleton methods】
 
@@ -85,13 +83,22 @@ String
 学習パラメータを変換して生成したjson文字列。
 
 ## def <<(layer)
-モデルにレイヤーを追加します。
+モデルにレイヤーまたはモデルを追加します。
 ### arguments
-* Layer layer  
-追加するレイヤー。
+* Layer | Model layer  
+追加するレイヤーまたはモデル。
 ### return
 Model  
 自身のモデルのインスタンス。
+
+## def optimizer
+モデルのオプティマイザーを取得します。
+モデルにオプティマイザーが存在しない場合は、上位のモデルのオプティマイザーを取得します。
+### arguments
+なし。
+### return
+Optimizer  
+モデルのオプティマイザー。
 
 ## def compile(optimizer)
 モデルをコンパイルします。
@@ -116,7 +123,7 @@ bool
 トレーニング用入力データ。
 * Numo::SFloat y  
 トレーニング用出力データ。
-* epochs  
+* Integer epochs  
 学習回数。
 * Integer batch_size: 1  
 学習に使用するミニバッチの数。
@@ -233,7 +240,7 @@ Array
 レイヤーの形状。Layerクラスのshapeメソッドでは、前レイヤーの形状を返却します。
 
 ## abstruct def to_hash
-レイヤーをハッシュに変換します。このメソッドは、モデルをjsonに変換するために使用されます。このメソッドが返すハッシュの要素には、{name: self.class.name}が含まれていなければなりません。
+レイヤーをハッシュに変換します。このメソッドは、モデルをjsonに変換するために使用されます。このメソッドが返すハッシュの要素には、{name: `self.class.name`}が含まれていなければなりません。
 ### arguments
 なし。
 ### return
@@ -248,6 +255,7 @@ Hash
 
 ## private abstruct def init_params
 更新可能なパラメータを初期化します。HasParamLayerクラスを継承するクラスは、このメソッドを実装する必要があります。
+このメソッドは、レイヤーが初回ビルドされたときのみ実行されます。
 ### arguments
 なし。
 ### return
