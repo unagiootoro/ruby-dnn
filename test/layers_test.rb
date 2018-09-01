@@ -134,7 +134,6 @@ class TestDense < MiniTest::Unit::TestCase
   end
 
   def test_forward
-    # y = x.dot(w) + b
     dense = Dense.new(2)
     x = Numo::DFloat[[1, 2, 3], [4, 5, 6]]
     dense.params[:weight] = Numo::DFloat[[10, 20], [10, 20], [10, 20]]
@@ -225,7 +224,6 @@ end
 
 
 class TestOutputLayer < MiniTest::Unit::TestCase
-  # l2 = ->lambda, w { 0.5 * lambda * w.sum }
   def test_ridge
     model = Model.new
     model << InputLayer.new(10)
@@ -337,12 +335,6 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat.zeros(10), batch_norm.instance_variable_get(:@running_var)
   end
 
-  # mean = ->x { x.mean(0) }
-  # std = ->x { NMath.sqrt(((x - mean.(x))**2).mean(0)) }
-  # batch_norm = ->x, gamma, beta { 
-  #   xn = (x - mean.(x)) / std.(x)
-  #   gamma * xn + beta
-  # }
   def test_forward
     model = Model.new
     model << InputLayer.new(1)

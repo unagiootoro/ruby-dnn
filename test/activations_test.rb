@@ -6,7 +6,6 @@ include Layers
 include Optimizers
 
 class TestSigmoid < MiniTest::Unit::TestCase
-  # f = ->x { 1 / (1 + NMath.exp(-x)) }
   def test_forward
     sigmoid = Sigmoid.new
     out = sigmoid.forward(Numo::DFloat[0, 1])
@@ -25,7 +24,6 @@ end
 
 
 class TestTanh < MiniTest::Unit::TestCase
-  # f = ->x { (NMath.exp(x) - NMath.exp(-x)) / (NMath.exp(x) + NMath.exp(-x)) }
   def test_forward
     tanh = Tanh.new
     out = tanh.forward(Numo::DFloat[0, 1])
@@ -80,7 +78,6 @@ end
 
 
 class TestReLU < MiniTest::Unit::TestCase
-  # f = ->x { x > 0 ? x : 0 }
   def test_forward
     relu = ReLU.new
     out = relu.forward(Numo::DFloat[-2, 0, 2])
@@ -97,7 +94,6 @@ end
 
 
 class TestLeakyReLU < MiniTest::Unit::TestCase
-  # f = ->x { x > 0 ? x : 0.3 * x }
   def test_load_hash
     hash = {alpha: 0.2}
     lrelu = LeakyReLU.load_hash(hash)
@@ -135,14 +131,12 @@ end
 
 
 class TestIdentityMSE < MiniTest::Unit::TestCase
-  # f = ->x { x }
   def test_forward
     identity = IdentityMSE.new
     out = identity.forward(Numo::DFloat[0, 1])
     assert_equal out, Numo::DFloat[0, 1]
   end
 
-  # loss = ->x, y { 0.5 * (f.(x) - y)**2 }
   def test_loss
     model = Model.new
     model << InputLayer.new(2)
@@ -177,14 +171,12 @@ end
 
 
 class TestIdentityMAE < MiniTest::Unit::TestCase
-  # f = ->x { x }
   def test_forward
     identity = IdentityMAE.new
     out = identity.forward(Numo::DFloat[0, 1])
     assert_equal out, Numo::DFloat[0, 1]
   end
 
-  # loss = ->x, y { (f.(x) - y).abs }
   def test_loss
     model = Model.new
     model << InputLayer.new(2)
@@ -219,14 +211,12 @@ end
 
 
 class TestIdentityHuber < MiniTest::Unit::TestCase
-  # f = ->x { x }
   def test_forward
     identity = IdentityMAE.new
     out = identity.forward(Numo::DFloat[0, 1])
     assert_equal out, Numo::DFloat[0, 1]
   end
 
-  # loss = ->x, y { (f.(x) - y).abs > 1.0 ? (f.(x) - y).abs : 0.5 * (f.(x) - y)**2 }
   def test_loss
     model = Model.new
     model << InputLayer.new(2)
@@ -292,14 +282,12 @@ end
 
 
 class TestSoftmaxWithLoss < MiniTest::Unit::TestCase
-  # f = ->x { NMath.exp(x) / NMath.exp(x).sum }
   def test_forward
     softmax = SoftmaxWithLoss.new
     out = softmax.forward(Numo::DFloat[[0, 1, 2]]).round(4)
     assert_equal out, Numo::DFloat[[0.09, 0.2447, 0.6652]]
   end
 
-  # loss = ->x, y { -(y * NMath.log(f.(x))).sum }
   def test_loss
     model = Model.new
     model << InputLayer.new(3)
@@ -340,7 +328,6 @@ class TestSigmoidWithLoss < MiniTest::Unit::TestCase
     assert_equal Numo::DFloat[0.5, 0.7311], out.round(4)
   end
 
-  #loss = ->x, y { -(y * NMath.log(f.(x)) + (1 - y) * NMath.log(1 - f.(x))).sum }
   def test_loss
     model = Model.new
     model << InputLayer.new(2)
