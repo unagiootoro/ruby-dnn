@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.6.7
+最終更新バージョン:0.6.8
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -757,18 +757,36 @@ RMSPropによるオプティマイザです。
 
 ## 【Properties】
 
-## attr_accessor :muse
-Float muse  
+## attr_accessor :alpha
+Float alpha  
 指数平均移動のための係数。
 
 ## 【Instance methods】
 
-## def initialize(learning_rate = 0.001, muse = 0.9)
+## def initialize(learning_rate = 0.001, alpha: 0.9)
 コンストラクタ。
 ### arguments
 * Float learning_rate  
   学習率。
-* Float muse  
+* Float alpha  
+  指数平均移動のための係数。
+
+
+# class AdaDelta < Optimizer
+AdaDeltaによるオプティマイザです。
+
+## 【Properties】
+
+## attr_accessor :rho
+Float rho  
+指数平均移動のための係数。
+
+## 【Instance methods】
+
+## def initialize(rho: 0.95)
+コンストラクタ。
+### arguments
+* Float rho  
   指数平均移動のための係数。
 
 
@@ -787,7 +805,7 @@ Float beta2
 
 ## 【Instance methods】
 
-## def initialize(learning_rate = 0.001, beta1 = 0.9, beta2 = 0.999)
+## def initialize(learning_rate = 0.001, beta1: 0.9, beta2: 0.999)
 コンストラクタ。
 ### arguments
 * Float beta1
