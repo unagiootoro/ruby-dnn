@@ -95,15 +95,15 @@ module DNN
     
     
     class RMSProp < Optimizer
-      attr_accessor :muse
+      attr_accessor :alpha
 
       def self.load_hash(hash)
-        self.new(hash[:learning_rate], hash[:muse])
+        self.new(hash[:learning_rate], alpha: hash[:alpha])
       end
     
-      def initialize(learning_rate = 0.001, muse = 0.9)
+      def initialize(learning_rate = 0.001, alpha: 0.9)
         super(learning_rate)
-        @muse = muse
+        @alpha = alpha
         @g = {}
       end
     
@@ -111,13 +111,46 @@ module DNN
         @g[layer] ||= {}
         layer.params.each_key do |key|
           @g[layer][key] ||= 0
-          @g[layer][key] = @muse * @g[layer][key] + (1 - @muse) * layer.grads[key]**2
+          @g[layer][key] = @alpha * @g[layer][key] + (1 - @alpha) * layer.grads[key]**2
           layer.params[key] -= (@learning_rate / Xumo::NMath.sqrt(@g[layer][key] + 1e-7)) * layer.grads[key]
         end
       end
 
       def to_hash
-        super({muse: @muse})
+        super({alpha: @alpha})
+      end
+    end
+
+
+    class AdaDelta < Optimizer
+      attr_accessor :rho
+
+      def self.load_hash(hash)
+        self.new(rho: hash[:rho])
+      end
+
+      def initialize(rho: 0.95)
+        super(nil)
+        @rho = rho
+        @h = {}
+        @s = {}
+      end
+
+      def update(layer)
+        @h[layer] ||= {}
+        @s[layer] ||= {}
+        layer.params.each_key do |key|
+          @h[layer][key] ||= Xumo::SFloat.zeros(*layer.params[key].shape)
+          @s[layer][key] ||= Xumo::SFloat.zeros(*layer.params[key].shape)
+          @h[layer][key] = @rho * @h[layer][key] + (1 - @rho) * layer.grads[key]**2
+          v = (Xumo::NMath.sqrt(@s[layer][key] + 1e-6) / Xumo::NMath.sqrt(@h[layer][key] + 1e-6)) * layer.grads[key]
+          @s[layer][key] = @rho * @s[layer][key] + (1 - @rho) * v**2
+          layer.params[key] -= v
+        end
+      end
+
+      def to_hash
+        super({rho: @rho})
       end
     end
 
@@ -125,18 +158,18 @@ module DNN
     class Adam < Optimizer
       attr_accessor :beta1
       attr_accessor :beta2
+      
+      def self.load_hash(hash)
+        self.new(hash[:learning_rate], beta1: hash[:beta1], beta2: hash[:beta2])
+      end
 
-      def initialize(learning_rate = 0.001, beta1 = 0.9, beta2 = 0.999)
+      def initialize(learning_rate = 0.001, beta1: 0.9, beta2: 0.999)
         super(learning_rate)
         @beta1 = beta1
         @beta2 = beta2
         @iter = 0
         @m = {}
         @v = {}
-      end
-
-      def self.load_hash(hash)
-        self.new(hash[:learning_rate], hash[:beta1], hash[:beta2])
       end
 
       def update(layer)
