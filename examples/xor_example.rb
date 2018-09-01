@@ -1,6 +1,5 @@
 require "dnn"
 
-include Numo
 include DNN::Layers
 include DNN::Activations
 include DNN::Optimizers

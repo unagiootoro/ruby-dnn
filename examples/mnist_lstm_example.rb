@@ -2,7 +2,6 @@ require "dnn"
 require "dnn/lib/mnist"
 #require "numo/linalg/autoloader"
 
-include Numo
 include DNN::Layers
 include DNN::Activations
 include DNN::Optimizers
