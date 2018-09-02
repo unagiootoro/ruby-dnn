@@ -21,6 +21,42 @@ module DNN
         dout * (1 - @out**2)
       end
     end
+
+
+    class Softsign < Layers::Layer
+      def forward(x)
+        @x = x
+        x / (1 + x.abs)
+      end
+
+      def backward(dout)
+        dout * (1 / (1 + @x.abs)**2)
+      end
+    end
+
+
+    class Softplus < Layers::Layer
+      def forward(x)
+        @x = x
+        Xumo::NMath.log(1 + Xumo::NMath.exp(x))
+      end
+
+      def backward(dout)
+        dout * (1 / (1 + Xumo::NMath.exp(-@x)))
+      end
+    end
+
+
+    class Swish < Layers::Layer
+      def forward(x)
+        @x = x
+        @out = x * (1 / (1 + Xumo::NMath.exp(-x)))
+      end
+    
+      def backward(dout)
+        dout * (@out + (1 / (1 + Xumo::NMath.exp(-@x))) * (1 - @out))
+      end
+    end
     
     
     class ReLU < Layers::Layer
@@ -68,26 +104,39 @@ module DNN
     end
 
 
-    class Softsign < Layers::Layer
+    class ELU < Layers::Layer
+      attr_reader :alpha
+
+      def self.load_hash(hash)
+        self.new(hash[:alpha])
+      end
+
+      def initialize(alpha = 1.0)
+        @alpha = alpha
+      end
+
       def forward(x)
         @x = x
-        x / (1 + x.abs)
+        x1 = Xumo::SFloat.zeros(x.shape)
+        x1[x >= 0] = 1
+        x1 *= x
+        x2 = Xumo::SFloat.zeros(x.shape)
+        x2[x < 0] = 1
+        x2 *= @alpha * Xumo::NMath.exp(x) - @alpha
+        x1 + x2
       end
 
       def backward(dout)
-        dout * (1 / (1 + @x.abs)**2)
-      end
-    end
-
-
-    class Softplus < Layers::Layer
-      def forward(x)
-        @x = x
-        Xumo::NMath.log(1 + Xumo::NMath.exp(x))
+        dx = Xumo::SFloat.ones(@x.shape)
+        dx[@x < 0] = 0
+        dx2 = Xumo::SFloat.zeros(@x.shape)
+        dx2[@x < 0] = 1
+        dx2 *= @alpha * Xumo::NMath.exp(@x)
+        dout * (dx + dx2)
       end
 
-      def backward(dout)
-        dout * (1 / (1 + Xumo::NMath.exp(-@x)))
+      def to_hash
+        {class: self.class.name, alpha: @alpha}
       end
     end
 

@@ -77,6 +77,24 @@ class TestSoftplus < MiniTest::Unit::TestCase
 end
 
 
+class TestSwish < MiniTest::Unit::TestCase
+  def test_forward
+    swish = Swish.new
+    out = swish.forward(Numo::DFloat[0, 1])
+    assert_equal Numo::DFloat[0, 0.7311], out.round(4)
+  end
+
+  def test_backward
+    swish = Swish.new
+    x = Numo::DFloat[0, 1]
+    swish.forward(x)
+    grad = swish.backward(1).round(4)
+    n_grad = Util.numerical_grad(x, swish.method(:forward)).round(4)
+    assert_equal n_grad, grad
+  end
+end
+
+
 class TestReLU < MiniTest::Unit::TestCase
   def test_forward
     relu = ReLU.new
@@ -126,6 +144,44 @@ class TestLeakyReLU < MiniTest::Unit::TestCase
     lrelu = LeakyReLU.new
     expected_hash = {class: "DNN::Activations::LeakyReLU", alpha: 0.3}
     assert_equal expected_hash, lrelu.to_hash
+  end
+end
+
+
+class TestELU < MiniTest::Unit::TestCase
+  def test_load_hash
+    hash = {alpha: 0.2}
+    elu = ELU.load_hash(hash)
+    assert_equal 0.2, elu.alpha
+  end
+
+  def test_forward
+    elu = ELU.new
+    out = elu.forward(Numo::DFloat[-2, 0, 2])
+    assert_equal Numo::DFloat[-0.86, 0, 2], out.round(2)
+  end
+
+  def test_backward
+    elu = ELU.new
+    elu.forward(Numo::DFloat[-2, 0, 2])
+    grad = elu.backward(1).round(4)
+    assert_equal Numo::DFloat[0.1353, 1, 1], grad
+  end
+
+  def test_backward2
+    elu = ELU.new
+    x = Numo::DFloat[-2, 2]
+    elu.forward(x)
+    grad = elu.backward(1).round(4)
+    x = Numo::DFloat[-2, 2]
+    n_grad = Util.numerical_grad(x, elu.method(:forward)).round(4)
+    assert_equal n_grad, grad
+  end
+
+  def test_to_hash
+    elu = ELU.new
+    expected_hash = {class: "DNN::Activations::ELU", alpha: 1.0}
+    assert_equal expected_hash, elu.to_hash
   end
 end
 
