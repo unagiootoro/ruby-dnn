@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.6.8
+最終更新バージョン:0.6.9
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -595,12 +595,33 @@ softsign関数のレイヤーです。
 softplus関数のレイヤーです。
 
 
+# class Swish < Layer
+swish関数のレイヤーです。
+
+
 # class ReLU < Layer
 ランプ関数のレイヤーです。
 
 
 # class LeakyReLU < Layer
 LeakyReLU関数のレイヤーです。
+
+## 【Properties】
+## attr_reader :alpha
+Float alpha  
+出力値が負のときの傾き。
+
+## 【Instance methods】
+
+## def initialize(alpha)
+コンストラクタ。
+### arguments
+* Float alpha  
+出力値が負のときの傾き。
+
+
+# class ELU < Layer
+eLU関数のレイヤーです。
 
 ## 【Properties】
 ## attr_reader :alpha
