@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.6.9
+最終更新バージョン:0.6.10
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -692,9 +692,29 @@ Float std
 ## def initialize(mean = 0, std = 0.05)
 ### arguments
 * Float mean = 0  
-  正規分布の平均。
+正規分布の平均。
 * Float std = 0.05  
-  正規分布の分散。
+正規分布の分散。
+
+
+# class RandomUniform < Initializer
+パラメータを一様分布による乱数で初期化します。
+
+## 【Properties】
+## attr_reader :min
+Float min  
+一様分布の最小値。
+## attr_reader :max
+Float max  
+一様分布の最大値。
+
+## 【Instance methods】
+## def initialize(min = -0.25, max = 0.25)
+### arguments
+* Float min = -0.25  
+一様分布の最小値。
+* Float max = 0.25  
+一様分布の最大値。
 
 
 # class Xavier < Initializer
