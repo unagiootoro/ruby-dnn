@@ -42,6 +42,29 @@ module DNN
         super({mean: @mean, std: @std})
       end
     end
+
+
+    class RandomUniform < Initializer
+      attr_reader :min
+      attr_reader :max
+
+      def self.load_hash(hash)
+        self.new(hash[:min], hash[:max])
+      end
+
+      def initialize(min = -0.25, max = 0.25)
+        @min = min
+        @max = max
+      end
+
+      def init_param(layer, param_key)
+        super(layer, param_key, layer.params[param_key].rand(@min, @max))
+      end
+
+      def to_hash
+        super({min: @min, max: @max})
+      end
+    end
     
     
     class Xavier < Initializer

@@ -87,6 +87,44 @@ class TestRandomNorm < MiniTest::Unit::TestCase
 end
 
 
+class TestRandomNorm < MiniTest::Unit::TestCase
+  def test_load_hash
+    hash = {min: -0.1, max: 0.1}
+    initializer = RandomUniform.load_hash(hash)
+    assert_equal -0.1, initializer.min
+    assert_equal 0.1, initializer.max
+  end
+
+  def test_initialize
+    initializer = RandomUniform.new
+    assert_equal -0.25, initializer.min
+    assert_equal 0.25, initializer.max
+  end
+
+  def test_init_param
+    initializer = RandomUniform.new
+    model = Model.new
+    model << InputLayer.new(10)
+    dense = Dense.new(10)
+    model << dense
+    model << IdentityMSE.new
+    model.compile(SGD.new)
+    initializer.init_param(dense, :weight)
+    assert_kind_of Numo::SFloat, dense.params[:weight]
+  end
+
+  def test_to_hash
+    initializer = RandomUniform.new
+    expected_hash = {
+      class: "DNN::Initializers::RandomUniform",
+      min: -0.25,
+      max: 0.25,
+    }
+    assert_equal expected_hash, initializer.to_hash
+  end
+end
+
+
 class TestXavier < MiniTest::Unit::TestCase
   def test_init_param
     initializer = Xavier.new
