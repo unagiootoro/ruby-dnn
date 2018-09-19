@@ -60,29 +60,26 @@ module DNN
     end
     
     
-    class Conv2D < HasParamLayer
-      include Initializers
+    class Conv2D < Connection
       include Conv2DModule
 
       attr_reader :num_filters
       attr_reader :filter_size
       attr_reader :strides
-      attr_reader :weight_decay
     
       def initialize(num_filters, filter_size,
                      weight_initializer: nil,
                      bias_initializer: nil,
                      strides: 1,
                      padding: false,
-                     weight_decay: 0)
-        super()
+                     l1_lambda: 0,
+                     l2_lambda: 0)
+        super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
+              l1_lambda: l1_lambda, l2_lambda: l1_lambda)
         @num_filters = num_filters
         @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
-        @weight_initializer = (weight_initializer || RandomNormal.new)
-        @bias_initializer = (bias_initializer || Zeros.new)
         @strides = strides.is_a?(Integer) ? [strides, strides] : strides
         @padding = padding
-        @weight_decay = weight_decay
       end
 
       def self.load_hash(hash)
@@ -91,7 +88,8 @@ module DNN
                    bias_initializer: Util.load_hash(hash[:bias_initializer]),
                    strides: hash[:strides],
                    padding: hash[:padding],
-                   weight_decay: hash[:weight_decay])
+                   l1_lambda: hash[:l1_lambda],
+                   l2_lambda: hash[:l2_lambda])
       end
 
       def build(model)
@@ -116,8 +114,9 @@ module DNN
       def backward(dout)
         dout = dout.reshape(dout.shape[0..2].reduce(:*), dout.shape[3])
         @grads[:weight] = @col.transpose.dot(dout)
-        if @weight_decay > 0
-          dridge = @weight_decay * @params[:weight]
+        if @l1_lambda > 0
+          @grads[:weight] += dlasso
+        elsif @l2_lambda > 0
           @grads[:weight] += dridge
         end
         @grads[:bias] = dout.sum(0)
@@ -130,22 +129,11 @@ module DNN
         [*@out_size, @num_filters]
       end
 
-      def ridge
-        if @weight_decay > 0
-          0.5 * @weight_decay * (@params[:weight]**2).sum
-        else
-          0
-        end
-      end
-
       def to_hash
         super({num_filters: @num_filters,
                filter_size: @filter_size,
-               weight_initializer: @weight_initializer.to_hash,
-               bias_initializer: @bias_initializer.to_hash,
                strides: @strides,
-               padding: @padding,
-               weight_decay: @weight_decay})
+               padding: @padding})
       end
     
       private
@@ -154,8 +142,7 @@ module DNN
         num_prev_filter = prev_layer.shape[2]
         @params[:weight] = Xumo::SFloat.new(num_prev_filter * @filter_size.reduce(:*), @num_filters)
         @params[:bias] = Xumo::SFloat.new(@num_filters)
-        @weight_initializer.init_param(self, :weight)
-        @bias_initializer.init_param(self, :bias)
+        super()
       end
     end
 
@@ -193,18 +180,6 @@ module DNN
         end
       end
 
-      def forward(x)
-        x = padding(x, @pad) if @padding
-        @x_shape = x.shape
-        col = im2col(x, *@out_size, *@pool_size, @strides)
-        col.reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
-      end
-
-      def backward(dcol)
-        dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
-        @padding ? back_padding(dx, @pad) : dx
-      end
-
       def shape
         [*@out_size, @num_channel]
       end
@@ -224,7 +199,10 @@ module DNN
       end
 
       def forward(x)
-        col = super(x)
+        x = padding(x, @pad) if @padding
+        @x_shape = x.shape
+        col = im2col(x, *@out_size, *@pool_size, @strides)
+        col = col.reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
         @max_index = col.max_index(1)
         col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
@@ -233,7 +211,8 @@ module DNN
         dmax = Xumo::SFloat.zeros(dout.size * @pool_size.reduce(:*))
         dmax[@max_index] = dout.flatten
         dcol = dmax.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
-        super(dcol)
+        dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
+        @padding ? back_padding(dx, @pad) : dx
       end
     end
 
@@ -244,7 +223,10 @@ module DNN
       end
 
       def forward(x)
-        col = super(x)
+        x = padding(x, @pad) if @padding
+        @x_shape = x.shape
+        col = im2col(x, *@out_size, *@pool_size, @strides)
+        col = col.reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
         col.mean(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
@@ -256,7 +238,8 @@ module DNN
           davg[true, i] = dout.flatten
         end
         dcol = davg.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
-        super(dcol)
+        dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
+        @padding ? back_padding(dx, @pad) : dx
       end
     end
 
