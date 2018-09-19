@@ -2,8 +2,10 @@ module DNN
   module Activations
 
     class Sigmoid < Layers::Layer
+      NMath = Xumo::NMath
+
       def forward(x)
-        @out = 1 / (1 + Xumo::NMath.exp(-x))
+        @out = 1 / (1 + NMath.exp(-x))
       end
     
       def backward(dout)
@@ -13,8 +15,10 @@ module DNN
 
 
     class Tanh < Layers::Layer
+      NMath = Xumo::NMath
+
       def forward(x)
-        @out = Xumo::NMath.tanh(x)
+        @out = NMath.tanh(x)
       end
       
       def backward(dout)
@@ -36,25 +40,29 @@ module DNN
 
 
     class Softplus < Layers::Layer
+      NMath = Xumo::NMath
+
       def forward(x)
         @x = x
-        Xumo::NMath.log(1 + Xumo::NMath.exp(x))
+        NMath.log(1 + NMath.exp(x))
       end
 
       def backward(dout)
-        dout * (1 / (1 + Xumo::NMath.exp(-@x)))
+        dout * (1 / (1 + NMath.exp(-@x)))
       end
     end
 
 
     class Swish < Layers::Layer
+      NMath = Xumo::NMath
+
       def forward(x)
         @x = x
-        @out = x * (1 / (1 + Xumo::NMath.exp(-x)))
+        @out = x * (1 / (1 + NMath.exp(-x)))
       end
     
       def backward(dout)
-        dout * (@out + (1 / (1 + Xumo::NMath.exp(-@x))) * (1 - @out))
+        dout * (@out + (1 / (1 + NMath.exp(-@x))) * (1 - @out))
       end
     end
     
@@ -105,6 +113,8 @@ module DNN
 
 
     class ELU < Layers::Layer
+      NMath = Xumo::NMath
+
       attr_reader :alpha
 
       def self.load_hash(hash)
@@ -122,7 +132,7 @@ module DNN
         x1 *= x
         x2 = Xumo::SFloat.zeros(x.shape)
         x2[x < 0] = 1
-        x2 *= @alpha * Xumo::NMath.exp(x) - @alpha
+        x2 *= @alpha * NMath.exp(x) - @alpha
         x1 + x2
       end
 
@@ -131,7 +141,7 @@ module DNN
         dx[@x < 0] = 0
         dx2 = Xumo::SFloat.zeros(@x.shape)
         dx2[@x < 0] = 1
-        dx2 *= @alpha * Xumo::NMath.exp(@x)
+        dx2 *= @alpha * NMath.exp(@x)
         dout * (dx + dx2)
       end
 
@@ -152,7 +162,7 @@ module DNN
     
       def loss(y)
         batch_size = y.shape[0]
-        0.5 * ((@out - y)**2).sum / batch_size + ridge
+        0.5 * ((@out - y)**2).sum / batch_size + lasso + ridge
       end
     end
 
@@ -171,7 +181,7 @@ module DNN
     
       def loss(y)
         batch_size = y.shape[0]
-        (@out - y).abs.sum / batch_size + ridge
+        (@out - y).abs.sum / batch_size + lasso + ridge
       end
     end
 
@@ -183,7 +193,8 @@ module DNN
 
       def loss(y)
         loss = loss_l1(y)
-        @loss = loss > 1 ? loss : loss_l2(y)
+        loss = loss > 1 ? loss : loss_l2(y)
+        @loss = loss + lasso + ridge
       end
 
       def backward(y)
@@ -210,8 +221,10 @@ module DNN
     
     
     class SoftmaxWithLoss < Layers::OutputLayer
+      NMath = Xumo::NMath
+
       def forward(x)
-        @out = Xumo::NMath.exp(x) / Xumo::NMath.exp(x).sum(1).reshape(x.shape[0], 1)
+        @out = NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
       end
     
       def backward(y)
@@ -220,12 +233,14 @@ module DNN
     
       def loss(y)
         batch_size = y.shape[0]
-        -(y * Xumo::NMath.log(@out + 1e-7)).sum / batch_size + ridge
+        -(y * NMath.log(@out + 1e-7)).sum / batch_size + lasso + ridge
       end
     end
 
 
     class SigmoidWithLoss < Layers::OutputLayer
+      NMath = Xumo::NMath
+
       def initialize
         @sigmoid = Sigmoid.new
       end
@@ -240,7 +255,7 @@ module DNN
 
       def loss(y)
         batch_size = y.shape[0]
-        -(y * Xumo::NMath.log(@out + 1e-7) + (1 - y) * Xumo::NMath.log(1 - @out + 1e-7)).sum / batch_size + ridge
+        -(y * NMath.log(@out + 1e-7) + (1 - y) * NMath.log(1 - @out + 1e-7)).sum / batch_size + lasso + ridge
       end
     end
 
