@@ -100,30 +100,86 @@ module DNN
         super({shape: @shape})
       end
     end
-    
-    
-    class Dense < HasParamLayer
+
+
+    class Connection < HasParamLayer
       include Initializers
 
+      attr_reader :l1_lambda
+      attr_reader :l2_lambda
+
+      def initialize(weight_initializer: nil,
+                     bias_initializer: nil,
+                     l1_lambda: 0,
+                     l2_lambda: 0)
+        super()
+        @weight_initializer = (weight_initializer || RandomNormal.new)
+        @bias_initializer = (bias_initializer || Zeros.new)
+        @l1_lambda = l1_lambda
+        @l2_lambda = l2_lambda
+      end
+
+      def lasso
+        if @l1_lambda > 0
+          @l1_lambda * @params[:weight].abs.sum
+        else
+          0
+        end
+      end
+
+      def ridge
+        if @l2_lambda > 0
+          0.5 * @l2_lambda * (@params[:weight]**2).sum
+        else
+          0
+        end
+      end
+
+      def dlasso
+        dlasso = Xumo::SFloat.ones(*@params[:weight].shape)
+        dlasso[@params[:weight] < 0] = -1
+        @l1_lambda * dlasso
+      end
+
+      def dridge
+        @l2_lambda * @params[:weight]
+      end
+
+      def to_hash(merge_hash)
+        super({weight_initializer: @weight_initializer.to_hash,
+               bias_initializer: @bias_initializer.to_hash,
+               l1_lambda: @l1_lambda,
+               l2_lambda: @l2_lambda}.merge(merge_hash))
+      end
+
+      private
+
+      def init_params
+        @weight_initializer.init_param(self, :weight)
+        @bias_initializer.init_param(self, :bias)
+      end
+    end
+    
+    
+    class Dense < Connection
       attr_reader :num_nodes
-      attr_reader :weight_decay
 
       def self.load_hash(hash)
         self.new(hash[:num_nodes],
                  weight_initializer: Util.load_hash(hash[:weight_initializer]),
                  bias_initializer: Util.load_hash(hash[:bias_initializer]),
-                 weight_decay: hash[:weight_decay])
+                 l1_lambda: hash[:l1_lambda],
+                 l2_lambda: hash[:l2_lambda])
       end
     
       def initialize(num_nodes,
                      weight_initializer: nil,
                      bias_initializer: nil,
-                     weight_decay: 0)
-        super()
+                     l1_lambda: 0,
+                     l2_lambda: 0)
+        super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
+              l1_lambda: l1_lambda, l2_lambda: l2_lambda)
         @num_nodes = num_nodes
-        @weight_initializer = (weight_initializer || RandomNormal.new)
-        @bias_initializer = (bias_initializer || Zeros.new)
-        @weight_decay = weight_decay
       end
     
       def forward(x)
@@ -133,8 +189,9 @@ module DNN
     
       def backward(dout)
         @grads[:weight] = @x.transpose.dot(dout)
-        if @weight_decay > 0
-          dridge = @weight_decay * @params[:weight]
+        if @l1_lambda > 0
+          @grads[:weight] += dlasso
+        elsif @l2_lambda > 0
           @grads[:weight] += dridge
         end
         @grads[:bias] = dout.sum(0)
@@ -145,19 +202,8 @@ module DNN
         [@num_nodes]
       end
 
-      def ridge
-        if @weight_decay > 0
-          0.5 * @weight_decay * (@params[:weight]**2).sum
-        else
-          0
-        end
-      end
-
       def to_hash
-        super({num_nodes: @num_nodes,
-               weight_initializer: @weight_initializer.to_hash,
-               bias_initializer: @bias_initializer.to_hash,
-               weight_decay: @weight_decay})
+        super({num_nodes: @num_nodes})
       end
     
       private
@@ -166,8 +212,7 @@ module DNN
         num_prev_nodes = prev_layer.shape[0]
         @params[:weight] = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
         @params[:bias] = Xumo::SFloat.new(@num_nodes)
-        @weight_initializer.init_param(self, :weight)
-        @bias_initializer.init_param(self, :bias)
+        super()
       end
     end
     
@@ -218,9 +263,14 @@ module DNN
 
     class OutputLayer < Layer
       private
+
+      def lasso
+        @model.layers.select { |layer| layer.is_a?(Connection) }
+                     .reduce(0) { |sum, layer| sum + layer.lasso }
+      end
     
       def ridge
-        @model.layers.select { |layer| layer.respond_to?(:ridge) }
+        @model.layers.select { |layer| layer.is_a?(Connection) }
                      .reduce(0) { |sum, layer| sum + layer.ridge }
       end
     end
