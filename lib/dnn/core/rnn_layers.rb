@@ -2,28 +2,25 @@ module DNN
   module Layers
 
     # Super class of all RNN classes.
-    class RNN < HasParamLayer
-      include Initializers
+    class RNN < Connection
       include Activations
 
       attr_accessor :h
       attr_reader :num_nodes
       attr_reader :stateful
-      attr_reader :weight_decay
 
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
                      weight_initializer: nil,
                      bias_initializer: nil,
-                     weight_decay: 0)
-        super()
+                     l1_lambda: 0,
+                     l2_lambda: 0)
+        super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
+              l1_lambda: l1_lambda, l2_lambda: l2_lambda)
         @num_nodes = num_nodes
         @stateful = stateful
         @return_sequences = return_sequences
-        @weight_initializer = (weight_initializer || RandomNormal.new)
-        @bias_initializer = (bias_initializer || Zeros.new)
-        @weight_decay = weight_decay
         @layers = []
         @h = nil
       end
@@ -62,29 +59,60 @@ module DNN
 
       def to_hash(merge_hash = nil)
         hash = {
-          class: self.class.name,
           num_nodes: @num_nodes,
           stateful: @stateful,
           return_sequences: @return_sequences,
-          weight_initializer: @weight_initializer.to_hash,
-          bias_initializer: @bias_initializer.to_hash,
-          weight_decay: @weight_decay,
+          h: @h.to_a
         }
         hash.merge!(merge_hash) if merge_hash
-        hash
+        super(hash)
       end
 
       def shape
         @return_sequences ? [@time_length, @num_nodes] : [@num_nodes]
       end
 
-      def ridge
-        if @weight_decay > 0
-          0.5 * (@weight_decay * ((@params[:weight]**2).sum + (@params[:weight2]**2).sum))
+      def reset_state
+        @h = @h.fill(0) if @h
+      end
+
+      def lasso
+        if @l1_lambda > 0
+          @l1_lambda * (@params[:weight].abs.sum + @params[:weight2].abs.sum)
         else
           0
         end
       end
+
+      def ridge
+        if @l2_lambda > 0
+          0.5 * (@l2_lambda * ((@params[:weight]**2).sum + (@params[:weight2]**2).sum))
+        else
+          0
+        end
+      end
+
+      def dlasso
+        dlasso = Xumo::SFloat.ones(*@params[:weight].shape)
+        dlasso[@params[:weight] < 0] = -1
+        @l1_lambda * dlasso
+      end
+
+      def dridge
+        @l2_lambda * @params[:weight]
+      end
+
+      def dlasso2
+        dlasso = Xumo::SFloat.ones(*@params[:weight2].shape)
+        dlasso[@params[:weight2] < 0] = -1
+        @l1_lambda * dlasso
+      end
+
+      def dridge2
+        @l2_lambda * @params[:weight2]
+      end
+
+      private
 
       def init_params
         @time_length = prev_layer.shape[0]
@@ -93,26 +121,32 @@ module DNN
 
 
     class SimpleRNN_Dense
-      def initialize(params, grads, activation)
-        @params = params
-        @grads = grads
-        @activation = activation
+      def initialize(rnn)
+        @rnn = rnn
+        @activation = rnn.activation.clone
       end
 
       def forward(x, h)
         @x = x
         @h = h
-        h2 = x.dot(@params[:weight]) + h.dot(@params[:weight2]) + @params[:bias]
+        h2 = x.dot(@rnn.params[:weight]) + h.dot(@rnn.params[:weight2]) + @rnn.params[:bias]
         @activation.forward(h2)
       end
 
       def backward(dh2)
         dh2 = @activation.backward(dh2)
-        @grads[:weight] += @x.transpose.dot(dh2)
-        @grads[:weight2] += @h.transpose.dot(dh2)
-        @grads[:bias] += dh2.sum(0)
-        dx = dh2.dot(@params[:weight].transpose)
-        dh = dh2.dot(@params[:weight2].transpose)
+        @rnn.grads[:weight] += @x.transpose.dot(dh2)
+        @rnn.grads[:weight2] += @h.transpose.dot(dh2)
+        if @rnn.l1_lambda > 0
+          @rnn.grads[:weight] += dlasso
+          @rnn.grads[:weight2] += dlasso2
+        elsif @rnn.l2_lambda > 0
+          @rnn.grads[:weight] += dridge
+          @grads[:weight2] += dridge2
+        end
+        @rnn.grads[:bias] += dh2.sum(0)
+        dx = dh2.dot(@rnn.params[:weight].transpose)
+        dh = dh2.dot(@rnn.params[:weight2].transpose)
         [dx, dh]
       end
     end
@@ -120,13 +154,16 @@ module DNN
 
     class SimpleRNN < RNN
       def self.load_hash(hash)
-        self.new(hash[:num_nodes],
-                 stateful: hash[:stateful],
-                 return_sequences: hash[:return_sequences],
-                 activation: Util.load_hash(hash[:activation]),
-                 weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                 bias_initializer: Util.load_hash(hash[:bias_initializer]),
-                 weight_decay: hash[:weight_decay])
+        simple_rnn = self.new(hash[:num_nodes],
+                              stateful: hash[:stateful],
+                              return_sequences: hash[:return_sequences],
+                              activation: Util.load_hash(hash[:activation]),
+                              weight_initializer: Util.load_hash(hash[:weight_initializer]),
+                              bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                              l1_lambda: hash[:l1_lambda],
+                              l2_lambda: hash[:l2_lambda])
+        simple_rnn.h = Xumo::SFloat.cast(hash[:h])
+        simple_rnn
       end
 
       def initialize(num_nodes,
@@ -135,13 +172,15 @@ module DNN
                      activation: nil,
                      weight_initializer: nil,
                      bias_initializer: nil,
-                     weight_decay: 0)
+                     l1_lambda: 0,
+                     l2_lambda: 0)
         super(num_nodes,
               stateful: stateful,
               return_sequences: return_sequences,
               weight_initializer: weight_initializer,
               bias_initializer: bias_initializer,
-              weight_decay: weight_decay)
+              l1_lambda: 0,
+              l2_lambda: 0)
         @activation = (activation || Tanh.new)
       end
 
@@ -161,16 +200,15 @@ module DNN
         @weight_initializer.init_param(self, :weight2)
         @bias_initializer.init_param(self, :bias)
         @time_length.times do |t|
-          @layers << SimpleRNN_Dense.new(@params, @grads, @activation.clone)
+          @layers << SimpleRNN_Dense.new(self)
         end
       end
     end
 
 
     class LSTM_Dense
-      def initialize(params, grads)
-        @params = params
-        @grads = grads
+      def initialize(rnn)
+        @rnn = rnn
         @tanh = Tanh.new
         @g_tanh = Tanh.new
         @forget_sigmoid = Sigmoid.new
@@ -178,56 +216,67 @@ module DNN
         @out_sigmoid = Sigmoid.new
       end
 
-      def forward(x, h, cell)
+      def forward(x, h, c)
         @x = x
         @h = h
-        @cell = cell
+        @c = c
         num_nodes = h.shape[1]
-        a = x.dot(@params[:weight]) + h.dot(@params[:weight2]) + @params[:bias]
+        a = x.dot(@rnn.params[:weight]) + h.dot(@rnn.params[:weight2]) + @rnn.params[:bias]
 
         @forget = @forget_sigmoid.forward(a[true, 0...num_nodes])
         @g = @g_tanh.forward(a[true, num_nodes...(num_nodes * 2)])
         @in = @in_sigmoid.forward(a[true, (num_nodes * 2)...(num_nodes * 3)])
         @out = @out_sigmoid.forward(a[true, (num_nodes * 3)..-1])
 
-        cell2 = @forget * cell + @g * @in
-        @tanh_cell2 = @tanh.forward(cell2)
-        h2 = @out * @tanh_cell2
-        [h2, cell2]
+        c2 = @forget * c + @g * @in
+        @tanh_c2 = @tanh.forward(c2)
+        h2 = @out * @tanh_c2
+        [h2, c2]
       end
 
-      def backward(dh2, dcell2)
-        dh2_tmp = @tanh_cell2 * dh2
-        dcell2_tmp = @tanh.backward(@out * dh2) + dcell2
+      def backward(dh2, dc2)
+        dh2_tmp = @tanh_c2 * dh2
+        dc2_tmp = @tanh.backward(@out * dh2) + dc2
 
         dout = @out_sigmoid.backward(dh2_tmp)
-        din = @in_sigmoid.backward(dcell2_tmp * @g)
-        dg = @g_tanh.backward(dcell2_tmp * @in)
-        dforget = @forget_sigmoid.backward(dcell2_tmp * @cell)
+        din = @in_sigmoid.backward(dc2_tmp * @g)
+        dg = @g_tanh.backward(dc2_tmp * @in)
+        dforget = @forget_sigmoid.backward(dc2_tmp * @c)
 
         da = Xumo::SFloat.hstack([dforget, dg, din, dout])
 
-        @grads[:weight] += @x.transpose.dot(da)
-        @grads[:weight2] += @h.transpose.dot(da)
-        @grads[:bias] += da.sum(0)
-        dx = da.dot(@params[:weight].transpose)
-        dh = da.dot(@params[:weight2].transpose)
-        dcell = dcell2_tmp * @forget
-        [dx, dh, dcell]
+        @rnn.grads[:weight] += @x.transpose.dot(da)
+        @rnn.grads[:weight2] += @h.transpose.dot(da)
+        if @rnn.l1_lambda > 0
+          @rnn.grads[:weight] += dlasso
+          @rnn.grads[:weight2] += dlasso2
+        elsif @rnn.l2_lambda > 0
+          @rnn.grads[:weight] += dridge
+          @rnn.grads[:weight2] += dridge2
+        end
+        @rnn.grads[:bias] += da.sum(0)
+        dx = da.dot(@rnn.params[:weight].transpose)
+        dh = da.dot(@rnn.params[:weight2].transpose)
+        dc = dc2_tmp * @forget
+        [dx, dh, dc]
       end
     end
 
 
     class LSTM < RNN
-      attr_accessor :cell
+      attr_accessor :c
 
       def self.load_hash(hash)
-        self.new(hash[:num_nodes],
-                 stateful: hash[:stateful],
-                 return_sequences: hash[:return_sequences],
-                 weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                 bias_initializer: Util.load_hash(hash[:bias_initializer]),
-                 weight_decay: hash[:weight_decay])
+        lstm = self.new(hash[:num_nodes],
+                        stateful: hash[:stateful],
+                        return_sequences: hash[:return_sequences],
+                        weight_initializer: Util.load_hash(hash[:weight_initializer]),
+                        bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                        l1_lambda: hash[:l1_lambda],
+                        l2_lambda: hash[:l2_lambda])
+        lstm.h = Xumo::SFloat.cast(hash[:h])
+        lstm.c = Xumo::SFloat.cast(hash[:c])
+        lstm
       end
 
       def initialize(num_nodes,
@@ -235,29 +284,30 @@ module DNN
                      return_sequences: true,
                      weight_initializer: nil,
                      bias_initializer: nil,
-                     weight_decay: 0)
+                     l1_lambda: 0,
+                     l2_lambda: 0)
         super
-        @cell = nil
+        @c = nil
       end
 
       def forward(xs)
         @xs_shape = xs.shape
         hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
         h = nil
-        cell = nil
+        c = nil
         if @stateful
           h = @h if @h
-          cell = @cell if @cell
+          c = @c if @c
         end
         h ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
-        cell ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
+        c ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
-          h, cell = @layers[t].forward(x, h, cell)
+          h, c = @layers[t].forward(x, h, c)
           hs[true, t, false] = h
         end
         @h = h
-        @cell = cell
+        @c = c
         @return_sequences ? hs : h
       end
 
@@ -272,13 +322,22 @@ module DNN
         end
         dxs = Xumo::SFloat.zeros(@xs_shape)
         dh = 0
-        dcell = 0
+        dc = 0
         (0...dh2s.shape[1]).to_a.reverse.each do |t|
           dh2 = dh2s[true, t, false]
-          dx, dh, dcell = @layers[t].backward(dh2 + dh, dcell)
+          dx, dh, dc = @layers[t].backward(dh2 + dh, dc)
           dxs[true, t, false] = dx
         end
         dxs
+      end
+
+      def reset_state
+        super()
+        @c = @c.fill(0) if @c
+      end
+
+      def to_hash
+        super({c: @c.to_a})
       end
 
       private
@@ -293,16 +352,15 @@ module DNN
         @weight_initializer.init_param(self, :weight2)
         @bias_initializer.init_param(self, :bias)
         @time_length.times do |t|
-          @layers << LSTM_Dense.new(@params, @grads)
+          @layers << LSTM_Dense.new(self)
         end
       end
     end
 
 
     class GRU_Dense
-      def initialize(params, grads)
-        @params = params
-        @grads = grads
+      def initialize(rnn)
+        @rnn = rnn
         @update_sigmoid = Sigmoid.new
         @reset_sigmoid = Sigmoid.new
         @tanh = Tanh.new
@@ -312,16 +370,16 @@ module DNN
         @x = x
         @h = h
         num_nodes = h.shape[1]
-        @weight_a = @params[:weight][true, 0...(num_nodes * 2)]
-        @weight2_a = @params[:weight2][true, 0...(num_nodes * 2)]
-        bias_a = @params[:bias][0...(num_nodes * 2)]
+        @weight_a = @rnn.params[:weight][true, 0...(num_nodes * 2)]
+        @weight2_a = @rnn.params[:weight2][true, 0...(num_nodes * 2)]
+        bias_a = @rnn.params[:bias][0...(num_nodes * 2)]
         a = x.dot(@weight_a) + h.dot(@weight2_a) + bias_a
         @update = @update_sigmoid.forward(a[true, 0...num_nodes])
         @reset = @reset_sigmoid.forward(a[true, num_nodes..-1])
 
-        @weight_h = @params[:weight][true, (num_nodes * 2)..-1]
-        @weight2_h = @params[:weight2][true, (num_nodes * 2)..-1]
-        bias_h = @params[:bias][(num_nodes * 2)..-1]
+        @weight_h = @rnn.params[:weight][true, (num_nodes * 2)..-1]
+        @weight2_h = @rnn.params[:weight2][true, (num_nodes * 2)..-1]
+        bias_h = @rnn.params[:bias][(num_nodes * 2)..-1]
         @tanh_h = @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h) + bias_h)
         h2 = (1 - @update) * h + @update * @tanh_h
         h2
@@ -346,9 +404,16 @@ module DNN
         dh += da.dot(@weight2_a.transpose)
         dbias_a = da.sum(0)
 
-        @grads[:weight] += Xumo::SFloat.hstack([dweight_a, dweight_h])
-        @grads[:weight2] += Xumo::SFloat.hstack([dweight2_a, dweight2_h])
-        @grads[:bias] += Xumo::SFloat.hstack([dbias_a, dbias_h])
+        @rnn.grads[:weight] += Xumo::SFloat.hstack([dweight_a, dweight_h])
+        @rnn.grads[:weight2] += Xumo::SFloat.hstack([dweight2_a, dweight2_h])
+        if @rnn.l1_lambda > 0
+          @rnn.grads[:weight] += dlasso
+          @rnn.grads[:weight2] += dlasso2
+        elsif @rnn.l2_lambda > 0
+          @rnn.grads[:weight] += dridge
+          @rnn.grads[:weight2] += dridge2
+        end
+        @rnn.grads[:bias] += Xumo::SFloat.hstack([dbias_a, dbias_h])
         [dx, dh]
       end
     end
@@ -356,12 +421,15 @@ module DNN
 
     class GRU < RNN
       def self.load_hash(hash)
-        self.new(hash[:num_nodes],
-                 stateful: hash[:stateful],
-                 return_sequences: hash[:return_sequences],
-                 weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                 bias_initializer: Util.load_hash(hash[:bias_initializer]),
-                 weight_decay: hash[:weight_decay])
+        gru = self.new(hash[:num_nodes],
+                       stateful: hash[:stateful],
+                       return_sequences: hash[:return_sequences],
+                       weight_initializer: Util.load_hash(hash[:weight_initializer]),
+                       bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                       l1_lambda: hash[:l1_lambda],
+                       l2_lambda: hash[:l2_lambda])
+        gru.h = Xumo::SFloat.cast(hash[:h])
+        gru
       end
 
       def initialize(num_nodes,
@@ -369,7 +437,8 @@ module DNN
                      return_sequences: true,
                      weight_initializer: nil,
                      bias_initializer: nil,
-                     weight_decay: 0)
+                     l1_lambda: 0,
+                     l2_lambda: 0)
         super
       end
 
@@ -385,7 +454,7 @@ module DNN
         @weight_initializer.init_param(self, :weight2)
         @bias_initializer.init_param(self, :bias)
         @time_length.times do |t|
-          @layers << GRU_Dense.new(@params, @grads)
+          @layers << GRU_Dense.new(self)
         end
       end
     end
