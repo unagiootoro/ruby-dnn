@@ -1,4 +1,5 @@
 require "json"
+require "base64"
 
 module DNN
   # This class deals with the model of the network.
@@ -32,8 +33,9 @@ module DNN
       @layers.each do |layer|
         next unless layer.is_a?(HasParamLayer)
         hash_params = has_param_layers_params[has_param_layers_index]
-        hash_params.each do |key, param|
-          layer.params[key] = Xumo::SFloat.cast(param)
+        hash_params.each do |key, (shape, base64_param)|
+          bin = Base64.decode64(base64_param)
+          layer.params[key] = Xumo::SFloat.from_binary(bin).reshape(*shape)
         end
         has_param_layers_index += 1
       end
@@ -59,7 +61,10 @@ module DNN
     def params_to_json
       has_param_layers = @layers.select { |layer| layer.is_a?(HasParamLayer) }
       has_param_layers_params = has_param_layers.map do |layer|
-        layer.params.map { |key, param| [key, param.to_a] }.to_h
+        layer.params.map { |key, param|
+          base64_param = Base64.encode64(param.to_binary)
+          [key, [param.shape, base64_param]]
+        }.to_h
       end
       JSON.dump(has_param_layers_params)
     end
@@ -189,6 +194,16 @@ module DNN
 
     def copy
       Marshal.load(Marshal.dump(self))
+    end
+
+    def get_layer(*args)
+      if args.length == 1
+        index = args[0]
+        @layers[index]
+      else
+        layer_class, index = args
+        @layers.select { |layer| layer.is_a?(layer_class) }[index]
+      end
     end
   
     def forward(x, training)
