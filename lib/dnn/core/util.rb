@@ -16,11 +16,6 @@ module DNN
       end
       y2
     end
-  
-    # Perform numerical differentiation.
-    def self.numerical_grad(x, func)
-      (func.(x + 1e-7) - func.(x)) / 1e-7
-    end
 
     # Convert hash to an object.
     def self.load_hash(hash)

@@ -28,13 +28,6 @@ class TestUtil < MiniTest::Unit::TestCase
     assert_kind_of Numo::SFloat, y2
   end
 
-  def test_numerical_grad
-    x = Numo::DFloat[1, 3]
-    func = ->x { x**2 }
-    n_grad = Util.numerical_grad(x, func)
-    assert_equal Numo::DFloat[2, 6], n_grad.round(4)
-  end
-
   def test_load_hash
     relu = Util.load_hash({class: "DNN::Activations::ReLU"})
     assert_kind_of ReLU, relu
