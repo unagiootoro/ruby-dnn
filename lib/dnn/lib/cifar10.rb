@@ -1,8 +1,8 @@
 require "dnn"
-require "dnn/ext/cifar10_loader/cifar10_loader"
 require "open-uri"
 require "zlib"
 require "archive/tar/minitar"
+require_relative "dnn/ext/cifar10_loader/cifar10_loader"
 
 URL_CIFAR10 = "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
 CIFAR10_DIR = "cifar-10-batches-bin"

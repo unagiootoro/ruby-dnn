@@ -1,5 +1,5 @@
 require "numo/narray"
-require "dnn/ext/rb_stb_image/rb_stb_image"
+require_relative "dnn/ext/rb_stb_image/rb_stb_image"
 
 module DNN
   module ImageIO
