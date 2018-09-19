@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.6.10
+最終更新バージョン:0.7.0
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -187,6 +187,35 @@ predictとは異なり、一つの入力データに対して、一つの出力�
 Numo::SFloat
 推論結果を返します。
 
+## def copy
+現在のモデルをコピーした新たなモデルを生成します。
+### arguments
+なし。
+### return
+Model  
+コピーしたモデル。
+
+## def get_layer(index)
+indexのレイヤーを取得します。
+### arguments
+* Integer index  
+取得するレイヤーのインデックス。
+### return
+Layer  
+対象のレイヤーのインスタンス。
+
+## def get_layer(layer_class, index)
+layer_classで指定されたクラスのレイヤーをindexで取得します。
+### arguments
+* Layer layer_class  
+取得するレイヤーのクラス。
+* Integer index  
+レイヤーのインデックス。例えば、layersが[InputLayer, Dense, Dense,SoftmaxWithLoss]のとき、
+最初のDenseを取得したい場合、インデックスは0になります。
+### return
+Layer  
+対象のレイヤーのインスタンス。
+
 
 # module Layers
 レイヤーの名前空間をなすモジュールです。
@@ -274,7 +303,29 @@ Hash
 入力層のdimentionまたはshapeを指定します。引数がIntegerだとdimentionとみなし、Arrayだとshapeとみなします。
 
 
-# class Dense
+# class Connection < HasParamLayer
+ニューロンを接続するすべてのレイヤーのスーパークラスです。
+
+## 【Properties】
+
+## attr_reader :weight_initializer
+Initializer  
+重みの初期化に使用するイニシャライザーを取得します。
+
+## attr_reader :bias_initializer
+Initializer  
+バイアスの初期化に使用するイニシャライザーを取得します。
+
+## attr_reader :l1_lambda
+Float  
+重みのL1正則化の係数を取得します。
+
+## attr_reader :l2_lambda
+Float  
+重みのL2正則化の係数を取得します。
+
+
+# class Dense < Connection
 全結合レイヤーを扱うクラスです。
 
 ## 【Properties】
@@ -283,28 +334,26 @@ Hash
 Integer  
 レイヤーのノード数を取得します。
 
-## attr_reader :weight_decay
-Float  
-重み減衰の係数を取得します。
-
 ## 【Instance methods】
 
-## def initialize(num_nodes, weight_initializer: nil, bias_initializer: nil, weight_decay: 0)
+## def initialize(num_nodes, weight_initializer: nil, bias_initializer: nil, l1_lambda: 0, l2_lambda: 0)
 コンストラクタ。
 ### arguments
 * Integer num_nodes  
 レイヤーのノード数を設定します。
 * Initializer weight_initializer: nil  
-重みの初期化に使用するイニシャライザーを設定します
+重みの初期化に使用するイニシャライザーを設定します。
 nilを指定すると、RandomNormalイニシャライザーが使用されます。  
 * Initializer bias_initializer: nil  
 バイアスの初期化に使用するイニシャライザーを設定します。
 nilを指定すると、Zerosイニシャライザーが使用されます。
-* Float weight_decay: 0
-重み減衰の係数を設定します。
+* Float l1_lambda: 0  
+重みのL1正則化の係数を設定します。
+* Float l2_lambda: 0  
+重みのL2正則化の係数を設定します。
 
 
-# class Conv2D < HasParamLayer
+# class Conv2D < Connection
 畳み込みレイヤーを扱うクラスです。
 
 ## 【Properties】
@@ -323,13 +372,9 @@ Array
 畳み込みを行う際のストライドの単位。  
 [Integer height, Integer width]の形式で取得します。
 
-## attr_reader :weight_decay
-Float  
-重み減衰を行うL2正則化項の強さを取得します。
-
 ## 【Instance methods】
 
-## def initialize(num_filters, filter_size, weight_initializer: nil, bias_initializer: nil, strides: 1, padding false, weight_decay: 0)
+## def initialize(num_filters, filter_size, weight_initializer: nil, bias_initializer: nil, strides: 1, padding false, l1_lambda: 0, l2_lambda: 0)
 コンストラクタ。
 ### arguments
 * Integer num_filters  
@@ -348,8 +393,10 @@ Arrayで指定する場合、[Integer height, Integer width]の形式で指定�
 * bool padding: true  
 イメージに対してゼロパディングを行うか否かを設定します。trueを設定すると、出力されるイメージのサイズが入力されたイメージと同じになるように
 ゼロパディングを行います。
-* Float weight_decay: 0  
-重み減衰を行うL2正則化項の強さを設定します。
+* Float l1_lambda: 0  
+重みのL1正則化の係数を設定します。
+* Float l2_lambda: 0  
+重みのL2正則化の係数を設定します。
 
 
 # class Pool2D < Layer
@@ -412,15 +459,8 @@ Array
 Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
 
 
-# class RNN < HasParamLayer
+# class RNN < Connection
 全てのリカレントニューラルネットワークのレイヤーのスーパークラスです。
-
-## 【Properties】
-
-## attr_accessor :h
-Numo::SFloat  
-中間層の現在のステートを取得します。
-nilを設定することで、中間層のステートをリセットすることができます。
 
 ## attr_reader :num_nodes
 Integer  
@@ -430,13 +470,9 @@ Integer
 bool  
 レイヤーがステートフルであるか否かを返します。
 
-## attr_reader :weight_decay
-Float  
-重み減衰の係数を取得します。
-
 ## 【Instance methods】
 
-## def initialize(num_nodes, stateful: false, return_sequences: true, weight_initializer: nil, bias_initializer: nil, weight_decay: 0)
+## def initialize(num_nodes, stateful: false, return_sequences: true, weight_initializer: nil, bias_initializer: nil, l1_lamda: 0, l2_lambda: 0)
 コンストラクタ。
 ### arguments
 * Integer num_nodes  
@@ -452,8 +488,13 @@ nilを指定すると、RandomNormalイニシャライザーが使用されま�
 * Initializer bias_initializer: nil  
 バイアスの初期化に使用するイニシャライザーを設定します。
 nilを指定すると、Zerosイニシャライザーが使用されます。
-* Float weight_decay: 0
-重み減衰の係数を設定します。
+* Float l1_lambda: 0  
+重みのL1正則化の係数を設定します。
+* Float l2_lambda: 0  
+重みのL2正則化の係数を設定します。
+
+## def reset_state
+中間層のステートをリセットします。
 
 
 # class SimpleRNN < RNN
@@ -461,7 +502,7 @@ nilを指定すると、Zerosイニシャライザーが使用されます。
 
 ## 【Instance methods】
 
-## def initialize(num_nodes, stateful: false, return_sequences: true,  activation: nil, weight_initializer: nil, bias_initializer: nil, weight_decay: 0)
+## def initialize(num_nodes, stateful: false, return_sequences: true,  activation: nil, weight_initializer: nil, bias_initializer: nil, l1_lamda: 0, l2_lambda: 0)
 コンストラクタ。
 ### arguments
 * Integer num_nodes  
@@ -480,19 +521,14 @@ nilを指定すると、RandomNormalイニシャライザーが使用されま�
 * Initializer bias_initializer: nil  
 バイアスの初期化に使用するイニシャライザーを設定します。
 nilを指定すると、Zerosイニシャライザーが使用されます。
-* Float weight_decay: 0
-重み減衰の係数を設定します。
+* Float l1_lambda: 0  
+重みのL1正則化の係数を設定します。
+* Float l2_lambda: 0  
+重みのL2正則化の係数を設定します。
 
 
 # class LSTM < RNN
 LSTMレイヤーを扱うクラスです。
-
-## 【Properties】
-
-## attr_accessor :cell
-Numo::SFloat  
-中間層の現在のセルステートを取得します。
-nilを設定することで、中間層のセルステートをリセットすることができます。
 
 
 # class GRU < RNN
