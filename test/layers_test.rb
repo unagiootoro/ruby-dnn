@@ -98,13 +98,13 @@ class TestInputLayer < MiniTest::Unit::TestCase
 
   def test_forward
     layer = InputLayer.new(10)
-    x = Numo::DFloat[0, 1]
+    x = Xumo::SFloat[0, 1]
     assert_equal x, layer.forward(x)
   end
 
   def test_backward
     layer = InputLayer.new(10)
-    dout = Numo::DFloat[0, 1]
+    dout = Xumo::SFloat[0, 1]
     assert_equal dout, layer.backward(dout)
   end
 
@@ -127,7 +127,8 @@ class TestDense < MiniTest::Unit::TestCase
         std: 0.05,
       },
       bias_initializer: {class: "DNN::Initializers::Zeros"},
-      weight_decay: 0,
+      l1_lambda: 0,
+      l2_lambda: 0,
     }
     dense = Dense.load_hash(hash)
     assert_equal 100, dense.num_nodes
@@ -135,22 +136,23 @@ class TestDense < MiniTest::Unit::TestCase
 
   def test_forward
     dense = Dense.new(2)
-    x = Numo::DFloat[[1, 2, 3], [4, 5, 6]]
-    dense.params[:weight] = Numo::DFloat[[10, 20], [10, 20], [10, 20]]
-    dense.params[:bias] = Numo::DFloat[5, 10]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    dense.params[:weight] = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.params[:bias] = Xumo::SFloat[5, 10]
     out = dense.forward(x)
-    assert_equal Numo::DFloat[[65, 130], [155, 310]], out
+    assert_equal Xumo::SFloat[[65, 130], [155, 310]], out
   end
 
   def test_backward
     dense = Dense.new(2)
-    x = Numo::DFloat[[1, 2, 3]]
-    dense.params[:weight] = Numo::DFloat[[5], [10], [15]]
-    dense.params[:bias] = Numo::DFloat[20]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    dense.params[:weight] = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.params[:bias] = Xumo::SFloat[5, 10]
     dense.forward(x)
-    grad = dense.backward(Numo::DFloat[1]).round(3)
-    n_grad = Util.numerical_grad(x, dense.method(:forward)).round(3)
-    assert_equal n_grad.sum, grad.sum
+    grad = dense.backward(Xumo::SFloat[1])
+    assert_equal Xumo::SFloat[30, 30, 30], grad.round(4)
+    assert_equal Xumo::SFloat[5, 7, 9], dense.grads[:weight].round(4)
+    assert_in_delta 1.0, dense.grads[:bias]
   end
 
   def test_shape
@@ -161,7 +163,7 @@ class TestDense < MiniTest::Unit::TestCase
   def test_ridge
     model = Model.new
     model << InputLayer.new(10)
-    dense = Dense.new(1, weight_decay: 1)
+    dense = Dense.new(1, l2_lambda: 1)
     model << dense
     model << IdentityMSE.new
     model.compile(SGD.new)
@@ -179,7 +181,8 @@ class TestDense < MiniTest::Unit::TestCase
         std: 0.05,
       },
       bias_initializer: {class: "DNN::Initializers::Zeros"},
-      weight_decay: 0,
+      l1_lambda: 0,
+      l2_lambda: 0,
     }
     dense = Dense.new(100)
     assert_equal expected_hash, dense.to_hash
@@ -227,9 +230,9 @@ class TestOutputLayer < MiniTest::Unit::TestCase
   def test_ridge
     model = Model.new
     model << InputLayer.new(10)
-    dense = Dense.new(1, weight_decay: 1)
+    dense = Dense.new(1, l2_lambda: 1)
     model << dense
-    dense2 = Dense.new(10, weight_decay: 1)
+    dense2 = Dense.new(10, l2_lambda: 1)
     model << dense2
     output_layer = OutputLayer.new
     model << output_layer
@@ -259,7 +262,7 @@ class TestDropout < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, true)
-    num = dropout.forward(Numo::DFloat.ones(100)).sum.round
+    num = dropout.forward(Xumo::SFloat.ones(100)).sum.round
     assert num.between?(30, 70)
   end
 
@@ -271,7 +274,7 @@ class TestDropout < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, false)
-    num = dropout.forward(Numo::DFloat.ones(10)).sum.round(1)
+    num = dropout.forward(Xumo::SFloat.ones(10)).sum.round(1)
     assert_equal 5.0, num
   end
 
@@ -282,8 +285,8 @@ class TestDropout < MiniTest::Unit::TestCase
     model << dropout
     model << IdentityMSE.new
     model.compile(SGD.new)
-    out = dropout.forward(Numo::DFloat.ones(10))
-    dout = dropout.backward(Numo::DFloat.ones(10))
+    out = dropout.forward(Xumo::SFloat.ones(10))
+    dout = dropout.backward(Xumo::SFloat.ones(10))
     assert_equal out.round, dout.round
   end
 
@@ -295,8 +298,8 @@ class TestDropout < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, false)
-    dropout.forward(Numo::DFloat.ones(10))
-    dout = dropout.backward(Numo::DFloat.ones(10))
+    dropout.forward(Xumo::SFloat.ones(10))
+    dout = dropout.backward(Xumo::SFloat.ones(10))
     assert_equal 10.0, dout.sum.round(1)
   end
 
@@ -346,8 +349,8 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model.instance_variable_set(:@training, true)
     batch_norm.params[:gamma] = Numo::SFloat.new(10).fill(3)
     batch_norm.params[:beta] = Numo::SFloat.new(10).fill(10)
-    x = Numo::DFloat.cast([Numo::DFloat.new(10).fill(10), Numo::DFloat.new(10).fill(20)])
-    expected = Numo::DFloat.cast([Numo::DFloat.new(10).fill(7), Numo::DFloat.new(10).fill(13)])
+    x = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)])
+    expected = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(7), Xumo::SFloat.new(10).fill(13)])
     assert_equal expected, batch_norm.forward(x).round(4)
   end
 
@@ -356,16 +359,16 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model << InputLayer.new(1)
     model << Dense.new(10)
     
-    batch_norm = BatchNormalization.new(running_mean: Numo::DFloat.new(10).fill(15),
-                                        running_var: Numo::DFloat.new(10).fill(25))
+    batch_norm = BatchNormalization.new(running_mean: Xumo::SFloat.new(10).fill(15),
+                                        running_var: Xumo::SFloat.new(10).fill(25))
     model << batch_norm
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, false)
     batch_norm.params[:gamma] = Numo::SFloat.new(10).fill(3)
     batch_norm.params[:beta] = Numo::SFloat.new(10).fill(10)
-    x = Numo::DFloat.cast([Numo::DFloat.new(10).fill(10), Numo::DFloat.new(10).fill(20)])
-    expected = Numo::DFloat.cast([Numo::DFloat.new(10).fill(7), Numo::DFloat.new(10).fill(13)])
+    x = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)])
+    expected = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(7), Xumo::SFloat.new(10).fill(13)])
     assert_equal expected, batch_norm.forward(x).round(4)
   end
 
@@ -378,11 +381,12 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, true)
-    x = Numo::DFloat.cast([Numo::DFloat.new(10).fill(10), Numo::DFloat.new(10).fill(20)])
+    x = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)])
     batch_norm.forward(x)
-    grad = batch_norm.backward(Numo::DFloat.ones(*x.shape)).round(4)
-    n_grad = Util.numerical_grad(x, batch_norm.method(:forward)).round(4)
-    assert_equal n_grad, grad
+    grad = batch_norm.backward(Xumo::SFloat.ones(*x.shape))
+    assert_equal Xumo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
+    assert_equal Xumo::SFloat[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], batch_norm.grads[:gamma]
+    assert_equal Xumo::SFloat[2, 2, 2, 2, 2, 2, 2, 2, 2, 2], batch_norm.grads[:beta]
   end
 
   def test_to_hash

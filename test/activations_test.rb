@@ -8,17 +8,16 @@ include Optimizers
 class TestSigmoid < MiniTest::Unit::TestCase
   def test_forward
     sigmoid = Sigmoid.new
-    out = sigmoid.forward(Numo::DFloat[0, 1])
-    assert_equal Numo::DFloat[0.5, 0.7311], out.round(4)
+    out = sigmoid.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0.5, 0.7311], out.round(4)
   end
 
   def test_backward
     sigmoid = Sigmoid.new
-    x = Numo::DFloat[0, 1]
+    x = Xumo::SFloat[0, 1]
     sigmoid.forward(x)
-    grad = sigmoid.backward(1).round(4)
-    n_grad = Util.numerical_grad(x, sigmoid.method(:forward)).round(4)
-    assert_equal n_grad, grad
+    grad = sigmoid.backward(1)
+    assert_equal Xumo::SFloat[0.25, 0.1966], grad.round(4)
   end
 end
 
@@ -26,17 +25,16 @@ end
 class TestTanh < MiniTest::Unit::TestCase
   def test_forward
     tanh = Tanh.new
-    out = tanh.forward(Numo::DFloat[0, 1])
-    assert_equal Numo::DFloat[0, 0.7616], out.round(4)
+    out = tanh.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0, 0.7616], out.round(4)
   end
 
   def test_backward
     tanh = Tanh.new
-    x = Numo::DFloat[0, 1]
+    x = Xumo::SFloat[0, 1]
     tanh.forward(x)
-    grad = tanh.backward(1).round(4)
-    n_grad = Util.numerical_grad(x, tanh.method(:forward)).round(4)
-    assert_equal n_grad, grad
+    grad = tanh.backward(1)
+    assert_equal Xumo::SFloat[1, 0.42], grad.round(4)
   end
 end
 
@@ -44,17 +42,16 @@ end
 class TestSoftsign < MiniTest::Unit::TestCase
   def test_forward
     softsign = Softsign.new
-    out = softsign.forward(Numo::DFloat[1, 2])
-    assert_equal Numo::DFloat[0.5, 0.6667], out.round(4)
+    out = softsign.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0, 0.5], out.round(4)
   end
 
   def test_backward
     softsign = Softsign.new
-    x = Numo::DFloat[1, 2]
+    x = Xumo::SFloat[0, 1]
     softsign.forward(x)
-    grad = softsign.backward(1).round(4)
-    n_grad = Util.numerical_grad(x, softsign.method(:forward)).round(4)
-    assert_equal n_grad, grad
+    grad = softsign.backward(1)
+    assert_equal Xumo::SFloat[1, 0.25], grad.round(4)
   end
 end
 
@@ -62,17 +59,16 @@ end
 class TestSoftplus < MiniTest::Unit::TestCase
   def test_forward
     softplus = Softplus.new
-    out = softplus.forward(Numo::DFloat[1, 2])
-    assert_equal Numo::DFloat[1.3133, 2.1269], out.round(4)
+    out = softplus.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0.6931, 1.3133], out.round(4)
   end
 
   def test_backward
     softplus = Softplus.new
-    x = Numo::DFloat[1, 2]
+    x = Xumo::SFloat[0, 1]
     softplus.forward(x)
-    grad = softplus.backward(1).round(4)
-    n_grad = Util.numerical_grad(x, softplus.method(:forward)).round(4)
-    assert_equal n_grad, grad
+    grad = softplus.backward(1)
+    assert_equal Xumo::SFloat[0.5, 0.7311], grad.round(4)
   end
 end
 
@@ -80,17 +76,16 @@ end
 class TestSwish < MiniTest::Unit::TestCase
   def test_forward
     swish = Swish.new
-    out = swish.forward(Numo::DFloat[0, 1])
-    assert_equal Numo::DFloat[0, 0.7311], out.round(4)
+    out = swish.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0, 0.7311], out.round(4)
   end
 
   def test_backward
     swish = Swish.new
-    x = Numo::DFloat[0, 1]
+    x = Xumo::SFloat[0, 1]
     swish.forward(x)
-    grad = swish.backward(1).round(4)
-    n_grad = Util.numerical_grad(x, swish.method(:forward)).round(4)
-    assert_equal n_grad, grad
+    grad = swish.backward(1)
+    assert_equal Xumo::SFloat[0.5, 0.9277], grad.round(4)
   end
 end
 
@@ -98,15 +93,15 @@ end
 class TestReLU < MiniTest::Unit::TestCase
   def test_forward
     relu = ReLU.new
-    out = relu.forward(Numo::DFloat[-2, 0, 2])
-    assert_equal Numo::DFloat[0, 0, 2], out
+    out = relu.forward(Xumo::SFloat[-2, 0, 2])
+    assert_equal Xumo::SFloat[0, 0, 2], out
   end
 
   def test_backward
     relu = ReLU.new
-    relu.forward(Numo::DFloat[-2, 0, 2])
-    grad = relu.backward(1).round(4)
-    assert_equal Numo::DFloat[0, 0, 1], grad
+    relu.forward(Xumo::SFloat[-2, 0, 2])
+    grad = relu.backward(1)
+    assert_equal Xumo::SFloat[0, 0, 1], grad.round(4)
   end
 end
 
@@ -118,26 +113,22 @@ class TestLeakyReLU < MiniTest::Unit::TestCase
     assert_equal 0.2, lrelu.alpha
   end
 
+  def test_initialize
+    lrelu = LeakyReLU.new
+    assert_equal 0.3, lrelu.alpha
+  end
+
   def test_forward
     lrelu = LeakyReLU.new
-    out = lrelu.forward(Numo::DFloat[-2, 0, 2])
-    assert_equal Numo::DFloat[-0.6, 0, 2], out.round(2)
+    out = lrelu.forward(Xumo::SFloat[-2, 0, 2])
+    assert_equal Xumo::SFloat[-0.6, 0, 2], out.round(4)
   end
 
   def test_backward
     lrelu = LeakyReLU.new
-    lrelu.forward(Numo::DFloat[-2, 0, 2])
-    grad = lrelu.backward(1).round(4)
-    assert_equal Numo::DFloat[0.3, 0.3, 1], grad
-  end
-
-  def test_backward2
-    lrelu = LeakyReLU.new
-    x = Numo::DFloat[-2, 2]
-    lrelu.forward(x)
-    grad = lrelu.backward(1).round(4)
-    n_grad = Util.numerical_grad(x, lrelu.method(:forward)).round(4)
-    assert_equal n_grad, grad
+    lrelu.forward(Xumo::SFloat[-2, 0, 2])
+    grad = lrelu.backward(1)
+    assert_equal Xumo::SFloat[0.3, 0.3, 1], grad.round(4)
   end
 
   def test_to_hash
@@ -155,27 +146,22 @@ class TestELU < MiniTest::Unit::TestCase
     assert_equal 0.2, elu.alpha
   end
 
+  def test_initialize
+    elu = ELU.new
+    assert_equal 1.0, elu.alpha
+  end
+
   def test_forward
     elu = ELU.new
-    out = elu.forward(Numo::DFloat[-2, 0, 2])
-    assert_equal Numo::DFloat[-0.86, 0, 2], out.round(2)
+    out = elu.forward(Xumo::SFloat[-2, 0, 2])
+    assert_equal Xumo::SFloat[-0.8647, 0, 2], out.round(4)
   end
 
   def test_backward
     elu = ELU.new
-    elu.forward(Numo::DFloat[-2, 0, 2])
-    grad = elu.backward(1).round(4)
-    assert_equal Numo::DFloat[0.1353, 1, 1], grad
-  end
-
-  def test_backward2
-    elu = ELU.new
-    x = Numo::DFloat[-2, 2]
-    elu.forward(x)
-    grad = elu.backward(1).round(4)
-    x = Numo::DFloat[-2, 2]
-    n_grad = Util.numerical_grad(x, elu.method(:forward)).round(4)
-    assert_equal n_grad, grad
+    elu.forward(Xumo::SFloat[-2, 0, 2])
+    grad = elu.backward(1)
+    assert_equal Xumo::SFloat[0.1353, 1, 1], grad.round(4)
   end
 
   def test_to_hash
@@ -189,8 +175,8 @@ end
 class TestIdentityMSE < MiniTest::Unit::TestCase
   def test_forward
     identity = IdentityMSE.new
-    out = identity.forward(Numo::DFloat[0, 1])
-    assert_equal out, Numo::DFloat[0, 1]
+    out = identity.forward(Xumo::SFloat[0, 1])
+    assert_equal out, Xumo::SFloat[0, 1]
   end
 
   def test_loss
@@ -200,9 +186,9 @@ class TestIdentityMSE < MiniTest::Unit::TestCase
     identity = IdentityMSE.new
     model << identity
     model.compile(SGD.new)
-    out = identity.forward(Numo::DFloat[[0, 1]])
-    loss = identity.loss(Numo::DFloat[[2, 4]])
-    assert_equal 6.5, loss.round(1)
+    out = identity.forward(Xumo::SFloat[[0, 1]])
+    loss = identity.loss(Xumo::SFloat[[2, 4]])
+    assert_equal 6.5, loss.round(4)
   end
 
   def test_backward
@@ -212,16 +198,11 @@ class TestIdentityMSE < MiniTest::Unit::TestCase
     identity = IdentityMSE.new
     model << identity
     model.compile(SGD.new)
-    x = Numo::DFloat[[0, 1]]
-    y = Numo::DFloat[[2, 4]]
+    x = Xumo::SFloat[[0, 1]]
+    y = Xumo::SFloat[[2, 4]]
     identity.forward(x)
-    grad = identity.backward(y).round(4)
-    func = ->x do
-      identity.forward(x)
-      identity.loss(y)
-    end
-    n_grad = Util.numerical_grad(x, func).round(4)
-    assert_equal n_grad, grad.sum
+    grad = identity.backward(y)
+    assert_equal Xumo::SFloat[[-2, -3]], grad.round(4)
   end
 end
 
@@ -229,8 +210,8 @@ end
 class TestIdentityMAE < MiniTest::Unit::TestCase
   def test_forward
     identity = IdentityMAE.new
-    out = identity.forward(Numo::DFloat[0, 1])
-    assert_equal out, Numo::DFloat[0, 1]
+    out = identity.forward(Xumo::SFloat[0, 1])
+    assert_equal out, Xumo::SFloat[0, 1]
   end
 
   def test_loss
@@ -240,9 +221,9 @@ class TestIdentityMAE < MiniTest::Unit::TestCase
     identity = IdentityMAE.new
     model << identity
     model.compile(SGD.new)
-    out = identity.forward(Numo::DFloat[[0, 1]])
-    loss = identity.loss(Numo::DFloat[[2, 4]])
-    assert_equal 5, loss.round(1)
+    out = identity.forward(Xumo::SFloat[[0, 1]])
+    loss = identity.loss(Xumo::SFloat[[2, 4]])
+    assert_equal 5, loss.round(4)
   end
 
   def test_backward
@@ -252,16 +233,11 @@ class TestIdentityMAE < MiniTest::Unit::TestCase
     identity = IdentityMAE.new
     model << identity
     model.compile(SGD.new)
-    x = Numo::DFloat[[-1, 2]]
-    y = Numo::DFloat[[2, 4]]
+    x = Xumo::SFloat[[-1, 2]]
+    y = Xumo::SFloat[[2, 4]]
     identity.forward(x)
-    grad = identity.backward(y).round(4)
-    func = ->x do
-      identity.forward(x)
-      identity.loss(y)
-    end
-    n_grad = Util.numerical_grad(x, func).round(4)
-    assert_equal n_grad, grad.sum
+    grad = identity.backward(y)
+    assert_equal Xumo::SFloat[[-1, -1]], grad.round(4)
   end
 end
 
@@ -269,8 +245,8 @@ end
 class TestIdentityHuber < MiniTest::Unit::TestCase
   def test_forward
     identity = IdentityMAE.new
-    out = identity.forward(Numo::DFloat[0, 1])
-    assert_equal out, Numo::DFloat[0, 1]
+    out = identity.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0, 1], out
   end
 
   def test_loss
@@ -280,9 +256,9 @@ class TestIdentityHuber < MiniTest::Unit::TestCase
     identity = IdentityHuber.new
     model << identity
     model.compile(SGD.new)
-    out = identity.forward(Numo::DFloat[[0, 1]])
-    loss = identity.loss(Numo::DFloat[[2, 4]])
-    assert_equal 5, loss.round(3)
+    out = identity.forward(Xumo::SFloat[[0, 1]])
+    loss = identity.loss(Xumo::SFloat[[2, 4]])
+    assert_equal 5, loss.round(4)
   end
 
   def test_loss2
@@ -292,47 +268,39 @@ class TestIdentityHuber < MiniTest::Unit::TestCase
     identity = IdentityHuber.new
     model << identity
     model.compile(SGD.new)
-    out = identity.forward(Numo::DFloat[[0, 1.0]])
-    loss = identity.loss(Numo::DFloat[[0.5, 1.25]])
-    assert_equal 0.15625, loss.round(5)
+    out = identity.forward(Xumo::SFloat[[0, 1.0]])
+    loss = identity.loss(Xumo::SFloat[[0.5, 1.25]])
+    assert_equal 0.1563, loss.round(4)
   end
 
   def test_backward
     model = Model.new
     model << InputLayer.new(2)
     model << Dense.new(2)
-    identity = IdentityMSE.new
+    identity = IdentityHuber.new
     model << identity
     model.compile(SGD.new)
-    x = Numo::DFloat[[-1, 2]]
-    y = Numo::DFloat[[-3, 4]]
+    x = Xumo::SFloat[[-1, 2]]
+    y = Xumo::SFloat[[-3, 4]]
     identity.forward(x)
-    grad = identity.backward(y).round(4)
-    func = ->x do
-      identity.forward(x)
-      identity.loss(y)
-    end
-    n_grad = Util.numerical_grad(x, func).round(4)
-    assert_equal n_grad, grad.sum
+    identity.loss(y)
+    grad = identity.backward(y)
+    assert_equal Xumo::SFloat[[1, -1]], grad.round(4)
   end
 
   def test_backward2
     model = Model.new
     model << InputLayer.new(2)
     model << Dense.new(2)
-    identity = IdentityMSE.new
+    identity = IdentityHuber.new
     model << identity
     model.compile(SGD.new)
-    x = Numo::DFloat[[-1, 2]]
-    y = Numo::DFloat[[-0.5, 1.7]]
+    x = Xumo::SFloat[[-1, 2]]
+    y = Xumo::SFloat[[-0.5, 1.7]]
     identity.forward(x)
-    grad = identity.backward(y).round(4)
-    func = ->x do
-      identity.forward(x)
-      identity.loss(y)
-    end
-    n_grad = Util.numerical_grad(x, func).round(4)
-    assert_equal n_grad, grad.sum
+    identity.loss(y)
+    grad = identity.backward(y)
+    assert_equal Xumo::SFloat[[-0.5, 0.3]], grad.round(4)
   end
 end
 
@@ -340,8 +308,8 @@ end
 class TestSoftmaxWithLoss < MiniTest::Unit::TestCase
   def test_forward
     softmax = SoftmaxWithLoss.new
-    out = softmax.forward(Numo::DFloat[[0, 1, 2]]).round(4)
-    assert_equal out, Numo::DFloat[[0.09, 0.2447, 0.6652]]
+    out = softmax.forward(Xumo::SFloat[[0, 1, 2]])
+    assert_equal Xumo::SFloat[[0.09, 0.2447, 0.6652]], out.round(4)
   end
 
   def test_loss
@@ -351,9 +319,9 @@ class TestSoftmaxWithLoss < MiniTest::Unit::TestCase
     softmax = SoftmaxWithLoss.new
     model << softmax
     model.compile(SGD.new)
-    out = softmax.forward(Numo::DFloat[[0, 1, 2]]).round(4)
-    loss = softmax.loss(Numo::DFloat[[0, 0, 1]]).round(4)
-    assert_equal 0.4076, loss
+    out = softmax.forward(Xumo::SFloat[[0, 1, 2]])
+    loss = softmax.loss(Xumo::SFloat[[0, 0, 1]])
+    assert_equal 0.4076, loss.round(4)
   end
 
   def test_backward
@@ -363,16 +331,11 @@ class TestSoftmaxWithLoss < MiniTest::Unit::TestCase
     softmax = SoftmaxWithLoss.new
     model << softmax
     model.compile(SGD.new)
-    x = Numo::DFloat[[0, 1, 2]]
-    y = Numo::DFloat[[0, 0, 1]]
+    x = Xumo::SFloat[[0, 1, 2]]
+    y = Xumo::SFloat[[0, 0, 1]]
     softmax.forward(x)
     grad = softmax.backward(y)
-    func = ->x do
-      softmax.forward(x)
-      softmax.loss(y)
-    end
-    n_grad = Util.numerical_grad(x, func).round(4)
-    assert_equal n_grad, grad.sum.round(4)
+    assert_equal Xumo::SFloat[[0.09, 0.2447, -0.3348]], grad.round(4)
   end
 end
 
@@ -380,8 +343,8 @@ end
 class TestSigmoidWithLoss < MiniTest::Unit::TestCase
   def test_forward
     sigmoid = SigmoidWithLoss.new
-    out = sigmoid.forward(Numo::DFloat[0, 1])
-    assert_equal Numo::DFloat[0.5, 0.7311], out.round(4)
+    out = sigmoid.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0.5, 0.7311], out.round(4)
   end
 
   def test_loss
@@ -391,9 +354,9 @@ class TestSigmoidWithLoss < MiniTest::Unit::TestCase
     sigmoid = SigmoidWithLoss.new
     model << sigmoid
     model.compile(SGD.new)
-    out = sigmoid.forward(Numo::DFloat[[0, 1]]).round(4)
-    loss = sigmoid.loss(Numo::DFloat[[1, 0]]).round(4)
-    assert_equal 2.0064, loss
+    out = sigmoid.forward(Xumo::SFloat[[0, 1]])
+    loss = sigmoid.loss(Xumo::SFloat[[1, 0]])
+    assert_equal 2.0064, loss.round(4)
   end
 
   def test_backward
@@ -403,15 +366,10 @@ class TestSigmoidWithLoss < MiniTest::Unit::TestCase
     sigmoid = SigmoidWithLoss.new
     model << sigmoid
     model.compile(SGD.new)
-    x = Numo::DFloat[[0, 1]]
-    y = Numo::DFloat[[1, 0]]
+    x = Xumo::SFloat[[0, 1]]
+    y = Xumo::SFloat[[1, 0]]
     sigmoid.forward(x)
     grad = sigmoid.backward(y)
-    func = ->x do
-      sigmoid.forward(x)
-      sigmoid.loss(y)
-    end
-    n_grad = Util.numerical_grad(x, func).round(4)
-    assert_equal n_grad, grad.sum.round(4)
+    assert_equal Xumo::SFloat[[-0.5, 0.7311]], grad.round(4)
   end
 end
