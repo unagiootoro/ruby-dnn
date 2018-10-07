@@ -52,7 +52,7 @@ module DNN
         self.new(hash[:min], hash[:max])
       end
 
-      def initialize(min = -0.25, max = 0.25)
+      def initialize(min = -0.05, max = 0.05)
         @min = min
         @max = max
       end
