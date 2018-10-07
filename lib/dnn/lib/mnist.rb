@@ -1,6 +1,6 @@
 require "open-uri"
 require "zlib"
-require "dnn/core/error"
+require_relative "../core/error"
 
 module DNN
   module MNIST
