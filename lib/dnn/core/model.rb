@@ -270,10 +270,10 @@ module DNN
 
     def input_data_shape_check(x, y = nil)
       unless @layers.first.shape == x.shape[1..-1]
-        raise DNN_ShapeError.new("The shape of x does not match the input shape.")
+        raise DNN_ShapeError.new("The shape of x does not match the input shape. x shape is #{x.shape[1..-1]}, but input shape is #{@layers.first.shape}.")
       end
       if y && @layers.last.shape != y.shape[1..-1]
-        raise DNN_ShapeError.new("The shape of y does not match the input shape.")
+        raise DNN_ShapeError.new("The shape of y does not match the input shape. y shape is #{y.shape[1..-1]}, but output shape is #{@layers.last.shape}.")
       end
     end
 
