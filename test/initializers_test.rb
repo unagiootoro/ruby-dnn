@@ -97,8 +97,8 @@ class TestRandomNorm < MiniTest::Unit::TestCase
 
   def test_initialize
     initializer = RandomUniform.new
-    assert_equal -0.25, initializer.min
-    assert_equal 0.25, initializer.max
+    assert_equal -0.05, initializer.min
+    assert_equal 0.05, initializer.max
   end
 
   def test_init_param
@@ -117,8 +117,8 @@ class TestRandomNorm < MiniTest::Unit::TestCase
     initializer = RandomUniform.new
     expected_hash = {
       class: "DNN::Initializers::RandomUniform",
-      min: -0.25,
-      max: 0.25,
+      min: -0.05,
+      max: 0.05,
     }
     assert_equal expected_hash, initializer.to_hash
   end
