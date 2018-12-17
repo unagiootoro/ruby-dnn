@@ -1,26 +1,27 @@
 #include <ruby.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #define CIFAR10_WIDTH 32
 #define CIFAR10_HEIGHT 32
 #define CIFAR10_CHANNEL 3
 
-VALUE cifar10_load_binary(VALUE self, VALUE rb_bin, VALUE rb_num_datas) {
-  char* bin = StringValuePtr(rb_bin);
-  int num_datas = FIX2INT(rb_num_datas);
+static VALUE cifar10_load_binary(VALUE self, VALUE rb_bin, VALUE rb_num_datas) {
+  uint8_t* bin = (uint8_t*)StringValuePtr(rb_bin);
+  int32_t num_datas = FIX2INT(rb_num_datas);
   VALUE rb_x_bin;
   VALUE rb_y_bin;
-  int i;
-  int j = 0;
-  int k = 0;
-  int size = CIFAR10_WIDTH * CIFAR10_HEIGHT * CIFAR10_CHANNEL;
-  int x_bin_size = num_datas * size;
-  int y_bin_size = num_datas;
-  char* x_bin;
-  char* y_bin;
+  int32_t i;
+  int32_t j = 0;
+  int32_t k = 0;
+  int32_t size = CIFAR10_WIDTH * CIFAR10_HEIGHT * CIFAR10_CHANNEL;
+  int32_t x_bin_size = num_datas * size;
+  int32_t y_bin_size = num_datas;
+  uint8_t* x_bin;
+  uint8_t* y_bin;
 
-  x_bin = (char*)malloc(x_bin_size);
-  y_bin = (char*)malloc(y_bin_size);
+  x_bin = (uint8_t*)malloc(x_bin_size);
+  y_bin = (uint8_t*)malloc(y_bin_size);
   for (i = 0; i < num_datas; i++) {
     y_bin[i] = bin[j];
     j++;
@@ -28,8 +29,8 @@ VALUE cifar10_load_binary(VALUE self, VALUE rb_bin, VALUE rb_num_datas) {
     j += size;
     k += size;
   }
-  rb_x_bin = rb_str_new(x_bin, x_bin_size);
-  rb_y_bin = rb_str_new(y_bin, y_bin_size);
+  rb_x_bin = rb_str_new((char*)x_bin, x_bin_size);
+  rb_y_bin = rb_str_new((char*)y_bin, y_bin_size);
   free(x_bin);
   free(y_bin);
   return rb_ary_new3(2, rb_x_bin, rb_y_bin);
