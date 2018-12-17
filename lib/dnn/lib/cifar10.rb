@@ -1,4 +1,3 @@
-require "dnn"
 require "open-uri"
 require "zlib"
 require "archive/tar/minitar"
