@@ -19,10 +19,12 @@ module DNN
       end
 
       # Forward propagation.
-      def forward() end
+      # Classes that inherit from this class must implement this method.
+      # def forward() end
 
       # Backward propagation.
-      def backward() end
+      # Classes that inherit from this class must implement this method.
+      # def backward() end
     
       # Get the shape of the layer.
       def shape
@@ -102,11 +104,12 @@ module DNN
     end
 
 
+    # It is a superclass of all connection layers.
     class Connection < HasParamLayer
       include Initializers
 
-      attr_reader :l1_lambda
-      attr_reader :l2_lambda
+      attr_reader :l1_lambda # L1 regularization
+      attr_reader :l2_lambda # L2 regularization
 
       def initialize(weight_initializer: nil,
                      bias_initializer: nil,
