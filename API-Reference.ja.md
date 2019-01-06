@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.7.0
+最終更新バージョン:0.8.0
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -299,7 +299,7 @@ Hash
 ## def initialize(dim_or_shape)
 コンストラクタ
 ### arguments
-* Integer|Array dim_or_shape  
+* Integer | Array dim_or_shape  
 入力層のdimentionまたはshapeを指定します。引数がIntegerだとdimentionとみなし、Arrayだとshapeとみなします。
 
 
@@ -600,15 +600,11 @@ Numo::SFloat y
 
 ## 【Instance methods】
 
-## def initialize(momentum: 0.9, running_mean: nil, running_var: nil)
+## def initialize(momentum: 0.9
 コンストラクタ。
 ### arguments
 * Float momenum: 0.9  
 推論時に使用する平均と分散を求めるための指数平均移動の係数。
-* Float running_mean: nil  
-推論時に使用する平均。
-* Float running_var: nil  
-推論時に使用する分散。
 
 
 # module Activations
@@ -745,11 +741,11 @@ Float max
 一様分布の最大値。
 
 ## 【Instance methods】
-## def initialize(min = -0.25, max = 0.25)
+## def initialize(min = -0.05, max = 0.05)
 ### arguments
-* Float min = -0.25  
+* Float min = -0.05  
 一様分布の最小値。
-* Float max = 0.25  
+* Float max = 0.05  
 一様分布の最大値。
 
 
@@ -782,8 +778,8 @@ Float learning_rate
 * Float learning_rate  
   Optimizerの学習率。
 
-## abstruct def update(layer)
-layerのgradsを元に、layerのparamsを更新します。全てのOptimizerを継承するクラスは、このメソッドを実装する必要があります。
+## abstruct def update(params)
+paramsが持つ全ての学習パラメータにおいて、gradを元に、dataを更新します。全てのOptimizerを継承するクラスは、このメソッドを実装する必要があります。
 ### arguments
 * Layer layer  
   paramsを更新するレイヤー。
