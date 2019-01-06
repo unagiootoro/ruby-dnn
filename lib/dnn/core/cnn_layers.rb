@@ -1,6 +1,6 @@
 module DNN
   module Layers
-    #This module is used for convolution.
+    # This module is used for convolution.
     module Conv2DModule
       private
 
@@ -107,20 +107,20 @@ module DNN
         x = padding(x, @pad) if @padding
         @x_shape = x.shape
         @col = im2col(x, *@out_size, *@filter_size, @strides)
-        out = @col.dot(@params[:weight]) + @params[:bias]
+        out = @col.dot(@weight.data) + @bias.data
         out.reshape(x.shape[0], *@out_size, out.shape[3])
       end
 
       def backward(dout)
         dout = dout.reshape(dout.shape[0..2].reduce(:*), dout.shape[3])
-        @grads[:weight] = @col.transpose.dot(dout)
+        @weight.grad = @col.transpose.dot(dout)
         if @l1_lambda > 0
-          @grads[:weight] += dlasso
+          @weight.grad += dlasso
         elsif @l2_lambda > 0
-          @grads[:weight] += dridge
+          @weight.grad += dridge
         end
-        @grads[:bias] = dout.sum(0)
-        dcol = dout.dot(@params[:weight].transpose)
+        @bias.grad = dout.sum(0)
+        dcol = dout.dot(@weight.data.transpose)
         dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
         @padding ? back_padding(dx, @pad) : dx
       end
@@ -140,13 +140,14 @@ module DNN
     
       def init_params
         num_prev_filter = prev_layer.shape[2]
-        @params[:weight] = Xumo::SFloat.new(num_prev_filter * @filter_size.reduce(:*), @num_filters)
-        @params[:bias] = Xumo::SFloat.new(@num_filters)
+        @weight.data = Xumo::SFloat.new(num_prev_filter * @filter_size.reduce(:*), @num_filters)
+        @bias.data = Xumo::SFloat.new(@num_filters)
         super()
       end
     end
 
-    #Super class of all pooling2D class.
+    
+    # Super class of all pooling2D class.
     class Pool2D < Layer
       include Conv2DModule
 
@@ -185,8 +186,7 @@ module DNN
       end
 
       def to_hash
-        super({pool_width: @pool_width,
-               pool_height: @pool_height,
+        super({pool_size: @pool_size,
                strides: @strides,
                padding: @padding})
       end

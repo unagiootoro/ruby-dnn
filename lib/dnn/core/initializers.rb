@@ -2,9 +2,8 @@ module DNN
   module Initializers
 
     class Initializer
-      def init_param(layer, param_key, param)
-        layer.params[param_key] = param
-      end
+      # Classes that inherit from this class must implement this method.
+      # def init_param(param) end
 
       def to_hash(merge_hash = nil)
         hash = {class: self.class.name}
@@ -15,8 +14,8 @@ module DNN
 
 
     class Zeros < Initializer
-      def init_param(layer, param_key)
-        super(layer, param_key, layer.params[param_key].fill(0))
+      def init_param(param)
+        param.data = param.data.fill(0)
       end
     end
     
@@ -34,8 +33,8 @@ module DNN
         @std = std
       end
 
-      def init_param(layer, param_key)
-        super(layer, param_key, layer.params[param_key].rand_norm(@mean, @std))
+      def init_param(param)
+        param.data = param.data.rand_norm(@mean, @std)
       end
 
       def to_hash
@@ -57,8 +56,8 @@ module DNN
         @max = max
       end
 
-      def init_param(layer, param_key)
-        super(layer, param_key, layer.params[param_key].rand(@min, @max))
+      def init_param(param)
+        param.data = param.data.rand(@min, @max)
       end
 
       def to_hash
@@ -68,17 +67,17 @@ module DNN
     
     
     class Xavier < Initializer
-      def init_param(layer, param_key)
-        num_prev_nodes = layer.prev_layer.shape.reduce(:*)
-        super(layer, param_key, layer.params[param_key].rand_norm / Math.sqrt(num_prev_nodes))
+      def init_param(param)
+        num_prev_nodes = param.layer.prev_layer.shape.reduce(:*)
+        param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes)
       end
     end
     
     
     class He < Initializer
-      def init_param(layer, param_key)
-        num_prev_nodes = layer.prev_layer.shape.reduce(:*)
-        super(layer, param_key, layer.params[param_key].rand_norm / Math.sqrt(num_prev_nodes) * Math.sqrt(2))
+      def init_param(param)
+        num_prev_nodes = param.layer.prev_layer.shape.reduce(:*)
+        param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes) * Math.sqrt(2)
       end
     end
 

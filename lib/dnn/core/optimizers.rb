@@ -9,8 +9,9 @@ module DNN
         @learning_rate = learning_rate
       end
 
-      # Update layer has params.
-      def update(layer) end
+      # Update params.
+      # Classes that inherit from this class must implement this method.
+      # def update(params) end
 
       def to_hash(merge_hash = nil)
         hash = {class: self.class.name, learning_rate: @learning_rate}
@@ -33,16 +34,15 @@ module DNN
         @v = {}
       end
     
-      def update(layer)
-        @v[layer] ||= {}
-        layer.params.each_key do |key|
-          amount = layer.grads[key] * @learning_rate
+      def update(params)
+        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+          amount = param.grad * @learning_rate
           if @momentum > 0
-            @v[layer][key] ||= 0
-            amount += @momentum * @v[layer][key]
-            @v[layer][key] = amount
+            @v[param] ||= 0
+            amount += @momentum * @v[param]
+            @v[param] = amount
           end
-          layer.params[key] -= amount
+          param.data -= amount
         end
       end
 
@@ -61,13 +61,12 @@ module DNN
         super(learning_rate, momentum: momentum)
       end
     
-      def update(layer)
-        @v[layer] ||= {}
-        layer.params.each_key do |key|
-          @v[layer][key] ||= 0
-          amount = layer.grads[key] * @learning_rate
-          @v[layer][key] = @v[layer][key] * @momentum - amount
-          layer.params[key] = (layer.params[key] + @momentum**2 * @v[layer][key]) - (1 + @momentum) * amount
+      def update(params)
+        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+          @v[param] ||= 0
+          amount = param.grad * @learning_rate
+          @v[param] = @v[param] * @momentum - amount
+          param.data = (param.data + @momentum**2 * @v[param]) - (1 + @momentum) * amount
         end
       end
     end
@@ -83,12 +82,11 @@ module DNN
         self.new(hash[:learning_rate])
       end
     
-      def update(layer)
-        @g[layer] ||= {}
-        layer.params.each_key do |key|
-          @g[layer][key] ||= 0
-          @g[layer][key] += layer.grads[key]**2
-          layer.params[key] -= (@learning_rate / Xumo::NMath.sqrt(@g[layer][key] + 1e-7)) * layer.grads[key]
+      def update(params)
+        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+          @g[param] ||= 0
+          @g[param] += param.grad**2
+          param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + 1e-7)) * param.grad
         end
       end
     end
@@ -107,12 +105,11 @@ module DNN
         @g = {}
       end
     
-      def update(layer)
-        @g[layer] ||= {}
-        layer.params.each_key do |key|
-          @g[layer][key] ||= 0
-          @g[layer][key] = @alpha * @g[layer][key] + (1 - @alpha) * layer.grads[key]**2
-          layer.params[key] -= (@learning_rate / Xumo::NMath.sqrt(@g[layer][key] + 1e-7)) * layer.grads[key]
+      def update(params)
+        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+          @g[param] ||= 0
+          @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
+          param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + 1e-7)) * param.grad
         end
       end
 
@@ -136,16 +133,14 @@ module DNN
         @s = {}
       end
 
-      def update(layer)
-        @h[layer] ||= {}
-        @s[layer] ||= {}
-        layer.params.each_key do |key|
-          @h[layer][key] ||= Xumo::SFloat.zeros(*layer.params[key].shape)
-          @s[layer][key] ||= Xumo::SFloat.zeros(*layer.params[key].shape)
-          @h[layer][key] = @rho * @h[layer][key] + (1 - @rho) * layer.grads[key]**2
-          v = (Xumo::NMath.sqrt(@s[layer][key] + 1e-6) / Xumo::NMath.sqrt(@h[layer][key] + 1e-6)) * layer.grads[key]
-          @s[layer][key] = @rho * @s[layer][key] + (1 - @rho) * v**2
-          layer.params[key] -= v
+      def update(params)
+        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+          @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
+          v = (Xumo::NMath.sqrt(@s[param] + 1e-6) / Xumo::NMath.sqrt(@h[param] + 1e-6)) * param.grad
+          @s[param] = @rho * @s[param] + (1 - @rho) * v**2
+          param.data -= v
         end
       end
 
@@ -172,17 +167,15 @@ module DNN
         @v = {}
       end
 
-      def update(layer)
+      def update(params)
         @iter += 1
-        @m[layer] ||= {}
-        @v[layer] ||= {}
         lr = @learning_rate * Math.sqrt(1 - @beta2**@iter) / (1 - @beta1**@iter) 
-        layer.params.each_key do |key|
-          @m[layer][key] ||= 0
-          @v[layer][key] ||= 0
-          @m[layer][key] += (1 - @beta1) * (layer.grads[key] - @m[layer][key])
-          @v[layer][key] += (1 - @beta2) * (layer.grads[key]**2 - @v[layer][key])
-          layer.params[key] -= lr * @m[layer][key] / Xumo::NMath.sqrt(@v[layer][key] + 1e-7)
+        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+          @m[param] ||= 0
+          @v[param] ||= 0
+          @m[param] += (1 - @beta1) * (param.grad - @m[param])
+          @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
+          param.data -= lr * @m[param] / Xumo::NMath.sqrt(@v[param] + 1e-7)
         end
       end
 

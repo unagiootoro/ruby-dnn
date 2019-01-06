@@ -45,10 +45,10 @@ class TestSGD < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     sgd = SGD.new(0.1)
     model.compile(sgd)
-    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
-    sgd.update(dense)
-    assert_equal -0.1, dense.params[:weight].mean.round(2)
+    dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
+    sgd.update(dense.params)
+    assert_equal -0.1, dense.params[:weight].data.mean.round(2)
   end
 
   def test_update2
@@ -59,11 +59,11 @@ class TestSGD < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     sgd = SGD.new(0.1, momentum: 1)
     model.compile(sgd)
-    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
-    sgd.update(dense)
-    sgd.update(dense)
-    assert_equal -0.3, dense.params[:weight].mean.round(2)
+    dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
+    sgd.update(dense.params)
+    sgd.update(dense.params)
+    assert_equal -0.3, dense.params[:weight].data.mean.round(2)
   end
 
   def test_to_hash
@@ -98,11 +98,11 @@ class TestNesterov < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     nesterov = Nesterov.new(0.1, momentum: 0.9)
     model.compile(nesterov)
-    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
-    nesterov.update(dense)
-    nesterov.update(dense)
-    assert_equal -0.6149, dense.params[:weight].mean.round(5)
+    dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
+    nesterov.update(dense.params)
+    nesterov.update(dense.params)
+    assert_equal -0.6149, dense.params[:weight].data.mean.round(5)
   end
 end
 
@@ -125,10 +125,10 @@ class TestAdaGrad < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     adagrad = AdaGrad.new
     model.compile(adagrad)
-    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
-    adagrad.update(dense)
-    assert_equal -0.01, dense.params[:weight].mean.round(3)
+    dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
+    adagrad.update(dense.params)
+    assert_equal -0.01, dense.params[:weight].data.mean.round(3)
   end
 end
 
@@ -153,10 +153,10 @@ class TestRMSProp < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     rmsprop = RMSProp.new(0.01, alpha: 0.5)
     model.compile(rmsprop)
-    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
-    rmsprop.update(dense)
-    assert_equal -0.0141, dense.params[:weight].mean.round(4)
+    dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
+    rmsprop.update(dense.params)
+    assert_equal -0.0141, dense.params[:weight].data.mean.round(4)
   end
 
   def test_to_hash
@@ -189,10 +189,10 @@ class TestAdaGrad < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     adadelta = AdaDelta.new(rho: 0.5)
     model.compile(adadelta)
-    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
-    adadelta.update(dense)
-    assert_equal -0.0014, dense.params[:weight].mean.round(4)
+    dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
+    adadelta.update(dense.params)
+    assert_equal -0.0014, dense.params[:weight].data.mean.round(4)
   end
 
   def test_to_hash
@@ -228,11 +228,11 @@ class TestAdam < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     adam = Adam.new(0.01, beta1: 0.8, beta2: 0.9)
     model.compile(adam)
-    dense.grads[:weight] = Numo::SFloat.ones(*dense.params[:weight].shape)
-    dense.grads[:bias] = Numo::SFloat.ones(*dense.params[:bias].shape)
-    adam.update(dense)
-    adam.update(dense)
-    assert_equal -0.02, dense.params[:weight].mean.round(3)
+    dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
+    adam.update(dense.params)
+    adam.update(dense.params)
+    assert_equal -0.02, dense.params[:weight].data.mean.round(3)
   end
 
   def test_to_hash

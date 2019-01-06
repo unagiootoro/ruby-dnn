@@ -35,7 +35,12 @@ module DNN
         hash_params = has_param_layers_params[has_param_layers_index]
         hash_params.each do |key, (shape, base64_param)|
           bin = Base64.decode64(base64_param)
-          layer.params[key] = Xumo::SFloat.from_binary(bin).reshape(*shape)
+          data = Xumo::SFloat.from_binary(bin).reshape(*shape)
+          if layer.params[key].is_a?(LearningParam)
+            layer.params[key].data = data
+          else
+            layer.params[key] = data
+          end
         end
         has_param_layers_index += 1
       end
@@ -55,13 +60,14 @@ module DNN
     def to_json
       hash_layers = @layers.map { |layer| layer.to_hash }
       hash = {version: VERSION, layers: hash_layers, optimizer: @optimizer.to_hash}
-      JSON.dump(hash)
+      JSON.pretty_generate(hash)
     end
     
     def params_to_json
-      has_param_layers = @layers.select { |layer| layer.is_a?(HasParamLayer) }
+      has_param_layers = @layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
       has_param_layers_params = has_param_layers.map do |layer|
         layer.params.map { |key, param|
+          param = param.data if param.is_a?(LearningParam)
           base64_param = Base64.encode64(param.to_binary)
           [key, [param.shape, base64_param]]
         }.to_h
@@ -160,7 +166,7 @@ module DNN
       loss_value
     end
   
-    def accurate(x, y, batch_size = 1, &batch_proc)
+    def accurate(x, y, batch_size = 100, &batch_proc)
       input_data_shape_check(x, y)
       batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
       correct = 0

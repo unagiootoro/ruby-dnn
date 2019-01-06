@@ -49,12 +49,10 @@ module DNN
     class HasParamLayer < Layer
       attr_accessor :trainable # Setting false prevents learning of parameters.
       attr_reader :params      # The parameters of the layer.
-      attr_reader :grads       # Differential value of parameter of layer.
     
       def initialize
-        super
+        super()
         @params = {}
-        @grads = {}
         @trainable = true
       end
     
@@ -68,12 +66,13 @@ module DNN
     
       # Update the parameters.
       def update
-        @model.optimizer.update(self) if @trainable
+        @model.optimizer.update(@params) if @trainable
       end
     
       private
       
       # Initialize of the parameters.
+      # Classes that inherit from this class must implement this method.
       def init_params() end
     end
     
@@ -120,11 +119,13 @@ module DNN
         @bias_initializer = (bias_initializer || Zeros.new)
         @l1_lambda = l1_lambda
         @l2_lambda = l2_lambda
+        @params[:weight] = @weight = LearningParam.new(self)
+        @params[:bias] = @bias = LearningParam.new(self)
       end
 
       def lasso
         if @l1_lambda > 0
-          @l1_lambda * @params[:weight].abs.sum
+          @l1_lambda * @weight.data.abs.sum
         else
           0
         end
@@ -132,20 +133,20 @@ module DNN
 
       def ridge
         if @l2_lambda > 0
-          0.5 * @l2_lambda * (@params[:weight]**2).sum
+          0.5 * @l2_lambda * (@weight.data**2).sum
         else
           0
         end
       end
 
       def dlasso
-        dlasso = Xumo::SFloat.ones(*@params[:weight].shape)
-        dlasso[@params[:weight] < 0] = -1
+        dlasso = Xumo::SFloat.ones(*@weight.data.shape)
+        dlasso[@weight.data < 0] = -1
         @l1_lambda * dlasso
       end
 
       def dridge
-        @l2_lambda * @params[:weight]
+        @l2_lambda * @weight.data
       end
 
       def to_hash(merge_hash)
@@ -158,8 +159,8 @@ module DNN
       private
 
       def init_params
-        @weight_initializer.init_param(self, :weight)
-        @bias_initializer.init_param(self, :bias)
+        @weight_initializer.init_param(@weight)
+        @bias_initializer.init_param(@bias)
       end
     end
     
@@ -187,18 +188,18 @@ module DNN
     
       def forward(x)
         @x = x
-        @x.dot(@params[:weight]) + @params[:bias]
+        @x.dot(@weight.data) + @bias.data
       end
     
       def backward(dout)
-        @grads[:weight] = @x.transpose.dot(dout)
+        @weight.grad = @x.transpose.dot(dout)
         if @l1_lambda > 0
-          @grads[:weight] += dlasso
+          @weight.grad += dlasso
         elsif @l2_lambda > 0
-          @grads[:weight] += dridge
+          @weight.grad += dridge
         end
-        @grads[:bias] = dout.sum(0)
-        dout.dot(@params[:weight].transpose)
+        @bias.grad = dout.sum(0)
+        dout.dot(@weight.data.transpose)
       end
     
       def shape
@@ -213,8 +214,8 @@ module DNN
     
       def init_params
         num_prev_nodes = prev_layer.shape[0]
-        @params[:weight] = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
-        @params[:bias] = Xumo::SFloat.new(@num_nodes)
+        @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
+        @bias.data = Xumo::SFloat.new(@num_nodes)
         super()
       end
     end
@@ -317,22 +318,22 @@ module DNN
       attr_reader :momentum
 
       def self.load_hash(hash)
-        running_mean = Xumo::SFloat.cast(hash[:running_mean])
-        running_var = Xumo::SFloat.cast(hash[:running_var])
-        self.new(momentum: hash[:momentum], running_mean: running_mean, running_var: running_var)
+        self.new(momentum: hash[:momentum])
       end
 
-      def initialize(momentum: 0.9, running_mean: nil, running_var: nil)
+      def initialize(momentum: 0.9)
         super()
         @momentum = momentum
-        @running_mean = running_mean
-        @running_var = running_var
+        @params[:gamma] = @gamma = LearningParam.new(self)
+        @params[:beta] = @beta = LearningParam.new(self)
+        @params[:running_mean] = nil
+        @params[:running_var] = nil
       end
 
       def build(model)
         super
-        @running_mean ||= Xumo::SFloat.zeros(*shape)
-        @running_var ||= Xumo::SFloat.zeros(*shape)
+        @params[:running_mean] ||= Xumo::SFloat.zeros(*shape)
+        @params[:running_var] ||= Xumo::SFloat.zeros(*shape)
       end
 
       def forward(x)
@@ -343,20 +344,20 @@ module DNN
           @std = Xumo::NMath.sqrt(var + 1e-7)
           xn = @xc / @std
           @xn = xn
-          @running_mean = @momentum * @running_mean + (1 - @momentum) * mean
-          @running_var = @momentum * @running_var + (1 - @momentum) * var
+          @params[:running_mean] = @momentum * @params[:running_mean] + (1 - @momentum) * mean
+          @params[:running_var] = @momentum * @params[:running_var] + (1 - @momentum) * var
         else
-          xc = x - @running_mean
-          xn = xc / Xumo::NMath.sqrt(@running_var + 1e-7)
+          xc = x - @params[:running_mean]
+          xn = xc / Xumo::NMath.sqrt(@params[:running_var] + 1e-7)
         end
-        @params[:gamma] * xn + @params[:beta]
+        @gamma.data * xn + @beta.data
       end
     
       def backward(dout)
         batch_size = dout.shape[0]
-        @grads[:beta] = dout.sum(0)
-        @grads[:gamma] = (@xn * dout).sum(0)
-        dxn = @params[:gamma] * dout
+        @beta.grad = dout.sum(0)
+        @gamma.grad = (@xn * dout).sum(0)
+        dxn = @gamma.data * dout
         dxc = dxn / @std
         dstd = -((dxn * @xc) / (@std**2)).sum(0)
         dvar = 0.5 * dstd / @std
@@ -366,16 +367,14 @@ module DNN
       end
 
       def to_hash
-        super({momentum: @momentum,
-               running_mean: @running_mean.to_a,
-               running_var: @running_var.to_a})
+        super({momentum: @momentum})
       end
     
       private
     
       def init_params
-        @params[:gamma] = Xumo::SFloat.ones(*shape)
-        @params[:beta] = Xumo::SFloat.zeros(*shape)
+        @gamma.data = Xumo::SFloat.ones(*shape)
+        @beta.data = Xumo::SFloat.zeros(*shape)
       end
     end
   end
