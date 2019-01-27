@@ -11,7 +11,9 @@ module DNN
 
       # Update params.
       # Classes that inherit from this class must implement this method.
-      # def update(params) end
+      def update(params)
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update'")
+      end
 
       def to_hash(merge_hash = nil)
         hash = {class: self.class.name, learning_rate: @learning_rate}

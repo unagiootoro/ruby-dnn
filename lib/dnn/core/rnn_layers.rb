@@ -25,7 +25,7 @@ module DNN
         @return_sequences = return_sequences
         @layers = []
         @params[:h] = nil
-        @params[:weight2] = @weight2 = LearningParam.new(self)
+        @params[:weight2] = @weight2 = LearningParam.new
       end
 
       def forward(xs)
@@ -199,9 +199,9 @@ module DNN
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
         @weight2.data = Xumo::SFloat.new(@num_nodes, @num_nodes)
         @bias.data = Xumo::SFloat.new(@num_nodes)
-        @weight_initializer.init_param(@weight)
-        @weight_initializer.init_param(@weight2)
-        @bias_initializer.init_param(@bias)
+        @weight_initializer.init_param(self, @weight)
+        @weight_initializer.init_param(self, @weight2)
+        @bias_initializer.init_param(self, @bias)
         @time_length.times do |t|
           @layers << SimpleRNN_Dense.new(self)
         end
@@ -343,9 +343,9 @@ module DNN
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes * 4)
         @weight2.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 4)
         @bias.data = Xumo::SFloat.new(@num_nodes * 4)
-        @weight_initializer.init_param(@weight)
-        @weight_initializer.init_param(@weight2)
-        @bias_initializer.init_param(@bias)
+        @weight_initializer.init_param(self, @weight)
+        @weight_initializer.init_param(self, @weight2)
+        @bias_initializer.init_param(self, @bias)
         @time_length.times do |t|
           @layers << LSTM_Dense.new(self)
         end
@@ -444,9 +444,9 @@ module DNN
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes * 3)
         @weight2.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 3)
         @bias.data = Xumo::SFloat.new(@num_nodes * 3)
-        @weight_initializer.init_param(@weight)
-        @weight_initializer.init_param(@weight2)
-        @bias_initializer.init_param(@bias)
+        @weight_initializer.init_param(self, @weight)
+        @weight_initializer.init_param(self, @weight2)
+        @bias_initializer.init_param(self, @bias)
         @time_length.times do |t|
           @layers << GRU_Dense.new(self)
         end

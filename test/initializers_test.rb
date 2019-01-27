@@ -30,7 +30,7 @@ class TestZeros < MiniTest::Unit::TestCase
     model << IdentityMSE.new
     model.compile(SGD.new)
     zeros = Numo::SFloat.zeros(dense.params[:weight].data.shape)
-    initializer.init_param(dense.params[:weight])
+    initializer.init_param(self, dense.params[:weight])
     assert_equal zeros, dense.params[:weight].data
   end
 end
@@ -58,7 +58,7 @@ class TestRandomNorm < MiniTest::Unit::TestCase
     model << dense
     model << IdentityMSE.new
     model.compile(SGD.new)
-    initializer.init_param(dense.params[:weight])
+    initializer.init_param(self, dense.params[:weight])
     assert_kind_of Numo::SFloat, dense.params[:weight].data
   end
 
@@ -96,7 +96,7 @@ class TestRandomNorm < MiniTest::Unit::TestCase
     model << dense
     model << IdentityMSE.new
     model.compile(SGD.new)
-    initializer.init_param(dense.params[:weight])
+    initializer.init_param(self, dense.params[:weight])
     assert_kind_of Numo::SFloat, dense.params[:weight].data
   end
 
@@ -121,7 +121,7 @@ class TestXavier < MiniTest::Unit::TestCase
     model << dense
     model << IdentityMSE.new
     model.compile(SGD.new)
-    initializer.init_param(dense.params[:weight])
+    initializer.init_param(dense, dense.params[:weight])
     assert_kind_of Numo::SFloat, dense.params[:weight].data
   end
 end
@@ -136,7 +136,7 @@ class TestHe < MiniTest::Unit::TestCase
     model << dense
     model << IdentityMSE.new
     model.compile(SGD.new)
-    initializer.init_param(dense.params[:weight])
+    initializer.init_param(dense, dense.params[:weight])
     assert_kind_of Numo::SFloat, dense.params[:weight].data
   end
 end

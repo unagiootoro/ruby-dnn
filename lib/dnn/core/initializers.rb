@@ -3,7 +3,9 @@ module DNN
 
     class Initializer
       # Classes that inherit from this class must implement this method.
-      # def init_param(param) end
+      def init_param(layer, param)
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_params'")
+      end
 
       def to_hash(merge_hash = nil)
         hash = {class: self.class.name}
@@ -14,7 +16,7 @@ module DNN
 
 
     class Zeros < Initializer
-      def init_param(param)
+      def init_param(layer, param)
         param.data = param.data.fill(0)
       end
     end
@@ -33,7 +35,7 @@ module DNN
         @std = std
       end
 
-      def init_param(param)
+      def init_param(layer, param)
         param.data = param.data.rand_norm(@mean, @std)
       end
 
@@ -56,7 +58,7 @@ module DNN
         @max = max
       end
 
-      def init_param(param)
+      def init_param(layer, param)
         param.data = param.data.rand(@min, @max)
       end
 
@@ -67,16 +69,16 @@ module DNN
     
     
     class Xavier < Initializer
-      def init_param(param)
-        num_prev_nodes = param.layer.prev_layer.shape.reduce(:*)
+      def init_param(layer, param)
+        num_prev_nodes = layer.prev_layer.shape.reduce(:*)
         param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes)
       end
     end
     
     
     class He < Initializer
-      def init_param(param)
-        num_prev_nodes = param.layer.prev_layer.shape.reduce(:*)
+      def init_param(layer, param)
+        num_prev_nodes = layer.prev_layer.shape.reduce(:*)
         param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes) * Math.sqrt(2)
       end
     end

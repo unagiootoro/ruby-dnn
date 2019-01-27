@@ -71,9 +71,10 @@ class TestHasParamLayer < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     model << layer
     model << OutputLayer.new
-    model.compile(SGD.new)
-    layer.update
-    assert_nil nil
+    assert_raises(NotImplementedError) do
+      model.compile(SGD.new)
+      layer.update
+    end
   end
 end
 
@@ -319,13 +320,9 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     hash = {
       class: "DNN::Layers::BatchNormalization",
       momentum: 0.8,
-      running_mean: Numo::SFloat.ones(10),
-      running_var: Numo::SFloat.ones(10),
     }
     batch_norm = BatchNormalization.load_hash(hash)
     assert_equal 0.8, batch_norm.momentum
-    assert_equal Numo::SFloat.ones(10), batch_norm.params[:running_mean]
-    assert_equal Numo::SFloat.ones(10), batch_norm.params[:running_var]
   end
 
   def test_build
@@ -334,8 +331,6 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model << InputLayer.new(10)
     model << batch_norm
     batch_norm.build(model)
-    assert_equal Numo::SFloat.zeros(10), batch_norm.params[:running_mean]
-    assert_equal Numo::SFloat.zeros(10), batch_norm.params[:running_var]
   end
 
   def test_forward
@@ -359,14 +354,15 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     model << InputLayer.new(1)
     model << Dense.new(10)
     
-    batch_norm = BatchNormalization.new(running_mean: Numo::SFloat.new(10).fill(15),
-                                        running_var: Numo::SFloat.new(10).fill(25))
+    batch_norm = BatchNormalization.new
     model << batch_norm
     model << IdentityMSE.new
     model.compile(SGD.new)
     model.instance_variable_set(:@training, false)
     batch_norm.params[:gamma].data = Numo::SFloat.new(10).fill(3)
     batch_norm.params[:beta].data = Numo::SFloat.new(10).fill(10)
+    batch_norm.params[:running_mean] = Numo::SFloat.new(10).fill(15)
+    batch_norm.params[:running_var] = Numo::SFloat.new(10).fill(25)
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
     assert_equal expected, batch_norm.forward(x).round(4)
@@ -393,8 +389,6 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     expected_hash = {
       class: "DNN::Layers::BatchNormalization",
       momentum: 0.9,
-      running_mean: [0] * 10,
-      running_var: [0] * 10,
     }
     model = Model.new
     model << InputLayer.new(1)

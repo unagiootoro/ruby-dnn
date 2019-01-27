@@ -20,11 +20,15 @@ module DNN
 
       # Forward propagation.
       # Classes that inherit from this class must implement this method.
-      # def forward() end
+      def forward
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
+      end
 
       # Backward propagation.
       # Classes that inherit from this class must implement this method.
-      # def backward() end
+      def backward
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update'")
+      end
     
       # Get the shape of the layer.
       def shape
@@ -73,7 +77,9 @@ module DNN
       
       # Initialize of the parameters.
       # Classes that inherit from this class must implement this method.
-      def init_params() end
+      def init_params
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_params'")
+      end
     end
     
     
@@ -119,8 +125,8 @@ module DNN
         @bias_initializer = (bias_initializer || Zeros.new)
         @l1_lambda = l1_lambda
         @l2_lambda = l2_lambda
-        @params[:weight] = @weight = LearningParam.new(self)
-        @params[:bias] = @bias = LearningParam.new(self)
+        @params[:weight] = @weight = LearningParam.new
+        @params[:bias] = @bias = LearningParam.new
       end
 
       def lasso
@@ -159,8 +165,8 @@ module DNN
       private
 
       def init_params
-        @weight_initializer.init_param(@weight)
-        @bias_initializer.init_param(@bias)
+        @weight_initializer.init_param(self, @weight)
+        @bias_initializer.init_param(self, @bias)
       end
     end
     
@@ -324,8 +330,8 @@ module DNN
       def initialize(momentum: 0.9)
         super()
         @momentum = momentum
-        @params[:gamma] = @gamma = LearningParam.new(self)
-        @params[:beta] = @beta = LearningParam.new(self)
+        @params[:gamma] = @gamma = LearningParam.new
+        @params[:beta] = @beta = LearningParam.new
         @params[:running_mean] = nil
         @params[:running_var] = nil
       end
