@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.8.0
+最終更新バージョン:0.8.2
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -336,17 +336,15 @@ Integer
 
 ## 【Instance methods】
 
-## def initialize(num_nodes, weight_initializer: nil, bias_initializer: nil, l1_lambda: 0, l2_lambda: 0)
+## def initialize(num_nodes, weight_initializer: Initializers::RandomNormal.new, bias_initializer: Initializers::Zeros.new, l1_lambda: 0, l2_lambda: 0)
 コンストラクタ。
 ### arguments
 * Integer num_nodes  
 レイヤーのノード数を設定します。
-* Initializer weight_initializer: nil  
+* Initializer weight_initializer: Initializers::RandomNormal.new  
 重みの初期化に使用するイニシャライザーを設定します。
-nilを指定すると、RandomNormalイニシャライザーが使用されます。  
-* Initializer bias_initializer: nil  
+* Initializer bias_initializer: Initializers::Zeros.new  
 バイアスの初期化に使用するイニシャライザーを設定します。
-nilを指定すると、Zerosイニシャライザーが使用されます。
 * Float l1_lambda: 0  
 重みのL1正則化の係数を設定します。
 * Float l2_lambda: 0  
@@ -374,7 +372,7 @@ Array
 
 ## 【Instance methods】
 
-## def initialize(num_filters, filter_size, weight_initializer: nil, bias_initializer: nil, strides: 1, padding false, l1_lambda: 0, l2_lambda: 0)
+## def initialize(num_filters, filter_size, weight_initializer: Initializers::RandomNormal.new, bias_initializer: Initializers::Zeros.new, strides: 1, padding false, l1_lambda: 0, l2_lambda: 0)
 コンストラクタ。
 ### arguments
 * Integer num_filters  
@@ -382,10 +380,9 @@ Array
 * Integer | Array filter_size  
 フィルターの縦と横の長さ。
 Arrayで指定する場合、[Integer height, Integer width]の形式で指定します。
-* Initializer weight_initializer: nil  
-重みの初期化に使用するイニシャライザーを設定します
-nilを指定すると、RandomNormalイニシャライザーが使用されます。  
-* Initializer bias_initializer: nil  
+* Initializer weight_initializer: Initializers::RandomNormal.new  
+重みの初期化に使用するイニシャライザーを設定します。
+* Initializer bias_initializer: Initializers::Zeros.new  
 バイアスの初期化に使用するイニシャライザーを設定します。
 * Array<Integer> strides: 1  
 畳み込みを行う際のストライドの単位を指定します。
@@ -472,7 +469,7 @@ bool
 
 ## 【Instance methods】
 
-## def initialize(num_nodes, stateful: false, return_sequences: true, weight_initializer: nil, bias_initializer: nil, l1_lamda: 0, l2_lambda: 0)
+## def initialize(num_nodes, stateful: false, return_sequences: true, weight_initializer: Initializers::RandomNormal.new, bias_initializer: Initializers::Zeros.new, l1_lamda: 0, l2_lambda: 0)
 コンストラクタ。
 ### arguments
 * Integer num_nodes  
@@ -482,12 +479,10 @@ trueを設定すると、一つ前に計算した中間層の値を使用して�
 * bool return_sequences
 trueを設定すると、時系列ネットワークの中間層全てを出力します。  
 falseを設定すると、時系列ネットワークの中間層の最後のみを出力します。
-* Initializer weight_initializer: nil  
+* Initializer weight_initializer: Initializers::RandomNormal.new  
 重みの初期化に使用するイニシャライザーを設定します。
-nilを指定すると、RandomNormalイニシャライザーが使用されます。  
-* Initializer bias_initializer: nil  
+* Initializer bias_initializer: Initializers::Zeros.new  
 バイアスの初期化に使用するイニシャライザーを設定します。
-nilを指定すると、Zerosイニシャライザーが使用されます。
 * Float l1_lambda: 0  
 重みのL1正則化の係数を設定します。
 * Float l2_lambda: 0  
@@ -502,7 +497,7 @@ nilを指定すると、Zerosイニシャライザーが使用されます。
 
 ## 【Instance methods】
 
-## def initialize(num_nodes, stateful: false, return_sequences: true,  activation: nil, weight_initializer: nil, bias_initializer: nil, l1_lamda: 0, l2_lambda: 0)
+## def initialize(num_nodes, stateful: false, return_sequences: true,  activation: Tanh.new, weight_initializer: Initializers::RandomNormal.new, bias_initializer: Initializers::Zeros.new, l1_lamda: 0, l2_lambda: 0)
 コンストラクタ。
 ### arguments
 * Integer num_nodes  
@@ -514,13 +509,10 @@ trueを設定すると、時系列ネットワークの中間層全てを出力�
 falseを設定すると、時系列ネットワークの中間層の最後のみを出力します。
 * Layer activation
 リカレントニューラルネットワークにおいて、使用する活性化関数を設定します。
-nilを指定すると、Tanhが使用されます。
 * Initializer weight_initializer: nil  
 重みの初期化に使用するイニシャライザーを設定します。
-nilを指定すると、RandomNormalイニシャライザーが使用されます。  
 * Initializer bias_initializer: nil  
 バイアスの初期化に使用するイニシャライザーを設定します。
-nilを指定すると、Zerosイニシャライザーが使用されます。
 * Float l1_lambda: 0  
 重みのL1正則化の係数を設定します。
 * Float l2_lambda: 0  
@@ -694,14 +686,12 @@ Float alpha
 
 ## 【Instance methods】
 
-## def init_param(layer, param_key, param)
+## def init_param(layer, param)
 レイヤーの持つパラメータを更新します。
 ### arguments
 * HasParamLayer layer  
 更新対象のパラメータを持つレイヤーを指定します。
-* Symbol param_key  
-更新す対象のパラメータの名前を指定します。
-* Numo::SFloat param  
+* LearningParam param  
 更新するパラメータです。
 
 
