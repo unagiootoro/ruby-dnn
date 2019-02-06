@@ -68,14 +68,14 @@ module DNN
       attr_reader :strides
     
       def initialize(num_filters, filter_size,
-                     weight_initializer: nil,
-                     bias_initializer: nil,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::RandomNormal.new,
                      strides: 1,
                      padding: false,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
-              l1_lambda: l1_lambda, l2_lambda: l1_lambda)
+              l1_lambda: l1_lambda, l2_lambda: l2_lambda)
         @num_filters = num_filters
         @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
         @strides = strides.is_a?(Integer) ? [strides, strides] : strides

@@ -111,18 +111,16 @@ module DNN
 
     # It is a superclass of all connection layers.
     class Connection < HasParamLayer
-      include Initializers
-
       attr_reader :l1_lambda # L1 regularization
       attr_reader :l2_lambda # L2 regularization
 
-      def initialize(weight_initializer: nil,
-                     bias_initializer: nil,
+      def initialize(weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super()
-        @weight_initializer = (weight_initializer || RandomNormal.new)
-        @bias_initializer = (bias_initializer || Zeros.new)
+        @weight_initializer = weight_initializer
+        @bias_initializer = bias_initializer
         @l1_lambda = l1_lambda
         @l2_lambda = l2_lambda
         @params[:weight] = @weight = LearningParam.new

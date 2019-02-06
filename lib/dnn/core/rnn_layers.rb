@@ -172,9 +172,9 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     activation: nil,
-                     weight_initializer: nil,
-                     bias_initializer: nil,
+                     activation: Tanh.new,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super(num_nodes,
@@ -184,7 +184,7 @@ module DNN
               bias_initializer: bias_initializer,
               l1_lambda: 0,
               l2_lambda: 0)
-        @activation = (activation || Tanh.new)
+        @activation = activation
       end
 
       def to_hash
@@ -281,8 +281,8 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: nil,
-                     bias_initializer: nil,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super
@@ -429,8 +429,8 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: nil,
-                     bias_initializer: nil,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new
                      l1_lambda: 0,
                      l2_lambda: 0)
         super
