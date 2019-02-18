@@ -20,13 +20,13 @@ module DNN
 
       # Forward propagation.
       # Classes that inherit from this class must implement this method.
-      def forward
+      def forward(x)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
       end
 
       # Backward propagation.
       # Classes that inherit from this class must implement this method.
-      def backward
+      def backward(dout)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update'")
       end
     
@@ -181,8 +181,8 @@ module DNN
       end
     
       def initialize(num_nodes,
-                     weight_initializer: nil,
-                     bias_initializer: nil,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
@@ -328,16 +328,6 @@ module DNN
       def initialize(momentum: 0.9)
         super()
         @momentum = momentum
-        @params[:gamma] = @gamma = LearningParam.new
-        @params[:beta] = @beta = LearningParam.new
-        @params[:running_mean] = nil
-        @params[:running_var] = nil
-      end
-
-      def build(model)
-        super
-        @params[:running_mean] ||= Xumo::SFloat.zeros(*shape)
-        @params[:running_var] ||= Xumo::SFloat.zeros(*shape)
       end
 
       def forward(x)
@@ -377,8 +367,12 @@ module DNN
       private
     
       def init_params
+        @params[:gamma] = @gamma = LearningParam.new
+        @params[:beta] = @beta = LearningParam.new
         @gamma.data = Xumo::SFloat.ones(*shape)
         @beta.data = Xumo::SFloat.zeros(*shape)
+        @params[:running_mean] = Xumo::SFloat.zeros(*shape)
+        @params[:running_var] = Xumo::SFloat.zeros(*shape)
       end
     end
   end
