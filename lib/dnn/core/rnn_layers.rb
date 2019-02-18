@@ -14,8 +14,8 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: nil,
-                     bias_initializer: nil,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
@@ -430,7 +430,7 @@ module DNN
                      stateful: false,
                      return_sequences: true,
                      weight_initializer: Initializers::RandomNormal.new,
-                     bias_initializer: Initializers::Zeros.new
+                     bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super
