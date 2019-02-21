@@ -2,6 +2,7 @@ require "json"
 require "base64"
 
 module DNN
+
   # This class deals with the model of the network.
   class Model
     attr_accessor :layers    # All layers possessed by the model
@@ -162,6 +163,7 @@ module DNN
       forward(x, true)
       loss_value = loss(y)
       backward(y)
+      dloss
       update
       loss_value
     end
@@ -229,6 +231,10 @@ module DNN
 
     def loss(y)
       @layers[-1].loss(y)
+    end
+
+    def dloss
+      @layers[-1].dloss
     end
   
     def backward(y)
@@ -303,4 +309,5 @@ module DNN
       end
     end
   end
+
 end

@@ -94,24 +94,18 @@ module DNN
         end
       end
 
-      def dlasso
-        dlasso = Xumo::SFloat.ones(*@weight.data.shape)
-        dlasso[@weight.data < 0] = -1
-        @l1_lambda * dlasso
-      end
-
-      def dridge
-        @l2_lambda * @weight.data
-      end
-
       def dlasso2
-        dlasso = Xumo::SFloat.ones(*@weight2.data.shape)
-        dlasso[@weight2.data < 0] = -1
-        @l1_lambda * dlasso
+        if @l1_lambda > 0
+          dlasso = Xumo::SFloat.ones(*@weight2.data.shape)
+          dlasso[@weight2.data < 0] = -1
+          @weight2.grad += @l1_lambda * dlasso
+        end
       end
 
       def dridge2
-        @l2_lambda * @weight2.data
+        if @l2_lambda > 0
+          @weight2.grad += l2_lambda * @weight2.data
+        end
       end
 
       private
@@ -139,13 +133,6 @@ module DNN
         dh2 = @activation.backward(dh2)
         @rnn.weight.grad += @x.transpose.dot(dh2)
         @rnn.weight2.grad += @h.transpose.dot(dh2)
-        if @rnn.l1_lambda > 0
-          @rnn.weight.grad += dlasso
-          @rnn.weight2.grad += dlasso2
-        elsif @rnn.l2_lambda > 0
-          @rnn.weight.grad += dridge
-          @rnn.weight2.grad += dridge2
-        end
         @rnn.bias.grad += dh2.sum(0)
         dx = dh2.dot(@rnn.weight.data.transpose)
         dh = dh2.dot(@rnn.weight2.data.transpose)
@@ -250,13 +237,6 @@ module DNN
 
         @rnn.weight.grad += @x.transpose.dot(da)
         @rnn.weight2.grad += @h.transpose.dot(da)
-        if @rnn.l1_lambda > 0
-          @rnn.weight.grad += dlasso
-          @rnn.weight2.grad += dlasso2
-        elsif @rnn.l2_lambda > 0
-          @rnn.weight.grad += dridge
-          @rnn.weight2.grad += dridge2
-        end
         @rnn.bias.grad += da.sum(0)
         dx = da.dot(@rnn.weight.data.transpose)
         dh = da.dot(@rnn.weight2.data.transpose)
@@ -401,13 +381,6 @@ module DNN
 
         @rnn.weight.grad += Xumo::SFloat.hstack([dweight_a, dweight_h])
         @rnn.weight2.grad += Xumo::SFloat.hstack([dweight2_a, dweight2_h])
-        if @rnn.l1_lambda > 0
-          @rnn.weight.grad += dlasso
-          @rnn.weight2.grad += dlasso2
-        elsif @rnn.l2_lambda > 0
-          @rnn.weight.grad += dridge
-          @rnn.weight2.grad += dridge2
-        end
         @rnn.bias.grad += Xumo::SFloat.hstack([dbias_a, dbias_h])
         [dx, dh]
       end

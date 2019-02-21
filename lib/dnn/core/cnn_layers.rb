@@ -114,11 +114,6 @@ module DNN
       def backward(dout)
         dout = dout.reshape(dout.shape[0..2].reduce(:*), dout.shape[3])
         @weight.grad = @col.transpose.dot(dout)
-        if @l1_lambda > 0
-          @weight.grad += dlasso
-        elsif @l2_lambda > 0
-          @weight.grad += dridge
-        end
         @bias.grad = dout.sum(0)
         dcol = dout.dot(@weight.data.transpose)
         dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)

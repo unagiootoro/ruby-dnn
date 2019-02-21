@@ -144,13 +144,17 @@ module DNN
       end
 
       def dlasso
-        dlasso = Xumo::SFloat.ones(*@weight.data.shape)
-        dlasso[@weight.data < 0] = -1
-        @l1_lambda * dlasso
+        if @l1_lambda > 0
+          dlasso = Xumo::SFloat.ones(*@weight.data.shape)
+          dlasso[@weight.data < 0] = -1
+          @weight.grad += @l1_lambda * dlasso
+        end
       end
 
       def dridge
-        @l2_lambda * @weight.data
+        if @l2_lambda > 0
+          @weight.grad += @l2_lambda * @weight.data
+        end
       end
 
       def to_hash(merge_hash)
@@ -197,11 +201,6 @@ module DNN
     
       def backward(dout)
         @weight.grad = @x.transpose.dot(dout)
-        if @l1_lambda > 0
-          @weight.grad += dlasso
-        elsif @l2_lambda > 0
-          @weight.grad += dridge
-        end
         @bias.grad = dout.sum(0)
         dout.dot(@weight.data.transpose)
       end
@@ -270,6 +269,18 @@ module DNN
 
 
     class OutputLayer < Layer
+      # Classes that inherit from this class must implement this method.
+      def loss(x)
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
+      end
+
+      def dloss
+        @model.layers.select { |layer| layer.is_a?(Connection) }.each do |layer|
+          layer.dlasso
+          layer.dridge
+        end
+      end
+      
       private
 
       def lasso
