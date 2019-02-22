@@ -216,6 +216,12 @@ module DNN
         @layers.select { |layer| layer.is_a?(layer_class) }[index]
       end
     end
+
+    def get_all_layers
+      @layers.map { |layer|
+        layer.is_a?(Model) ? layer.get_all_layers : layer
+      }.flatten
+    end
   
     def forward(x, training)
       @training = training
@@ -291,7 +297,7 @@ module DNN
 
     def layers_shape_check
       @layers.each.with_index do |layer, i|
-        prev_shape = layer.prev_layer.shape
+        prev_shape = layer.is_a?(Layers::Layer) ? layer.prev_layer.shape : layer.layers[-1]
         if layer.is_a?(Layers::Dense)
           if prev_shape.length != 1
             raise DNN_ShapeError.new("layer index(#{i}) Dense:  The shape of the previous layer is #{prev_shape}. The shape of the previous layer must be 1 dimensional.")

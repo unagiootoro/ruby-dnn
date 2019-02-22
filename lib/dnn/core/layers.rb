@@ -275,7 +275,7 @@ module DNN
       end
 
       def dloss
-        @model.layers.select { |layer| layer.is_a?(Connection) }.each do |layer|
+        @model.get_all_layers.select { |layer| layer.is_a?(Connection) }.each do |layer|
           layer.dlasso
           layer.dridge
         end
@@ -284,13 +284,13 @@ module DNN
       private
 
       def lasso
-        @model.layers.select { |layer| layer.is_a?(Connection) }
-                     .reduce(0) { |sum, layer| sum + layer.lasso }
+        @model.get_all_layers.select { |layer| layer.is_a?(Connection) }
+                             .reduce(0) { |sum, layer| sum + layer.lasso }
       end
     
       def ridge
-        @model.layers.select { |layer| layer.is_a?(Connection) }
-                     .reduce(0) { |sum, layer| sum + layer.ridge }
+        @model.get_all_layers.select { |layer| layer.is_a?(Connection) }
+                             .reduce(0) { |sum, layer| sum + layer.ridge }
       end
     end
     

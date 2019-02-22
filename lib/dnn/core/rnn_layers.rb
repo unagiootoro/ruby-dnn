@@ -94,16 +94,20 @@ module DNN
         end
       end
 
-      def dlasso2
+      def dlasso
         if @l1_lambda > 0
-          dlasso = Xumo::SFloat.ones(*@weight2.data.shape)
-          dlasso[@weight2.data < 0] = -1
-          @weight2.grad += @l1_lambda * dlasso
+          dlasso = Xumo::SFloat.ones(*@weight.data.shape)
+          dlasso[@weight.data < 0] = -1
+          @weight.grad += @l1_lambda * dlasso
+          dlasso2 = Xumo::SFloat.ones(*@weight2.data.shape)
+          dlasso2[@weight2.data < 0] = -1
+          @weight2.grad += @l1_lambda * dlasso2
         end
       end
 
-      def dridge2
+      def dridge
         if @l2_lambda > 0
+          @weight.grad += l2_lambda * @weight.data
           @weight2.grad += l2_lambda * @weight2.data
         end
       end
