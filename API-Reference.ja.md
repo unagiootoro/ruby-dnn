@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.8.2
+最終更新バージョン:0.8.5
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -697,6 +697,16 @@ Float alpha
 
 # class Zeros < Initializer
 パラメータを0で初期化します。
+
+
+# class Const < Initializer
+パラメータを指定の定数で初期化します。
+
+## 【Instance methods】
+## def initialize(const)
+### arguments
+* Float const  
+初期化する定数
 
 
 # class RandomNormal < Initializer
