@@ -1,6 +1,6 @@
 # LIB-APIリファレンス
 ruby-dnnの付属ライブラリのリファレンスです。  
-最終更新バージョン:0.5.10
+最終更新バージョン:0.8.5
 
 
 # dnn/lib/mnist
@@ -71,11 +71,11 @@ Array
   Numo::UInt8の[10000]の形式
 
 
-# dnn/lib/image_io
-画像のin/outを行うライブラリです。内部でstb_image.hとstb_image_write.hを使用しています。
+# dnn/lib/image
+画像のread/writeを行うライブラリです。内部でstb_image.hとstb_image_write.hを使用しています。
 
 
-# module ImageIO
+# module Image
 
 ## def self.read(file_name)
 画像をNumo::UInt8形式で読み込みます。
