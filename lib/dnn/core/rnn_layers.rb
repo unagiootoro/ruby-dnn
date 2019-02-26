@@ -121,25 +121,27 @@ module DNN
 
 
     class SimpleRNN_Dense
-      def initialize(rnn)
-        @rnn = rnn
-        @activation = rnn.activation.clone
+      def initialize(weight, weight2, bias, activation)
+        @weight = weight
+        @weight2 = weight2
+        @bias = bias
+        @activation = activation.clone
       end
 
       def forward(x, h)
         @x = x
         @h = h
-        h2 = x.dot(@rnn.weight.data) + h.dot(@rnn.weight2.data) + @rnn.bias.data
+        h2 = x.dot(@weight.data) + h.dot(@weight2.data) + @bias.data
         @activation.forward(h2)
       end
 
       def backward(dh2)
         dh2 = @activation.backward(dh2)
-        @rnn.weight.grad += @x.transpose.dot(dh2)
-        @rnn.weight2.grad += @h.transpose.dot(dh2)
-        @rnn.bias.grad += dh2.sum(0)
-        dx = dh2.dot(@rnn.weight.data.transpose)
-        dh = dh2.dot(@rnn.weight2.data.transpose)
+        @weight.grad += @x.transpose.dot(dh2)
+        @weight2.grad += @h.transpose.dot(dh2)
+        @bias.grad += dh2.sum(0)
+        dx = dh2.dot(@weight.data.transpose)
+        dh = dh2.dot(@weight2.data.transpose)
         [dx, dh]
       end
     end
@@ -194,15 +196,17 @@ module DNN
         @weight_initializer.init_param(self, @weight2)
         @bias_initializer.init_param(self, @bias)
         @time_length.times do |t|
-          @layers << SimpleRNN_Dense.new(self)
+          @layers << SimpleRNN_Dense.new(@weight, @weight2, @bias)
         end
       end
     end
 
 
     class LSTM_Dense
-      def initialize(rnn)
-        @rnn = rnn
+      def initialize(weight, weight2, bias)
+        @weight = weight
+        @weight2 = weight2
+        @bias = bias
         @tanh = Tanh.new
         @g_tanh = Tanh.new
         @forget_sigmoid = Sigmoid.new
@@ -215,7 +219,7 @@ module DNN
         @h = h
         @c = c
         num_nodes = h.shape[1]
-        a = x.dot(@rnn.weight.data) + h.dot(@rnn.weight2.data) + @rnn.bias.data
+        a = x.dot(@weight.data) + h.dot(@weight2.data) + @bias.data
 
         @forget = @forget_sigmoid.forward(a[true, 0...num_nodes])
         @g = @g_tanh.forward(a[true, num_nodes...(num_nodes * 2)])
@@ -239,11 +243,11 @@ module DNN
 
         da = Xumo::SFloat.hstack([dforget, dg, din, dout])
 
-        @rnn.weight.grad += @x.transpose.dot(da)
-        @rnn.weight2.grad += @h.transpose.dot(da)
-        @rnn.bias.grad += da.sum(0)
-        dx = da.dot(@rnn.weight.data.transpose)
-        dh = da.dot(@rnn.weight2.data.transpose)
+        @weight.grad += @x.transpose.dot(da)
+        @weight2.grad += @h.transpose.dot(da)
+        @bias.grad += da.sum(0)
+        dx = da.dot(@weight.data.transpose)
+        dh = da.dot(@weight2.data.transpose)
         dc = dc2_tmp * @forget
         [dx, dh, dc]
       end
@@ -331,15 +335,17 @@ module DNN
         @weight_initializer.init_param(self, @weight2)
         @bias_initializer.init_param(self, @bias)
         @time_length.times do |t|
-          @layers << LSTM_Dense.new(self)
+          @layers << LSTM_Dense.new(@weight, @weight2, @bias)
         end
       end
     end
 
 
     class GRU_Dense
-      def initialize(rnn)
-        @rnn = rnn
+      def initialize(weight, weight2, bias)
+        @weight = weight
+        @weight2 = weight2
+        @bias = bias
         @update_sigmoid = Sigmoid.new
         @reset_sigmoid = Sigmoid.new
         @tanh = Tanh.new
@@ -349,16 +355,16 @@ module DNN
         @x = x
         @h = h
         num_nodes = h.shape[1]
-        @weight_a = @rnn.weight.data[true, 0...(num_nodes * 2)]
-        @weight2_a = @rnn.weight2.data[true, 0...(num_nodes * 2)]
-        bias_a = @rnn.bias.data[0...(num_nodes * 2)]
+        @weight_a = @weight.data[true, 0...(num_nodes * 2)]
+        @weight2_a = @weight2.data[true, 0...(num_nodes * 2)]
+        bias_a = @bias.data[0...(num_nodes * 2)]
         a = x.dot(@weight_a) + h.dot(@weight2_a) + bias_a
         @update = @update_sigmoid.forward(a[true, 0...num_nodes])
         @reset = @reset_sigmoid.forward(a[true, num_nodes..-1])
 
-        @weight_h = @rnn.weight.data[true, (num_nodes * 2)..-1]
-        @weight2_h = @rnn.weight2.data[true, (num_nodes * 2)..-1]
-        bias_h = @rnn.bias.data[(num_nodes * 2)..-1]
+        @weight_h = @weight.data[true, (num_nodes * 2)..-1]
+        @weight2_h = @weight2.data[true, (num_nodes * 2)..-1]
+        bias_h = @bias.data[(num_nodes * 2)..-1]
         @tanh_h = @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h) + bias_h)
         h2 = (1 - @update) * h + @update * @tanh_h
         h2
@@ -383,9 +389,9 @@ module DNN
         dh += da.dot(@weight2_a.transpose)
         dbias_a = da.sum(0)
 
-        @rnn.weight.grad += Xumo::SFloat.hstack([dweight_a, dweight_h])
-        @rnn.weight2.grad += Xumo::SFloat.hstack([dweight2_a, dweight2_h])
-        @rnn.bias.grad += Xumo::SFloat.hstack([dbias_a, dbias_h])
+        @weight.grad += Xumo::SFloat.hstack([dweight_a, dweight_h])
+        @weight2.grad += Xumo::SFloat.hstack([dweight2_a, dweight2_h])
+        @bias.grad += Xumo::SFloat.hstack([dbias_a, dbias_h])
         [dx, dh]
       end
     end
@@ -425,7 +431,7 @@ module DNN
         @weight_initializer.init_param(self, @weight2)
         @bias_initializer.init_param(self, @bias)
         @time_length.times do |t|
-          @layers << GRU_Dense.new(self)
+          @layers << GRU_Dense.new(@weight, @weight2, @bias)
         end
       end
     end
