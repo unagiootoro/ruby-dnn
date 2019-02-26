@@ -20,6 +20,25 @@ module DNN
         param.data = param.data.fill(0)
       end
     end
+
+
+    class Const < Initializer
+      def self.load_hash(hash)
+        self.new(hash[:const])
+      end
+
+      def initialize(const)
+        @const = const
+      end
+
+      def init_param(layer, param)
+        param.data = param.data.fill(@const)
+      end
+
+      def to_hash
+        super({const: @const})
+      end
+    end
     
     
     class RandomNormal < Initializer
