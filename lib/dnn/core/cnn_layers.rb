@@ -276,7 +276,7 @@ module DNN
       end
 
       def shape
-        [@out_height, @out_width, @num_channel]
+        [*@out_size, @num_channel]
       end
 
       def to_hash
