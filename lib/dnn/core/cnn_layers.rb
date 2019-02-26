@@ -271,12 +271,12 @@ module DNN
 
       def backward(dout)
         unpool_h, unpool_w = @unpool_size
-        dout = dout.reshape(dout.shape[0], @x_shape[0], unpool_h, @x_shape[1], unpool_w, @num_channel)
+        dout = dout.reshape(dout.shape[0], @x_shape[1], unpool_h, @x_shape[2], unpool_w, @num_channel)
         dout[true, true, 0, true, 0, true].clone
       end
 
       def shape
-        [@out_width, @out_height, @num_channel]
+        [@out_height, @out_width, @num_channel]
       end
 
       def to_hash
