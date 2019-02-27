@@ -152,7 +152,7 @@ epoch_proc
 Integer  
 損失関数の値を返します。
 
-## def accurate(x, y, batch_size = 1, &batch_proc)
+## def accurate(x, y, batch_size = 100, &batch_proc)
 学習結果をもとに認識率を返します。
 ### arguments
 * Numo::SFloat x  
@@ -216,6 +216,13 @@ layer_classで指定されたクラスのレイヤーをindexで取得します�
 Layer  
 対象のレイヤーのインスタンス。
 
+## def get_all_layers
+モデルが持つ全てのレイヤー(モデルが持つ下位のモデルのレイヤーも含む)を取得します。
+### arguments
+なし。
+### return
+Array  
+モデルの持つすべてのレイヤーの配列
 
 # module Layers
 レイヤーの名前空間をなすモジュールです。
