@@ -1,12 +1,10 @@
-require "open-uri"
 require "zlib"
 require_relative "../core/error"
+require_relative "downloader"
 
 module DNN
   module MNIST
     class DNN_MNIST_LoadError < DNN_Error; end
-
-    class DNN_MNIST_DownloadError < DNN_Error; end
 
     URL_TRAIN_IMAGES = "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz"
     URL_TRAIN_LABELS = "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz"
@@ -16,12 +14,10 @@ module DNN
     def self.downloads
       return if Dir.exist?(mnist_dir)
       Dir.mkdir(mnist_dir)
-      puts "Now downloading..."
-      download(URL_TRAIN_IMAGES)
-      download(URL_TRAIN_LABELS)
-      download(URL_TEST_IMAGES)
-      download(URL_TEST_LABELS)
-      puts "The download has ended."
+      Downloader.download(URL_TRAIN_IMAGES, mnist_dir)
+      Downloader.download(URL_TRAIN_LABELS, mnist_dir)
+      Downloader.download(URL_TEST_IMAGES, mnist_dir)
+      Downloader.download(URL_TEST_LABELS, mnist_dir)
     end
 
     def self.load_train
@@ -55,14 +51,6 @@ module DNN
     end
 
     private_class_method
-
-    def self.download(url)
-      open(url, "rb") do |f|
-        File.binwrite(url_to_file_name(url), f.read)
-      end
-    rescue => ex
-      raise DNN_MNIST_DownloadError.new(ex.message)
-    end
 
     def self.load_images(file_name)
       images = nil
