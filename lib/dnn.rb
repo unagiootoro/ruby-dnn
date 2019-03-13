@@ -12,7 +12,7 @@ module DNN; end
 require_relative "dnn/version"
 require_relative "dnn/core/error"
 require_relative "dnn/core/model"
-require_relative "dnn/core/learning_param"
+require_relative "dnn/core/param"
 require_relative "dnn/core/initializers"
 require_relative "dnn/core/layers"
 require_relative "dnn/core/activations"
