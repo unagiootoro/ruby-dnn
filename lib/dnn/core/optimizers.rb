@@ -37,7 +37,7 @@ module DNN
       end
     
       def update(params)
-        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+        params.select { |key, param| param.grad }.each_value do |param|
           amount = param.grad * @learning_rate
           if @momentum > 0
             @v[param] ||= 0
@@ -64,7 +64,7 @@ module DNN
       end
     
       def update(params)
-        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+        params.select { |key, param| param.grad }.each_value do |param|
           @v[param] ||= 0
           amount = param.grad * @learning_rate
           @v[param] = @v[param] * @momentum - amount
@@ -85,7 +85,7 @@ module DNN
       end
     
       def update(params)
-        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+        params.select { |key, param| param.grad }.each_value do |param|
           @g[param] ||= 0
           @g[param] += param.grad**2
           param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + 1e-7)) * param.grad
@@ -108,7 +108,7 @@ module DNN
       end
     
       def update(params)
-        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+        params.select { |key, param| param.grad }.each_value do |param|
           @g[param] ||= 0
           @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
           param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + 1e-7)) * param.grad
@@ -136,7 +136,7 @@ module DNN
       end
 
       def update(params)
-        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+        params.select { |key, param| param.grad }.each_value do |param|
           @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
@@ -172,7 +172,7 @@ module DNN
       def update(params)
         @iter += 1
         lr = @learning_rate * Math.sqrt(1 - @beta2**@iter) / (1 - @beta1**@iter) 
-        params.select { |key, param| param.is_a?(LearningParam) }.each_value do |param|
+        params.select { |key, param| param.grad }.each_value do |param|
           @m[param] ||= 0
           @v[param] ||= 0
           @m[param] += (1 - @beta1) * (param.grad - @m[param])

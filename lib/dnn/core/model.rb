@@ -37,7 +37,7 @@ module DNN
         hash_params.each do |key, (shape, base64_param)|
           bin = Base64.decode64(base64_param)
           data = Xumo::SFloat.from_binary(bin).reshape(*shape)
-          if layer.params[key].is_a?(LearningParam)
+          if layer.params[key].is_a?(Param)
             layer.params[key].data = data
           else
             layer.params[key] = data
@@ -68,9 +68,8 @@ module DNN
       has_param_layers = @layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
       has_param_layers_params = has_param_layers.map do |layer|
         layer.params.map { |key, param|
-          param = param.data if param.is_a?(LearningParam)
-          base64_param = Base64.encode64(param.to_binary)
-          [key, [param.shape, base64_param]]
+          base64_data = Base64.encode64(param.data.to_binary)
+          [key, [param.data.shape, base64_data]]
         }.to_h
       end
       JSON.dump(has_param_layers_params)

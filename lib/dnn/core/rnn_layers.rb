@@ -25,7 +25,7 @@ module DNN
         @return_sequences = return_sequences
         @layers = []
         @params[:h] = nil
-        @params[:weight2] = @weight2 = LearningParam.new
+        @params[:weight2] = @weight2 = Param.new
       end
 
       def forward(xs)

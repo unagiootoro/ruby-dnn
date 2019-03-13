@@ -123,8 +123,8 @@ module DNN
         @bias_initializer = bias_initializer
         @l1_lambda = l1_lambda
         @l2_lambda = l2_lambda
-        @params[:weight] = @weight = LearningParam.new
-        @params[:bias] = @bias = LearningParam.new
+        @params[:weight] = @weight = Param.new
+        @params[:bias] = @bias = Param.new
       end
 
       def lasso
@@ -349,11 +349,11 @@ module DNN
           @std = Xumo::NMath.sqrt(var + 1e-7)
           xn = @xc / @std
           @xn = xn
-          @params[:running_mean] = @momentum * @params[:running_mean] + (1 - @momentum) * mean
-          @params[:running_var] = @momentum * @params[:running_var] + (1 - @momentum) * var
+          @running_mean.data = @momentum * @running_mean.data + (1 - @momentum) * mean
+          @running_var.data = @momentum * @running_var.data + (1 - @momentum) * var
         else
-          xc = x - @params[:running_mean]
-          xn = xc / Xumo::NMath.sqrt(@params[:running_var] + 1e-7)
+          xc = x - @running_mean.data
+          xn = xc / Xumo::NMath.sqrt(@running_var.data + 1e-7)
         end
         @gamma.data * xn + @beta.data
       end
@@ -378,12 +378,10 @@ module DNN
       private
     
       def init_params
-        @params[:gamma] = @gamma = LearningParam.new
-        @params[:beta] = @beta = LearningParam.new
-        @gamma.data = Xumo::SFloat.ones(*shape)
-        @beta.data = Xumo::SFloat.zeros(*shape)
-        @params[:running_mean] = Xumo::SFloat.zeros(*shape)
-        @params[:running_var] = Xumo::SFloat.zeros(*shape)
+        @params[:gamma] = @gamma = Param.new(Xumo::SFloat.ones(*shape))
+        @params[:beta] = @beta = Param.new(Xumo::SFloat.zeros(*shape))
+        @params[:running_mean] = @running_mean = Param.new(Xumo::SFloat.zeros(*shape))
+        @params[:running_var] = @running_var = Param.new(Xumo::SFloat.zeros(*shape))
       end
     end
   end
