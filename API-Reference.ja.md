@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.8.6
+最終更新バージョン:0.8.7
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -698,7 +698,7 @@ Float alpha
 ### arguments
 * HasParamLayer layer  
 更新対象のパラメータを持つレイヤーを指定します。
-* LearningParam param  
+* Param param  
 更新するパラメータです。
 
 
