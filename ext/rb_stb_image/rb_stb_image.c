@@ -4,8 +4,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
-#include "stb_image.h"
-#include "stb_image_write.h"
+#include "../../third_party/stb_image.h"
+#include "../../third_party/stb_image_write.h"
 
 // STBIDEF stbi_uc *stbi_load(char const *filename, int *x, int *y, int *comp, int req_comp);
 static VALUE rb_stbi_load(VALUE self, VALUE rb_filename, VALUE rb_req_comp) {
