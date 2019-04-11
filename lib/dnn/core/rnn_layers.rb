@@ -24,20 +24,20 @@ module DNN
         @stateful = stateful
         @return_sequences = return_sequences
         @layers = []
-        @params[:h] = nil
+        @hidden = @params[:h] = Param.new
         @params[:weight2] = @weight2 = Param.new
       end
 
       def forward(xs)
         @xs_shape = xs.shape
         hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
-        h = (@stateful && @params[:h]) ? @params[:h] : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
+        h = (@stateful && @hidden.data) ? @hidden.data : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
           h = @layers[t].forward(x, h)
           hs[true, t, false] = h
         end
-        @params[:h] = h
+        @hidden.data = h
         @return_sequences ? hs : h
       end
 
@@ -75,7 +75,7 @@ module DNN
       end
 
       def reset_state
-        @params[:h] = @params[:h].fill(0) if @params[:h]
+        @hidden.data = @hidden.data.fill(0) if @hidden.data
       end
 
       def lasso
@@ -274,7 +274,7 @@ module DNN
                      l1_lambda: 0,
                      l2_lambda: 0)
         super
-        @params[:c] = nil
+        @cell = @params[:c] = Param.new
       end
 
       def forward(xs)
@@ -283,8 +283,8 @@ module DNN
         h = nil
         c = nil
         if @stateful
-          h = @params[:h] if @params[:h]
-          c = @params[:c] if @params[:c]
+          h = @hidden.data if @hidden.data
+          c = @cell.data if @cell.data
         end
         h ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         c ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
@@ -293,8 +293,8 @@ module DNN
           h, c = @layers[t].forward(x, h, c)
           hs[true, t, false] = h
         end
-        @params[:h] = h
-        @params[:c] = c
+        @hidden.data = h
+        @cell.data = c
         @return_sequences ? hs : h
       end
 
@@ -320,7 +320,7 @@ module DNN
 
       def reset_state
         super()
-        @params[:c] = @params[:c].fill(0) if @params[:c]
+        @cell.data = @cell.data.fill(0) if @cell.data
       end
 
       private
