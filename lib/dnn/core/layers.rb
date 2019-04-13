@@ -180,8 +180,8 @@ module DNN
 
       def self.load_hash(hash)
         self.new(hash[:num_nodes],
-                 weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                 bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                 weight_initializer: Utils.load_hash(hash[:weight_initializer]),
+                 bias_initializer: Utils.load_hash(hash[:bias_initializer]),
                  l1_lambda: hash[:l1_lambda],
                  l2_lambda: hash[:l2_lambda])
       end

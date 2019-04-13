@@ -15,8 +15,8 @@ module DNN
     def self.load_json(json_str)
       hash = JSON.parse(json_str, symbolize_names: true)
       model = self.new
-      model.layers = hash[:layers].map { |hash_layer| Util.load_hash(hash_layer) }
-      model.compile(Util.load_hash(hash[:optimizer]))
+      model.layers = hash[:layers].map { |hash_layer| Utils.load_hash(hash_layer) }
+      model.compile(Utils.load_hash(hash[:optimizer]))
       model
     end
   
@@ -126,7 +126,7 @@ module DNN
       (1..epochs).each do |epoch|
         puts "【 epoch #{epoch}/#{epochs} 】" if verbose
         (num_train_data.to_f / batch_size).ceil.times do |index|
-          x_batch, y_batch = Util.get_minibatch(x, y, batch_size)
+          x_batch, y_batch = Utils.get_minibatch(x, y, batch_size)
           loss = train_on_batch(x_batch, y_batch, &batch_proc)
           if loss.nan?
             puts "\nloss is nan" if verbose

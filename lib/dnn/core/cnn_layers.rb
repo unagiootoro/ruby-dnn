@@ -84,8 +84,8 @@ module DNN
 
       def self.load_hash(hash)
         Conv2D.new(hash[:num_filters], hash[:filter_size],
-                   weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                   bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                   weight_initializer: Utils.load_hash(hash[:weight_initializer]),
+                   bias_initializer: Utils.load_hash(hash[:bias_initializer]),
                    strides: hash[:strides],
                    padding: hash[:padding],
                    l1_lambda: hash[:l1_lambda],

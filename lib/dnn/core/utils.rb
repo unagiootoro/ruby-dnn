@@ -1,6 +1,6 @@
 module DNN
   # This module provides utility functions.
-  module Util
+  module Utils
     # Create a mini batch for "batch_size".
     def self.get_minibatch(x, y, batch_size)
       indexes = (0...x.shape[0]).to_a.sample(batch_size)

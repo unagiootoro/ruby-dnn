@@ -154,9 +154,9 @@ module DNN
         simple_rnn = self.new(hash[:num_nodes],
                               stateful: hash[:stateful],
                               return_sequences: hash[:return_sequences],
-                              activation: Util.load_hash(hash[:activation]),
-                              weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                              bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                              activation: Utils.load_hash(hash[:activation]),
+                              weight_initializer: Utils.load_hash(hash[:weight_initializer]),
+                              bias_initializer: Utils.load_hash(hash[:bias_initializer]),
                               l1_lambda: hash[:l1_lambda],
                               l2_lambda: hash[:l2_lambda])
         simple_rnn
@@ -259,8 +259,8 @@ module DNN
         lstm = self.new(hash[:num_nodes],
                         stateful: hash[:stateful],
                         return_sequences: hash[:return_sequences],
-                        weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                        bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                        weight_initializer: Utils.load_hash(hash[:weight_initializer]),
+                        bias_initializer: Utils.load_hash(hash[:bias_initializer]),
                         l1_lambda: hash[:l1_lambda],
                         l2_lambda: hash[:l2_lambda])
         lstm
@@ -402,8 +402,8 @@ module DNN
         gru = self.new(hash[:num_nodes],
                        stateful: hash[:stateful],
                        return_sequences: hash[:return_sequences],
-                       weight_initializer: Util.load_hash(hash[:weight_initializer]),
-                       bias_initializer: Util.load_hash(hash[:bias_initializer]),
+                       weight_initializer: Utils.load_hash(hash[:weight_initializer]),
+                       bias_initializer: Utils.load_hash(hash[:bias_initializer]),
                        l1_lambda: hash[:l1_lambda],
                        l2_lambda: hash[:l2_lambda])
         gru

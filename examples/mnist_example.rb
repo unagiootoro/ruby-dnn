@@ -17,8 +17,8 @@ x_test = Numo::SFloat.cast(x_test).reshape(x_test.shape[0], 784)
 x_train /= 255
 x_test /= 255
 
-y_train = DNN::Util.to_categorical(y_train, 10, Numo::SFloat)
-y_test = DNN::Util.to_categorical(y_test, 10, Numo::SFloat)
+y_train = DNN::Utils.to_categorical(y_train, 10, Numo::SFloat)
+y_test = DNN::Utils.to_categorical(y_test, 10, Numo::SFloat)
 
 model = Model.new
 
