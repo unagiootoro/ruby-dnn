@@ -173,19 +173,15 @@ class TestDense < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
+    dense = Dense.new(100)
     expected_hash = {
       class: "DNN::Layers::Dense",
       num_nodes: 100,
-      weight_initializer: {
-        class: "DNN::Initializers::RandomNormal",
-        mean: 0,
-        std: 0.05,
-      },
-      bias_initializer: {class: "DNN::Initializers::Zeros"},
+      weight_initializer: dense.weight_initializer.to_hash,
+      bias_initializer: dense.bias_initializer.to_hash,
       l1_lambda: 0,
       l2_lambda: 0,
     }
-    dense = Dense.new(100)
     assert_equal expected_hash, dense.to_hash
   end
 end
@@ -250,15 +246,17 @@ class TestDropout < MiniTest::Unit::TestCase
     hash = {
       class: "DNN::Layers::Dropout",
       dropout_ratio: 0.3,
+      seed: 0,
     }
     dropout = Dropout.load_hash(hash)
     assert_equal 0.3, dropout.dropout_ratio
+    assert_equal 0, dropout.instance_variable_get(:@seed)
   end
 
   def test_forward
     model = Model.new
     model << InputLayer.new(1)
-    dropout = Dropout.new
+    dropout = Dropout.new(0.5, 0)
     model << dropout
     model << IdentityMSE.new
     model.compile(SGD.new)
@@ -291,7 +289,7 @@ class TestDropout < MiniTest::Unit::TestCase
     assert_equal out.round, dout.round
   end
 
-  def test_backward
+  def test_backward2
     model = Model.new
     model << InputLayer.new(1)
     dropout = Dropout.new(1.0)
@@ -307,9 +305,10 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Layers::Dropout",
-      dropout_ratio: 0.5
+      dropout_ratio: 0.3,
+      seed: 0,
     }
-    dropout = Dropout.new
+    dropout = Dropout.new(0.3, 0)
     assert_equal expected_hash, dropout.to_hash
   end
 end

@@ -113,6 +113,8 @@ module DNN
     class Connection < HasParamLayer
       attr_reader :l1_lambda # L1 regularization
       attr_reader :l2_lambda # L2 regularization
+      attr_reader :weight_initializer
+      attr_reader :bias_initializer
 
       def initialize(weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
@@ -299,17 +301,19 @@ module DNN
       attr_reader :dropout_ratio
 
       def self.load_hash(hash)
-        self.new(hash[:dropout_ratio])
+        self.new(hash[:dropout_ratio], hash[:seed])
       end
 
-      def initialize(dropout_ratio = 0.5)
+      def initialize(dropout_ratio = 0.5, seed = rand(1 << 63))
         super()
         @dropout_ratio = dropout_ratio
+        @seed = seed
         @mask = nil
       end
     
       def forward(x)
         if @model.training?
+          Xumo::SFloat.srand(@seed)
           @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
           x[@mask] = 0
         else
@@ -324,7 +328,7 @@ module DNN
       end
 
       def to_hash
-        super({dropout_ratio: @dropout_ratio})
+        super({dropout_ratio: @dropout_ratio, seed: @seed})
       end
     end
     

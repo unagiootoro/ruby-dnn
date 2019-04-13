@@ -5,8 +5,6 @@ else
   Xumo = Numo
 end
 
-Xumo::SFloat.srand(rand(2**64))
-
 module DNN; end
 
 require_relative "dnn/version"

@@ -2,13 +2,16 @@ module DNN
   module Initializers
 
     class Initializer
-      # Classes that inherit from this class must implement this method.
+      def initialize(seed = false)
+        @seed = seed == true ? srand(1 << 63) : seed
+      end
+
       def init_param(layer, param)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_params'")
       end
 
       def to_hash(merge_hash = nil)
-        hash = {class: self.class.name}
+        hash = {class: self.class.name, seed: @seed}
         hash.merge!(merge_hash) if merge_hash
         hash
       end
@@ -23,11 +26,14 @@ module DNN
 
 
     class Const < Initializer
+      attr_reader :const
+
       def self.load_hash(hash)
         self.new(hash[:const])
       end
 
       def initialize(const)
+        super()
         @const = const
       end
 
@@ -46,15 +52,17 @@ module DNN
       attr_reader :std
       
       def self.load_hash(hash)
-        self.new(hash[:mean], hash[:std])
+        self.new(hash[:mean], hash[:std], hash[:seed])
       end
 
-      def initialize(mean = 0, std = 0.05)
+      def initialize(mean = 0, std = 0.05, seed = true)
+        super(seed)
         @mean = mean
         @std = std
       end
 
       def init_param(layer, param)
+        Xumo::SFloat.srand(@seed)
         param.data = param.data.rand_norm(@mean, @std)
       end
 
@@ -69,15 +77,17 @@ module DNN
       attr_reader :max
 
       def self.load_hash(hash)
-        self.new(hash[:min], hash[:max])
+        self.new(hash[:min], hash[:max], hash[:seed])
       end
 
-      def initialize(min = -0.05, max = 0.05)
+      def initialize(min = -0.05, max = 0.05, seed = true)
+        super(seed)
         @min = min
         @max = max
       end
 
       def init_param(layer, param)
+        Xumo::SFloat.srand(@seed)
         param.data = param.data.rand(@min, @max)
       end
 
@@ -88,7 +98,12 @@ module DNN
     
     
     class Xavier < Initializer
+      def initialize(seed = true)
+        super
+      end
+
       def init_param(layer, param)
+        Xumo::SFloat.srand(@seed)
         num_prev_nodes = layer.prev_layer.shape.reduce(:*)
         param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes)
       end
@@ -96,7 +111,12 @@ module DNN
     
     
     class He < Initializer
+      def initialize(seed = true)
+        super
+      end
+
       def init_param(layer, param)
+        Xumo::SFloat.srand(@seed)
         num_prev_nodes = layer.prev_layer.shape.reduce(:*)
         param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes) * Math.sqrt(2)
       end
