@@ -2,10 +2,8 @@ module DNN
   module Activations
 
     class Sigmoid < Layers::Layer
-      NMath = Xumo::NMath
-
       def forward(x)
-        @out = 1 / (1 + NMath.exp(-x))
+        @out = Utils.sigmoid(x)
       end
     
       def backward(dout)
@@ -147,115 +145,6 @@ module DNN
 
       def to_hash
         {class: self.class.name, alpha: @alpha}
-      end
-    end
-
-
-    class IdentityMSE < Layers::OutputLayer
-      def forward(x)
-        @out = x
-      end
-    
-      def backward(y)
-        @out - y
-      end
-    
-      def loss(y)
-        batch_size = y.shape[0]
-        0.5 * ((@out - y)**2).sum / batch_size + lasso + ridge
-      end
-    end
-
-
-    class IdentityMAE < Layers::OutputLayer
-      def forward(x)
-        @out = x
-      end
-    
-      def backward(y)
-        dout = @out - y
-        dout[dout >= 0] = 1
-        dout[dout < 0] = -1
-        dout
-      end
-    
-      def loss(y)
-        batch_size = y.shape[0]
-        (@out - y).abs.sum / batch_size + lasso + ridge
-      end
-    end
-
-
-    class IdentityHuber < Layers::OutputLayer
-      def forward(x)
-        @out = x
-      end
-
-      def loss(y)
-        loss = loss_l1(y)
-        loss = loss > 1 ? loss : loss_l2(y)
-        @loss = loss + lasso + ridge
-      end
-
-      def backward(y)
-        dout = @out - y
-        if @loss > 1
-          dout[dout >= 0] = 1
-          dout[dout < 0] = -1
-        end
-        dout
-      end
-
-      private
-
-      def loss_l1(y)
-        batch_size = y.shape[0]
-        (@out - y).abs.sum / batch_size
-      end
-
-      def loss_l2(y)
-        batch_size = y.shape[0]
-        0.5 * ((@out - y)**2).sum / batch_size
-      end
-    end
-    
-    
-    class SoftmaxWithLoss < Layers::OutputLayer
-      NMath = Xumo::NMath
-
-      def forward(x)
-        @out = NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
-      end
-    
-      def backward(y)
-        @out - y
-      end
-    
-      def loss(y)
-        batch_size = y.shape[0]
-        -(y * NMath.log(@out + 1e-7)).sum / batch_size + lasso + ridge
-      end
-    end
-
-
-    class SigmoidWithLoss < Layers::OutputLayer
-      NMath = Xumo::NMath
-
-      def initialize
-        @sigmoid = Sigmoid.new
-      end
-
-      def forward(x)
-        @out = @sigmoid.forward(x)
-      end
-
-      def backward(y)
-        @out - y
-      end
-
-      def loss(y)
-        batch_size = y.shape[0]
-        -(y * NMath.log(@out + 1e-7) + (1 - y) * NMath.log(1 - @out + 1e-7)).sum / batch_size + lasso + ridge
       end
     end
 

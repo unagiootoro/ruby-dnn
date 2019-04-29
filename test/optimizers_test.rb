@@ -38,13 +38,9 @@ class TestSGD < MiniTest::Unit::TestCase
   end
 
   def test_update
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
-    model << dense
-    model << IdentityMSE.new
+    dense.build([10])
     sgd = SGD.new(0.1)
-    model.compile(sgd)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
     sgd.update(dense.params)
@@ -52,15 +48,11 @@ class TestSGD < MiniTest::Unit::TestCase
   end
 
   def test_update2
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
-    model << dense
-    model << IdentityMSE.new
-    sgd = SGD.new(0.1, momentum: 1)
-    model.compile(sgd)
+    dense.build([10])
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
+    sgd = SGD.new(0.1, momentum: 1)
     sgd.update(dense.params)
     sgd.update(dense.params)
     assert_equal -0.3, dense.params[:weight].data.mean.round(2)
@@ -91,13 +83,9 @@ class TestNesterov < MiniTest::Unit::TestCase
   end
 
   def test_update2
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
-    model << dense
-    model << IdentityMSE.new
+    dense.build([10])
     nesterov = Nesterov.new(0.1, momentum: 0.9)
-    model.compile(nesterov)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
     nesterov.update(dense.params)
@@ -118,11 +106,8 @@ class TestAdaGrad < MiniTest::Unit::TestCase
   end
 
   def test_update
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
-    model << dense
-    model << IdentityMSE.new
+    dense.build([10])
     adagrad = AdaGrad.new
     model.compile(adagrad)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
@@ -146,13 +131,9 @@ class TestRMSProp < MiniTest::Unit::TestCase
   end
 
   def test_update
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
-    model << dense
-    model << IdentityMSE.new
+    dense.build([10])
     rmsprop = RMSProp.new(0.01, alpha: 0.5)
-    model.compile(rmsprop)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
     rmsprop.update(dense.params)
@@ -182,13 +163,9 @@ class TestAdaGrad < MiniTest::Unit::TestCase
   end
 
   def test_update
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
-    model << dense
-    model << IdentityMSE.new
+    dense.build([10])
     adadelta = AdaDelta.new(rho: 0.5)
-    model.compile(adadelta)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
     adadelta.update(dense.params)
@@ -221,13 +198,9 @@ class TestAdam < MiniTest::Unit::TestCase
   end
 
   def test_update
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10, weight_initializer: Zeros.new)
-    model << dense
-    model << IdentityMSE.new
+    dense.build([10])
     adam = Adam.new(0.01, beta1: 0.8, beta2: 0.9)
-    model.compile(adam)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     dense.params[:bias].grad = Numo::SFloat.ones(*dense.params[:bias].data.shape)
     adam.update(dense.params)

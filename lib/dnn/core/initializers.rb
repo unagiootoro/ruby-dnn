@@ -3,7 +3,7 @@ module DNN
 
     class Initializer
       def initialize(seed = false)
-        @seed = seed == true ? srand(1 << 63) : seed
+        @seed = seed == true ? rand(1 << 31) : seed
       end
 
       def init_param(layer, param)
@@ -104,7 +104,7 @@ module DNN
 
       def init_param(layer, param)
         Xumo::SFloat.srand(@seed)
-        num_prev_nodes = layer.prev_layer.shape.reduce(:*)
+        num_prev_nodes = layer.input_shape.reduce(:*)
         param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes)
       end
     end
@@ -117,7 +117,7 @@ module DNN
 
       def init_param(layer, param)
         Xumo::SFloat.srand(@seed)
-        num_prev_nodes = layer.prev_layer.shape.reduce(:*)
+        num_prev_nodes = layer.input_shape.reduce(:*)
         param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes) * Math.sqrt(2)
       end
     end

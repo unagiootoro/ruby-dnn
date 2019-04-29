@@ -3,13 +3,15 @@ module DNN
 
     # Super class of all optimizer classes.
     class Layer
+      attr_reader :input_shape
+
       def initialize
         @built = false
       end
 
       # Build the layer.
-      def build(model)
-        @model = model
+      def build(input_shape)
+        @input_shape = input_shape
         @built = true
       end
       
@@ -19,20 +21,17 @@ module DNN
       end
 
       # Forward propagation.
-      # Classes that inherit from this class must implement this method.
       def forward(x)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
       end
 
       # Backward propagation.
-      # Classes that inherit from this class must implement this method.
       def backward(dout)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update'")
       end
-    
-      # Get the shape of the layer.
-      def shape
-        prev_layer.shape
+
+      def output_shape
+        @input_shape
       end
 
       # Layer to a hash.
@@ -40,11 +39,6 @@ module DNN
         hash = {class: self.class.name}
         hash.merge!(merge_hash) if merge_hash
         hash
-      end
-    
-      # Get the previous layer.
-      def prev_layer
-        @model.get_prev_layer(self)
       end
     end
     
@@ -60,8 +54,8 @@ module DNN
         @trainable = true
       end
     
-      def build(model)
-        @model = model
+      def build(input_shape)
+        @input_shape = input_shape
         unless @built
           @built = true
           init_params
@@ -69,14 +63,13 @@ module DNN
       end
     
       # Update the parameters.
-      def update
-        @model.optimizer.update(@params) if @trainable
+      def update(optimizer)
+        optimizer.update(@params) if @trainable
       end
     
       private
       
       # Initialize of the parameters.
-      # Classes that inherit from this class must implement this method.
       def init_params
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_params'")
       end
@@ -84,15 +77,18 @@ module DNN
     
     
     class InputLayer < Layer
-      attr_reader :shape
-
       def self.load_hash(hash)
-        self.new(hash[:shape])
+        self.new(hash[:input_shape])
       end
 
-      def initialize(dim_or_shape)
+      def initialize(input_dim_or_shape)
         super()
-        @shape = dim_or_shape.is_a?(Array) ? dim_or_shape : [dim_or_shape]
+        @input_shape = input_dim_or_shape.is_a?(Array) ? input_dim_or_shape : [input_dim_or_shape]
+      end
+
+      def build
+        @built = true
+        @input_shape
       end
 
       def forward(x)
@@ -104,7 +100,7 @@ module DNN
       end
 
       def to_hash
-        super({shape: @shape})
+        super({input_shape: @input_shape})
       end
     end
 
@@ -145,7 +141,7 @@ module DNN
         end
       end
 
-      def dlasso
+      def d_lasso
         if @l1_lambda > 0
           dlasso = Xumo::SFloat.ones(*@weight.data.shape)
           dlasso[@weight.data < 0] = -1
@@ -153,7 +149,7 @@ module DNN
         end
       end
 
-      def dridge
+      def d_ridge
         if @l2_lambda > 0
           @weight.grad += @l2_lambda * @weight.data
         end
@@ -207,7 +203,7 @@ module DNN
         dout.dot(@weight.data.transpose)
       end
     
-      def shape
+      def output_shape
         [@num_nodes]
       end
 
@@ -218,7 +214,7 @@ module DNN
       private
     
       def init_params
-        num_prev_nodes = prev_layer.shape[0]
+        num_prev_nodes = @input_shape[0]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
         @bias.data = Xumo::SFloat.new(@num_nodes)
         super()
@@ -228,74 +224,46 @@ module DNN
 
     class Flatten < Layer
       def forward(x)
-        @shape = x.shape
-        x.reshape(x.shape[0], x.shape[1..-1].reduce(:*))
+        x.reshape(x.shape[0], *output_shape)
       end
     
       def backward(dout)
-        dout.reshape(*@shape)
+        dout.reshape(dout.shape[0], *@input_shape)
       end
-    
-      def shape
-        [prev_layer.shape.reduce(:*)]
+
+      def output_shape
+        [@input_shape.reduce(:*)]
       end
     end
 
 
     class Reshape < Layer
-      attr_reader :shape
-      
-      def initialize(shape)
-        super()
-        @shape = shape
-        @x_shape = nil
+      def self.load_hash(hash)
+        self.new(hash[:output_shape])
       end
 
-      def self.load_hash(hash)
-        self.new(hash[:shape])
+      def initialize(output_shape)
+        super()
+        @output_shape = output_shape
       end
 
       def forward(x)
-        @x_shape = x.shape
-        x.reshape(x.shape[0], *@shape)
+        x.reshape(x.shape[0], *@output_shape)
       end
 
       def backward(dout)
-        dout.reshape(*@x_shape)
+        dout.reshape(dout.shape[0], *@input_shape)
+      end
+
+      def output_shape
+        @output_shape
       end
 
       def to_hash
-        super({shape: @shape})
+        super({output_shape: @output_shape})
       end
     end
 
-
-    class OutputLayer < Layer
-      # Classes that inherit from this class must implement this method.
-      def loss(x)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
-      end
-
-      def dloss
-        @model.get_all_layers.select { |layer| layer.is_a?(Connection) }.each do |layer|
-          layer.dlasso
-          layer.dridge
-        end
-      end
-      
-      private
-
-      def lasso
-        @model.get_all_layers.select { |layer| layer.is_a?(Connection) }
-                             .reduce(0) { |sum, layer| sum + layer.lasso }
-      end
-    
-      def ridge
-        @model.get_all_layers.select { |layer| layer.is_a?(Connection) }
-                             .reduce(0) { |sum, layer| sum + layer.ridge }
-      end
-    end
-    
     
     class Dropout < Layer
       attr_reader :dropout_ratio
@@ -310,9 +278,9 @@ module DNN
         @seed = seed
         @mask = nil
       end
-    
-      def forward(x)
-        if @model.training?
+
+      def forward(x, learning_phase)
+        if learning_phase
           Xumo::SFloat.srand(@seed)
           @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
           x[@mask] = 0
@@ -322,8 +290,8 @@ module DNN
         x
       end
     
-      def backward(dout)
-        dout[@mask] = 0 if @model.training?
+      def backward(dout, learning_phase)
+        dout[@mask] = 0 if learning_phase
         dout
       end
 
@@ -345,8 +313,8 @@ module DNN
         @momentum = momentum
       end
 
-      def forward(x)
-        if @model.training?
+      def forward(x, learning_phase)
+        if learning_phase
           mean = x.mean(0)
           @xc = x - mean
           var = (@xc**2).mean(0)
@@ -362,7 +330,7 @@ module DNN
         @gamma.data * xn + @beta.data
       end
     
-      def backward(dout)
+      def backward(dout, learning_phase)
         batch_size = dout.shape[0]
         @beta.grad = dout.sum(0)
         @gamma.grad = (@xn * dout).sum(0)
@@ -382,10 +350,10 @@ module DNN
       private
     
       def init_params
-        @params[:gamma] = @gamma = Param.new(Xumo::SFloat.ones(*shape))
-        @params[:beta] = @beta = Param.new(Xumo::SFloat.zeros(*shape))
-        @params[:running_mean] = @running_mean = Param.new(Xumo::SFloat.zeros(*shape))
-        @params[:running_var] = @running_var = Param.new(Xumo::SFloat.zeros(*shape))
+        @params[:gamma] = @gamma = Param.new(Xumo::SFloat.ones(*output_shape))
+        @params[:beta] = @beta = Param.new(Xumo::SFloat.zeros(*output_shape))
+        @params[:running_mean] = @running_mean = Param.new(Xumo::SFloat.zeros(*output_shape))
+        @params[:running_var] = @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
       end
     end
   end

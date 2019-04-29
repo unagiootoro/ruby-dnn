@@ -30,12 +30,8 @@ class TestConst < MiniTest::Unit::TestCase
 
   def test_init_param
     initializer = Const.new(1)
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10)
-    model << dense
-    model << IdentityMSE.new
-    model.compile(SGD.new)
+    dense.build([10])
     zeros = Numo::SFloat.ones(dense.params[:weight].data.shape)
     initializer.init_param(self, dense.params[:weight])
     assert_equal zeros, dense.params[:weight].data
@@ -56,12 +52,8 @@ end
 class TestZeros < MiniTest::Unit::TestCase
   def test_init_param
     initializer = Zeros.new
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10)
-    model << dense
-    model << IdentityMSE.new
-    model.compile(SGD.new)
+    dense.build([10])
     zeros = Numo::SFloat.zeros(dense.params[:weight].data.shape)
     initializer.init_param(self, dense.params[:weight])
     assert_equal zeros, dense.params[:weight].data
@@ -86,12 +78,8 @@ class TestRandomNorm < MiniTest::Unit::TestCase
 
   def test_init_param
     initializer = RandomNormal.new(0, 0.05, 0)
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10)
-    model << dense
-    model << IdentityMSE.new
-    model.compile(SGD.new)
+    dense.build([10])
     initializer.init_param(dense, dense.params[:weight])
 
     Numo::SFloat.srand(0)
@@ -123,12 +111,8 @@ class TestRandomNorm < MiniTest::Unit::TestCase
 
   def test_init_param
     initializer = RandomUniform.new(-0.05, 0.05, 0)
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10)
-    model << dense
-    model << IdentityMSE.new
-    model.compile(SGD.new)
+    dense.build([10])
     initializer.init_param(dense, dense.params[:weight])
 
     Numo::SFloat.srand(0)
@@ -152,12 +136,8 @@ end
 class TestXavier < MiniTest::Unit::TestCase
   def test_init_param
     initializer = Xavier.new(0)
-    model = Model.new
-    model << InputLayer.new(10)
     dense = Dense.new(10)
-    model << dense
-    model << IdentityMSE.new
-    model.compile(SGD.new)
+    dense.build([10])
     initializer.init_param(dense, dense.params[:weight])
 
     Numo::SFloat.srand(0)
@@ -169,13 +149,9 @@ end
 
 class TestHe < MiniTest::Unit::TestCase
   def test_init_param
-    initializer = He.new
-    model = Model.new
-    model << InputLayer.new(10)
+    initializer = He.new(0)
     dense = Dense.new(10)
-    model << dense
-    model << IdentityMSE.new
-    model.compile(SGD.new)
+    dense.build([10])
     initializer.init_param(dense, dense.params[:weight])
 
     Numo::SFloat.srand(0)

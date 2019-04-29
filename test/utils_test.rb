@@ -4,18 +4,6 @@ include DNN
 include Activations
 
 class TestUtils < MiniTest::Unit::TestCase
-  def test_getminibatch
-    x = Numo::NArray[[1], [2], [3], [4]]
-    batch1, batch2 = Utils.get_minibatch(x, x, 2)
-    assert_equal 2, batch1.shape[0]
-  end
-
-  def test_getminibatch2
-    x = Numo::NArray[[1], [2], [3], [4]]
-    batch1, batch2 = Utils.get_minibatch(x, x, 2)
-    assert_equal batch1, batch2
-  end
-
   def test_to_categorical
     y = Numo::NArray[0, 3]
     y2 = Utils.to_categorical(y, 5)
@@ -36,5 +24,15 @@ class TestUtils < MiniTest::Unit::TestCase
   def test_load_hash2
     lrelu = Utils.load_hash({class: "DNN::Activations::LeakyReLU", alpha: 0.2})
     assert_equal 0.2, lrelu.alpha
+  end
+
+  def test_sigmoid
+    out = Utils.sigmoid(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0.5, 0.7311], out.round(4)
+  end
+
+  def test_softmax
+    out = Utils.softmax(Xumo::SFloat[[0, 1, 2]])
+    assert_equal Xumo::SFloat[[0.09, 0.2447, 0.6652]], out.round(4)
   end
 end

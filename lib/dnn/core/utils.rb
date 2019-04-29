@@ -1,11 +1,7 @@
 module DNN
   # This module provides utility functions.
   module Utils
-    # Create a mini batch for "batch_size".
-    def self.get_minibatch(x, y, batch_size)
-      indexes = (0...x.shape[0]).to_a.sample(batch_size)
-      [x[indexes, false], y[indexes, false]]
-    end
+    NMath = Xumo::NMath
 
     # Categorize labels into "num_classes" classes.
     def self.to_categorical(y, num_classes, narray_type = nil)
@@ -24,6 +20,14 @@ module DNN
         return dnn_class.load_hash(hash)
       end
       dnn_class.new
+    end
+
+    def self.sigmoid(x)
+      1 / (1 + NMath.exp(-x))
+    end
+
+    def self.softmax(x)
+      NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
     end
   end
 end

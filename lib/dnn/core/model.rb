@@ -83,22 +83,40 @@ module DNN
       self
     end
   
-    def compile(optimizer)
+    def compile(optimizer, loss)
       unless optimizer.is_a?(Optimizers::Optimizer)
         raise TypeError.new("optimizer is not an instance of the DNN::Optimizers::Optimizer class.")
+      end
+      unless loss.is_a?(Losses::Loss)
+        raise TypeError.new("loss is not an instance of the DNN::Losses::Loss class.")
       end
       @compiled = true
       layers_check
       @optimizer = optimizer
+      @loss = loss
       build
       layers_shape_check
     end
 
     def build(super_model = nil)
       @super_model = super_model
-      @layers.each do |layer|
-        layer.build(self)
+      shape = @layers.first.build
+      @layers[1..-1].each do |layer|
+        if layer.is_a?(Model)
+          layer.build(self)
+        else
+          layer.build(shape)
+        end
+        shape = layer.output_shape
       end
+    end
+
+    def input_shape
+      @layers.first.input_shape
+    end
+
+    def output_shape
+      @layers.last.output_shape
     end
 
     def optimizer
@@ -122,29 +140,30 @@ module DNN
       unless compiled?
         raise DNN_Error.new("The model is not compiled.")
       end
-      num_train_data = x.shape[0]
+      dataset = Dataset.new(x, y)
+      num_train_datas = x.shape[0]
       (1..epochs).each do |epoch|
         puts "【 epoch #{epoch}/#{epochs} 】" if verbose
-        (num_train_data.to_f / batch_size).ceil.times do |index|
-          x_batch, y_batch = Utils.get_minibatch(x, y, batch_size)
+        (num_train_datas.to_f / batch_size).ceil.times do |index|
+          x_batch, y_batch = dataset.get_batch(batch_size)
           loss = train_on_batch(x_batch, y_batch, &batch_proc)
           if loss.nan?
             puts "\nloss is nan" if verbose
             return
           end
-          num_trained_data = (index + 1) * batch_size
-          num_trained_data = num_trained_data > num_train_data ? num_train_data : num_trained_data
+          num_trained_datas = (index + 1) * batch_size
+          num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
           log = "\r"
           40.times do |i|
-            if i < num_trained_data * 40 / num_train_data
+            if i < num_trained_datas * 40 / num_train_datas
               log << "="
-            elsif i == num_trained_data * 40 / num_train_data
+            elsif i == num_trained_datas * 40 / num_train_datas
               log << ">"
             else
               log << "_"
             end
           end
-          log << "  #{num_trained_data}/#{num_train_data} loss: #{sprintf('%.8f', loss)}"
+          log << "  #{num_trained_datas}/#{num_train_datas} loss: #{sprintf('%.8f', loss)}"
           print log if verbose
         end
         if verbose && test
@@ -159,10 +178,11 @@ module DNN
     def train_on_batch(x, y, &batch_proc)
       input_data_shape_check(x, y)
       x, y = batch_proc.call(x, y) if batch_proc
-      forward(x, true)
-      loss_value = loss(y)
-      backward(y)
-      dloss
+      out = forward(x, true)
+      loss_value = @loss.forward(out, y) + @loss.regularize(get_all_layers)
+      dout = @loss.backward(y)
+      backward(dout, true)
+      @loss.d_regularize(get_all_layers)
       update
       loss_value
     end
@@ -183,7 +203,7 @@ module DNN
         x_batch, y_batch = batch_proc.call(x_batch, y_batch) if batch_proc
         out = forward(x_batch, false)
         batch_size.times do |j|
-          if @layers[-1].shape == [1]
+          if @layers.last.output_shape == [1]
             correct += 1 if out[j, 0].round == y_batch[j, 0].round
           else
             correct += 1 if out[j, true].max_index == y_batch[j, true].max_index
@@ -222,37 +242,36 @@ module DNN
       }.flatten
     end
   
-    def forward(x, training)
-      @training = training
+    def forward(x, learning_phase)
       @layers.each do |layer|
-        x = if layer.is_a?(Layers::Layer)
+        x = if layer.is_a?(Layers::Dropout) || layer.is_a?(Layers::BatchNormalization) || layer.is_a?(Model)
+          layer.forward(x, learning_phase)
+        else
           layer.forward(x)
-        elsif layer.is_a?(Model)
-          layer.forward(x, training)
         end
       end
       x
     end
-
-    def loss(y)
-      @layers[-1].loss(y)
-    end
-
-    def dloss
-      @layers[-1].dloss
-    end
   
-    def backward(y)
-      dout = y
+    def backward(dout, learning_phase)
       @layers.reverse.each do |layer|
-        dout = layer.backward(dout)
+        if layer.is_a?(Layers::Dropout) || layer.is_a?(Layers::BatchNormalization) || layer.is_a?(Model)
+          dout = layer.backward(dout, learning_phase)
+        else
+          dout = layer.backward(dout)
+        end
       end
       dout
     end
 
     def update
+      return unless @trainable
       @layers.each do |layer|
-        layer.update if @trainable && (layer.is_a?(Layers::HasParamLayer) || layer.is_a?(Model))
+        if layer.is_a?(Layers::HasParamLayer)
+          layer.update(@optimizer)
+        elsif layer.is_a?(Model)
+          layer.update
+        end
       end
     end
 
@@ -270,7 +289,7 @@ module DNN
       if prev_layer.is_a?(Layers::Layer)
         prev_layer
       elsif prev_layer.is_a?(Model)
-        prev_layer.layers[-1]
+        prev_layer.layers.last
       end
     end
 
@@ -280,23 +299,20 @@ module DNN
       unless @layers.first.is_a?(Layers::InputLayer)
         raise TypeError.new("The first layer is not an InputLayer.")
       end
-      unless @layers.last.is_a?(Layers::OutputLayer)
-        raise TypeError.new("The last layer is not an OutputLayer.")
-      end
     end
 
     def input_data_shape_check(x, y = nil)
-      unless @layers.first.shape == x.shape[1..-1]
+      unless @layers.first.input_shape == x.shape[1..-1]
         raise DNN_ShapeError.new("The shape of x does not match the input shape. x shape is #{x.shape[1..-1]}, but input shape is #{@layers.first.shape}.")
       end
-      if y && @layers.last.shape != y.shape[1..-1]
+      if y && @layers.last.output_shape != y.shape[1..-1]
         raise DNN_ShapeError.new("The shape of y does not match the input shape. y shape is #{y.shape[1..-1]}, but output shape is #{@layers.last.shape}.")
       end
     end
 
     def layers_shape_check
       @layers.each.with_index do |layer, i|
-        prev_shape = layer.is_a?(Layers::Layer) ? layer.prev_layer.shape : layer.layers[-1]
+        prev_shape = layer.is_a?(Layers::Layer) ? layer.input_shape : layer.layers[-1]
         if layer.is_a?(Layers::Dense)
           if prev_shape.length != 1
             raise DNN_ShapeError.new("layer index(#{i}) Dense:  The shape of the previous layer is #{prev_shape}. The shape of the previous layer must be 1 dimensional.")

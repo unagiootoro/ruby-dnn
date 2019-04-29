@@ -60,6 +60,10 @@ module DNN
         dxs
       end
 
+      def output_shape
+        @return_sequences ? [@time_length, @num_nodes] : [@num_nodes]
+      end
+
       def to_hash(merge_hash = nil)
         hash = {
           num_nodes: @num_nodes,
@@ -94,7 +98,7 @@ module DNN
         end
       end
 
-      def dlasso
+      def d_lasso
         if @l1_lambda > 0
           dlasso = Xumo::SFloat.ones(*@weight.data.shape)
           dlasso[@weight.data < 0] = -1
@@ -105,7 +109,7 @@ module DNN
         end
       end
 
-      def dridge
+      def d_ridge
         if @l2_lambda > 0
           @weight.grad += l2_lambda * @weight.data
           @weight2.grad += l2_lambda * @weight2.data
@@ -115,7 +119,7 @@ module DNN
       private
 
       def init_params
-        @time_length = prev_layer.shape[0]
+        @time_length = @input_shape[0]
       end
     end
 
@@ -188,7 +192,7 @@ module DNN
     
       def init_params
         super()
-        num_prev_nodes = prev_layer.shape[1]
+        num_prev_nodes = @input_shape[1]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
         @weight2.data = Xumo::SFloat.new(@num_nodes, @num_nodes)
         @bias.data = Xumo::SFloat.new(@num_nodes)
@@ -327,7 +331,7 @@ module DNN
     
       def init_params
         super()
-        num_prev_nodes = prev_layer.shape[1]
+        num_prev_nodes = @input_shape[1]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes * 4)
         @weight2.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 4)
         @bias.data = Xumo::SFloat.new(@num_nodes * 4)

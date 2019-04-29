@@ -84,17 +84,17 @@ module DNN
 
       def self.load_hash(hash)
         Conv2D.new(hash[:num_filters], hash[:filter_size],
-                   weight_initializer: Utils.load_hash(hash[:weight_initializer]),
-                   bias_initializer: Utils.load_hash(hash[:bias_initializer]),
+                   weight_initializer: Util.load_hash(hash[:weight_initializer]),
+                   bias_initializer: Util.load_hash(hash[:bias_initializer]),
                    strides: hash[:strides],
                    padding: hash[:padding],
                    l1_lambda: hash[:l1_lambda],
                    l2_lambda: hash[:l2_lambda])
       end
 
-      def build(model)
+      def build(input_shape)
         super
-        prev_h, prev_w = prev_layer.shape[0..1]
+        prev_h, prev_w = input_shape[0..1]
         @out_size = out_size(prev_h, prev_w, *@filter_size, @strides)
         out_w, out_h = @out_size
         if @padding
@@ -120,7 +120,7 @@ module DNN
         @padding ? back_padding(dx, @pad) : dx
       end
 
-      def shape
+      def output_shape
         [*@out_size, @num_filters]
       end
 
@@ -134,7 +134,7 @@ module DNN
       private
     
       def init_params
-        num_prev_filter = prev_layer.shape[2]
+        num_prev_filter = @input_shape[2]
         @weight.data = Xumo::SFloat.new(num_prev_filter * @filter_size.reduce(:*), @num_filters)
         @bias.data = Xumo::SFloat.new(@num_filters)
         super()
@@ -164,10 +164,10 @@ module DNN
         @padding = padding
       end
 
-      def build(model)
+      def build(input_shape)
         super
-        prev_w, prev_h = prev_layer.shape[0..1]
-        @num_channel = prev_layer.shape[2]
+        prev_h, prev_w = input_shape[0..1]
+        @num_channel = input_shape[2]
         @out_size = out_size(prev_h, prev_w, *@pool_size, @strides)
         out_w, out_h = @out_size
         if @padding
@@ -176,7 +176,7 @@ module DNN
         end
       end
 
-      def shape
+      def output_shape
         [*@out_size, @num_channel]
       end
 
@@ -251,14 +251,14 @@ module DNN
         UnPool2D.new(hash[:unpool_size])
       end
 
-      def build(model)
+      def build(input_shape)
         super
-        prev_h, prev_w = prev_layer.shape[0..1]
+        prev_h, prev_w = input_shape[0..1]
         unpool_h, unpool_w = @unpool_size
         out_h = prev_h * unpool_h
         out_w = prev_w * unpool_w
         @out_size = [out_h, out_w]
-        @num_channel = prev_layer.shape[2]
+        @num_channel = input_shape[2]
       end
 
       def forward(x)
@@ -275,7 +275,7 @@ module DNN
         dout[true, true, 0, true, 0, true].clone
       end
 
-      def shape
+      def output_shape
         [*@out_size, @num_channel]
       end
 
