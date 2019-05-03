@@ -14,7 +14,7 @@ module DNN
       if img.shape.length == 2
         img = Numo::UInt8[img, img, img].transpose(1, 2, 0).clone
       elsif img.shape[2] == 1
-        img = img.shape(img.shape[0], img.shape[1])
+        img = img.reshape(img.shape[0], img.shape[1])
         img = Numo::UInt8[img, img, img].transpose(1, 2, 0).clone
       end
       h, w, ch = img.shape
