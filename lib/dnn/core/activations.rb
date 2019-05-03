@@ -13,8 +13,6 @@ module DNN
 
 
     class Tanh < Layers::Layer
-      NMath = Xumo::NMath
-
       def forward(x)
         @out = NMath.tanh(x)
       end
@@ -38,8 +36,6 @@ module DNN
 
 
     class Softplus < Layers::Layer
-      NMath = Xumo::NMath
-
       def forward(x)
         @x = x
         NMath.log(1 + NMath.exp(x))
@@ -52,8 +48,6 @@ module DNN
 
 
     class Swish < Layers::Layer
-      NMath = Xumo::NMath
-
       def forward(x)
         @x = x
         @out = x * (1 / (1 + NMath.exp(-x)))
@@ -111,8 +105,6 @@ module DNN
 
 
     class ELU < Layers::Layer
-      NMath = Xumo::NMath
-
       attr_reader :alpha
 
       def self.load_hash(hash)

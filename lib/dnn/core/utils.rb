@@ -1,8 +1,6 @@
 module DNN
   # This module provides utility functions.
   module Utils
-    NMath = Xumo::NMath
-
     # Categorize labels into "num_classes" classes.
     def self.to_categorical(y, num_classes, narray_type = nil)
       narray_type ||= y.class

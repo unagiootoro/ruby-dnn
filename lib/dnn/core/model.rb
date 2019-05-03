@@ -198,7 +198,11 @@ module DNN
       input_data_shape_check(x, y)
       x, y = batch_proc.call(x, y) if batch_proc
       out = forward(x, true)
-      loss_value = @loss.forward(out, y) + @loss.regularize(get_all_layers)
+      loss_value = if @loss.is_a?(HuberLoss)
+        @loss.forward(out, y, get_all_layers)
+      else
+        @loss.forward(out, y) + @loss.regularize(get_all_layers)
+      end
       dout = @loss.backward(y)
       backward(dout, true)
       @loss.d_regularize(get_all_layers)

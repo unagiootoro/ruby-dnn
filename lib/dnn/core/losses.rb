@@ -57,11 +57,12 @@ module DNN
 
 
     class HuberLoss < Loss
-      def forward(out, y)
+      def forward(out, y, layers)
         @out = out
         loss = loss_l1(y)
         loss = loss > 1 ? loss : loss_l2(y)
-        @loss = loss + regularize
+        #@loss = loss + regularize(layers)
+        @loss = loss
       end
 
       def backward(y)
@@ -88,8 +89,6 @@ module DNN
 
 
     class SoftmaxCrossEntropy < Loss
-      NMath = Xumo::NMath
-
       def forward(x, y)
         @out = Utils.softmax(x)
         batch_size = y.shape[0]
@@ -103,8 +102,6 @@ module DNN
 
 
     class SigmoidCrossEntropy < Loss
-      NMath = Xumo::NMath
-
       def forward(x, y)
         @out = Utils.sigmoid(x)
         batch_size = y.shape[0]
