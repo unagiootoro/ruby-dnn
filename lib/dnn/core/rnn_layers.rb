@@ -427,7 +427,7 @@ module DNN
     
       def init_params
         super()
-        num_prev_nodes = prev_layer.shape[1]
+        num_prev_nodes = @input_shape[1]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes * 3)
         @weight2.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 3)
         @bias.data = Xumo::SFloat.new(@num_nodes * 3)

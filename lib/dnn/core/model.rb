@@ -14,9 +14,14 @@ module DNN
 
     def self.load_json(json_str)
       hash = JSON.parse(json_str, symbolize_names: true)
+      model = self.load_hash(hash)
+      model.compile(Utils.load_hash(hash[:optimizer]), Utils.load_hash(hash[:loss]))
+      model
+    end
+
+    def self.load_hash(hash)
       model = self.new
       model.layers = hash[:layers].map { |hash_layer| Utils.load_hash(hash_layer) }
-      model.compile(Utils.load_hash(hash[:optimizer]))
       model
     end
   
@@ -24,15 +29,15 @@ module DNN
       @layers = []
       @trainable = true
       @optimizer = nil
-      @training = false
       @compiled = false
     end
 
     def load_json_params(json_str)
-      has_param_layers_params = JSON.parse(json_str, symbolize_names: true)
+      hash = JSON.parse(json_str, symbolize_names: true)
+      has_param_layers_params = hash[:params]
       has_param_layers_index = 0
-      @layers.each do |layer|
-        next unless layer.is_a?(HasParamLayer)
+      has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
+      has_param_layers.each do |layer|
         hash_params = has_param_layers_params[has_param_layers_index]
         hash_params.each do |key, (shape, base64_param)|
           bin = Base64.decode64(base64_param)
@@ -46,7 +51,7 @@ module DNN
         has_param_layers_index += 1
       end
     end
-  
+
     def save(file_name)
       marshal = Marshal.dump(self)
       begin
@@ -59,36 +64,41 @@ module DNN
     end
 
     def to_json
-      hash_layers = @layers.map { |layer| layer.to_hash }
-      hash = {version: VERSION, layers: hash_layers, optimizer: @optimizer.to_hash}
+      hash = self.to_hash
+      hash[:version] = VERSION
       JSON.pretty_generate(hash)
     end
     
     def params_to_json
-      has_param_layers = @layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
+      has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
       has_param_layers_params = has_param_layers.map do |layer|
         layer.params.map { |key, param|
           base64_data = Base64.encode64(param.data.to_binary)
           [key, [param.data.shape, base64_data]]
         }.to_h
       end
-      JSON.dump(has_param_layers_params)
+      hash = {version: VERSION, params: has_param_layers_params}
+      JSON.dump(hash)
     end
-  
+
     def <<(layer)
-      if !layer.is_a?(Layers::Layer) && !layer.is_a?(Model)
-        raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Model class.")
+      # Due to a bug in saving nested models, temporarily prohibit model nesting.
+      # if !layer.is_a?(Layers::Layer) && !layer.is_a?(Model)
+      #   raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Model class.")
+      # end
+      unless layer.is_a?(Layers::Layer)
+        raise TypeError.new("layer:#{layer.class.name} is not an instance of the DNN::Layers::Layer class.")
       end
       @layers << layer
       self
     end
-  
+
     def compile(optimizer, loss)
       unless optimizer.is_a?(Optimizers::Optimizer)
-        raise TypeError.new("optimizer is not an instance of the DNN::Optimizers::Optimizer class.")
+        raise TypeError.new("optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class.")
       end
       unless loss.is_a?(Losses::Loss)
-        raise TypeError.new("loss is not an instance of the DNN::Losses::Loss class.")
+        raise TypeError.new("loss:#{loss.class} is not an instance of DNN::Losses::Loss class.")
       end
       @compiled = true
       layers_check
@@ -100,7 +110,11 @@ module DNN
 
     def build(super_model = nil)
       @super_model = super_model
-      shape = @layers.first.build
+      shape = if super_model
+        super_model.output_shape
+      else
+        @layers.first.build
+      end
       @layers[1..-1].each do |layer|
         if layer.is_a?(Model)
           layer.build(self)
@@ -120,15 +134,17 @@ module DNN
     end
 
     def optimizer
+      raise DNN_Error.new("The model is not compiled.") unless compiled?
       @optimizer ? @optimizer : @super_model.optimizer
+    end
+
+    def loss
+      raise DNN_Error.new("The model is not compiled.") unless compiled?
+      @loss ? @loss : @super_model.loss
     end
 
     def compiled?
       @compiled
-    end
-
-    def training?
-      @training
     end
 
     def train(x, y, epochs,
@@ -140,6 +156,7 @@ module DNN
       unless compiled?
         raise DNN_Error.new("The model is not compiled.")
       end
+      check_xy_type(x, y)
       dataset = Dataset.new(x, y)
       num_train_datas = x.shape[0]
       (1..epochs).each do |epoch|
@@ -176,6 +193,7 @@ module DNN
     end
   
     def train_on_batch(x, y, &batch_proc)
+      check_xy_type(x, y)
       input_data_shape_check(x, y)
       x, y = batch_proc.call(x, y) if batch_proc
       out = forward(x, true)
@@ -188,6 +206,7 @@ module DNN
     end
   
     def accurate(x, y, batch_size = 100, &batch_proc)
+      check_xy_type(x, y)
       input_data_shape_check(x, y)
       batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
       correct = 0
@@ -214,11 +233,13 @@ module DNN
     end
   
     def predict(x)
+      check_xy_type(x)
       input_data_shape_check(x)
       forward(x, false)
     end
 
     def predict1(x)
+      check_xy_type(x)
       predict(Xumo::SFloat.cast([x]))[0, false]
     end
 
@@ -293,6 +314,11 @@ module DNN
       end
     end
 
+    def to_hash
+      hash_layers = @layers.map { |layer| layer.to_hash }
+      {class: Model.name, layers: hash_layers, optimizer: @optimizer.to_hash, loss: @loss.to_hash}
+    end
+
     private
 
     def layers_check
@@ -303,16 +329,16 @@ module DNN
 
     def input_data_shape_check(x, y = nil)
       unless @layers.first.input_shape == x.shape[1..-1]
-        raise DNN_ShapeError.new("The shape of x does not match the input shape. x shape is #{x.shape[1..-1]}, but input shape is #{@layers.first.shape}.")
+        raise DNN_ShapeError.new("The shape of x does not match the input shape. x shape is #{x.shape[1..-1]}, but input shape is #{@layers.first.input_shape}.")
       end
       if y && @layers.last.output_shape != y.shape[1..-1]
-        raise DNN_ShapeError.new("The shape of y does not match the input shape. y shape is #{y.shape[1..-1]}, but output shape is #{@layers.last.shape}.")
+        raise DNN_ShapeError.new("The shape of y does not match the input shape. y shape is #{y.shape[1..-1]}, but output shape is #{@layers.last.output_shape}.")
       end
     end
 
     def layers_shape_check
       @layers.each.with_index do |layer, i|
-        prev_shape = layer.is_a?(Layers::Layer) ? layer.input_shape : layer.layers[-1]
+        prev_shape = layer.input_shape
         if layer.is_a?(Layers::Dense)
           if prev_shape.length != 1
             raise DNN_ShapeError.new("layer index(#{i}) Dense:  The shape of the previous layer is #{prev_shape}. The shape of the previous layer must be 1 dimensional.")
@@ -327,6 +353,21 @@ module DNN
             raise DNN_ShapeError.new("layer index(#{i}) #{layer_name}:  The shape of the previous layer is #{prev_shape}. The shape of the previous layer must be 3 dimensional.")
           end
         end
+      end
+    end
+
+    def check_xy_type(x, y = nil)
+      unless x.is_a?(Xumo::SFloat)
+        raise TypeError.new("x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class.")
+      end
+      if y && !y.is_a?(Xumo::SFloat)
+        raise TypeError.new("y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class.")
+      end
+    end
+
+    def type_check(var_name, var, type)
+      unless var.is_a?(type)
+        raise TypeError.new("#{var_name}:#{var.class} is not an instance of #{type} class.")
       end
     end
   end

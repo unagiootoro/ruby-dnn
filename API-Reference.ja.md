@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.8.7
+最終更新バージョン:0.9.0
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -65,7 +65,7 @@ Model
 なし。
 
 ## def to_json
-モデルをjson文字列に変換します。
+モデルをjson文字列に変換します。 
 変換したjson文字列には学習パラメータの情報は含まれません。
 学習パラメータの情報を取得したい場合は、params_to_jsonを使用してください。
 ### arguments
@@ -83,28 +83,39 @@ String
 学習パラメータを変換して生成したjson文字列。
 
 ## def <<(layer)
-モデルにレイヤーまたはモデルを追加します。
+モデルにレイヤー追加します。
 ### arguments
-* Layer | Model layer  
-追加するレイヤーまたはモデル。
+* Layer  
+追加するレイヤー。
 ### return
 Model  
 自身のモデルのインスタンス。
 
 ## def optimizer
 モデルのオプティマイザーを取得します。
-モデルにオプティマイザーが存在しない場合は、上位のモデルのオプティマイザーを取得します。
+
 ### arguments
 なし。
 ### return
 Optimizer  
 モデルのオプティマイザー。
 
-## def compile(optimizer)
+## def loss
+モデルの損失関数を取得します。
+
+### arguments
+なし。
+### return
+Loss  
+モデルの損失関数。
+
+## def compile(optimizer, loss)
 モデルをコンパイルします。
 ### arguments
 * Optimizer optimizer
 モデルが学習に使用するオプティマイザー。
+* Loss loss
+モデルが学習に使用する損失関数。
 ### return
 なし。
 
@@ -233,11 +244,11 @@ Array
 
 ## 【Instance methods】
 
-## def build(model)
+## def build(input_shape)
 モデルのコンパイル時に、レイヤーをビルドするために使用されます。
 ### arguments
-* Model model  
-レイヤーを持つモデルを登録します。
+* Array input_shape  
+入力されるNArrayの形状。
 ### return
 なし。
 
@@ -550,26 +561,7 @@ N次元のデータを平坦化します。
 データの形状を変更するshapeです。
 
 
-# class OutputLayer < Layer
-出力層に該当するレイヤーです。出力層の活性化関数は、全てこのクラスを継承する必要があります。
 
-## 【Instance methods】
-
-## abstruct def backward(y)
-出力層の活性化関数と損失関数を合わせたものを微分した導関数を用いて、教師データの出力データを逆方向に伝搬します。
-### arguments
-Numo::SFloat y
-出力データ。
-### return
-出力層の活性化関数と損失関数の微分値。
-
-## abstruct def loss
-損失関数の値を取得します。
-### arguments
-Numo::SFloat y  
-出力データ。
-### return
-損失関数の値。
 
 
 # class Dropout
@@ -666,22 +658,6 @@ Float alpha
 ### arguments
 * Float alpha  
 出力値が負のときの傾き。
-
-
-# class IdentityMSE < OutputLayer
-恒等関数と二乗誤差関数を合わせた出力層のレイヤーです。
-
-
-# class IdentityMAE < OutputLayer
-恒等関数と平均絶対誤差関数を合わせた出力層のレイヤーです。
-
-
-# class SoftmaxWithLoss < OutputLayer
-ソフトマックス関数とクロスエントロピー誤差関数を合わせた出力層のレイヤーです。
-
-
-# class SigmoidWithLoss < OutputLayer
-シグモイド関数とバイナリクロスエントロピー誤差関数を合わせた出力層のレイヤーです。
 
 
 # module Initializers
@@ -894,7 +870,7 @@ Float beta2
   指数平均移動のための係数2。
 
 
-# module Util
+# module Utils
 ユーティリティ関数を提供します。
 
 ## 【Singleton methods】
@@ -924,3 +900,64 @@ Array
 ### return
 NArray  
 カテゴライズされたNArrayのインスタンス。
+
+## def self.sigmoid(x)
+xのシグモイド関数の値を返します。
+### arguments
+* Numo::SFloat x  
+シグモイド関数の引数の値。
+### return
+Numo::SFloat  
+シグモイド関数の値。
+
+## def self.softmax(x)
+xのソフトマックス関数の値を返します。
+### arguments
+* Numo::SFloat x  
+ソフトマックス関数の引数の値。
+### return
+Numo::SFloat  
+ソフトマックス関数の値。
+
+
+
+# module Losses
+損失関数のレイヤーの名前空間をなすモジュールです。
+
+# class Loss
+出力層に該当するレイヤーです。出力層の活性化関数は、全てこのクラスを継承する必要があります。
+
+## 【Instance methods】
+## abstruct def forward(out, y)
+損失関数の順伝搬を行います。全ての損失関数のクラスは、このメソッドを実装する必要があります。
+
+### arguments
+Numo::SFloat out
+ニューラルネットワークの出力値。
+Numo::SFloat y
+教師データの値。
+### return
+損失関数の値。
+
+## abstruct def loss
+損失関数の値を取得します。
+### arguments
+Numo::SFloat y  
+出力データ。
+### return
+損失関数の値。
+
+# class MeanSquaredError < OutputLayer
+二乗誤差の損失関数です。
+
+
+# class IdentityMAE < OutputLayer
+平均絶対誤差の損失関数です。
+
+
+# class SoftmaxCrossEntropy < OutputLayer
+ソフトマックス関数とクロスエントロピー誤差を合わせた損失関数です。
+
+
+# class SigmoidCrossEntropy < OutputLayer
+シグモイド関数とクロスエントロピー誤差を合わせた損失関数です。
