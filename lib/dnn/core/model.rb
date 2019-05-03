@@ -1,3 +1,4 @@
+require "zlib"
 require "json"
 require "base64"
 
@@ -9,7 +10,7 @@ module DNN
     attr_accessor :trainable # Setting false prevents learning of parameters.
 
     def self.load(file_name)
-      Marshal.load(File.binread(file_name))
+      Marshal.load(Zlib::Inflate.inflate(File.binread(file_name)))
     end
 
     def self.load_json(json_str)
@@ -53,13 +54,13 @@ module DNN
     end
 
     def save(file_name)
-      marshal = Marshal.dump(self)
+      bin = Zlib::Deflate.deflate(Marshal.dump(self))
       begin
-        File.binwrite(file_name, marshal)
+        File.binwrite(file_name, bin)
       rescue Errno::ENOENT => ex
         dir_name = file_name.match(%r`(.*)/.+$`)[1]
         Dir.mkdir(dir_name)
-        File.binwrite(file_name, marshal)
+        File.binwrite(file_name, bin)
       end
     end
 
