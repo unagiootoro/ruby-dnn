@@ -88,7 +88,7 @@ module DNN
         params.select { |key, param| param.grad }.each_value do |param|
           @g[param] ||= 0
           @g[param] += param.grad**2
-          param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + 1e-7)) * param.grad
+          param.data -= (@learning_rate / NMath.sqrt(@g[param] + 1e-7)) * param.grad
         end
       end
     end
@@ -111,7 +111,7 @@ module DNN
         params.select { |key, param| param.grad }.each_value do |param|
           @g[param] ||= 0
           @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
-          param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + 1e-7)) * param.grad
+          param.data -= (@learning_rate / NMath.sqrt(@g[param] + 1e-7)) * param.grad
         end
       end
 
@@ -140,7 +140,7 @@ module DNN
           @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
-          v = (Xumo::NMath.sqrt(@s[param] + 1e-6) / Xumo::NMath.sqrt(@h[param] + 1e-6)) * param.grad
+          v = (NMath.sqrt(@s[param] + 1e-6) / NMath.sqrt(@h[param] + 1e-6)) * param.grad
           @s[param] = @rho * @s[param] + (1 - @rho) * v**2
           param.data -= v
         end
@@ -177,7 +177,7 @@ module DNN
           @v[param] ||= 0
           @m[param] += (1 - @beta1) * (param.grad - @m[param])
           @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
-          param.data -= lr * @m[param] / Xumo::NMath.sqrt(@v[param] + 1e-7)
+          param.data -= lr * @m[param] / NMath.sqrt(@v[param] + 1e-7)
         end
       end
 

@@ -318,14 +318,14 @@ module DNN
           mean = x.mean(0)
           @xc = x - mean
           var = (@xc**2).mean(0)
-          @std = Xumo::NMath.sqrt(var + 1e-7)
+          @std = NMath.sqrt(var + 1e-7)
           xn = @xc / @std
           @xn = xn
           @running_mean.data = @momentum * @running_mean.data + (1 - @momentum) * mean
           @running_var.data = @momentum * @running_var.data + (1 - @momentum) * var
         else
           xc = x - @running_mean.data
-          xn = xc / Xumo::NMath.sqrt(@running_var.data + 1e-7)
+          xn = xc / NMath.sqrt(@running_var.data + 1e-7)
         end
         @gamma.data * xn + @beta.data
       end
