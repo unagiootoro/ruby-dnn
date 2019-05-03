@@ -1,10 +1,11 @@
 require "dnn"
 require "dnn/lib/mnist"
-#require "numo/linalg/autoloader"
+# require "numo/linalg/autoloader"
 
 include DNN::Layers
 include DNN::Activations
 include DNN::Optimizers
+include DNN::Losses
 Model = DNN::Model
 MNIST = DNN::MNIST
 
@@ -33,8 +34,7 @@ model << BatchNormalization.new
 model << ReLU.new
 
 model << Dense.new(10)
-model << SoftmaxWithLoss.new
 
-model.compile(RMSProp.new)
+model.compile(RMSProp.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
