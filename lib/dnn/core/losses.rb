@@ -12,7 +12,7 @@ module DNN
 
       def regularize(layers)
         layers.select { |layer| layer.is_a?(Connection) }
-                             .reduce(0) { |sum, layer| sum + layer.lasso + layer.ridge }
+              .reduce(0) { |sum, layer| sum + layer.lasso + layer.ridge }
       end
 
       def d_regularize(layers)
@@ -20,6 +20,10 @@ module DNN
           layer.d_lasso
           layer.d_ridge
         end
+      end
+
+      def to_hash
+        {class: self.class.name}
       end
     end
 
