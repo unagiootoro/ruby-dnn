@@ -43,11 +43,7 @@ module DNN
         hash_params.each do |key, (shape, base64_param)|
           bin = Base64.decode64(base64_param)
           data = Xumo::SFloat.from_binary(bin).reshape(*shape)
-          if layer.params[key].is_a?(Param)
-            layer.params[key].data = data
-          else
-            layer.params[key] = data
-          end
+          layer.params[key].data = data
         end
         has_param_layers_index += 1
       end
@@ -154,9 +150,7 @@ module DNN
               verbose: true,
               batch_proc: nil,
               &epoch_proc)
-      unless compiled?
-        raise DNN_Error.new("The model is not compiled.")
-      end
+      raise DNN_Error.new("The model is not compiled.") unless compiled?
       check_xy_type(x, y)
       dataset = Dataset.new(x, y)
       num_train_datas = x.shape[0]
@@ -194,6 +188,7 @@ module DNN
     end
   
     def train_on_batch(x, y, &batch_proc)
+      raise DNN_Error.new("The model is not compiled.") unless compiled?
       check_xy_type(x, y)
       input_data_shape_check(x, y)
       x, y = batch_proc.call(x, y) if batch_proc

@@ -939,25 +939,25 @@ Numo::SFloat y
 ### return
 損失関数の値。
 
-## abstruct def loss
-損失関数の値を取得します。
+## abstruct def backward(y)
+損失関数の逆伝搬を行います。全ての損失関数のクラスは、このメソッドを実装する必要があります。
 ### arguments
 Numo::SFloat y  
 出力データ。
 ### return
 損失関数の値。
 
-# class MeanSquaredError < OutputLayer
+# class MeanSquaredError < Loss
 二乗誤差の損失関数です。
 
 
-# class IdentityMAE < OutputLayer
+# class MeanAbsoluteError < Loss
 平均絶対誤差の損失関数です。
 
 
-# class SoftmaxCrossEntropy < OutputLayer
+# class SoftmaxCrossEntropy < Loss
 ソフトマックス関数とクロスエントロピー誤差を合わせた損失関数です。
 
 
-# class SigmoidCrossEntropy < OutputLayer
+# class SigmoidCrossEntropy < Loss
 シグモイド関数とクロスエントロピー誤差を合わせた損失関数です。
