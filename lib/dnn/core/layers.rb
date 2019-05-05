@@ -267,15 +267,17 @@ module DNN
     
     class Dropout < Layer
       attr_reader :dropout_ratio
+      attr_reader :use_scale
 
       def self.load_hash(hash)
-        self.new(hash[:dropout_ratio], hash[:seed])
+        self.new(hash[:dropout_ratio], seed: hash[:seed], use_scale: hash[:use_scale])
       end
 
-      def initialize(dropout_ratio = 0.5, seed = rand(1 << 31))
+      def initialize(dropout_ratio = 0.5, seed: rand(1 << 31), use_scale: true)
         super()
         @dropout_ratio = dropout_ratio
         @seed = seed
+        @use_scale = use_scale
         @mask = nil
       end
 
@@ -285,18 +287,18 @@ module DNN
           @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
           x[@mask] = 0
         else
-          x *= (1 - @dropout_ratio)
+          x *= (1 - @dropout_ratio) if @use_scale
         end
         x
       end
     
-      def backward(dout, learning_phase)
-        dout[@mask] = 0 if learning_phase
+      def backward(dout)
+        dout[@mask] = 0
         dout
       end
 
       def to_hash
-        super({dropout_ratio: @dropout_ratio, seed: @seed})
+        super({dropout_ratio: @dropout_ratio, seed: @seed, use_scale: @use_scale})
       end
     end
     
@@ -330,7 +332,7 @@ module DNN
         @gamma.data * xn + @beta.data
       end
     
-      def backward(dout, learning_phase)
+      def backward(dout)
         batch_size = dout.shape[0]
         @beta.grad = dout.sum(0)
         @gamma.grad = (@xn * dout).sum(0)
