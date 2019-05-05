@@ -3,26 +3,8 @@ require "test_helper"
 include DNN
 include Activations
 include Layers
-include Losses
 include Optimizers
-
-# TODO
-=begin
-class TestLoss < MiniTest::Unit::TestCase
-  def test_ridge
-    dense = Dense.new(1, l2_lambda: 1)
-    dense2 = Dense.new(10, l2_lambda: 1)
-    dense.build([10])
-    output_layer = OutputLayer.new
-    dense2.build([1])
-    model << output_layer
-    model.compile(SGD.new)
-    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
-    dense2.params[:weight].data = Numo::SFloat.ones(*dense2.params[:weight].data.shape)
-    assert_equal 10.0, output_layer.send(:ridge).round(1)
-  end
-end
-=end
+include Losses
 
 
 class TestMeanSquaredError < MiniTest::Unit::TestCase
@@ -30,17 +12,42 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     loss = MeanSquaredError.new
     x = Xumo::SFloat[[0, 1]]
     y = Xumo::SFloat[[2, 4]]
-    out = loss.forward(x, y)
+    out = loss.forward(x, y, [])
     assert_equal 6.5, out.round(4)
+  end
+
+  def test_forward2
+    loss = MeanSquaredError.new
+    dense = Dense.new(1, l1_lambda: 1, l2_lambda: 1)
+    dense.build([10])
+    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    out = Xumo::SFloat[[0, 1]]
+    y = Xumo::SFloat[[0, 1]]
+    assert_equal 15, loss.forward(out, y, [dense]).round(4)
+  end
+
+  def test_d_regularize
+    loss = MeanSquaredError.new
+    dense = Dense.new(2, l1_lambda: 1, l2_lambda: 1)
+    dense.build([1])
+    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
+    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
+    loss.d_regularize([dense])
+    assert_equal Numo::SFloat[[-3, 3]], dense.params[:weight].grad.round(4)
   end
 
   def test_backward
     loss = MeanSquaredError.new
     x = Xumo::SFloat[[0, 1]]
     y = Xumo::SFloat[[2, 4]]
-    loss.forward(x, y)
+    loss.forward(x, y, [])
     grad = loss.backward(y)
     assert_equal Xumo::SFloat[[-2, -3]], grad.round(4)
+  end
+
+  def test_to_hash
+    expected_hash = {class: "DNN::Losses::MeanSquaredError"}
+    assert_equal expected_hash, MeanSquaredError.new.to_hash
   end
 end
 
@@ -50,7 +57,7 @@ class TestMeanAbsoluteError < MiniTest::Unit::TestCase
     loss = MeanAbsoluteError.new
     x = Xumo::SFloat[[0, 1]]
     y = Xumo::SFloat[[2, 4]]
-    out = loss.forward(x, y)
+    out = loss.forward(x, y, [])
     assert_equal 5, out.round(4)
   end
 
@@ -58,7 +65,7 @@ class TestMeanAbsoluteError < MiniTest::Unit::TestCase
     loss = MeanAbsoluteError.new
     x = Xumo::SFloat[[-1, 2]]
     y = Xumo::SFloat[[2, 4]]
-    loss.forward(x, y)
+    loss.forward(x, y, [])
     grad = loss.backward(y)
     assert_equal Xumo::SFloat[[-1, -1]], grad.round(4)
   end
@@ -107,7 +114,7 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
     loss = SoftmaxCrossEntropy.new
     x = Xumo::SFloat[[0, 1, 2]]
     y = Xumo::SFloat[[0, 0, 1]]
-    out = loss.forward(x, y)
+    out = loss.forward(x, y, [])
     assert_equal 0.4076, out.round(4)
   end
 
@@ -115,7 +122,7 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
     loss = SoftmaxCrossEntropy.new
     x = Xumo::SFloat[[0, 1, 2]]
     y = Xumo::SFloat[[0, 0, 1]]
-    loss.forward(x, y)
+    loss.forward(x, y, [])
     grad = loss.backward(y)
     assert_equal Xumo::SFloat[[0.09, 0.2447, -0.3348]], grad.round(4)
   end
@@ -123,11 +130,11 @@ end
 
 
 class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
-  def test_loss
+  def test_forward
     loss = SigmoidCrossEntropy.new
     x = Xumo::SFloat[[0, 1]]
     y = Xumo::SFloat[[1, 0]]
-    out = loss.forward(x, y)
+    out = loss.forward(x, y, [])
     assert_equal 2.0064, out.round(4)
   end
 
@@ -135,7 +142,7 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     loss = SigmoidCrossEntropy.new
     x = Xumo::SFloat[[0, 1]]
     y = Xumo::SFloat[[1, 0]]
-    loss.forward(x, y)
+    loss.forward(x, y, [])
     grad = loss.backward(y)
     assert_equal Xumo::SFloat[[-0.5, 0.7311]], grad.round(4)
   end

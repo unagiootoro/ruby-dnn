@@ -141,14 +141,64 @@ class TestDense < MiniTest::Unit::TestCase
     dense = Dense.new(1, l1_lambda: 1)
     dense.build([10])
     dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
-    assert_equal 10, dense.lasso.round(1)
+    assert_equal 10, dense.lasso.round(4)
+  end
+
+  def test_lasso2
+    dense = Dense.new(1)
+    dense.build([10])
+    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    assert_equal 0, dense.lasso.round(4)
   end
 
   def test_ridge
     dense = Dense.new(1, l2_lambda: 1)
     dense.build([10])
     dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
-    assert_equal 5.0, dense.ridge.round(1)
+    assert_equal 5, dense.ridge.round(4)
+  end
+
+  def test_ridge2
+    dense = Dense.new(1)
+    dense.build([10])
+    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    assert_equal 0, dense.ridge.round(4)
+  end
+
+  def test_d_lasso
+    dense = Dense.new(2, l1_lambda: 1)
+    dense.build([1])
+    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
+    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
+    dense.d_lasso
+    assert_equal Numo::SFloat[[-1, 1]], dense.params[:weight].grad.round(4)
+  end
+
+  def test_d_lasso2
+    dense = Dense.new(2)
+    dense.build([1])
+    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
+    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
+    dense.d_lasso
+    assert_equal Numo::SFloat[[0, 0]], dense.params[:weight].grad.round(4)
+  end
+
+  def test_d_ridge
+    dense = Dense.new(2, l2_lambda: 1)
+    dense.build([1])
+    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
+    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
+    dense.d_ridge
+    assert_equal Numo::SFloat[[-2, 2]], dense.params[:weight].grad.round(4)
+  end
+
+  def test_d_ridge2
+    dense = Dense.new(2)
+    dense.build([1])
+    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
+    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
+    dense.d_ridge
+    assert_equal Numo::SFloat[[0, 0]], dense.params[:weight].grad.round(4)
   end
 
   def test_to_hash
@@ -162,6 +212,16 @@ class TestDense < MiniTest::Unit::TestCase
       l2_lambda: 0,
     }
     assert_equal expected_hash, dense.to_hash
+  end
+
+  def test_init_params
+    dense = Dense.new(100)
+    dense.instance_variable_set(:@input_shape, [50])
+    dense.send(:init_params)
+    assert_kind_of RandomNormal, dense.weight_initializer
+    assert_kind_of Zeros, dense.bias_initializer
+    assert_equal [50, 100], dense.params[:weight].data.shape
+    assert_equal [100], dense.params[:bias].data.shape
   end
 end
 
@@ -229,40 +289,41 @@ class TestDropout < MiniTest::Unit::TestCase
       class: "DNN::Layers::Dropout",
       dropout_ratio: 0.3,
       seed: 0,
+      use_scale: false,
     }
     dropout = Dropout.load_hash(hash)
     assert_equal 0.3, dropout.dropout_ratio
     assert_equal 0, dropout.instance_variable_get(:@seed)
+    assert_equal false, dropout.use_scale
   end
 
   def test_forward
-    dropout = Dropout.new(0.5, 0)
+    dropout = Dropout.new(0.5, seed: 0)
     dropout.build([100])
     num = dropout.forward(Numo::SFloat.ones(100), true).sum.round
     assert num.between?(30, 70)
   end
 
   def test_forward2
-    dropout = Dropout.new
+    dropout = Dropout.new(0.3, use_scale: true)
     dropout.build([1])
     num = dropout.forward(Numo::SFloat.ones(10), false).sum.round(1)
-    assert_equal 5.0, num
+    assert_equal 7.0, num
+  end
+
+  def test_forward3
+    dropout = Dropout.new(0.3, use_scale: false)
+    dropout.build([1])
+    num = dropout.forward(Numo::SFloat.ones(10), false).sum.round(1)
+    assert_equal 10.0, num
   end
 
   def test_backward
     dropout = Dropout.new
     dropout.build([1])
     out = dropout.forward(Numo::SFloat.ones(10), true)
-    dout = dropout.backward(Numo::SFloat.ones(10), true)
+    dout = dropout.backward(Numo::SFloat.ones(10))
     assert_equal out.round, dout.round
-  end
-
-  def test_backward2
-    dropout = Dropout.new(1.0)
-    dropout.build([1])
-    dropout.forward(Numo::SFloat.ones(10), false)
-    dout = dropout.backward(Numo::SFloat.ones(10), false)
-    assert_equal 10.0, dout.sum.round(1)
   end
 
   def test_to_hash
@@ -270,8 +331,9 @@ class TestDropout < MiniTest::Unit::TestCase
       class: "DNN::Layers::Dropout",
       dropout_ratio: 0.3,
       seed: 0,
+      use_scale: false,
     }
-    dropout = Dropout.new(0.3, 0)
+    dropout = Dropout.new(0.3, seed: 0, use_scale: false)
     assert_equal expected_hash, dropout.to_hash
   end
 end
@@ -314,7 +376,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.build([10])
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     batch_norm.forward(x, true)
-    grad = batch_norm.backward(Numo::SFloat.ones(*x.shape), true)
+    grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
     assert_equal Numo::SFloat[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], batch_norm.params[:gamma].grad
     assert_equal Numo::SFloat[2, 2, 2, 2, 2, 2, 2, 2, 2, 2], batch_norm.params[:beta].grad
