@@ -66,6 +66,16 @@ module DNN
       attr_reader :num_filters
       attr_reader :filter_size
       attr_reader :strides
+
+      def self.load_hash(hash)
+        Conv2D.new(hash[:num_filters], hash[:filter_size],
+                   weight_initializer: Utils.load_hash(hash[:weight_initializer]),
+                   bias_initializer: Utils.load_hash(hash[:bias_initializer]),
+                   strides: hash[:strides],
+                   padding: hash[:padding],
+                   l1_lambda: hash[:l1_lambda],
+                   l2_lambda: hash[:l2_lambda])
+      end
     
       def initialize(num_filters, filter_size,
                      weight_initializer: Initializers::RandomNormal.new,
@@ -80,16 +90,6 @@ module DNN
         @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
         @strides = strides.is_a?(Integer) ? [strides, strides] : strides
         @padding = padding
-      end
-
-      def self.load_hash(hash)
-        Conv2D.new(hash[:num_filters], hash[:filter_size],
-                   weight_initializer: Utils.load_hash(hash[:weight_initializer]),
-                   bias_initializer: Utils.load_hash(hash[:bias_initializer]),
-                   strides: hash[:strides],
-                   padding: hash[:padding],
-                   l1_lambda: hash[:l1_lambda],
-                   l2_lambda: hash[:l2_lambda])
       end
 
       def build(input_shape)
@@ -122,6 +122,10 @@ module DNN
 
       def output_shape
         [*@out_size, @num_filters]
+      end
+
+      def padding?
+        @padding
       end
 
       def to_hash
@@ -178,6 +182,10 @@ module DNN
 
       def output_shape
         [*@out_size, @num_channel]
+      end
+
+      def padding?
+        @padding
       end
 
       def to_hash
