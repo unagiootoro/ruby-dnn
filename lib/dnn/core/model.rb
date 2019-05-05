@@ -90,7 +90,9 @@ module DNN
       self
     end
 
+    # Set optimizer and loss to model and build all layers.
     def compile(optimizer, loss)
+      raise DNN_Error.new("The model is already compiled.") if compiled?
       unless optimizer.is_a?(Optimizers::Optimizer)
         raise TypeError.new("optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class.")
       end
@@ -102,6 +104,21 @@ module DNN
       @optimizer = optimizer
       @loss = loss
       build
+      layers_shape_check
+    end
+
+    # Set optimizer and loss to model and recompile. But does not build layers.
+    def recompile(optimizer, loss)
+      unless optimizer.is_a?(Optimizers::Optimizer)
+        raise TypeError.new("optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class.")
+      end
+      unless loss.is_a?(Losses::Loss)
+        raise TypeError.new("loss:#{loss.class} is not an instance of DNN::Losses::Loss class.")
+      end
+      @compiled = true
+      layers_check
+      @optimizer = optimizer
+      @loss = loss
       layers_shape_check
     end
 
@@ -193,13 +210,9 @@ module DNN
       input_data_shape_check(x, y)
       x, y = batch_proc.call(x, y) if batch_proc
       out = forward(x, true)
-      loss_value = if @loss.is_a?(HuberLoss)
-        @loss.forward(out, y, get_all_layers)
-      else
-        @loss.forward(out, y) + @loss.regularize(get_all_layers)
-      end
+      loss_value = @loss.forward(out, y, get_all_layers)
       dout = @loss.backward(y)
-      backward(dout, true)
+      backward(dout)
       @loss.d_regularize(get_all_layers)
       update
       loss_value
@@ -274,13 +287,9 @@ module DNN
       x
     end
   
-    def backward(dout, learning_phase)
+    def backward(dout)
       @layers.reverse.each do |layer|
-        if layer.is_a?(Layers::Dropout) || layer.is_a?(Layers::BatchNormalization) || layer.is_a?(Model)
-          dout = layer.backward(dout, learning_phase)
-        else
-          dout = layer.backward(dout)
-        end
+        dout = layer.backward(dout)
       end
       dout
     end
@@ -362,12 +371,6 @@ module DNN
       end
       if y && !y.is_a?(Xumo::SFloat)
         raise TypeError.new("y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class.")
-      end
-    end
-
-    def type_check(var_name, var, type)
-      unless var.is_a?(type)
-        raise TypeError.new("#{var_name}:#{var.class} is not an instance of #{type} class.")
       end
     end
   end
