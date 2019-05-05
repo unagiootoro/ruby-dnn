@@ -3,10 +3,11 @@ module DNN
 
     # Super class of all RNN classes.
     class RNN < Connection
-      include Activations
+      include Initializers
 
       attr_reader :num_nodes
       attr_reader :stateful
+      attr_reader :return_sequences
       attr_reader :weight
       attr_reader :weight2
       attr_reader :bias
@@ -14,8 +15,8 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: Initializers::RandomNormal.new,
-                     bias_initializer: Initializers::Zeros.new,
+                     weight_initializer: RandomNormal.new,
+                     bias_initializer: Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
@@ -152,6 +153,8 @@ module DNN
 
 
     class SimpleRNN < RNN
+      include Activations
+
       attr_reader :activation
       
       def self.load_hash(hash)
@@ -170,8 +173,8 @@ module DNN
                      stateful: false,
                      return_sequences: true,
                      activation: Tanh.new,
-                     weight_initializer: Initializers::RandomNormal.new,
-                     bias_initializer: Initializers::Zeros.new,
+                     weight_initializer: RandomNormal.new,
+                     bias_initializer: Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super(num_nodes,
@@ -273,8 +276,8 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: Initializers::RandomNormal.new,
-                     bias_initializer: Initializers::Zeros.new,
+                     weight_initializer: RandomNormal.new,
+                     bias_initializer: Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super
@@ -416,8 +419,8 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: Initializers::RandomNormal.new,
-                     bias_initializer: Initializers::Zeros.new,
+                     weight_initializer: RandomNormal.new,
+                     bias_initializer: Zeros.new,
                      l1_lambda: 0,
                      l2_lambda: 0)
         super
