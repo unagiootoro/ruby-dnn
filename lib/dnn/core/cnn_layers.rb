@@ -4,33 +4,34 @@ module DNN
     module Conv2DModule
       private
 
+      # img[bsize, out_h, out_w, channel] to col[bsize * out_h * out_w, fil_h * fil_w * ch]
       def im2col(img, out_h, out_w, fil_h, fil_w, strides)
         bsize = img.shape[0]
         ch = img.shape[3]
-        col = Xumo::SFloat.zeros(bsize, ch, fil_h, fil_w, out_h, out_w)
-        img = img.transpose(0, 3, 1, 2)
+        col = Xumo::SFloat.zeros(bsize, out_h, out_w, fil_h, fil_w, ch)
         (0...fil_h).each do |i|
           i_range = (i...(i + strides[0] * out_h)).step(strides[0]).to_a
           (0...fil_w).each do |j|
             j_range = (j...(j + strides[1] * out_w)).step(strides[1]).to_a
-            col[true, true, i, j, true, true] = img[true, true, i_range, j_range]
+            col[true, true, true, i, j, true] = img[true, i_range, j_range, true]
           end
         end
-        col.transpose(0, 4, 5, 2, 3, 1).reshape(bsize * out_h * out_w, fil_h * fil_w * ch)
+        col.reshape(bsize * out_h * out_w, fil_h * fil_w * ch)
       end
 
+      # col[bsize * out_h * out_w, fil_h * fil_w * ch] to img[bsize, out_h, out_w, channel]
       def col2im(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         bsize, img_h, img_w, ch = img_shape
-        col = col.reshape(bsize, out_h, out_w, fil_h, fil_w, ch).transpose(0, 5, 3, 4, 1, 2)
-        img = Xumo::SFloat.zeros(bsize, ch, img_h, img_w)
+        col = col.reshape(bsize, out_h, out_w, fil_h, fil_w, ch)
+        img = Xumo::SFloat.zeros(bsize, img_h, img_w, ch)
         (0...fil_h).each do |i|
           i_range = (i...(i + strides[0] * out_h)).step(strides[0]).to_a
           (0...fil_w).each do |j|
             j_range = (j...(j + strides[1] * out_w)).step(strides[1]).to_a
-            img[true, true, i_range, j_range] += col[true, true, i, j, true, true]
+            img[true, i_range, j_range, true] += col[true, true, true, i, j, true]
           end
         end
-        img.transpose(0, 2, 3, 1)
+        img
       end
 
       def padding(img, pad)
@@ -56,6 +57,12 @@ module DNN
         out_h = (prev_h - fil_h) / strides[0] + 1
         out_w = (prev_w - fil_w) / strides[1] + 1
         [out_h, out_w]
+      end
+
+      def padding_size(prev_h, prev_w, out_h, out_w, strides)
+        pad_h = (prev_h.to_f / strides[0]).ceil - out_h
+        pad_w = (prev_w.to_f / strides[1]).ceil - out_w
+        [pad_h, pad_w]
       end
     end
     
@@ -96,15 +103,14 @@ module DNN
         super
         prev_h, prev_w = input_shape[0..1]
         @out_size = out_size(prev_h, prev_w, *@filter_size, @strides)
-        out_w, out_h = @out_size
         if @padding
-          @pad = [prev_h - out_h, prev_w - out_w]
-          @out_size = [prev_h, prev_w]
+          @pad_size = padding_size(prev_h, prev_w, *@out_size, @strides)
+          @out_size = [@out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1]]
         end
       end
 
       def forward(x)
-        x = padding(x, @pad) if @padding
+        x = padding(x, @pad_size) if @padding
         @x_shape = x.shape
         @col = im2col(x, *@out_size, *@filter_size, @strides)
         out = @col.dot(@weight.data) + @bias.data
@@ -117,7 +123,7 @@ module DNN
         @bias.grad = dout.sum(0)
         dcol = dout.dot(@weight.data.transpose)
         dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
-        @padding ? back_padding(dx, @pad) : dx
+        @padding ? back_padding(dx, @pad_size) : dx
       end
 
       def output_shape
@@ -126,6 +132,16 @@ module DNN
 
       def padding?
         @padding
+      end
+
+      def filters
+        num_prev_filter = @input_shape[2]
+        @weight.data.reshape(*@filter_size, num_prev_filter, @num_filters)
+      end
+
+      def filters=(filters)
+        num_prev_filter = @input_shape[2]
+        @weight.data = filters.reshape(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
       end
 
       def to_hash
@@ -139,7 +155,7 @@ module DNN
     
       def init_params
         num_prev_filter = @input_shape[2]
-        @weight.data = Xumo::SFloat.new(num_prev_filter * @filter_size.reduce(:*), @num_filters)
+        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
         @bias.data = Xumo::SFloat.new(@num_filters)
         super()
       end
@@ -173,10 +189,9 @@ module DNN
         prev_h, prev_w = input_shape[0..1]
         @num_channel = input_shape[2]
         @out_size = out_size(prev_h, prev_w, *@pool_size, @strides)
-        out_w, out_h = @out_size
         if @padding
-          @pad = [prev_h - out_h, prev_w - out_w]
-          @out_size = [prev_h, prev_w]
+          @pad_size = padding_size(prev_h, prev_w, *@out_size, @strides)
+          @out_size = [@out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1]]
         end
       end
 
@@ -202,10 +217,11 @@ module DNN
       end
 
       def forward(x)
-        x = padding(x, @pad) if @padding
+        x = padding(x, @pad_size) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
-        col = col.reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
+        col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3]).transpose(0, 2, 1)
+                 .reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
         @max_index = col.max_index(1)
         col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
@@ -213,9 +229,9 @@ module DNN
       def backward(dout)
         dmax = Xumo::SFloat.zeros(dout.size * @pool_size.reduce(:*))
         dmax[@max_index] = dout.flatten
-        dcol = dmax.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
+        dcol = dmax.reshape(dout.shape[0..2].reduce(:*), @pool_size.reduce(:*) * dout.shape[3])
         dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
-        @padding ? back_padding(dx, @pad) : dx
+        @padding ? back_padding(dx, @pad_size) : dx
       end
     end
 
@@ -226,10 +242,11 @@ module DNN
       end
 
       def forward(x)
-        x = padding(x, @pad) if @padding
+        x = padding(x, @pad_size) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
-        col = col.reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
+        col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3]).transpose(0, 2, 1)
+                 .reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
         col.mean(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
@@ -242,7 +259,7 @@ module DNN
         end
         dcol = davg.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
         dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
-        @padding ? back_padding(dx, @pad) : dx
+        @padding ? back_padding(dx, @pad_size) : dx
       end
     end
 
