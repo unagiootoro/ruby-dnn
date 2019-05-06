@@ -61,7 +61,7 @@ class TestZeros < MiniTest::Unit::TestCase
 end
 
 
-class TestRandomNorm < MiniTest::Unit::TestCase
+class TestRandomNormal < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {mean: 1, std: 2, seed: 3}
     initializer = RandomNormal.load_hash(hash)
@@ -84,7 +84,7 @@ class TestRandomNorm < MiniTest::Unit::TestCase
 
     Numo::SFloat.srand(0)
     expected = Numo::SFloat.new(10, 10).rand_norm(0, 0.05).round(4)
-    assert_equal expected, Numo::SFloat, dense.params[:weight].data.round(4)
+    assert_equal expected, expected, dense.params[:weight].data.round(4)
   end
 
   def test_to_hash
@@ -100,7 +100,7 @@ class TestRandomNorm < MiniTest::Unit::TestCase
 end
 
 
-class TestRandomNorm < MiniTest::Unit::TestCase
+class TestRandomUniform < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {min: -0.1, max: 0.1, seed: 3}
     initializer = RandomUniform.load_hash(hash)
