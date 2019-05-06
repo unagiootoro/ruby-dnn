@@ -2,7 +2,7 @@
 ruby-dnnのAPIリファレンスです。このリファレンスでは、APIを利用するうえで必要となるクラスとメソッドしか記載していません。
 そのため、プログラムの詳細が必要な場合は、ソースコードを参照してください。
 
-最終更新バージョン:0.9.0
+最終更新バージョン:0.9.2
 
 # module DNN
 ruby-dnnの名前空間をなすモジュールです。
@@ -111,6 +111,16 @@ Loss
 
 ## def compile(optimizer, loss)
 モデルをコンパイルします。
+### arguments
+* Optimizer optimizer
+モデルが学習に使用するオプティマイザー。
+* Loss loss
+モデルが学習に使用する損失関数。
+### return
+なし。
+
+## def compile(optimizer, loss)
+モデルを再コンパイルします。ただし、レイヤーのビルドは行いません。
 ### arguments
 * Optimizer optimizer
 モデルが学習に使用するオプティマイザー。
@@ -484,6 +494,11 @@ Integer
 ## attr_reader :stateful
 bool  
 レイヤーがステートフルであるか否かを返します。
+
+## attr_reader :return_sequences
+bool  
+trueを指定した場合、レイヤーのforward出力値において、時系列データ全てを返します。  
+falseを指定した場合、レイヤーのforward出力値において、時系列データの最後の値を返します。
 
 ## 【Instance methods】
 
