@@ -70,8 +70,11 @@ module DNN
     class Conv2D < Connection
       include Conv2DModule
 
+      # @return [Integer] number of filters.
       attr_reader :num_filters
+      # @return [Array] Return filter size. filter size is of the form [height, width].
       attr_reader :filter_size
+      # @return [Array] Return stride length. stride length is of the form [height, width].
       attr_reader :strides
 
       def self.load_hash(hash)
@@ -83,7 +86,11 @@ module DNN
                    l1_lambda: hash[:l1_lambda],
                    l2_lambda: hash[:l2_lambda])
       end
-    
+      
+      # @param [Integer] num_filters number of filters.
+      # @param [Array or Integer] filter_size filter size. filter size is of the form [height, width].
+      # @option options [Array or Integer] :strides stride length. stride length is of the form [height, width].
+      # @option options [Bool] :padding Whether to padding.
       def initialize(num_filters, filter_size,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::RandomNormal.new,
@@ -130,15 +137,18 @@ module DNN
         [*@out_size, @num_filters]
       end
 
+      # @return [Bool] whether to padding.
       def padding?
         @padding
       end
 
+      # @return [Bool] filters Convert weight to filter and return.
       def filters
         num_prev_filter = @input_shape[2]
         @weight.data.reshape(*@filter_size, num_prev_filter, @num_filters)
       end
 
+      # @param [Bool] Convert weight to filters and set.
       def filters=(filters)
         num_prev_filter = @input_shape[2]
         @weight.data = filters.reshape(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
@@ -166,13 +176,19 @@ module DNN
     class Pool2D < Layer
       include Conv2DModule
 
+      # @return [Array] Return pooling size. pooling size is of the form [height, width].
       attr_reader :pool_size
+      # @return [Array] Return stride length. stride length is of the form [height, width].
       attr_reader :strides
 
       def self.load_hash(pool2d_class, hash)
         pool2d_class.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
       end
 
+      # @param [Array or Integer] filter_size filter size. filter size is of the form [height, width].
+      # @option options [Array or Integer or NilClass] :strides stride length. stride length is of the form [height, width].
+      #   If you set nil, treat pool_size as strides.
+      # @option options [Bool] :padding Whether to padding.
       def initialize(pool_size, strides: nil, padding: false)
         super()
         @pool_size = pool_size.is_a?(Integer) ? [pool_size, pool_size] : pool_size
@@ -199,6 +215,7 @@ module DNN
         [*@out_size, @num_channel]
       end
 
+      # @return [Bool] whether to padding.
       def padding?
         @padding
       end
@@ -265,8 +282,10 @@ module DNN
 
 
     class UnPool2D < Layer
+      # @return [Array] Return unpooling size. unpooling size is of the form [height, width].
       attr_reader :unpool_size
 
+      # @param [Array or Integer] unpool_size Unpooling size. unpooling size is of the form [height, width].
       def initialize(unpool_size)
         super()
         @unpool_size = unpool_size.is_a?(Integer) ? [unpool_size, unpool_size] : unpool_size

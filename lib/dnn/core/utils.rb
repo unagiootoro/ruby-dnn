@@ -20,6 +20,8 @@ module DNN
       dnn_class.new
     end
 
+    # TODO
+    # Don't want to write an implementation of the activation function in utils, so we will consider it later.
     def self.sigmoid(x)
       1 / (1 + NMath.exp(-x))
     end

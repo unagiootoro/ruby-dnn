@@ -6,13 +6,20 @@ module DNN
 
   # This class deals with the model of the network.
   class Model
-    attr_accessor :layers    # All layers possessed by the model
-    attr_accessor :trainable # Setting false prevents learning of parameters.
+    # @return [Array] All layers possessed by the model.
+    attr_accessor :layers
+    # @return [Bool] Setting false prevents learning of parameters.
+    attr_accessor :trainable
 
+    # Load marshal model.
+    # @param [String] file_name File name of marshal model to load.
     def self.load(file_name)
       Marshal.load(Zlib::Inflate.inflate(File.binread(file_name)))
     end
 
+    # Load json model.
+    # @param [String] json_str json string to load model.
+    # @return [DNN::Model]
     def self.load_json(json_str)
       hash = JSON.parse(json_str, symbolize_names: true)
       model = self.load_hash(hash)
@@ -33,6 +40,8 @@ module DNN
       @compiled = false
     end
 
+    # Load json model parameters.
+    # @param [String] json_str json string to load model parameters.
     def load_json_params(json_str)
       hash = JSON.parse(json_str, symbolize_names: true)
       has_param_layers_params = hash[:params]
@@ -49,6 +58,8 @@ module DNN
       end
     end
 
+    # Save the model in marshal format.
+    # @param [String] File file_name name to save model.
     def save(file_name)
       bin = Zlib::Deflate.deflate(Marshal.dump(self))
       begin
@@ -60,6 +71,8 @@ module DNN
       end
     end
 
+    # Convert model to json string.
+    # @return [String] json string.
     def to_json
       hash = self.to_hash
       hash[:version] = VERSION
@@ -78,6 +91,9 @@ module DNN
       JSON.dump(hash)
     end
 
+    # Add layer to the model.
+    # @param [DNN::Layers::Layer] layer Layer to add to the model.
+    # @return [DNN::Model] return self.
     def <<(layer)
       # Due to a bug in saving nested models, temporarily prohibit model nesting.
       # if !layer.is_a?(Layers::Layer) && !layer.is_a?(Model)
@@ -91,6 +107,8 @@ module DNN
     end
 
     # Set optimizer and loss to model and build all layers.
+    # @param [DNN::Optimizers::Optimizer] optimizer Optimizer to use for learning.
+    # @param [DNN::Losses::Loss] loss Lptimizer to use for learning.
     def compile(optimizer, loss)
       raise DNN_Error.new("The model is already compiled.") if compiled?
       unless optimizer.is_a?(Optimizers::Optimizer)
@@ -108,6 +126,8 @@ module DNN
     end
 
     # Set optimizer and loss to model and recompile. But does not build layers.
+    # @param [DNN::Optimizers::Optimizer] optimizer Optimizer to use for learning.
+    # @param [DNN::Losses::Loss] loss Lptimizer to use for learning.
     def recompile(optimizer, loss)
       unless optimizer.is_a?(Optimizers::Optimizer)
         raise TypeError.new("optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class.")
@@ -139,28 +159,42 @@ module DNN
       end
     end
 
+    # @return [Array] Return the input shape of the model.
     def input_shape
       @layers.first.input_shape
     end
 
+    # @return [Array] Return the output shape of the model.
     def output_shape
       @layers.last.output_shape
     end
 
+    # @return [DNN::Optimizers::Optimizer] optimizer Return the optimizer to use for learning.
     def optimizer
       raise DNN_Error.new("The model is not compiled.") unless compiled?
       @optimizer ? @optimizer : @super_model.optimizer
     end
 
+    # @return [DNN::Losses::Loss] loss Return the loss to use for learning.
     def loss
       raise DNN_Error.new("The model is not compiled.") unless compiled?
       @loss ? @loss : @super_model.loss
     end
 
+    # @return [Bool] Returns whether the model is learning.
     def compiled?
       @compiled
     end
 
+    # Start training.
+    # Compile the model before use this method.
+    # @param [Numo::SFloat] x Input training data.
+    # @param [Numo::SFloat] y Output training data.
+    # @param [Integer] epochs Number of training.
+    # @option options [Array or NilClass] :test (nil) If you to test the model for every 1 epoch,
+    #     specify [x_test, y_test]. Don't test to the model, specify nil.                     
+    # @option options [Bool] :verbose (true) Set true to display the log. If false is set, the log is not displayed.
+    # @option options [nil] :batch_proc Set proc to process per batch.
     def train(x, y, epochs,
               batch_size: 1,
               test: nil,
@@ -204,6 +238,10 @@ module DNN
       end
     end
   
+    # Training once.
+    # Compile the model before use this method.
+    # @param [Numo::SFloat] x Input training data.
+    # @param [Numo::SFloat] y Output training data.
     def train_on_batch(x, y, &batch_proc)
       raise DNN_Error.new("The model is not compiled.") unless compiled?
       check_xy_type(x, y)
@@ -218,6 +256,9 @@ module DNN
       loss_value
     end
   
+    # Evaluate model and get accurate of test data.
+    # @param [Numo::SFloat] x Input test data.
+    # @param [Numo::SFloat] y Output test data.
     def accurate(x, y, batch_size = 100, &batch_proc)
       check_xy_type(x, y)
       input_data_shape_check(x, y)
@@ -244,22 +285,28 @@ module DNN
       end
       correct.to_f / x.shape[0]
     end
-  
+
+    # Predict data.
+    # @param [Numo::SFloat] x Input data.
     def predict(x)
       check_xy_type(x)
       input_data_shape_check(x)
       forward(x, false)
     end
 
+    # Predict one data.
+    # @param [Numo::SFloat] x Input data.
     def predict1(x)
       check_xy_type(x)
       predict(Xumo::SFloat.cast([x]))[0, false]
     end
 
+    # @return [DNN::Model] Copy this model.
     def copy
       Marshal.load(Marshal.dump(self))
     end
 
+    # Get the layer that the model has.
     def get_layer(*args)
       if args.length == 1
         index = args[0]
@@ -270,13 +317,17 @@ module DNN
       end
     end
 
+    # Get the all layers.
+    # @return [Array] all layers array.
     def get_all_layers
       @layers.map { |layer|
         layer.is_a?(Model) ? layer.get_all_layers : layer
       }.flatten
     end
   
-    def forward(x, learning_phase)
+    # TODO
+    # It is not good to write the Layer class name directly in the Model class. I will fix it later.
+    def forward(x, learning_phase)01
       @layers.each do |layer|
         x = if layer.is_a?(Layers::Dropout) || layer.is_a?(Layers::BatchNormalization) || layer.is_a?(Model)
           layer.forward(x, learning_phase)

@@ -5,12 +5,12 @@ module DNN
     class RNN < Connection
       include Initializers
 
+      # @return [Integer] number of nodes.
       attr_reader :num_nodes
+      # @return [Bool] Maintain state between batches.
       attr_reader :stateful
+      # @return [Bool] Only the last of each cell of RNN is left.
       attr_reader :return_sequences
-      attr_reader :weight
-      attr_reader :weight2
-      attr_reader :bias
 
       def initialize(num_nodes,
                      stateful: false,
@@ -26,6 +26,8 @@ module DNN
         @return_sequences = return_sequences
         @layers = []
         @hidden = @params[:h] = Param.new
+        # TODO
+        # Change to a good name.
         @params[:weight2] = @weight2 = Param.new
       end
 
@@ -75,10 +77,7 @@ module DNN
         super(hash)
       end
 
-      def shape
-        @return_sequences ? [@time_length, @num_nodes] : [@num_nodes]
-      end
-
+      # Reset the state of RNN.
       def reset_state
         @hidden.data = @hidden.data.fill(0) if @hidden.data
       end

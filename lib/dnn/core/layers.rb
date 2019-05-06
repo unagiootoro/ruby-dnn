@@ -45,8 +45,10 @@ module DNN
     
     # This class is a superclass of all classes with learning parameters.
     class HasParamLayer < Layer
-      attr_accessor :trainable # Setting false prevents learning of parameters.
-      attr_reader :params      # The parameters of the layer.
+      # @return [Bool] trainable Setting false prevents learning of parameters.
+      attr_accessor :trainable
+      # @return [Array] The parameters of the layer.
+      attr_reader :params
     
       def initialize
         super()
@@ -107,11 +109,19 @@ module DNN
 
     # It is a superclass of all connection layers.
     class Connection < HasParamLayer
-      attr_reader :l1_lambda # L1 regularization
-      attr_reader :l2_lambda # L2 regularization
+      # @return [DNN::Initializers] weight initializer.
       attr_reader :weight_initializer
+      # @return [DNN::Initializers] bias initializer.
       attr_reader :bias_initializer
+      # @return [Float] L1 regularization
+      attr_reader :l1_lambda
+      # @return [Float] L2 regularization
+      attr_reader :l2_lambda
 
+      # @option options [DNN::Initializers] weight_initializer weight initializer.
+      # @option options [DNN::Initializers] bias_initializer bias initializer.
+      # @option options [Float] l1_lambda L1 regularization
+      # @option options [Float] l2_lambda L2 regularization
       def initialize(weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
@@ -171,7 +181,9 @@ module DNN
     end
     
     
+    # Full connnection layer.
     class Dense < Connection
+      # @return [Integer] number of nodes.
       attr_reader :num_nodes
 
       def self.load_hash(hash)
@@ -181,7 +193,8 @@ module DNN
                  l1_lambda: hash[:l1_lambda],
                  l2_lambda: hash[:l2_lambda])
       end
-    
+
+      # @param [Integer] num_nodes number of nodes.
       def initialize(num_nodes,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
@@ -213,6 +226,8 @@ module DNN
     
       private
     
+      # TODO
+      # Change writing super() other than the first.
       def init_params
         num_prev_nodes = @input_shape[0]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
@@ -266,7 +281,9 @@ module DNN
 
     
     class Dropout < Layer
+      # @return [Float] dropout ratio.
       attr_reader :dropout_ratio
+      # @return [Float] Use 'weight scaling inference rule'.
       attr_reader :use_scale
 
       def self.load_hash(hash)
@@ -304,12 +321,14 @@ module DNN
     
     
     class BatchNormalization < HasParamLayer
+      # @return [Float] Exponential moving average of mean and variance.
       attr_reader :momentum
 
       def self.load_hash(hash)
         self.new(momentum: hash[:momentum])
       end
 
+      # @param [Float] Exponential moving average of mean and variance.
       def initialize(momentum: 0.9)
         super()
         @momentum = momentum
