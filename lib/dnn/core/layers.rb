@@ -118,10 +118,10 @@ module DNN
       # @return [Float] L2 regularization
       attr_reader :l2_lambda
 
-      # @option options [DNN::Initializers] weight_initializer weight initializer.
-      # @option options [DNN::Initializers] bias_initializer bias initializer.
-      # @option options [Float] l1_lambda L1 regularization
-      # @option options [Float] l2_lambda L2 regularization
+      # @param [DNN::Initializers] weight_initializer weight initializer.
+      # @param [DNN::Initializers] bias_initializer bias initializer.
+      # @param [Float] l1_lambda L1 regularization
+      # @param [Float] l2_lambda L2 regularization
       def initialize(weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
@@ -328,7 +328,7 @@ module DNN
         self.new(momentum: hash[:momentum])
       end
 
-      # @param [Float] Exponential moving average of mean and variance.
+      # @param [Float] momentum Exponential moving average of mean and variance.
       def initialize(momentum: 0.9)
         super()
         @momentum = momentum

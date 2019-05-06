@@ -89,8 +89,8 @@ module DNN
       
       # @param [Integer] num_filters number of filters.
       # @param [Array or Integer] filter_size filter size. filter size is of the form [height, width].
-      # @option options [Array or Integer] :strides stride length. stride length is of the form [height, width].
-      # @option options [Bool] :padding Whether to padding.
+      # @param [Array or Integer] strides stride length. stride length is of the form [height, width].
+      # @param [Bool] padding Whether to padding.
       def initialize(num_filters, filter_size,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::RandomNormal.new,
@@ -142,13 +142,13 @@ module DNN
         @padding
       end
 
-      # @return [Bool] filters Convert weight to filter and return.
+      # @return [Numo::SFloat] Convert weight to filter and return.
       def filters
         num_prev_filter = @input_shape[2]
         @weight.data.reshape(*@filter_size, num_prev_filter, @num_filters)
       end
 
-      # @param [Bool] Convert weight to filters and set.
+      # @param [Numo::SFloat] filters Convert weight to filters and set.
       def filters=(filters)
         num_prev_filter = @input_shape[2]
         @weight.data = filters.reshape(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
@@ -185,10 +185,10 @@ module DNN
         pool2d_class.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
       end
 
-      # @param [Array or Integer] filter_size filter size. filter size is of the form [height, width].
-      # @option options [Array or Integer or NilClass] :strides stride length. stride length is of the form [height, width].
+      # @param [Array or Integer] pool_size pooling size. pooling size is of the form [height, width].
+      # @param [Array or Integer or NilClass] strides stride length. stride length is of the form [height, width].
       #   If you set nil, treat pool_size as strides.
-      # @option options [Bool] :padding Whether to padding.
+      # @param [Bool] padding Whether to padding.
       def initialize(pool_size, strides: nil, padding: false)
         super()
         @pool_size = pool_size.is_a?(Integer) ? [pool_size, pool_size] : pool_size

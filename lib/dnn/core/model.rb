@@ -59,7 +59,7 @@ module DNN
     end
 
     # Save the model in marshal format.
-    # @param [String] File file_name name to save model.
+    # @param [String] file_name name to save model.
     def save(file_name)
       bin = Zlib::Deflate.deflate(Marshal.dump(self))
       begin
@@ -79,6 +79,8 @@ module DNN
       JSON.pretty_generate(hash)
     end
     
+    # Convert model parameters to json string.
+    # @return [String] json string.
     def params_to_json
       has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
       has_param_layers_params = has_param_layers.map do |layer|
@@ -191,10 +193,12 @@ module DNN
     # @param [Numo::SFloat] x Input training data.
     # @param [Numo::SFloat] y Output training data.
     # @param [Integer] epochs Number of training.
-    # @option options [Array or NilClass] :test (nil) If you to test the model for every 1 epoch,
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Array or NilClass] test If you to test the model for every 1 epoch,
     #     specify [x_test, y_test]. Don't test to the model, specify nil.                     
-    # @option options [Bool] :verbose (true) Set true to display the log. If false is set, the log is not displayed.
-    # @option options [nil] :batch_proc Set proc to process per batch.
+    # @param [Bool] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Proc] batch_proc Set proc to process per batch.
+    # @yield [epoch] Process performed before one training.
     def train(x, y, epochs,
               batch_size: 1,
               test: nil,
@@ -242,6 +246,7 @@ module DNN
     # Compile the model before use this method.
     # @param [Numo::SFloat] x Input training data.
     # @param [Numo::SFloat] y Output training data.
+    # @yield [x, y] batch_proc Set proc to process per batch.
     def train_on_batch(x, y, &batch_proc)
       raise DNN_Error.new("The model is not compiled.") unless compiled?
       check_xy_type(x, y)
@@ -259,6 +264,7 @@ module DNN
     # Evaluate model and get accurate of test data.
     # @param [Numo::SFloat] x Input test data.
     # @param [Numo::SFloat] y Output test data.
+    # @yield [x, y] batch_proc Set proc to process per batch.
     def accurate(x, y, batch_size = 100, &batch_proc)
       check_xy_type(x, y)
       input_data_shape_check(x, y)
@@ -295,7 +301,7 @@ module DNN
     end
 
     # Predict one data.
-    # @param [Numo::SFloat] x Input data.
+    # @param [Numo::SFloat] x Input data. However, x is single data.
     def predict1(x)
       check_xy_type(x)
       predict(Xumo::SFloat.cast([x]))[0, false]
