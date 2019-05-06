@@ -84,7 +84,7 @@ class TestRandomNormal < MiniTest::Unit::TestCase
 
     Numo::SFloat.srand(0)
     expected = Numo::SFloat.new(10, 10).rand_norm(0, 0.05).round(4)
-    assert_equal expected, expected, dense.params[:weight].data.round(4)
+    assert_equal expected, dense.params[:weight].data.round(4)
   end
 
   def test_to_hash
