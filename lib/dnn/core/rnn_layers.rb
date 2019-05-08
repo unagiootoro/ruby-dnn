@@ -82,38 +82,17 @@ module DNN
         @hidden.data = @hidden.data.fill(0) if @hidden.data
       end
 
-      def lasso
+      def regularizers
+        regularizers = []
         if @l1_lambda > 0
-          @l1_lambda * (@weight.data.abs.sum + @weight2.data.abs.sum)
-        else
-          0
+          regularizers << Lasso.new(@l1_lambda, @weight)
+          regularizers << Lasso.new(@l1_lambda, @weight2)
         end
-      end
-
-      def ridge
         if @l2_lambda > 0
-          0.5 * (@l2_lambda * ((@weight.data**2).sum + (@weight2.data**2).sum))
-        else
-          0
+          regularizers << Ridge.new(@l2_lambda, @weight)
+          regularizers << Ridge.new(@l2_lambda, @weight2)
         end
-      end
-
-      def d_lasso
-        if @l1_lambda > 0
-          dlasso = Xumo::SFloat.ones(*@weight.data.shape)
-          dlasso[@weight.data < 0] = -1
-          @weight.grad += @l1_lambda * dlasso
-          dlasso2 = Xumo::SFloat.ones(*@weight2.data.shape)
-          dlasso2[@weight2.data < 0] = -1
-          @weight2.grad += @l1_lambda * dlasso2
-        end
-      end
-
-      def d_ridge
-        if @l2_lambda > 0
-          @weight.grad += l2_lambda * @weight.data
-          @weight2.grad += l2_lambda * @weight2.data
-        end
+        regularizers
       end
 
       private

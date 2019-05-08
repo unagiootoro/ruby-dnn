@@ -26,13 +26,13 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     assert_equal 15, loss.forward(out, y, [dense]).round(4)
   end
 
-  def test_d_regularize
+  def test_regularizes_backward
     loss = MeanSquaredError.new
     dense = Dense.new(2, l1_lambda: 1, l2_lambda: 1)
     dense.build([1])
     dense.params[:weight].data = Numo::SFloat[[-2, 2]]
     dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
-    loss.d_regularize([dense])
+    loss.regularizes_backward([InputLayer.new(1), dense])
     assert_equal Numo::SFloat[[-3, 3]], dense.params[:weight].grad.round(4)
   end
 

@@ -137,68 +137,17 @@ class TestDense < MiniTest::Unit::TestCase
     assert_equal [10], dense.output_shape
   end
 
-  def test_lasso
-    dense = Dense.new(1, l1_lambda: 1)
+  def test_regularizers
+    dense = Dense.new(1, l1_lambda: 1, l2_lambda: 1)
     dense.build([10])
-    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
-    assert_equal 10, dense.lasso.round(4)
+    assert_kind_of Lasso, dense.regularizers[0]
+    assert_kind_of Ridge, dense.regularizers[1]
   end
 
-  def test_lasso2
+  def test_regularizers2
     dense = Dense.new(1)
     dense.build([10])
-    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
-    assert_equal 0, dense.lasso.round(4)
-  end
-
-  def test_ridge
-    dense = Dense.new(1, l2_lambda: 1)
-    dense.build([10])
-    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
-    assert_equal 5, dense.ridge.round(4)
-  end
-
-  def test_ridge2
-    dense = Dense.new(1)
-    dense.build([10])
-    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
-    assert_equal 0, dense.ridge.round(4)
-  end
-
-  def test_d_lasso
-    dense = Dense.new(2, l1_lambda: 1)
-    dense.build([1])
-    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
-    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
-    dense.d_lasso
-    assert_equal Numo::SFloat[[-1, 1]], dense.params[:weight].grad.round(4)
-  end
-
-  def test_d_lasso2
-    dense = Dense.new(2)
-    dense.build([1])
-    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
-    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
-    dense.d_lasso
-    assert_equal Numo::SFloat[[0, 0]], dense.params[:weight].grad.round(4)
-  end
-
-  def test_d_ridge
-    dense = Dense.new(2, l2_lambda: 1)
-    dense.build([1])
-    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
-    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
-    dense.d_ridge
-    assert_equal Numo::SFloat[[-2, 2]], dense.params[:weight].grad.round(4)
-  end
-
-  def test_d_ridge2
-    dense = Dense.new(2)
-    dense.build([1])
-    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
-    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
-    dense.d_ridge
-    assert_equal Numo::SFloat[[0, 0]], dense.params[:weight].grad.round(4)
+    assert_equal [], dense.regularizers
   end
 
   def test_to_hash

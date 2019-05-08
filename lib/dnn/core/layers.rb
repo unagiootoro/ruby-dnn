@@ -135,34 +135,11 @@ module DNN
         @params[:bias] = @bias = Param.new
       end
 
-      def lasso
-        if @l1_lambda > 0
-          @l1_lambda * @weight.data.abs.sum
-        else
-          0
-        end
-      end
-
-      def ridge
-        if @l2_lambda > 0
-          0.5 * @l2_lambda * (@weight.data**2).sum
-        else
-          0
-        end
-      end
-
-      def d_lasso
-        if @l1_lambda > 0
-          dlasso = Xumo::SFloat.ones(*@weight.data.shape)
-          dlasso[@weight.data < 0] = -1
-          @weight.grad += @l1_lambda * dlasso
-        end
-      end
-
-      def d_ridge
-        if @l2_lambda > 0
-          @weight.grad += @l2_lambda * @weight.data
-        end
+      def regularizers
+        regularizers = []
+        regularizers << Lasso.new(@l1_lambda, @weight) if @l1_lambda > 0
+        regularizers << Ridge.new(@l2_lambda, @weight) if @l2_lambda > 0
+        regularizers
       end
 
       def to_hash(merge_hash)

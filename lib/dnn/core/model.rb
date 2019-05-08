@@ -256,7 +256,7 @@ module DNN
       loss_value = @loss.forward(out, y, get_all_layers)
       dout = @loss.backward(y)
       backward(dout)
-      @loss.d_regularize(get_all_layers)
+      @loss.regularizes_backward(get_all_layers)
       update
       loss_value
     end

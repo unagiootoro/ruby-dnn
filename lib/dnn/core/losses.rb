@@ -3,19 +3,25 @@ module DNN
 
     class Loss
       def forward(out, y, layers)
-        regularize = layers.select { |layer| layer.is_a?(Connection) }
-                           .reduce(0) { |sum, layer| sum + layer.lasso + layer.ridge }
-        loss(out, y) + regularize
+        loss_value = loss(out, y)
+        regularizers = layers.select { |layer| layer.is_a?(Connection) }
+                             .map { |layer| layer.regularizers }.flatten
+        
+        regularizers.each do |regularizer|
+          loss_value = regularizer.forward(loss_value)
+        end
+        loss_value
       end
 
       def backward(y)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward'")
       end
 
-      def d_regularize(layers)
+      def regularizes_backward(layers)
         layers.select { |layer| layer.is_a?(Connection) }.each do |layer|
-          layer.d_lasso
-          layer.d_ridge
+          layer.regularizers.each do |regularizer|
+            regularizer.backward
+          end
         end
       end
 
