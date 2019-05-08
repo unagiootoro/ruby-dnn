@@ -9,7 +9,7 @@ module DNN
       attr_reader :num_nodes
       # @return [Bool] Maintain state between batches.
       attr_reader :stateful
-      # @return [Bool] Only the last of each cell of RNN is left.
+      # @return [Bool] Set the false, only the last of each cell of RNN is left.
       attr_reader :return_sequences
 
       def initialize(num_nodes,
@@ -181,8 +181,8 @@ module DNN
               return_sequences: return_sequences,
               weight_initializer: weight_initializer,
               bias_initializer: bias_initializer,
-              l1_lambda: 0,
-              l2_lambda: 0)
+              l1_lambda: l1_lambda,
+              l2_lambda: l2_lambda)
         @activation = activation
       end
 
@@ -202,7 +202,7 @@ module DNN
         @weight_initializer.init_param(self, @weight2)
         @bias_initializer.init_param(self, @bias)
         @time_length.times do |t|
-          @layers << SimpleRNN_Dense.new(@weight, @weight2, @bias)
+          @layers << SimpleRNN_Dense.new(@weight, @weight2, @bias, @activation)
         end
       end
     end
