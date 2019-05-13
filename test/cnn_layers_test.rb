@@ -183,19 +183,13 @@ class TestConv2D < MiniTest::Unit::TestCase
   end
 
   def test_build
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
     conv2d = Conv2D.new(16, [4, 5], strides: [1, 2])
-    model << conv2d
     conv2d.build([32, 32, 3])
     assert_equal [29, 14], conv2d.instance_variable_get(:@out_size)
   end
 
   def test_build2
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
     conv2d = Conv2D.new(16, [4, 5], strides: [1, 2], padding: true)
-    model << conv2d
     conv2d.build([32, 32, 3])
     assert_equal [32, 16], conv2d.instance_variable_get(:@out_size)
   end
@@ -203,10 +197,7 @@ class TestConv2D < MiniTest::Unit::TestCase
   def test_forward
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     conv2d = Conv2D.new(16, 5)
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << conv2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    conv2d.build([32, 32, 3])
     assert_equal [1, 28, 28, 16], conv2d.forward(x).shape
   end
 
@@ -214,48 +205,33 @@ class TestConv2D < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     dout = Numo::SFloat.new(1, 28, 28, 16).seq
     conv2d = Conv2D.new(16, 5)
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << conv2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    conv2d.build([32, 32, 3])
     conv2d.forward(x)
     assert_equal [1, 32, 32, 3], conv2d.backward(dout).shape
   end
 
   def test_output_shape
     conv2d = Conv2D.new(16, [4, 5], strides: [1, 2])
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << conv2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    conv2d.build([32, 32, 3])
     assert_equal [29, 14, 16], conv2d.output_shape
   end
 
   def test_filters
     conv2d = Conv2D.new(16, [4, 5])
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << conv2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    conv2d.build([32, 32, 3])
     assert_equal [4, 5, 3, 16], conv2d.filters.shape
   end
 
   def test_filters_set
     conv2d = Conv2D.new(16, [4, 5])
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << conv2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    conv2d.build([32, 32, 3])
     conv2d.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
     assert_equal [4 * 5 * 3, 16], conv2d.params[:weight].data.shape
   end
 
   def test_filters_set2
     conv2d = Conv2D.new(16, [4, 5])
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << conv2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    conv2d.build([32, 32, 3])
     expected = conv2d.params[:weight].data
     conv2d.filters = expected
     assert_equal expected, conv2d.params[:weight].data
@@ -287,44 +263,41 @@ class TestMaxPool2D < MiniTest::Unit::TestCase
       strides: [2, 2],
       padding: true,
     }
-    max_pool2d = MaxPool2D.load_hash(hash)
-    assert_equal [3, 3], max_pool2d.pool_size
-    assert_equal [2, 2], max_pool2d.strides
-    assert_equal true, max_pool2d.padding?
+    pool2d = MaxPool2D.load_hash(hash)
+    assert_equal [3, 3], pool2d.pool_size
+    assert_equal [2, 2], pool2d.strides
+    assert_equal true, pool2d.padding?
   end
 
   def test_initialize
-    max_pool2d = MaxPool2D.new(3)
-    assert_equal [3, 3], max_pool2d.pool_size
-    assert_equal [3, 3], max_pool2d.strides
+    pool2d = MaxPool2D.new(3)
+    assert_equal [3, 3], pool2d.pool_size
+    assert_equal [3, 3], pool2d.strides
   end
 
   def test_initialize2
-    max_pool2d = MaxPool2D.new(3, strides: 2)
-    assert_equal [2, 2], max_pool2d.strides
+    pool2d = MaxPool2D.new(3, strides: 2)
+    assert_equal [2, 2], pool2d.strides
   end
 
   def test_build
-    max_pool2d = MaxPool2D.new([4, 5], strides: [1, 2])
-    max_pool2d.build([32, 32, 3])
-    assert_equal 3, max_pool2d.instance_variable_get(:@num_channel)
-    assert_equal [29, 14], max_pool2d.instance_variable_get(:@out_size)
+    pool2d = MaxPool2D.new([4, 5], strides: [1, 2])
+    pool2d.build([32, 32, 3])
+    assert_equal 3, pool2d.instance_variable_get(:@num_channel)
+    assert_equal [29, 14], pool2d.instance_variable_get(:@out_size)
   end
 
   def test_build2
-    max_pool2d = MaxPool2D.new([4, 5], strides: [1, 2], padding: true)
-    max_pool2d.build([32, 32, 3])
-    assert_equal 3, max_pool2d.instance_variable_get(:@num_channel)
-    assert_equal [32, 16], max_pool2d.instance_variable_get(:@out_size)
+    pool2d = MaxPool2D.new([4, 5], strides: [1, 2], padding: true)
+    pool2d.build([32, 32, 3])
+    assert_equal 3, pool2d.instance_variable_get(:@num_channel)
+    assert_equal [32, 16], pool2d.instance_variable_get(:@out_size)
   end
 
   def test_forward
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     pool2d = MaxPool2D.new(2)
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << pool2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    pool2d.build([32, 32, 3])
     assert_equal [1, 16, 16, 3], pool2d.forward(x).shape
   end
 
@@ -332,21 +305,15 @@ class TestMaxPool2D < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     dout = Numo::SFloat.new(1, 16, 16, 3).seq
     pool2d = MaxPool2D.new(2)
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << pool2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    pool2d.build([32, 32, 3])
     pool2d.forward(x)
     assert_equal [1, 32, 32, 3], pool2d.backward(dout).shape
   end
 
   def test_output_shape
-    max_pool2d = MaxPool2D.new([4, 5], strides: [1, 2])
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << max_pool2d
-    model.compile(SGD.new, MeanSquaredError.new)
-    assert_equal [29, 14, 3], max_pool2d.output_shape
+    pool2d = MaxPool2D.new([4, 5], strides: [1, 2])
+    pool2d.build([32, 32, 3])
+    assert_equal [29, 14, 3], pool2d.output_shape
   end
 end
 
@@ -359,19 +326,16 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
       strides: [2, 2],
       padding: true,
     }
-    max_pool2d = AvgPool2D.load_hash(hash)
-    assert_equal [3, 3], max_pool2d.pool_size
-    assert_equal [2, 2], max_pool2d.strides
-    assert_equal true, max_pool2d.padding?
+    pool2d = AvgPool2D.load_hash(hash)
+    assert_equal [3, 3], pool2d.pool_size
+    assert_equal [2, 2], pool2d.strides
+    assert_equal true, pool2d.padding?
   end
 
   def test_forward
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     pool2d = AvgPool2D.new(2)
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << pool2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    pool2d.build([32, 32, 3])
     assert_equal [1, 16, 16, 3], pool2d.forward(x).shape
   end
 
@@ -379,10 +343,7 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     dout = Numo::SFloat.new(1, 16, 16, 3).seq
     pool2d = AvgPool2D.new(2)
-    model = Model.new
-    model << InputLayer.new([32, 32, 3])
-    model << pool2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    pool2d.build([32, 32, 3])
     pool2d.forward(x)
     assert_equal [1, 32, 32, 3], pool2d.backward(dout).shape
   end
@@ -443,10 +404,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
   def test_forward
     x = Numo::SFloat.new(1, 8, 8, 3).seq
     unpool2d = UnPool2D.new(2)
-    model = Model.new
-    model << InputLayer.new([8, 8, 3])
-    model << unpool2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    unpool2d.build([8, 8, 3])
     out = unpool2d.forward(x).round(4)
     expected = unpool2d._forward(x).round(4)
     assert_equal expected, out
@@ -456,10 +414,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 8, 8, 3).seq
     dout = Numo::SFloat.new(1, 16, 16, 3).seq
     unpool2d = UnPool2D.new(2)
-    model = Model.new
-    model << InputLayer.new([8, 8, 3])
-    model << unpool2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    unpool2d.build([8, 8, 3])
     unpool2d.forward(x)
     dout2 = unpool2d.backward(dout).round(4)
     expected = unpool2d._backward(dout).round(4)
@@ -469,10 +424,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
   def test_output_shape
     x = Numo::SFloat.new(1, 8, 8, 3).seq
     unpool2d = UnPool2D.new(2)
-    model = Model.new
-    model << InputLayer.new([8, 8, 3])
-    model << unpool2d
-    model.compile(SGD.new, MeanSquaredError.new)
+    unpool2d.build([8, 8, 3])
     assert_equal [16, 16, 3], unpool2d.output_shape
   end
 
