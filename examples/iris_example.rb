@@ -1,6 +1,6 @@
 require "dnn"
 require "dnn/lib/iris"
-require "numo/linalg/autoloader"
+# require "numo/linalg/autoloader"
 
 include DNN::Layers
 include DNN::Activations
