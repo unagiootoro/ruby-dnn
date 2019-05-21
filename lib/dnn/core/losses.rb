@@ -100,8 +100,12 @@ module DNN
 
 
     class SoftmaxCrossEntropy < Loss
+      def self.softmax(x)
+        NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
+      end
+
       def loss(x, y)
-        @out = Utils.softmax(x)
+        @out = SoftmaxCrossEntropy.softmax(x)
         batch_size = y.shape[0]
         -(y * NMath.log(@out + 1e-7)).sum / batch_size
       end
@@ -113,10 +117,14 @@ module DNN
 
 
     class SigmoidCrossEntropy < Loss
+      def initialize
+        @sigmoid = Sigmoid.new
+      end
+
       def loss(x, y)
-        @out = Utils.sigmoid(x)
+        @out = @sigmoid.forward(x)
         batch_size = y.shape[0]
-        -(y * NMath.log(@out + 1e-7) + (1 - y) * NMath.log(1 - @out + 1e-7)).sum / batch_size
+        -(y * NMath.log(@out + 1e-7) + (1 - y) * NMath.log(1 - @out + 1e-7))
       end
 
       def backward(y)

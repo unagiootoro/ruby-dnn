@@ -213,8 +213,10 @@ module DNN
         puts "【 epoch #{epoch}/#{epochs} 】" if verbose
         (num_train_datas.to_f / batch_size).ceil.times do |index|
           x_batch, y_batch = dataset.get_batch(batch_size)
-          loss = train_on_batch(x_batch, y_batch, &batch_proc)
-          if loss.nan?
+          loss_value = train_on_batch(x_batch, y_batch, &batch_proc)
+          if loss_value.is_a?(Numo::SFloat)
+            loss_value = loss_value.mean
+          elsif loss.nan?
             puts "\nloss is nan" if verbose
             return
           end
@@ -230,7 +232,7 @@ module DNN
               log << "_"
             end
           end
-          log << "  #{num_trained_datas}/#{num_train_datas} loss: #{sprintf('%.8f', loss)}"
+          log << "  #{num_trained_datas}/#{num_train_datas} loss: #{sprintf('%.8f', loss_value)}"
           print log if verbose
         end
         if verbose && test
@@ -246,6 +248,7 @@ module DNN
     # Compile the model before use this method.
     # @param [Numo::SFloat] x Input training data.
     # @param [Numo::SFloat] y Output training data.
+    # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
     # @yield [x, y] batch_proc Set proc to process per batch.
     def train_on_batch(x, y, &batch_proc)
       raise DNN_Error.new("The model is not compiled.") unless compiled?

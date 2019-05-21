@@ -135,7 +135,7 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     x = Xumo::SFloat[[0, 1]]
     y = Xumo::SFloat[[1, 0]]
     out = loss.forward(x, y, [])
-    assert_equal 2.0064, out.round(4)
+    assert_equal Xumo::SFloat[[0.6931, 1.3133]], out.round(4)
   end
 
   def test_backward
