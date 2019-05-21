@@ -20,14 +20,14 @@ module DNN
       dnn_class.new
     end
 
-    # TODO
-    # Don't want to write an implementation of the activation function in utils, so we will consider it later.
+    # Return the result of the sigmoid function.
     def self.sigmoid(x)
-      1 / (1 + NMath.exp(-x))
+      Sigmoid.new.forward(x)
     end
 
+    # Return the result of the softmax function.
     def self.softmax(x)
-      NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
+      SoftmaxCrossEntropy.softmax(x)
     end
   end
 end

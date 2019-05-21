@@ -3,7 +3,7 @@ module DNN
 
     class Sigmoid < Layers::Layer
       def forward(x)
-        @out = Utils.sigmoid(x)
+        @out = 1 / (1 + NMath.exp(-x))
       end
     
       def backward(dout)
