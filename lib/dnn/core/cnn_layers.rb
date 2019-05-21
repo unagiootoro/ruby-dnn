@@ -34,6 +34,7 @@ module DNN
         img
       end
 
+
       def padding(img, pad)
         bsize, img_h, img_w, ch = img.shape
         img2 = Xumo::SFloat.zeros(bsize, img_h + pad[0], img_w + pad[1], ch)
@@ -305,18 +306,55 @@ module DNN
         @num_channel = input_shape[2]
       end
 
+      # def forward(x)
+      #   @x_shape = x.shape
+      #   unpool_h, unpool_w = @unpool_size
+      #   x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
+      #   x2[true, true, 0, true, 0, true] = x
+      #   x2.reshape(x.shape[0], *@out_size, x.shape[3])
+      # end
+
+      # def backward(dout)
+      #   unpool_h, unpool_w = @unpool_size
+      #   dout = dout.reshape(dout.shape[0], @x_shape[1], unpool_h, @x_shape[2], unpool_w, @num_channel)
+      #   dout[true, true, 0, true, 0, true].clone
+      # end
+
+      include Conv2DModule
+
       def forward(x)
         @x_shape = x.shape
         unpool_h, unpool_w = @unpool_size
         x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
-        x2[true, true, 0, true, 0, true] = x
+        unpool_h.times do |i|
+          unpool_w.times do |j|
+            x2[true, true, i, true, j, true] = x
+          end
+        end
         x2.reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
+      # def forward(x)
+      #   @x_shape = x.shape
+      #   in_size = input_shape[0..1]
+      #   unpool_h, unpool_w = @unpool_size
+      #   x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
+      #   unpool_h.times do |i|
+      #     unpool_w.times do |j|
+      #       x2[true, true, i, true, j, true] = x
+      #     end
+      #   end
+      #   col = x2.reshape(x.shape[0..2].reduce(:*), @unpool_size.reduce(:*) * x.shape[3])
+      #   img_shape = [x.shape[0], *output_shape]
+      #   col2im(col, img_shape, *in_size, *@unpool_size, @unpool_size)
+      # end
+
       def backward(dout)
-        unpool_h, unpool_w = @unpool_size
-        dout = dout.reshape(dout.shape[0], @x_shape[1], unpool_h, @x_shape[2], unpool_w, @num_channel)
-        dout[true, true, 0, true, 0, true].clone
+        in_size = input_shape[0..1]
+        col = im2col(dout, *input_shape[0..1], *@unpool_size, @unpool_size)
+        col = col.reshape(dout.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dout.shape[3]).transpose(0, 2, 1)
+                 .reshape(dout.shape[0] * in_size.reduce(:*) * dout.shape[3], @unpool_size.reduce(:*))
+        col.sum(1).reshape(dout.shape[0], *in_size, dout.shape[3])
       end
 
       def output_shape

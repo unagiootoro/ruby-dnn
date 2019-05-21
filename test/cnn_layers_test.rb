@@ -350,47 +350,6 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
 end
 
 
-class UnPool2D
-  def _forward(x)
-    @x_shape = x.shape
-    unpool_h, unpool_w = @unpool_size
-    x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1] * unpool_h, x.shape[2] * unpool_w, @num_channel)
-
-    height, width = x.shape[1], x.shape[2]
-    
-    x.shape[0].times do |h|
-      height.times do |i|
-        width.times do |j|
-          x.shape[3].times do |k|
-            x2[h, i * unpool_h, j * unpool_w, k] = x[h, i, j, k]
-          end
-        end
-      end
-    end
-
-    x2
-  end
-
-  def _backward(dout)
-    unpool_h, unpool_w = @unpool_size
-    dout2 = Xumo::SFloat.zeros(*@x_shape)
-
-    height, width = @x_shape[1], @x_shape[2]
-    
-    @x_shape[0].times do |h|
-      height.times do |i|
-        width.times do |j|
-          @x_shape[3].times do |k|
-            dout2[h, i, j, k] = dout[h, i * unpool_h, j * unpool_w, k]
-          end
-        end
-      end
-    end
-
-    dout2
-  end
-end
-
 class TestUnPool2D < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
@@ -405,9 +364,8 @@ class TestUnPool2D < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 8, 8, 3).seq
     unpool2d = UnPool2D.new(2)
     unpool2d.build([8, 8, 3])
-    out = unpool2d.forward(x).round(4)
-    expected = unpool2d._forward(x).round(4)
-    assert_equal expected, out
+    out = unpool2d.forward(x)
+    assert_equal [1, 16, 16, 3], out.shape
   end
 
   def test_backward
@@ -417,8 +375,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
     unpool2d.build([8, 8, 3])
     unpool2d.forward(x)
     dout2 = unpool2d.backward(dout).round(4)
-    expected = unpool2d._backward(dout).round(4)
-    assert_equal expected, dout2
+    assert_equal [1, 8, 8, 3], dout2.shape
   end
 
   def test_output_shape
