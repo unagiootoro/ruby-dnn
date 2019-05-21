@@ -304,7 +304,7 @@ module DNN
     # @param [Numo::SFloat] x Input data. However, x is single data.
     def predict1(x)
       check_xy_type(x)
-      predict(Xumo::SFloat.cast([x]))[0, false]
+      predict(x.reshape(1, *x.shape))[0, false]
     end
 
     # @return [DNN::Model] Copy this model.
