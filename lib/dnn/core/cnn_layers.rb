@@ -98,9 +98,10 @@ module DNN
                      strides: 1,
                      padding: false,
                      l1_lambda: 0,
-                     l2_lambda: 0)
+                     l2_lambda: 0,
+                     use_bias: true)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
-              l1_lambda: l1_lambda, l2_lambda: l2_lambda)
+              l1_lambda: l1_lambda, l2_lambda: l2_lambda, use_bias: use_bias)
         @num_filters = num_filters
         @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
         @strides = strides.is_a?(Integer) ? [strides, strides] : strides
@@ -121,14 +122,15 @@ module DNN
         x = padding(x, @pad_size) if @padding
         @x_shape = x.shape
         @col = im2col(x, *@out_size, *@filter_size, @strides)
-        out = @col.dot(@weight.data) + @bias.data
+        out = @col.dot(@weight.data)
+        out += @bias.data if @bias
         out.reshape(x.shape[0], *@out_size, out.shape[3])
       end
 
       def backward(dout)
         dout = dout.reshape(dout.shape[0..2].reduce(:*), dout.shape[3])
         @weight.grad = @col.transpose.dot(dout)
-        @bias.grad = dout.sum(0)
+        @bias.grad = dout.sum(0) if @bias
         dcol = dout.dot(@weight.data.transpose)
         dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
         @padding ? back_padding(dx, @pad_size) : dx
@@ -167,7 +169,7 @@ module DNN
       def init_params
         num_prev_filter = @input_shape[2]
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
-        @bias.data = Xumo::SFloat.new(@num_filters)
+        @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         super()
       end
     end

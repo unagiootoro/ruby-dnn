@@ -216,7 +216,7 @@ module DNN
           loss_value = train_on_batch(x_batch, y_batch, &batch_proc)
           if loss_value.is_a?(Numo::SFloat)
             loss_value = loss_value.mean
-          elsif loss.nan?
+          elsif loss_value.nan?
             puts "\nloss is nan" if verbose
             return
           end
@@ -336,7 +336,7 @@ module DNN
   
     # TODO
     # It is not good to write the Layer class name directly in the Model class. I will fix it later.
-    def forward(x, learning_phase)01
+    def forward(x, learning_phase)
       @layers.each do |layer|
         x = if layer.is_a?(Layers::Dropout) || layer.is_a?(Layers::BatchNormalization) || layer.is_a?(Model)
           layer.forward(x, learning_phase)

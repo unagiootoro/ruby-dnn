@@ -99,16 +99,26 @@ class TestDense < MiniTest::Unit::TestCase
       class: "DNN::Layers::Dense",
       num_nodes: 100,
       weight_initializer: {
-        class: "DNN::Initializers::RandomNormal",
-        mean: 0,
-        std: 0.05,
+        class: "DNN::Initializers::RandomUniform",
+        min: -0.05,
+        max: 0.05,
       },
-      bias_initializer: {class: "DNN::Initializers::Zeros"},
-      l1_lambda: 0,
-      l2_lambda: 0,
+      bias_initializer: {
+        class: "DNN::Initializers::RandomUniform",
+        min: -0.05,
+        max: 0.05,
+      },
+      l1_lambda: 0.1,
+      l2_lambda: 0.2,
+      use_bias: false,
     }
     dense = Dense.load_hash(hash)
     assert_equal 100, dense.num_nodes
+    assert_kind_of RandomUniform, dense.weight_initializer
+    assert_kind_of RandomUniform, dense.bias_initializer
+    assert_equal 0.1, dense.l1_lambda
+    assert_equal 0.2, dense.l2_lambda
+    assert_equal false, dense.use_bias
   end
 
   def test_forward
@@ -118,6 +128,15 @@ class TestDense < MiniTest::Unit::TestCase
     dense.params[:bias].data = Numo::SFloat[5, 10]
     out = dense.forward(x)
     assert_equal Numo::SFloat[[65, 130], [155, 310]], out
+  end
+
+  def test_forward2
+    dense = Dense.new(2, use_bias: false)
+    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    out = dense.forward(x)
+    assert_equal Numo::SFloat[[60, 120], [150, 300]], out
+    assert_nil dense.params[:bias]
   end
 
   def test_backward
@@ -130,6 +149,17 @@ class TestDense < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
     assert_equal Numo::SFloat[5, 7, 9], dense.params[:weight].grad.round(4)
     assert_in_delta 1.0, dense.params[:bias].grad
+  end
+
+  def test_backward2
+    dense = Dense.new(2, use_bias: false)
+    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.forward(x)
+    grad = dense.backward(Numo::SFloat[1])
+    assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
+    assert_equal Numo::SFloat[5, 7, 9], dense.params[:weight].grad.round(4)
+    assert_nil dense.params[:bias]
   end
 
   def test_output_shape

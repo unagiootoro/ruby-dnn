@@ -165,6 +165,7 @@ class TestConv2D < MiniTest::Unit::TestCase
       padding: true,
       l1_lambda: 0,
       l2_lambda: 0,
+      use_bias: true,
     }
     conv2d = Conv2D.load_hash(hash)
     assert_equal 16, conv2d.num_filters
@@ -208,6 +209,16 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d.build([32, 32, 3])
     conv2d.forward(x)
     assert_equal [1, 32, 32, 3], conv2d.backward(dout).shape
+  end
+
+  def test_backward2
+    x = Numo::SFloat.new(1, 32, 32, 3).seq
+    dout = Numo::SFloat.new(1, 28, 28, 16).seq
+    conv2d = Conv2D.new(16, 5, use_bias: false)
+    conv2d.build([32, 32, 3])
+    conv2d.forward(x)
+    conv2d.backward(dout)
+    assert_nil conv2d.params[:bias]
   end
 
   def test_output_shape

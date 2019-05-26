@@ -113,9 +113,9 @@ module DNN
       attr_reader :weight_initializer
       # @return [DNN::Initializers] bias initializer.
       attr_reader :bias_initializer
-      # @return [Float] L1 regularization
+      # @return [Float] L1 regularization.
       attr_reader :l1_lambda
-      # @return [Float] L2 regularization
+      # @return [Float] L2 regularization.
       attr_reader :l2_lambda
 
       # @param [DNN::Initializers] weight_initializer weight initializer.
@@ -125,14 +125,21 @@ module DNN
       def initialize(weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
-                     l2_lambda: 0)
+                     l2_lambda: 0,
+                     use_bias: true)
         super()
         @weight_initializer = weight_initializer
         @bias_initializer = bias_initializer
         @l1_lambda = l1_lambda
         @l2_lambda = l2_lambda
         @params[:weight] = @weight = Param.new
-        @params[:bias] = @bias = Param.new
+        # For compatibility on or before with v0.9.3, setting use_bias to nil use bias.
+        # Therefore, setting use_bias to nil is deprecated.
+        if use_bias || use_bias == nil
+          @params[:bias] = @bias = Param.new
+        else
+          @params[:bias] = @bias = nil
+        end
       end
 
       def regularizers
@@ -153,7 +160,7 @@ module DNN
 
       def init_params
         @weight_initializer.init_param(self, @weight)
-        @bias_initializer.init_param(self, @bias)
+        @bias_initializer.init_param(self, @bias) if @bias
       end
     end
     
@@ -168,7 +175,8 @@ module DNN
                  weight_initializer: Utils.load_hash(hash[:weight_initializer]),
                  bias_initializer: Utils.load_hash(hash[:bias_initializer]),
                  l1_lambda: hash[:l1_lambda],
-                 l2_lambda: hash[:l2_lambda])
+                 l2_lambda: hash[:l2_lambda],
+                 use_bias: hash[:use_bias])
       end
 
       # @param [Integer] num_nodes number of nodes.
@@ -176,25 +184,33 @@ module DNN
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
-                     l2_lambda: 0)
+                     l2_lambda: 0,
+                     use_bias: true)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
-              l1_lambda: l1_lambda, l2_lambda: l2_lambda)
+              l1_lambda: l1_lambda, l2_lambda: l2_lambda, use_bias: use_bias)
         @num_nodes = num_nodes
       end
     
       def forward(x)
         @x = x
-        @x.dot(@weight.data) + @bias.data
+        out = x.dot(@weight.data)
+        out += @bias.data if @bias
+        out
       end
     
       def backward(dout)
         @weight.grad = @x.transpose.dot(dout)
-        @bias.grad = dout.sum(0)
+        @bias.grad = dout.sum(0) if @bias
         dout.dot(@weight.data.transpose)
       end
     
       def output_shape
         [@num_nodes]
+      end
+
+      # @return [Bool] Return whether to use bias.
+      def use_bias
+        @bias ? true : false
       end
 
       def to_hash
@@ -208,7 +224,7 @@ module DNN
       def init_params
         num_prev_nodes = @input_shape[0]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
-        @bias.data = Xumo::SFloat.new(@num_nodes)
+        @bias.data = Xumo::SFloat.new(@num_nodes) if @bias
         super()
       end
     end
