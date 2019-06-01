@@ -4,7 +4,7 @@ module DNN
     module Conv2DModule
       private
 
-      # img[bsize, out_h, out_w, channel] to col[bsize * out_h * out_w, fil_h * fil_w * ch]
+      # img[bsize, out_h, out_w, ch] to col[bsize * out_h * out_w, fil_h * fil_w * ch]
       def im2col(img, out_h, out_w, fil_h, fil_w, strides)
         bsize = img.shape[0]
         ch = img.shape[3]
@@ -19,7 +19,7 @@ module DNN
         col.reshape(bsize * out_h * out_w, fil_h * fil_w * ch)
       end
 
-      # col[bsize * out_h * out_w, fil_h * fil_w * ch] to img[bsize, out_h, out_w, channel]
+      # col[bsize * out_h * out_w, fil_h * fil_w * ch] to img[bsize, out_h, out_w, ch]
       def col2im(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         bsize, img_h, img_w, ch = img_shape
         col = col.reshape(bsize, out_h, out_w, fil_h, fil_w, ch)
@@ -33,7 +33,6 @@ module DNN
         end
         img
       end
-
 
       def padding(img, pad)
         bsize, img_h, img_w, ch = img.shape
@@ -85,7 +84,8 @@ module DNN
                    strides: hash[:strides],
                    padding: hash[:padding],
                    l1_lambda: hash[:l1_lambda],
-                   l2_lambda: hash[:l2_lambda])
+                   l2_lambda: hash[:l2_lambda],
+                   use_bias: hash[:use_bias])
       end
       
       # @param [Integer] num_filters number of filters.
@@ -94,7 +94,7 @@ module DNN
       # @param [Bool] padding Whether to padding.
       def initialize(num_filters, filter_size,
                      weight_initializer: Initializers::RandomNormal.new,
-                     bias_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      strides: 1,
                      padding: false,
                      l1_lambda: 0,
@@ -308,20 +308,6 @@ module DNN
         @num_channel = input_shape[2]
       end
 
-      # def forward(x)
-      #   @x_shape = x.shape
-      #   unpool_h, unpool_w = @unpool_size
-      #   x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
-      #   x2[true, true, 0, true, 0, true] = x
-      #   x2.reshape(x.shape[0], *@out_size, x.shape[3])
-      # end
-
-      # def backward(dout)
-      #   unpool_h, unpool_w = @unpool_size
-      #   dout = dout.reshape(dout.shape[0], @x_shape[1], unpool_h, @x_shape[2], unpool_w, @num_channel)
-      #   dout[true, true, 0, true, 0, true].clone
-      # end
-
       include Conv2DModule
 
       def forward(x)
@@ -335,21 +321,6 @@ module DNN
         end
         x2.reshape(x.shape[0], *@out_size, x.shape[3])
       end
-
-      # def forward(x)
-      #   @x_shape = x.shape
-      #   in_size = input_shape[0..1]
-      #   unpool_h, unpool_w = @unpool_size
-      #   x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
-      #   unpool_h.times do |i|
-      #     unpool_w.times do |j|
-      #       x2[true, true, i, true, j, true] = x
-      #     end
-      #   end
-      #   col = x2.reshape(x.shape[0..2].reduce(:*), @unpool_size.reduce(:*) * x.shape[3])
-      #   img_shape = [x.shape[0], *output_shape]
-      #   col2im(col, img_shape, *in_size, *@unpool_size, @unpool_size)
-      # end
 
       def backward(dout)
         in_size = input_shape[0..1]

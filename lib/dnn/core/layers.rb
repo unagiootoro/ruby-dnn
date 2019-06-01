@@ -122,6 +122,7 @@ module DNN
       # @param [DNN::Initializers] bias_initializer bias initializer.
       # @param [Float] l1_lambda L1 regularization
       # @param [Float] l2_lambda L2 regularization
+      # @param [Bool] use_bias whether to use bias.
       def initialize(weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
                      l1_lambda: 0,
@@ -147,6 +148,11 @@ module DNN
         regularizers << Lasso.new(@l1_lambda, @weight) if @l1_lambda > 0
         regularizers << Ridge.new(@l2_lambda, @weight) if @l2_lambda > 0
         regularizers
+      end
+
+      # @return [Bool] Return whether to use bias.
+      def use_bias
+        @bias ? true : false
       end
 
       def to_hash(merge_hash)
@@ -206,11 +212,6 @@ module DNN
     
       def output_shape
         [@num_nodes]
-      end
-
-      # @return [Bool] Return whether to use bias.
-      def use_bias
-        @bias ? true : false
       end
 
       def to_hash

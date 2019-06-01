@@ -165,12 +165,13 @@ class TestConv2D < MiniTest::Unit::TestCase
       padding: true,
       l1_lambda: 0,
       l2_lambda: 0,
-      use_bias: true,
+      use_bias: false,
     }
     conv2d = Conv2D.load_hash(hash)
     assert_equal 16, conv2d.num_filters
     assert_equal [3, 3], conv2d.filter_size
     assert_equal [2, 2], conv2d.strides
+    assert_equal false, conv2d.use_bias
   end
 
   def test_initialize
