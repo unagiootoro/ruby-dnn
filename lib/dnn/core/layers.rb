@@ -26,7 +26,7 @@ module DNN
       end
 
       # Backward propagation.
-      def backward(dout)
+      def backward(dy)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update'")
       end
 
@@ -97,8 +97,8 @@ module DNN
         x
       end
     
-      def backward(dout)
-        dout
+      def backward(dy)
+        dy
       end
 
       def to_hash
@@ -199,15 +199,15 @@ module DNN
     
       def forward(x)
         @x = x
-        out = x.dot(@weight.data)
-        out += @bias.data if @bias
-        out
+        y = x.dot(@weight.data)
+        y += @bias.data if @bias
+        y
       end
     
-      def backward(dout)
-        @weight.grad = @x.transpose.dot(dout)
-        @bias.grad = dout.sum(0) if @bias
-        dout.dot(@weight.data.transpose)
+      def backward(dy)
+        @weight.grad = @x.transpose.dot(dy)
+        @bias.grad = dy.sum(0) if @bias
+        dy.dot(@weight.data.transpose)
       end
     
       def output_shape
@@ -236,8 +236,8 @@ module DNN
         x.reshape(x.shape[0], *output_shape)
       end
     
-      def backward(dout)
-        dout.reshape(dout.shape[0], *@input_shape)
+      def backward(dy)
+        dy.reshape(dy.shape[0], *@input_shape)
       end
 
       def output_shape
@@ -260,8 +260,8 @@ module DNN
         x.reshape(x.shape[0], *@output_shape)
       end
 
-      def backward(dout)
-        dout.reshape(dout.shape[0], *@input_shape)
+      def backward(dy)
+        dy.reshape(dy.shape[0], *@input_shape)
       end
 
       def output_shape
@@ -303,9 +303,9 @@ module DNN
         x
       end
     
-      def backward(dout)
-        dout[@mask] = 0
-        dout
+      def backward(dy)
+        dy[@mask] = 0
+        dy
       end
 
       def to_hash
@@ -345,11 +345,11 @@ module DNN
         @gamma.data * xn + @beta.data
       end
     
-      def backward(dout)
-        batch_size = dout.shape[0]
-        @beta.grad = dout.sum(0)
-        @gamma.grad = (@xn * dout).sum(0)
-        dxn = @gamma.data * dout
+      def backward(dy)
+        batch_size = dy.shape[0]
+        @beta.grad = dy.sum(0)
+        @gamma.grad = (@xn * dy).sum(0)
+        dxn = @gamma.data * dy
         dxc = dxn / @std
         dstd = -((dxn * @xc) / (@std**2)).sum(0)
         dvar = 0.5 * dstd / @std

@@ -122,16 +122,16 @@ module DNN
         x = padding(x, @pad_size) if @padding
         @x_shape = x.shape
         @col = im2col(x, *@out_size, *@filter_size, @strides)
-        out = @col.dot(@weight.data)
-        out += @bias.data if @bias
-        out.reshape(x.shape[0], *@out_size, out.shape[3])
+        y = @col.dot(@weight.data)
+        y += @bias.data if @bias
+        y.reshape(x.shape[0], *@out_size, y.shape[3])
       end
 
-      def backward(dout)
-        dout = dout.reshape(dout.shape[0..2].reduce(:*), dout.shape[3])
-        @weight.grad = @col.transpose.dot(dout)
-        @bias.grad = dout.sum(0) if @bias
-        dcol = dout.dot(@weight.data.transpose)
+      def backward(dy)
+        dy = dy.reshape(dy.shape[0..2].reduce(:*), dy.shape[3])
+        @weight.grad = @col.transpose.dot(dy)
+        @bias.grad = dy.sum(0) if @bias
+        dcol = dy.dot(@weight.data.transpose)
         dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
         @padding ? back_padding(dx, @pad_size) : dx
       end
@@ -246,10 +246,10 @@ module DNN
         col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
-      def backward(dout)
-        dmax = Xumo::SFloat.zeros(dout.size * @pool_size.reduce(:*))
-        dmax[@max_index] = dout.flatten
-        dcol = dmax.reshape(dout.shape[0..2].reduce(:*), @pool_size.reduce(:*) * dout.shape[3])
+      def backward(dy)
+        dmax = Xumo::SFloat.zeros(dy.size * @pool_size.reduce(:*))
+        dmax[@max_index] = dy.flatten
+        dcol = dmax.reshape(dy.shape[0..2].reduce(:*), @pool_size.reduce(:*) * dy.shape[3])
         dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
         @padding ? back_padding(dx, @pad_size) : dx
       end
@@ -270,14 +270,14 @@ module DNN
         col.mean(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
-      def backward(dout)
+      def backward(dy)
         row_length = @pool_size.reduce(:*)
-        dout /= row_length
-        davg = Xumo::SFloat.zeros(dout.size, row_length)
+        dy /= row_length
+        davg = Xumo::SFloat.zeros(dy.size, row_length)
         row_length.times do |i|
-          davg[true, i] = dout.flatten
+          davg[true, i] = dy.flatten
         end
-        dcol = davg.reshape(dout.shape[0..2].reduce(:*), dout.shape[3] * @pool_size.reduce(:*))
+        dcol = davg.reshape(dy.shape[0..2].reduce(:*), dy.shape[3] * @pool_size.reduce(:*))
         dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
         @padding ? back_padding(dx, @pad_size) : dx
       end
@@ -322,12 +322,12 @@ module DNN
         x2.reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
-      def backward(dout)
+      def backward(dy)
         in_size = input_shape[0..1]
-        col = im2col(dout, *input_shape[0..1], *@unpool_size, @unpool_size)
-        col = col.reshape(dout.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dout.shape[3]).transpose(0, 2, 1)
-                 .reshape(dout.shape[0] * in_size.reduce(:*) * dout.shape[3], @unpool_size.reduce(:*))
-        col.sum(1).reshape(dout.shape[0], *in_size, dout.shape[3])
+        col = im2col(dy, *input_shape[0..1], *@unpool_size, @unpool_size)
+        col = col.reshape(dy.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dy.shape[3]).transpose(0, 2, 1)
+                 .reshape(dy.shape[0] * in_size.reduce(:*) * dy.shape[3], @unpool_size.reduce(:*))
+        col.sum(1).reshape(dy.shape[0], *in_size, dy.shape[3])
       end
 
       def output_shape

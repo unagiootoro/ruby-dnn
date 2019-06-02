@@ -3,22 +3,22 @@ module DNN
 
     class Sigmoid < Layers::Layer
       def forward(x)
-        @out = 1 / (1 + NMath.exp(-x))
+        @y = 1 / (1 + NMath.exp(-x))
       end
     
-      def backward(dout)
-        dout * (1 - @out) * @out
+      def backward(dy)
+        dy * (1 - @y) * @y
       end
     end
 
 
     class Tanh < Layers::Layer
       def forward(x)
-        @out = NMath.tanh(x)
+        @y = NMath.tanh(x)
       end
       
-      def backward(dout)
-        dout * (1 - @out**2)
+      def backward(dy)
+        dy * (1 - @y**2)
       end
     end
 
@@ -29,8 +29,8 @@ module DNN
         x / (1 + x.abs)
       end
 
-      def backward(dout)
-        dout * (1 / (1 + @x.abs)**2)
+      def backward(dy)
+        dy * (1 / (1 + @x.abs)**2)
       end
     end
 
@@ -41,8 +41,8 @@ module DNN
         NMath.log(1 + NMath.exp(x))
       end
 
-      def backward(dout)
-        dout * (1 / (1 + NMath.exp(-@x)))
+      def backward(dy)
+        dy * (1 / (1 + NMath.exp(-@x)))
       end
     end
 
@@ -50,11 +50,11 @@ module DNN
     class Swish < Layers::Layer
       def forward(x)
         @x = x
-        @out = x * (1 / (1 + NMath.exp(-x)))
+        @y = x * (1 / (1 + NMath.exp(-x)))
       end
     
-      def backward(dout)
-        dout * (@out + (1 / (1 + NMath.exp(-@x))) * (1 - @out))
+      def backward(dy)
+        dy * (@y + (1 / (1 + NMath.exp(-@x))) * (1 - @y))
       end
     end
     
@@ -66,10 +66,10 @@ module DNN
         x
       end
     
-      def backward(dout)
+      def backward(dy)
         @x[@x > 0] = 1
         @x[@x <= 0] = 0
-        dout * @x
+        dy * @x
       end
     end
 
@@ -92,10 +92,10 @@ module DNN
         x * a
       end
 
-      def backward(dout)
+      def backward(dy)
         @x[@x > 0] = 1
         @x[@x <= 0] = @alpha
-        dout * @x
+        dy * @x
       end
 
       def to_hash
@@ -126,13 +126,13 @@ module DNN
         x1 + x2
       end
 
-      def backward(dout)
+      def backward(dy)
         dx = Xumo::SFloat.ones(@x.shape)
         dx[@x < 0] = 0
         dx2 = Xumo::SFloat.zeros(@x.shape)
         dx2[@x < 0] = 1
         dx2 *= @alpha * NMath.exp(@x)
-        dout * (dx + dx2)
+        dy * (dx + dx2)
       end
 
       def to_hash

@@ -2,8 +2,8 @@ module DNN
   module Losses
 
     class Loss
-      def forward(out, y, layers)
-        loss_value = loss(out, y)
+      def forward(x, y, layers)
+        loss_value = loss(x, y)
         regularizers = layers.select { |layer| layer.is_a?(Connection) }
                              .map { |layer| layer.regularizers }.flatten
         
@@ -31,70 +31,70 @@ module DNN
 
       private
 
-      def loss(out, y)
+      def loss(x, y)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'loss'")
       end
     end
 
     class MeanSquaredError < Loss
-      def loss(out, y)
-        @out = out
+      def loss(x, y)
+        @x = x
         batch_size = y.shape[0]
-        0.5 * ((out - y)**2).sum / batch_size
+        0.5 * ((x - y)**2).sum / batch_size
       end
 
       def backward(y)
-        @out - y
+        @x - y
       end
     end
 
 
     class MeanAbsoluteError < Loss
-      def loss(out, y)
-        @out = out
+      def loss(x, y)
+        @x = x
         batch_size = y.shape[0]
-        (out - y).abs.sum / batch_size
+        (x - y).abs.sum / batch_size
       end
 
       def backward(y)
-        dout = @out - y
-        dout[dout >= 0] = 1
-        dout[dout < 0] = -1
-        dout
+        dy = @x - y
+        dy[dy >= 0] = 1
+        dy[dy < 0] = -1
+        dy
       end
     end
 
 
     class HuberLoss < Loss
-      def forward(out, y, layers)
-        @loss_value = super(out, y, layers)
+      def forward(x, y, layers)
+        @loss_value = super(x, y, layers)
       end
 
-      def loss(out, y)
-        @out = out
+      def loss(x, y)
+        @x = x
         loss_value = loss_l1(y)
         loss_value > 1 ? loss_value : loss_l2(y)
       end
 
       def backward(y)
-        dout = @out - y
+        dy = @x - y
         if @loss_value > 1
-          dout[dout >= 0] = 1
-          dout[dout < 0] = -1
+          dy[dy >= 0] = 1
+          dy[dy < 0] = -1
         end
-        dout
+        dy
       end
 
       private
 
       def loss_l1(y)
         batch_size = y.shape[0]
-        (@out - y).abs.sum / batch_size
+        (@x - y).abs.sum / batch_size
       end
 
       def loss_l2(y)
         batch_size = y.shape[0]
-        0.5 * ((@out - y)**2).sum / batch_size
+        0.5 * ((@x - y)**2).sum / batch_size
       end
     end
 
@@ -105,13 +105,13 @@ module DNN
       end
 
       def loss(x, y)
-        @out = SoftmaxCrossEntropy.softmax(x)
+        @x = SoftmaxCrossEntropy.softmax(x)
         batch_size = y.shape[0]
-        -(y * NMath.log(@out + 1e-7)).sum / batch_size
+        -(y * NMath.log(@x + 1e-7)).sum / batch_size
       end
 
       def backward(y)
-        @out - y
+        @x - y
       end
     end
 
@@ -122,13 +122,13 @@ module DNN
       end
 
       def loss(x, y)
-        @out = @sigmoid.forward(x)
+        @x = @sigmoid.forward(x)
         batch_size = y.shape[0]
-        -(y * NMath.log(@out + 1e-7) + (1 - y) * NMath.log(1 - @out + 1e-7))
+        -(y * NMath.log(@x + 1e-7) + (1 - y) * NMath.log(1 - @x + 1e-7))
       end
 
       def backward(y)
-        @out - y
+        @x - y
       end
     end
 

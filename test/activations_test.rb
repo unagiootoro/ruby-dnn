@@ -8,8 +8,8 @@ include Optimizers
 class TestSigmoid < MiniTest::Unit::TestCase
   def test_forward
     sigmoid = Sigmoid.new
-    out = sigmoid.forward(Xumo::SFloat[0, 1])
-    assert_equal Xumo::SFloat[0.5, 0.7311], out.round(4)
+    y = sigmoid.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0.5, 0.7311], y.round(4)
   end
 
   def test_backward
@@ -25,8 +25,8 @@ end
 class TestTanh < MiniTest::Unit::TestCase
   def test_forward
     tanh = Tanh.new
-    out = tanh.forward(Xumo::SFloat[0, 1])
-    assert_equal Xumo::SFloat[0, 0.7616], out.round(4)
+    y = tanh.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0, 0.7616], y.round(4)
   end
 
   def test_backward
@@ -42,8 +42,8 @@ end
 class TestSoftsign < MiniTest::Unit::TestCase
   def test_forward
     softsign = Softsign.new
-    out = softsign.forward(Xumo::SFloat[0, 1])
-    assert_equal Xumo::SFloat[0, 0.5], out.round(4)
+    y = softsign.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0, 0.5], y.round(4)
   end
 
   def test_backward
@@ -59,8 +59,8 @@ end
 class TestSoftplus < MiniTest::Unit::TestCase
   def test_forward
     softplus = Softplus.new
-    out = softplus.forward(Xumo::SFloat[0, 1])
-    assert_equal Xumo::SFloat[0.6931, 1.3133], out.round(4)
+    y = softplus.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0.6931, 1.3133], y.round(4)
   end
 
   def test_backward
@@ -76,8 +76,8 @@ end
 class TestSwish < MiniTest::Unit::TestCase
   def test_forward
     swish = Swish.new
-    out = swish.forward(Xumo::SFloat[0, 1])
-    assert_equal Xumo::SFloat[0, 0.7311], out.round(4)
+    y = swish.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0, 0.7311], y.round(4)
   end
 
   def test_backward
@@ -93,8 +93,8 @@ end
 class TestReLU < MiniTest::Unit::TestCase
   def test_forward
     relu = ReLU.new
-    out = relu.forward(Xumo::SFloat[-2, 0, 2])
-    assert_equal Xumo::SFloat[0, 0, 2], out
+    y = relu.forward(Xumo::SFloat[-2, 0, 2])
+    assert_equal Xumo::SFloat[0, 0, 2], y
   end
 
   def test_backward
@@ -120,8 +120,8 @@ class TestLeakyReLU < MiniTest::Unit::TestCase
 
   def test_forward
     lrelu = LeakyReLU.new
-    out = lrelu.forward(Xumo::SFloat[-2, 0, 2])
-    assert_equal Xumo::SFloat[-0.6, 0, 2], out.round(4)
+    y = lrelu.forward(Xumo::SFloat[-2, 0, 2])
+    assert_equal Xumo::SFloat[-0.6, 0, 2], y.round(4)
   end
 
   def test_backward
@@ -153,8 +153,8 @@ class TestELU < MiniTest::Unit::TestCase
 
   def test_forward
     elu = ELU.new
-    out = elu.forward(Xumo::SFloat[-2, 0, 2])
-    assert_equal Xumo::SFloat[-0.8647, 0, 2], out.round(4)
+    y = elu.forward(Xumo::SFloat[-2, 0, 2])
+    assert_equal Xumo::SFloat[-0.8647, 0, 2], y.round(4)
   end
 
   def test_backward

@@ -205,20 +205,20 @@ class TestConv2D < MiniTest::Unit::TestCase
 
   def test_backward
     x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dout = Numo::SFloat.new(1, 28, 28, 16).seq
+    dy = Numo::SFloat.new(1, 28, 28, 16).seq
     conv2d = Conv2D.new(16, 5)
     conv2d.build([32, 32, 3])
     conv2d.forward(x)
-    assert_equal [1, 32, 32, 3], conv2d.backward(dout).shape
+    assert_equal [1, 32, 32, 3], conv2d.backward(dy).shape
   end
 
   def test_backward2
     x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dout = Numo::SFloat.new(1, 28, 28, 16).seq
+    dy = Numo::SFloat.new(1, 28, 28, 16).seq
     conv2d = Conv2D.new(16, 5, use_bias: false)
     conv2d.build([32, 32, 3])
     conv2d.forward(x)
-    conv2d.backward(dout)
+    conv2d.backward(dy)
     assert_nil conv2d.params[:bias]
   end
 
@@ -315,11 +315,11 @@ class TestMaxPool2D < MiniTest::Unit::TestCase
 
   def test_backward
     x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dout = Numo::SFloat.new(1, 16, 16, 3).seq
+    dy = Numo::SFloat.new(1, 16, 16, 3).seq
     pool2d = MaxPool2D.new(2)
     pool2d.build([32, 32, 3])
     pool2d.forward(x)
-    assert_equal [1, 32, 32, 3], pool2d.backward(dout).shape
+    assert_equal [1, 32, 32, 3], pool2d.backward(dy).shape
   end
 
   def test_output_shape
@@ -353,11 +353,11 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
 
   def test_backward
     x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dout = Numo::SFloat.new(1, 16, 16, 3).seq
+    dy = Numo::SFloat.new(1, 16, 16, 3).seq
     pool2d = AvgPool2D.new(2)
     pool2d.build([32, 32, 3])
     pool2d.forward(x)
-    assert_equal [1, 32, 32, 3], pool2d.backward(dout).shape
+    assert_equal [1, 32, 32, 3], pool2d.backward(dy).shape
   end
 end
 
@@ -376,17 +376,17 @@ class TestUnPool2D < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 8, 8, 3).seq
     unpool2d = UnPool2D.new(2)
     unpool2d.build([8, 8, 3])
-    out = unpool2d.forward(x)
-    assert_equal [1, 16, 16, 3], out.shape
+    y = unpool2d.forward(x)
+    assert_equal [1, 16, 16, 3], y.shape
   end
 
   def test_backward
     x = Numo::SFloat.new(1, 8, 8, 3).seq
-    dout = Numo::SFloat.new(1, 16, 16, 3).seq
+    dy = Numo::SFloat.new(1, 16, 16, 3).seq
     unpool2d = UnPool2D.new(2)
     unpool2d.build([8, 8, 3])
     unpool2d.forward(x)
-    dout2 = unpool2d.backward(dout).round(4)
+    dout2 = unpool2d.backward(dy).round(4)
     assert_equal [1, 8, 8, 3], dout2.shape
   end
 

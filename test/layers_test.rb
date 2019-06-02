@@ -81,8 +81,8 @@ class TestInputLayer < MiniTest::Unit::TestCase
 
   def test_backward
     layer = InputLayer.new(10)
-    dout = Numo::SFloat[0, 1]
-    assert_equal dout, layer.backward(dout)
+    dy = Numo::SFloat[0, 1]
+    assert_equal dy, layer.backward(dy)
   end
 
   def test_to_hash
@@ -126,16 +126,16 @@ class TestDense < MiniTest::Unit::TestCase
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
     dense.params[:bias].data = Numo::SFloat[5, 10]
-    out = dense.forward(x)
-    assert_equal Numo::SFloat[[65, 130], [155, 310]], out
+    y = dense.forward(x)
+    assert_equal Numo::SFloat[[65, 130], [155, 310]], y
   end
 
   def test_forward2
     dense = Dense.new(2, use_bias: false)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    out = dense.forward(x)
-    assert_equal Numo::SFloat[[60, 120], [150, 300]], out
+    y = dense.forward(x)
+    assert_equal Numo::SFloat[[60, 120], [150, 300]], y
     assert_nil dense.params[:bias]
   end
 
@@ -210,8 +210,8 @@ class TestFlatten < MiniTest::Unit::TestCase
     flatten = Flatten.new
     x = Numo::SFloat.zeros(10, 32, 32, 3)
     flatten.build([32, 32, 3])
-    out = flatten.forward(x)
-    assert_equal [10, 3072], out.shape
+    y = flatten.forward(x)
+    assert_equal [10, 3072], y.shape
   end
 
   def test_backward
@@ -219,8 +219,8 @@ class TestFlatten < MiniTest::Unit::TestCase
     x = Numo::SFloat.zeros(10, 32, 32, 3)
     flatten.build([32, 32, 3])
     flatten.forward(x)
-    dout = Numo::SFloat.zeros(10, 3072)
-    assert_equal [10, 32, 32, 3], flatten.backward(dout).shape
+    dy = Numo::SFloat.zeros(10, 3072)
+    assert_equal [10, 32, 32, 3], flatten.backward(dy).shape
   end
 end
 
@@ -238,8 +238,8 @@ class TestReshape < MiniTest::Unit::TestCase
     reshape = Reshape.new([32, 32, 3])
     reshape.build([3072])
     x = Numo::SFloat.zeros(10, 3072)
-    out = reshape.forward(x)
-    assert_equal [10, 32, 32, 3], out.shape
+    y = reshape.forward(x)
+    assert_equal [10, 32, 32, 3], y.shape
   end
 
   def test_backward
@@ -247,8 +247,8 @@ class TestReshape < MiniTest::Unit::TestCase
     reshape.build([3072])
     x = Numo::SFloat.zeros(10, 3072)
     reshape.forward(x)
-    dout = Numo::SFloat.zeros(10, 32, 32, 3)
-    assert_equal [10, 3072], reshape.backward(dout).shape
+    dy = Numo::SFloat.zeros(10, 32, 32, 3)
+    assert_equal [10, 3072], reshape.backward(dy).shape
   end
 
   def test_to_hash
@@ -300,9 +300,9 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_backward
     dropout = Dropout.new
     dropout.build([1])
-    out = dropout.forward(Numo::SFloat.ones(10), true)
-    dout = dropout.backward(Numo::SFloat.ones(10))
-    assert_equal out.round, dout.round
+    y = dropout.forward(Numo::SFloat.ones(10), true)
+    dy = dropout.backward(Numo::SFloat.ones(10))
+    assert_equal y.round, dy.round
   end
 
   def test_to_hash
