@@ -212,7 +212,7 @@ module DNN
       (1..epochs).each do |epoch|
         puts "【 epoch #{epoch}/#{epochs} 】" if verbose
         (num_train_datas.to_f / batch_size).ceil.times do |index|
-          x_batch, y_batch = dataset.get_batch(batch_size)
+          x_batch, y_batch = dataset.next_batch(batch_size)
           loss_value = train_on_batch(x_batch, y_batch, &batch_proc)
           if loss_value.is_a?(Numo::SFloat)
             loss_value = loss_value.mean
@@ -272,16 +272,10 @@ module DNN
       check_xy_type(x, y)
       input_data_shape_check(x, y)
       batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
+      dataset = Dataset.new(x, y, false)
       correct = 0
       (x.shape[0].to_f / batch_size).ceil.times do |i|
-        x_batch = Xumo::SFloat.zeros(batch_size, *x.shape[1..-1])
-        y_batch = Xumo::SFloat.zeros(batch_size, *y.shape[1..-1])
-        batch_size.times do |j|
-          k = i * batch_size + j
-          break if k >= x.shape[0]
-          x_batch[j, false] = x[k, false]
-          y_batch[j, false] = y[k, false]
-        end
+        x_batch, y_batch = dataset.next_batch(batch_size)
         x_batch, y_batch = batch_proc.call(x_batch, y_batch) if batch_proc
         out = forward(x_batch, false)
         batch_size.times do |j|
