@@ -29,7 +29,7 @@ module DNN
         @hidden = @params[:h] = Param.new
         # TODO
         # Change to a good name.
-        @params[:weight2] = @weight2 = Param.new
+        @params[:weight2] = @weight2 = Param.new(nil, 0)
       end
 
       def forward(xs)
@@ -46,9 +46,9 @@ module DNN
       end
 
       def backward(dh2s)
-        @weight.grad = Xumo::SFloat.zeros(*@weight.data.shape)
-        @weight2.grad = Xumo::SFloat.zeros(*@weight2.data.shape)
-        @bias.grad = Xumo::SFloat.zeros(*@bias.data.shape) if @bias
+        @weight.grad += Xumo::SFloat.zeros(*@weight.data.shape)
+        @weight2.grad += Xumo::SFloat.zeros(*@weight2.data.shape)
+        @bias.grad += Xumo::SFloat.zeros(*@bias.data.shape) if @bias
         unless @return_sequences
           dh = dh2s
           dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
@@ -137,13 +137,13 @@ module DNN
 
       attr_reader :activation
       
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         simple_rnn = self.new(hash[:num_nodes],
                               stateful: hash[:stateful],
                               return_sequences: hash[:return_sequences],
-                              activation: Utils.load_hash(hash[:activation]),
-                              weight_initializer: Utils.load_hash(hash[:weight_initializer]),
-                              bias_initializer: Utils.load_hash(hash[:bias_initializer]),
+                              activation: Utils.from_hash(hash[:activation]),
+                              weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                              bias_initializer: Utils.from_hash(hash[:bias_initializer]),
                               l1_lambda: hash[:l1_lambda],
                               l2_lambda: hash[:l2_lambda],
                               use_bias: hash[:use_bias])
@@ -246,12 +246,12 @@ module DNN
 
 
     class LSTM < RNN
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         lstm = self.new(hash[:num_nodes],
                         stateful: hash[:stateful],
                         return_sequences: hash[:return_sequences],
-                        weight_initializer: Utils.load_hash(hash[:weight_initializer]),
-                        bias_initializer: Utils.load_hash(hash[:bias_initializer]),
+                        weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                        bias_initializer: Utils.from_hash(hash[:bias_initializer]),
                         l1_lambda: hash[:l1_lambda],
                         l2_lambda: hash[:l2_lambda],
                         use_bias: hash[:use_bias])
@@ -292,9 +292,9 @@ module DNN
       end
 
       def backward(dh2s)
-        @weight.grad = Xumo::SFloat.zeros(*@weight.data.shape)
-        @weight2.grad = Xumo::SFloat.zeros(*@weight2.data.shape)
-        @bias.grad = Xumo::SFloat.zeros(*@bias.data.shape) if @bias
+        @weight.grad += Xumo::SFloat.zeros(*@weight.data.shape)
+        @weight2.grad += Xumo::SFloat.zeros(*@weight2.data.shape)
+        @bias.grad += Xumo::SFloat.zeros(*@bias.data.shape) if @bias
         unless @return_sequences
           dh = dh2s
           dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
@@ -363,13 +363,13 @@ module DNN
         else
           @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h))
         end
-        h2 = (1 - @update) * h + @update * @tanh_h
+        h2 = (1 - @update) * @tanh_h + @update * h
         h2
       end
 
       def backward(dh2)
-        dtanh_h = @tanh.backward(dh2 * @update)
-        dh = dh2 * (1 - @update)
+        dtanh_h = @tanh.backward(dh2 * (1 - @update))
+        dh = dh2 * @update
 
         dweight_h = @x.transpose.dot(dtanh_h)
         dx = dtanh_h.dot(@weight_h.transpose)
@@ -378,7 +378,7 @@ module DNN
         dbias_h = dtanh_h.sum(0) if @bias
 
         dreset = @reset_sigmoid.backward(dtanh_h.dot(@weight2_h.transpose) * @h)
-        dupdate = @update_sigmoid.backward(dh2 * @tanh_h - dh2 * @h)
+        dupdate = @update_sigmoid.backward(dh2 * @h - dh2 * @tanh_h)
         da = Xumo::SFloat.hstack([dupdate, dreset])
         dweight_a = @x.transpose.dot(da)
         dx += da.dot(@weight_a.transpose)
@@ -395,12 +395,12 @@ module DNN
 
 
     class GRU < RNN
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         gru = self.new(hash[:num_nodes],
                        stateful: hash[:stateful],
                        return_sequences: hash[:return_sequences],
-                       weight_initializer: Utils.load_hash(hash[:weight_initializer]),
-                       bias_initializer: Utils.load_hash(hash[:bias_initializer]),
+                       weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                       bias_initializer: Utils.from_hash(hash[:bias_initializer]),
                        l1_lambda: hash[:l1_lambda],
                        l2_lambda: hash[:l2_lambda],
                        use_bias: hash[:use_bias])
