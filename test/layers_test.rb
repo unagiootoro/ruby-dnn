@@ -59,7 +59,7 @@ end
 class TestInputLayer < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {class: "DNN::Layers::InputLayer", input_shape: [10]}
-    layer = InputLayer.load_hash(hash)
+    layer = InputLayer.from_hash(hash)
     assert_equal [10], layer.output_shape
   end
 
@@ -112,7 +112,7 @@ class TestDense < MiniTest::Unit::TestCase
       l2_lambda: 0.2,
       use_bias: false,
     }
-    dense = Dense.load_hash(hash)
+    dense = Dense.from_hash(hash)
     assert_equal 100, dense.num_nodes
     assert_kind_of RandomUniform, dense.weight_initializer
     assert_kind_of RandomUniform, dense.bias_initializer
@@ -160,6 +160,20 @@ class TestDense < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
     assert_equal Numo::SFloat[5, 7, 9], dense.params[:weight].grad.round(4)
     assert_nil dense.params[:bias]
+  end
+
+  def test_backward3
+    dense = Dense.new(2)
+    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.params[:bias].data = Numo::SFloat[5, 10]
+    dense.forward(x)
+    dense.forward(x)
+    dense.backward(Numo::SFloat[1])
+    grad = dense.backward(Numo::SFloat[1])
+    assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
+    assert_equal Numo::SFloat[10, 14, 18], dense.params[:weight].grad.round(4)
+    assert_in_delta 2.0, dense.params[:bias].grad
   end
 
   def test_output_shape
@@ -230,7 +244,7 @@ class TestReshape < MiniTest::Unit::TestCase
       class: "DNN::Layers::Reshape",
       output_shape: [32, 32, 3],
     }
-    reshape = Reshape.load_hash(hash)
+    reshape = Reshape.from_hash(hash)
     assert_equal [32, 32, 3], reshape.output_shape
   end
 
@@ -270,7 +284,7 @@ class TestDropout < MiniTest::Unit::TestCase
       seed: 0,
       use_scale: false,
     }
-    dropout = Dropout.load_hash(hash)
+    dropout = Dropout.from_hash(hash)
     assert_equal 0.3, dropout.dropout_ratio
     assert_equal 0, dropout.instance_variable_get(:@seed)
     assert_equal false, dropout.use_scale
@@ -322,9 +336,11 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
       class: "DNN::Layers::BatchNormalization",
+      axis: 1,
       momentum: 0.8,
     }
-    batch_norm = BatchNormalization.load_hash(hash)
+    batch_norm = BatchNormalization.from_hash(hash)
+    assert_equal 1, batch_norm.axis
     assert_equal 0.8, batch_norm.momentum
   end
 
@@ -357,16 +373,17 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.forward(x, true)
     grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
-    assert_equal Numo::SFloat[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], batch_norm.params[:gamma].grad
-    assert_equal Numo::SFloat[2, 2, 2, 2, 2, 2, 2, 2, 2, 2], batch_norm.params[:beta].grad
+    assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], batch_norm.params[:gamma].grad
+    assert_equal Numo::SFloat[[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]], batch_norm.params[:beta].grad
   end
 
   def test_to_hash
     expected_hash = {
       class: "DNN::Layers::BatchNormalization",
-      momentum: 0.9,
+      axis: 1,
+      momentum: 0.8,
     }
-    batch_norm = BatchNormalization.new
+    batch_norm = BatchNormalization.new(axis: 1, momentum: 0.8)
     batch_norm.build([10])
     assert_equal expected_hash, batch_norm.to_hash
   end

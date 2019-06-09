@@ -79,7 +79,7 @@ module DNN
     
     
     class InputLayer < Layer
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:input_shape])
       end
 
@@ -133,13 +133,13 @@ module DNN
         @bias_initializer = bias_initializer
         @l1_lambda = l1_lambda
         @l2_lambda = l2_lambda
-        @params[:weight] = @weight = Param.new
+        @params[:weight] = @weight = Param.new(nil, 0)
         # For compatibility on or before with v0.9.3, setting use_bias to nil use bias.
         # Therefore, setting use_bias to nil is deprecated.
         if use_bias || use_bias == nil
-          @params[:bias] = @bias = Param.new
+          @params[:bias] = @bias = Param.new(nil, 0)
         else
-          @params[:bias] = @bias = nil
+          @bias = nil
         end
       end
 
@@ -176,10 +176,10 @@ module DNN
       # @return [Integer] number of nodes.
       attr_reader :num_nodes
 
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:num_nodes],
-                 weight_initializer: Utils.load_hash(hash[:weight_initializer]),
-                 bias_initializer: Utils.load_hash(hash[:bias_initializer]),
+                 weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                 bias_initializer: Utils.from_hash(hash[:bias_initializer]),
                  l1_lambda: hash[:l1_lambda],
                  l2_lambda: hash[:l2_lambda],
                  use_bias: hash[:use_bias])
@@ -205,8 +205,8 @@ module DNN
       end
     
       def backward(dy)
-        @weight.grad = @x.transpose.dot(dy)
-        @bias.grad = dy.sum(0) if @bias
+        @weight.grad += @x.transpose.dot(dy)
+        @bias.grad += dy.sum(0) if @bias
         dy.dot(@weight.data.transpose)
       end
     
@@ -247,7 +247,7 @@ module DNN
 
 
     class Reshape < Layer
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:output_shape])
       end
 
@@ -280,7 +280,7 @@ module DNN
       # @return [Float] Use 'weight scaling inference rule'.
       attr_reader :use_scale
 
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:dropout_ratio], seed: hash[:seed], use_scale: hash[:use_scale])
       end
 
@@ -315,24 +315,31 @@ module DNN
     
     
     class BatchNormalization < HasParamLayer
+      # @return [Integer] The axis to normalization.
+      attr_reader :axis
       # @return [Float] Exponential moving average of mean and variance.
       attr_reader :momentum
 
-      def self.load_hash(hash)
-        self.new(momentum: hash[:momentum])
+      def self.from_hash(hash)
+        self.new(axis: hash[:axis], momentum: hash[:momentum])
       end
 
+      # @param [integer] axis The axis to normalization.
       # @param [Float] momentum Exponential moving average of mean and variance.
-      def initialize(momentum: 0.9)
+      def initialize(axis: 0, momentum: 0.9)
         super()
+        # For compatibility on or before with v0.9.3, setting axis to nil will use 0.
+        # Therefore, setting axis to nil is deprecated.
+        axis ||= 0
+        @axis = axis
         @momentum = momentum
       end
 
       def forward(x, learning_phase)
         if learning_phase
-          mean = x.mean(0)
+          mean = x.mean(axis: @axis, keepdims: true)
           @xc = x - mean
-          var = (@xc**2).mean(0)
+          var = (@xc**2).mean(axis: @axis, keepdims: true)
           @std = NMath.sqrt(var + 1e-7)
           xn = @xc / @std
           @xn = xn
@@ -346,20 +353,20 @@ module DNN
       end
     
       def backward(dy)
-        batch_size = dy.shape[0]
-        @beta.grad = dy.sum(0)
-        @gamma.grad = (@xn * dy).sum(0)
+        batch_size = dy.shape[@axis]
+        @beta.grad = dy.sum(axis: @axis, keepdims: true)
+        @gamma.grad = (@xn * dy).sum(axis: @axis, keepdims: true)
         dxn = @gamma.data * dy
         dxc = dxn / @std
-        dstd = -((dxn * @xc) / (@std**2)).sum(0)
+        dstd = -((dxn * @xc) / (@std**2)).sum(axis: @axis, keepdims: true)
         dvar = 0.5 * dstd / @std
         dxc += (2.0 / batch_size) * @xc * dvar
-        dmean = dxc.sum(0)
+        dmean = dxc.sum(axis: @axis, keepdims: true)
         dxc - dmean / batch_size
       end
 
       def to_hash
-        super({momentum: @momentum})
+        super({axis: @axis, momentum: @momentum})
       end
     
       private
