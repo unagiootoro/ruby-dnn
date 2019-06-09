@@ -34,7 +34,7 @@ module DNN
         img
       end
 
-      def padding(img, pad)
+      def zero_padding(img, pad)
         bsize, img_h, img_w, ch = img.shape
         img2 = Xumo::SFloat.zeros(bsize, img_h + pad[0], img_w + pad[1], ch)
         i_begin = pad[0] / 2
@@ -45,7 +45,7 @@ module DNN
         img2
       end
 
-      def back_padding(img, pad)
+      def zero_padding_bwd(img, pad)
         i_begin = pad[0] / 2
         i_end = img.shape[1] - (pad[0] / 2.0).round
         j_begin = pad[1] / 2
@@ -53,15 +53,27 @@ module DNN
         img[true, i_begin...i_end, j_begin...j_end, true]
       end
 
-      def out_size(prev_h, prev_w, fil_h, fil_w, strides)
-        out_h = (prev_h - fil_h) / strides[0] + 1
-        out_w = (prev_w - fil_w) / strides[1] + 1
+      def calc_conv2d_out_size(prev_h, prev_w, fil_h, fil_w, pad_h, pad_w, strides)
+        out_h = (prev_h + pad_h - fil_h) / strides[0] + 1
+        out_w = (prev_w + pad_w - fil_w) / strides[1] + 1
         [out_h, out_w]
       end
 
-      def padding_size(prev_h, prev_w, out_h, out_w, strides)
+      def calc_deconv2d_out_size(prev_h, prev_w, fil_h, fil_w, pad_h, pad_w, strides)
+        out_h = (prev_h - 1) * strides[0] + fil_h - pad_h
+        out_w = (prev_w - 1) * strides[1] + fil_w - pad_w
+        [out_h, out_w]
+      end
+
+      def calc_padding_size(prev_h, prev_w, out_h, out_w, strides)
         pad_h = (prev_h.to_f / strides[0]).ceil - out_h
         pad_w = (prev_w.to_f / strides[1]).ceil - out_w
+        [pad_h, pad_w]
+      end
+
+      def calc_padding_size(prev_h, prev_w, out_h, out_w, strides)
+        pad_h = ((prev_h.to_f / strides[0]).ceil - out_h) * strides[0]
+        pad_w = ((prev_w.to_f / strides[1]).ceil - out_w) * strides[1]
         [pad_h, pad_w]
       end
     end
@@ -76,11 +88,13 @@ module DNN
       attr_reader :filter_size
       # @return [Array] Return stride length. stride length is of the form [height, width].
       attr_reader :strides
+      # @return [Array | Bool] Return padding size or whether to padding.
+      attr_reader :padding
 
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         Conv2D.new(hash[:num_filters], hash[:filter_size],
-                   weight_initializer: Utils.load_hash(hash[:weight_initializer]),
-                   bias_initializer: Utils.load_hash(hash[:bias_initializer]),
+                   weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                   bias_initializer: Utils.from_hash(hash[:bias_initializer]),
                    strides: hash[:strides],
                    padding: hash[:padding],
                    l1_lambda: hash[:l1_lambda],
@@ -88,10 +102,10 @@ module DNN
                    use_bias: hash[:use_bias])
       end
       
-      # @param [Integer] num_filters number of filters.
-      # @param [Array or Integer] filter_size filter size. filter size is of the form [height, width].
-      # @param [Array or Integer] strides stride length. stride length is of the form [height, width].
-      # @param [Bool] padding Whether to padding.
+      # @param [Integer] num_filters Number of filters.
+      # @param [Array | Integer] filter_size Filter size. Filter size is of the form [height, width].
+      # @param [Array | Integer] strides Stride length. Stride length is of the form [height, width].
+      # @param [Array | Bool] padding Padding size or whether to padding. Padding size is of the form [height, width].
       def initialize(num_filters, filter_size,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
@@ -105,21 +119,25 @@ module DNN
         @num_filters = num_filters
         @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
         @strides = strides.is_a?(Integer) ? [strides, strides] : strides
-        @padding = padding
+        @padding = padding.is_a?(Integer) ? [padding, padding] : padding
       end
 
       def build(input_shape)
         super
         prev_h, prev_w = input_shape[0..1]
-        @out_size = out_size(prev_h, prev_w, *@filter_size, @strides)
-        if @padding
-          @pad_size = padding_size(prev_h, prev_w, *@out_size, @strides)
-          @out_size = [@out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1]]
+        if @padding == true
+          out_h, out_w = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
+          @pad_size = calc_padding_size(prev_h, prev_w, out_h, out_w, @strides)
+        elsif @padding.is_a?(Array)
+          @pad_size = @padding
+        else
+          @pad_size = [0, 0]
         end
+        @out_size = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
 
       def forward(x)
-        x = padding(x, @pad_size) if @padding
+        x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         @col = im2col(x, *@out_size, *@filter_size, @strides)
         y = @col.dot(@weight.data)
@@ -129,20 +147,15 @@ module DNN
 
       def backward(dy)
         dy = dy.reshape(dy.shape[0..2].reduce(:*), dy.shape[3])
-        @weight.grad = @col.transpose.dot(dy)
-        @bias.grad = dy.sum(0) if @bias
+        @weight.grad += @col.transpose.dot(dy)
+        @bias.grad += dy.sum(0) if @bias
         dcol = dy.dot(@weight.data.transpose)
         dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
-        @padding ? back_padding(dx, @pad_size) : dx
+        @padding ? zero_padding_bwd(dx, @pad_size) : dx
       end
 
       def output_shape
         [*@out_size, @num_filters]
-      end
-
-      # @return [Bool] whether to padding.
-      def padding?
-        @padding
       end
 
       # @return [Numo::SFloat] Convert weight to filter and return.
@@ -170,6 +183,117 @@ module DNN
         num_prev_filter = @input_shape[2]
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
+        @weight_initializer.init_param(self, @weight)
+        @bias_initializer.init_param(self, @bias) if @bias
+      end
+    end
+
+
+    class Deconv2D < Connection
+      include Conv2DModule
+
+      # @return [Integer] number of filters.
+      attr_reader :num_filters
+      # @return [Array] Return filter size. filter size is of the form [height, width].
+      attr_reader :filter_size
+      # @return [Array] Return stride length. stride length is of the form [height, width].
+      attr_reader :strides
+      # @return [Array] Return padding size.
+      attr_reader :padding
+
+      def self.from_hash(hash)
+        Deconv2D.new(hash[:num_filters], hash[:filter_size],
+                   weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                   bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                   strides: hash[:strides],
+                   padding: hash[:padding],
+                   l1_lambda: hash[:l1_lambda],
+                   l2_lambda: hash[:l2_lambda])
+      end
+      
+      # @param [Integer] num_filters Number of filters.
+      # @param [Array | Integer] filter_size Filter size. Filter size is of the form [height, width].
+      # @param [Array | Integer] strides Stride length. Stride length is of the form [height, width].
+      # @param [Array] padding Padding size. Padding size is of the form [height, width].
+      def initialize(num_filters, filter_size,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
+                     strides: 1,
+                     padding: false,
+                     l1_lambda: 0,
+                     l2_lambda: 0,
+                     use_bias: true)
+        super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
+              l1_lambda: l1_lambda, l2_lambda: l2_lambda, use_bias: use_bias)
+        @num_filters = num_filters
+        @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
+        @strides = strides.is_a?(Integer) ? [strides, strides] : strides
+        @padding = padding.is_a?(Integer) ? [padding, padding] : padding
+      end
+
+      def build(input_shape)
+        super
+        prev_h, prev_w = *input_shape[0..1]
+        if @padding == true
+          out_h, out_w = calc_deconv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
+          @pad_size = calc_padding_size(out_h, out_w, prev_h, prev_w, @strides)
+        elsif @padding.is_a?(Array)
+          @pad_size = @padding
+        else
+          @pad_size = [0, 0]
+        end
+        @out_size = calc_deconv2d_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
+      end
+
+      def forward(x)
+        bsize = x.shape[0]
+        x = x.reshape(x.shape[0..2].reduce(:*), x.shape[3])
+        @x = x
+        col = x.dot(@weight.data.transpose)
+        img_shape = [bsize, @out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1], @num_filters]
+        y = col2im(col, img_shape, *input_shape[0..1], *@filter_size, @strides)
+        y += @bias.data if @bias
+        @padding ? zero_padding_bwd(y, @pad_size) : y
+      end
+
+      def backward(dy)
+        dy = zero_padding(dy, @pad_size) if @padding
+        col = im2col(dy, *input_shape[0..1], *@filter_size, @strides)
+        @weight.grad += col.transpose.dot(@x)
+        @bias.grad += col.reshape(col.shape[0] * @filter_size.reduce(:*), @num_filters).sum(0) if @bias
+        dx = col.dot(@weight.data)
+        dx.reshape(dy.shape[0], *input_shape)
+      end
+
+      def output_shape
+        [*@out_size, @num_filters]
+      end
+
+      # @return [Numo::SFloat] Convert weight to filter and return.
+      def filters
+        num_prev_filter = @input_shape[2]
+        @weight.data.reshape(*@filter_size, @num_filters, num_prev_filter)
+      end
+
+      # @param [Numo::SFloat] filters Convert weight to filters and set.
+      def filters=(filters)
+        num_prev_filter = @input_shape[2]
+        @weight.data = filters.reshape(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
+      end
+
+      def to_hash
+        super({num_filters: @num_filters,
+               filter_size: @filter_size,
+               strides: @strides,
+               padding: @padding})
+      end
+    
+      private
+    
+      def init_params
+        num_prev_filter = @input_shape[2]
+        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
+        @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         super()
       end
     end
@@ -179,19 +303,21 @@ module DNN
     class Pool2D < Layer
       include Conv2DModule
 
-      # @return [Array] Return pooling size. pooling size is of the form [height, width].
+      # @return [Array] Return pooling size. Pooling size is of the form [height, width].
       attr_reader :pool_size
-      # @return [Array] Return stride length. stride length is of the form [height, width].
+      # @return [Array] Return stride length. Stride length is of the form [height, width].
       attr_reader :strides
+      # @return [Array | Bool] Return padding size or whether to padding.
+      attr_reader :padding
 
-      def self.load_hash(pool2d_class, hash)
+      def self.from_hash(pool2d_class, hash)
         pool2d_class.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
       end
 
-      # @param [Array or Integer] pool_size pooling size. pooling size is of the form [height, width].
-      # @param [Array or Integer or NilClass] strides stride length. stride length is of the form [height, width].
+      # @param [Array | Integer] pool_size Pooling size. Pooling size is of the form [height, width].
+      # @param [Array | Integer | NilClass] Strides stride length. Stride length is of the form [height, width].
       #   If you set nil, treat pool_size as strides.
-      # @param [Bool] padding Whether to padding.
+      # @param [Array | Bool] padding Padding size or whether to padding. Padding size is of the form [height, width].
       def initialize(pool_size, strides: nil, padding: false)
         super()
         @pool_size = pool_size.is_a?(Integer) ? [pool_size, pool_size] : pool_size
@@ -200,27 +326,26 @@ module DNN
         else
           @pool_size.clone
         end
-        @padding = padding
+        @padding = padding.is_a?(Integer) ? [padding, padding] : padding
       end
 
       def build(input_shape)
         super
         prev_h, prev_w = input_shape[0..1]
         @num_channel = input_shape[2]
-        @out_size = out_size(prev_h, prev_w, *@pool_size, @strides)
-        if @padding
-          @pad_size = padding_size(prev_h, prev_w, *@out_size, @strides)
-          @out_size = [@out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1]]
+        if @padding == true
+          out_h, out_w = calc_conv2d_out_size(prev_h, prev_w, *@pool_size, 0, 0, @strides)
+          @pad_size = calc_padding_size(prev_h, prev_w, out_h, out_w, @strides)
+        elsif @padding.is_a?(Array)
+          @pad_size = @padding
+        else
+          @pad_size = [0, 0]
         end
+        @out_size = calc_conv2d_out_size(prev_h, prev_w, *@pool_size, *@pad_size, @strides)
       end
 
       def output_shape
         [*@out_size, @num_channel]
-      end
-
-      # @return [Bool] whether to padding.
-      def padding?
-        @padding
       end
 
       def to_hash
@@ -232,12 +357,12 @@ module DNN
     
     
     class MaxPool2D < Pool2D
-      def self.load_hash(hash)
-        Pool2D.load_hash(self, hash)
+      def self.from_hash(hash)
+        Pool2D.from_hash(self, hash)
       end
 
       def forward(x)
-        x = padding(x, @pad_size) if @padding
+        x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
         col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3]).transpose(0, 2, 1)
@@ -251,18 +376,18 @@ module DNN
         dmax[@max_index] = dy.flatten
         dcol = dmax.reshape(dy.shape[0..2].reduce(:*), @pool_size.reduce(:*) * dy.shape[3])
         dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
-        @padding ? back_padding(dx, @pad_size) : dx
+        @padding ? zero_padding_bwd(dx, @pad_size) : dx
       end
     end
 
 
     class AvgPool2D < Pool2D
-      def self.load_hash(hash)
-        Pool2D.load_hash(self, hash)
+      def self.from_hash(hash)
+        Pool2D.from_hash(self, hash)
       end
 
       def forward(x)
-        x = padding(x, @pad_size) if @padding
+        x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
         col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3]).transpose(0, 2, 1)
@@ -279,7 +404,7 @@ module DNN
         end
         dcol = davg.reshape(dy.shape[0..2].reduce(:*), dy.shape[3] * @pool_size.reduce(:*))
         dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
-        @padding ? back_padding(dx, @pad_size) : dx
+        @padding ? zero_padding_bwd(dx, @pad_size) : dx
       end
     end
 
@@ -294,7 +419,7 @@ module DNN
         @unpool_size = unpool_size.is_a?(Integer) ? [unpool_size, unpool_size] : unpool_size
       end
 
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         UnPool2D.new(hash[:unpool_size])
       end
 

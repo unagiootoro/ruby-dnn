@@ -89,7 +89,7 @@ class TestConv2DModule < MiniTest::Unit::TestCase
     assert_equal expected_img.round(4), img.round(4)
   end
 
-  def test_padding
+  def test_zero_padding
     img = Numo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
     expected_img = Numo::SFloat.cast([[
       [
@@ -109,10 +109,10 @@ class TestConv2DModule < MiniTest::Unit::TestCase
         [0, 0, 0, 0, 0, 0],
       ]
     ]]).transpose(0, 2, 3, 1)
-    assert_equal expected_img, padding(img, [2, 2])
+    assert_equal expected_img, zero_padding(img, [2, 2])
   end
 
-  def test_back_padding
+  def test_zero_padding_bwd
     img = Numo::SFloat.cast([[
       [
         [0, 0, 0, 0, 0, 0],
@@ -132,23 +132,23 @@ class TestConv2DModule < MiniTest::Unit::TestCase
       ]
     ]]).transpose(0, 2, 3, 1)
     expected_img = Numo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
-    assert_equal expected_img, back_padding(img, [2, 2])
+    assert_equal expected_img, zero_padding_bwd(img, [2, 2])
   end
 
-  def test_out_size
-    assert_equal [29, 14], out_size(32, 32, 4, 5, [1, 2])
+  def test_calc_conv2d_out_size
+    assert_equal [29, 14], calc_conv2d_out_size(32, 32, 4, 5, 0, 0, [1, 2])
   end
 
-  def test_out_size2
-    assert_equal [32, 32], out_size(32, 32, 1, 1, [1, 1])
+  def test_calc_conv2d_out_size2
+    assert_equal [32, 32], calc_conv2d_out_size(32, 32, 1, 1, 0, 0, [1, 1])
   end
 
-  def test_padding_size
-    assert_equal [3, 2], padding_size(32, 32, 29, 14, [1, 2])
+  def test_calc_padding_size
+    assert_equal [3, 4], calc_padding_size(32, 32, 29, 14, [1, 2])
   end
   
-  def test_padding_size2
-    assert_equal [0, 1], padding_size(32, 32, 32, 10, [1, 3])
+  def test_calc_padding_size2
+    assert_equal [0, 3], calc_padding_size(32, 32, 32, 10, [1, 3])
   end
 end
 
@@ -167,11 +167,12 @@ class TestConv2D < MiniTest::Unit::TestCase
       l2_lambda: 0,
       use_bias: false,
     }
-    conv2d = Conv2D.load_hash(hash)
+    conv2d = Conv2D.from_hash(hash)
     assert_equal 16, conv2d.num_filters
     assert_equal [3, 3], conv2d.filter_size
     assert_equal [2, 2], conv2d.strides
     assert_equal false, conv2d.use_bias
+    assert_equal true, conv2d.padding
   end
 
   def test_initialize
@@ -194,6 +195,12 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d = Conv2D.new(16, [4, 5], strides: [1, 2], padding: true)
     conv2d.build([32, 32, 3])
     assert_equal [32, 16], conv2d.instance_variable_get(:@out_size)
+  end
+
+  def test_build3
+    conv2d = Conv2D.new(16, 4, padding: 3)
+    conv2d.build([32, 32, 3])
+    assert_equal [32, 32], conv2d.instance_variable_get(:@out_size)
   end
 
   def test_forward
@@ -267,6 +274,118 @@ class TestConv2D < MiniTest::Unit::TestCase
 end
 
 
+class TestDeconv2D < MiniTest::Unit::TestCase
+  def test_load_hash
+    hash = {
+      class: "DNN::Layers::Deconv2D",
+      num_filters: 16,
+      filter_size: [3, 3],
+      weight_initializer: RandomNormal.new.to_hash,
+      bias_initializer: Zeros.new.to_hash,
+      strides: [2, 2],
+      padding: true,
+      l1_lambda: 0,
+      l2_lambda: 0,
+      use_bias: true,
+    }
+    deconv2d = Deconv2D.from_hash(hash)
+    assert_equal 16, deconv2d.num_filters
+    assert_equal [3, 3], deconv2d.filter_size
+    assert_equal [2, 2], deconv2d.strides
+    assert_equal true, deconv2d.padding
+  end
+
+  def test_initialize
+    deconv2d = Deconv2D.new(16, 3)
+    assert_equal [3, 3], deconv2d.filter_size
+  end
+
+  def test_initialize2
+    deconv2d = Deconv2D.new(16, 3, strides: 2)
+    assert_equal [2, 2], deconv2d.strides
+  end
+
+  def test_build
+    deconv2d = Deconv2D.new(16, [4, 6], strides: [1, 2])
+    deconv2d.build([29, 14, 3])
+    assert_equal [32, 32], deconv2d.instance_variable_get(:@out_size)
+  end
+
+  def test_build2
+    deconv2d = Deconv2D.new(16, [4, 6], strides: [1, 2], padding: true)
+    deconv2d.build([32, 16, 3])
+    assert_equal [32, 32], deconv2d.instance_variable_get(:@out_size)
+  end
+
+  def test_build3
+    deconv2d = Deconv2D.new(16, 4, padding: 3)
+    deconv2d.build([32, 32, 3])
+    assert_equal [32, 32], deconv2d.instance_variable_get(:@out_size)
+  end
+
+  def test_forward
+    x = Numo::SFloat.new(1, 16, 16, 3).seq
+    deconv2d = Deconv2D.new(8, 2, strides: 2)
+    deconv2d.build([16, 16, 3])
+    assert_equal [1, 32, 32, 8], deconv2d.forward(x).shape
+  end
+
+  def test_backward
+    x = Numo::SFloat.new(1, 16, 16, 3).seq
+    dy = Numo::SFloat.new(1, 32, 32, 8).seq
+    deconv2d = Deconv2D.new(8, 2, strides: 2)
+    deconv2d.build([16, 16, 3])
+    deconv2d.forward(x)
+    assert_equal [1, 16, 16, 3], deconv2d.backward(dy).shape
+    assert_equal deconv2d.params[:weight].data.shape, deconv2d.params[:weight].grad.shape
+    assert_equal deconv2d.params[:bias].data.shape, deconv2d.params[:bias].grad.shape
+  end
+
+  def test_output_shape
+    deconv2d = Deconv2D.new(16, [4, 6], strides: [1, 2])
+    deconv2d.build([29, 14, 3])
+    assert_equal [32, 32, 16], deconv2d.output_shape
+  end
+
+  def test_filters
+    deconv2d = Deconv2D.new(16, [4, 5])
+    deconv2d.build([32, 32, 3])
+    assert_equal [4, 5, 16, 3], deconv2d.filters.shape
+  end
+
+  def test_filters_set
+    deconv2d = Deconv2D.new(16, [4, 5])
+    deconv2d.build([32, 32, 3])
+    deconv2d.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
+    assert_equal [4 * 5 * 16, 3], deconv2d.params[:weight].data.shape
+  end
+
+  def test_filters_set2
+    deconv2d = Deconv2D.new(16, [4, 5])
+    deconv2d.build([32, 32, 3])
+    expected = deconv2d.params[:weight].data
+    deconv2d.filters = expected
+    assert_equal expected, deconv2d.params[:weight].data
+  end
+
+  def test_to_hash
+    deconv2d = Deconv2D.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2)
+    expected_hash = {
+      class: "DNN::Layers::Deconv2D",
+      num_filters: 16,
+      filter_size: [5, 5],
+      weight_initializer: deconv2d.weight_initializer.to_hash,
+      bias_initializer: deconv2d.bias_initializer.to_hash,
+      strides: [2, 2],
+      padding: true,
+      l1_lambda: 0.1,
+      l2_lambda: 0.2,
+    }
+    assert_equal expected_hash, deconv2d.to_hash
+  end
+end
+
+
 class TestMaxPool2D < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {
@@ -275,10 +394,10 @@ class TestMaxPool2D < MiniTest::Unit::TestCase
       strides: [2, 2],
       padding: true,
     }
-    pool2d = MaxPool2D.load_hash(hash)
+    pool2d = MaxPool2D.from_hash(hash)
     assert_equal [3, 3], pool2d.pool_size
     assert_equal [2, 2], pool2d.strides
-    assert_equal true, pool2d.padding?
+    assert_equal true, pool2d.padding
   end
 
   def test_initialize
@@ -338,10 +457,10 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
       strides: [2, 2],
       padding: true,
     }
-    pool2d = AvgPool2D.load_hash(hash)
+    pool2d = AvgPool2D.from_hash(hash)
     assert_equal [3, 3], pool2d.pool_size
     assert_equal [2, 2], pool2d.strides
-    assert_equal true, pool2d.padding?
+    assert_equal true, pool2d.padding
   end
 
   def test_forward
@@ -368,7 +487,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
       class: "DNN::Layers::UnPool2D",
       unpool_size: [2, 2],
     }
-    unpool2d = UnPool2D.load_hash(hash)
+    unpool2d = UnPool2D.from_hash(hash)
     assert_equal [2, 2], unpool2d.unpool_size
   end
 
