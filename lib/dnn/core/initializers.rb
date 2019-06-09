@@ -28,7 +28,7 @@ module DNN
     class Const < Initializer
       attr_reader :const
 
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:const])
       end
 
@@ -51,7 +51,7 @@ module DNN
       attr_reader :mean
       attr_reader :std
       
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:mean], hash[:std], hash[:seed])
       end
 
@@ -76,7 +76,7 @@ module DNN
       attr_reader :min
       attr_reader :max
 
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:min], hash[:max], hash[:seed])
       end
 

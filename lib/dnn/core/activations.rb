@@ -81,7 +81,7 @@ module DNN
         @alpha = alpha
       end
 
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:alpha])
       end
 
@@ -107,7 +107,7 @@ module DNN
     class ELU < Layers::Layer
       attr_reader :alpha
 
-      def self.load_hash(hash)
+      def self.from_hash(hash)
         self.new(hash[:alpha])
       end
 

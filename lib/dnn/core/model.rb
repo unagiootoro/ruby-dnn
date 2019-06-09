@@ -22,14 +22,14 @@ module DNN
     # @return [DNN::Model]
     def self.load_json(json_str)
       hash = JSON.parse(json_str, symbolize_names: true)
-      model = self.load_hash(hash)
-      model.compile(Utils.load_hash(hash[:optimizer]), Utils.load_hash(hash[:loss]))
+      model = self.from_hash(hash)
+      model.compile(Utils.from_hash(hash[:optimizer]), Utils.from_hash(hash[:loss]))
       model
     end
 
-    def self.load_hash(hash)
+    def self.from_hash(hash)
       model = self.new
-      model.layers = hash[:layers].map { |hash_layer| Utils.load_hash(hash_layer) }
+      model.layers = hash[:layers].map { |hash_layer| Utils.from_hash(hash_layer) }
       model
     end
   

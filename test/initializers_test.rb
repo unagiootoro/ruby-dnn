@@ -24,7 +24,7 @@ end
 class TestConst < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {const: 1}
-    initializer = Const.load_hash(hash)
+    initializer = Const.from_hash(hash)
     assert_equal 1, initializer.const
   end
 
@@ -64,7 +64,7 @@ end
 class TestRandomNormal < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {mean: 1, std: 2, seed: 3}
-    initializer = RandomNormal.load_hash(hash)
+    initializer = RandomNormal.from_hash(hash)
     assert_equal 1, initializer.mean
     assert_equal 2, initializer.std
     assert_equal 3, initializer.instance_variable_get(:@seed)
@@ -103,7 +103,7 @@ end
 class TestRandomUniform < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {min: -0.1, max: 0.1, seed: 3}
-    initializer = RandomUniform.load_hash(hash)
+    initializer = RandomUniform.from_hash(hash)
     assert_equal -0.1, initializer.min
     assert_equal 0.1, initializer.max
     assert_equal 3, initializer.instance_variable_get(:@seed)

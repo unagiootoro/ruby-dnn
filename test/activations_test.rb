@@ -109,7 +109,7 @@ end
 class TestLeakyReLU < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {alpha: 0.2}
-    lrelu = LeakyReLU.load_hash(hash)
+    lrelu = LeakyReLU.from_hash(hash)
     assert_equal 0.2, lrelu.alpha
   end
 
@@ -142,7 +142,7 @@ end
 class TestELU < MiniTest::Unit::TestCase
   def test_load_hash
     hash = {alpha: 0.2}
-    elu = ELU.load_hash(hash)
+    elu = ELU.from_hash(hash)
     assert_equal 0.2, elu.alpha
   end
 

@@ -17,12 +17,12 @@ class TestUtils < MiniTest::Unit::TestCase
   end
 
   def test_load_hash
-    relu = Utils.load_hash({class: "DNN::Activations::ReLU"})
+    relu = Utils.from_hash({class: "DNN::Activations::ReLU"})
     assert_kind_of ReLU, relu
   end
 
   def test_load_hash2
-    lrelu = Utils.load_hash({class: "DNN::Activations::LeakyReLU", alpha: 0.2})
+    lrelu = Utils.from_hash({class: "DNN::Activations::LeakyReLU", alpha: 0.2})
     assert_equal 0.2, lrelu.alpha
   end
 
