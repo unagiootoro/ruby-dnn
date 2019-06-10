@@ -56,24 +56,9 @@ module DNN
         @trainable = true
       end
     
-      def build(input_shape)
-        @input_shape = input_shape
-        unless @built
-          @built = true
-          init_params
-        end
-      end
-    
       # Update the parameters.
       def update(optimizer)
         optimizer.update(@params) if @trainable
-      end
-    
-      private
-      
-      # Initialize of the parameters.
-      def init_params
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_params'")
       end
     end
     
@@ -161,13 +146,6 @@ module DNN
                l1_lambda: @l1_lambda,
                l2_lambda: @l2_lambda}.merge(merge_hash))
       end
-
-      private
-
-      def init_params
-        @weight_initializer.init_param(self, @weight)
-        @bias_initializer.init_param(self, @bias) if @bias
-      end
     end
     
     
@@ -196,6 +174,17 @@ module DNN
               l1_lambda: l1_lambda, l2_lambda: l2_lambda, use_bias: use_bias)
         @num_nodes = num_nodes
       end
+
+      def build(input_shape)
+        super
+        num_prev_nodes = input_shape[0]
+        @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
+        @weight_initializer.init_param(self, @weight)
+        if @bias
+          @bias.data = Xumo::SFloat.new(@num_nodes)
+          @bias_initializer.init_param(self, @bias) 
+        end
+      end
     
       def forward(x)
         @x = x
@@ -216,17 +205,6 @@ module DNN
 
       def to_hash
         super({num_nodes: @num_nodes})
-      end
-    
-      private
-    
-      # TODO
-      # Change writing super() other than the first.
-      def init_params
-        num_prev_nodes = @input_shape[0]
-        @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
-        @bias.data = Xumo::SFloat.new(@num_nodes) if @bias
-        super()
       end
     end
     
@@ -335,6 +313,14 @@ module DNN
         @momentum = momentum
       end
 
+      def build(input_shape)
+        super
+        @params[:gamma] = @gamma = Param.new(Xumo::SFloat.ones(*output_shape))
+        @params[:beta] = @beta = Param.new(Xumo::SFloat.zeros(*output_shape))
+        @params[:running_mean] = @running_mean = Param.new(Xumo::SFloat.zeros(*output_shape))
+        @params[:running_var] = @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
+      end
+
       def forward(x, learning_phase)
         if learning_phase
           mean = x.mean(axis: @axis, keepdims: true)
@@ -367,15 +353,6 @@ module DNN
 
       def to_hash
         super({axis: @axis, momentum: @momentum})
-      end
-    
-      private
-    
-      def init_params
-        @params[:gamma] = @gamma = Param.new(Xumo::SFloat.ones(*output_shape))
-        @params[:beta] = @beta = Param.new(Xumo::SFloat.zeros(*output_shape))
-        @params[:running_mean] = @running_mean = Param.new(Xumo::SFloat.zeros(*output_shape))
-        @params[:running_var] = @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
       end
     end
   end

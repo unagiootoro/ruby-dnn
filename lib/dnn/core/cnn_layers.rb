@@ -124,7 +124,13 @@ module DNN
 
       def build(input_shape)
         super
-        prev_h, prev_w = input_shape[0..1]
+        prev_h, prev_w, num_prev_filter = *input_shape
+        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
+        @weight_initializer.init_param(self, @weight)
+        if @bias
+          @bias.data = Xumo::SFloat.new(@num_filters)
+          @bias_initializer.init_param(self, @bias) 
+        end
         if @padding == true
           out_h, out_w = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
           @pad_size = calc_padding_size(prev_h, prev_w, out_h, out_w, @strides)
@@ -176,16 +182,6 @@ module DNN
                strides: @strides,
                padding: @padding})
       end
-    
-      private
-    
-      def init_params
-        num_prev_filter = @input_shape[2]
-        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
-        @bias.data = Xumo::SFloat.new(@num_filters) if @bias
-        @weight_initializer.init_param(self, @weight)
-        @bias_initializer.init_param(self, @bias) if @bias
-      end
     end
 
 
@@ -233,7 +229,13 @@ module DNN
 
       def build(input_shape)
         super
-        prev_h, prev_w = *input_shape[0..1]
+        prev_h, prev_w, num_prev_filter = *input_shape
+        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
+        @weight_initializer.init_param(self, @weight)
+        if @bias
+          @bias.data = Xumo::SFloat.new(@num_filters)
+          @bias_initializer.init_param(self, @bias) 
+        end
         if @padding == true
           out_h, out_w = calc_deconv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
           @pad_size = calc_padding_size(out_h, out_w, prev_h, prev_w, @strides)
@@ -286,15 +288,6 @@ module DNN
                filter_size: @filter_size,
                strides: @strides,
                padding: @padding})
-      end
-    
-      private
-    
-      def init_params
-        num_prev_filter = @input_shape[2]
-        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
-        @bias.data = Xumo::SFloat.new(@num_filters) if @bias
-        super()
       end
     end
 

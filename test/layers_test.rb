@@ -39,13 +39,6 @@ end
 
 
 class TestHasParamLayer < MiniTest::Unit::TestCase
-  # Make sure init_param is called
-  def test_build
-    layer = HasParamLayer.new
-    layer.define_singleton_method(:init_params) { true }
-    assert_equal true, layer.build([10])
-  end
-
   def test_update
     layer = HasParamLayer.new
     weight = Param.new(Numo::SFloat.ones(1), Numo::SFloat.ones(1))
@@ -119,6 +112,15 @@ class TestDense < MiniTest::Unit::TestCase
     assert_equal 0.1, dense.l1_lambda
     assert_equal 0.2, dense.l2_lambda
     assert_equal false, dense.use_bias
+  end
+
+  def test_build
+    dense = Dense.new(100)
+    dense.build([50])
+    assert_kind_of RandomNormal, dense.weight_initializer
+    assert_kind_of Zeros, dense.bias_initializer
+    assert_equal [50, 100], dense.params[:weight].data.shape
+    assert_equal [100], dense.params[:bias].data.shape
   end
 
   def test_forward
@@ -205,16 +207,6 @@ class TestDense < MiniTest::Unit::TestCase
       l2_lambda: 0,
     }
     assert_equal expected_hash, dense.to_hash
-  end
-
-  def test_init_params
-    dense = Dense.new(100)
-    dense.instance_variable_set(:@input_shape, [50])
-    dense.send(:init_params)
-    assert_kind_of RandomNormal, dense.weight_initializer
-    assert_kind_of Zeros, dense.bias_initializer
-    assert_equal [50, 100], dense.params[:weight].data.shape
-    assert_equal [100], dense.params[:bias].data.shape
   end
 end
 
