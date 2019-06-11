@@ -48,7 +48,7 @@ module DNN
         super({momentum: @momentum})
       end
 
-      def update_param(param)
+      private def update_param(param)
         amount = param.grad * @learning_rate
         if @momentum > 0
           @v[param] ||= 0
@@ -69,7 +69,7 @@ module DNN
         super(learning_rate, momentum: momentum)
       end
     
-      def update_param(param)
+      private def update_param(param)
         @v[param] ||= 0
         amount = param.grad * @learning_rate
         @v[param] = @v[param] * @momentum - amount
@@ -88,7 +88,7 @@ module DNN
         self.new(hash[:learning_rate])
       end
     
-      def update_param(param)
+      private def update_param(param)
         @g[param] ||= 0
         @g[param] += param.grad**2
         param.data -= (@learning_rate / NMath.sqrt(@g[param] + 1e-7)) * param.grad
@@ -113,7 +113,7 @@ module DNN
         super({alpha: @alpha})
       end
 
-      def update_param(param)
+      private def update_param(param)
         @g[param] ||= 0
         @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
         param.data -= (@learning_rate / NMath.sqrt(@g[param] + 1e-7)) * param.grad
@@ -139,7 +139,7 @@ module DNN
         super({rho: @rho})
       end
 
-      def update_param(param)
+      private def update_param(param)
         @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
         @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
         @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
@@ -180,7 +180,7 @@ module DNN
         super({beta1: @beta1, beta2: @beta2})
       end
 
-      def update_param(param, lr)
+      private def update_param(param, lr)
         @m[param] ||= 0
         @v[param] ||= 0
         @m[param] += (1 - @beta1) * (param.grad - @m[param])
