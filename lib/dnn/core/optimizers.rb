@@ -79,71 +79,78 @@ module DNN
     
     
     class AdaGrad < Optimizer
-      def initialize(learning_rate = 0.01)
+      attr_accessor :eps
+
+      def initialize(learning_rate = 0.01, eps: 1e-7)
         super(learning_rate)
+        @eps = eps
         @g = {}
       end
 
       def self.from_hash(hash)
-        self.new(hash[:learning_rate])
+        self.new(hash[:learning_rate], eps: hash[:eps])
       end
     
       private def update_param(param)
         @g[param] ||= 0
         @g[param] += param.grad**2
-        param.data -= (@learning_rate / NMath.sqrt(@g[param] + 1e-7)) * param.grad
+        param.data -= (@learning_rate / NMath.sqrt(@g[param] + @eps)) * param.grad
       end
     end
     
     
     class RMSProp < Optimizer
       attr_accessor :alpha
+      attr_accessor :eps
 
       def self.from_hash(hash)
-        self.new(hash[:learning_rate], alpha: hash[:alpha])
+        self.new(hash[:learning_rate], alpha: hash[:alpha], eps: hash[:eps])
       end
     
-      def initialize(learning_rate = 0.001, alpha: 0.9)
+      def initialize(learning_rate = 0.001, alpha: 0.9, eps: 1e-7)
         super(learning_rate)
         @alpha = alpha
+        @eps = eps
         @g = {}
       end
 
       def to_hash
-        super({alpha: @alpha})
+        super({alpha: @alpha, eps: @eps})
       end
 
       private def update_param(param)
         @g[param] ||= 0
         @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
-        param.data -= (@learning_rate / NMath.sqrt(@g[param] + 1e-7)) * param.grad
+        param.data -= (@learning_rate / NMath.sqrt(@g[param] + @eps)) * param.grad
       end
     end
 
 
     class AdaDelta < Optimizer
       attr_accessor :rho
+      attr_accessor :eps
 
       def self.from_hash(hash)
-        self.new(rho: hash[:rho])
+        self.new(rho: hash[:rho], eps: hash[:eps])
       end
 
-      def initialize(rho: 0.95)
+      def initialize(rho: 0.95, eps: 1e-6)
         super(nil)
         @rho = rho
+        @eps = eps
         @h = {}
         @s = {}
       end
 
       def to_hash
-        super({rho: @rho})
+        super({rho: @rho, eps: @eps})
       end
 
       private def update_param(param)
         @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
         @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
         @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
-        v = (NMath.sqrt(@s[param] + 1e-6) / NMath.sqrt(@h[param] + 1e-6)) * param.grad
+        v = (NMath.sqrt(@s[param] + @eps) / NMath.sqrt(@h[param] + @eps)) * param.grad
         @s[param] = @rho * @s[param] + (1 - @rho) * v**2
         param.data -= v
       end
@@ -153,15 +160,17 @@ module DNN
     class Adam < Optimizer
       attr_accessor :beta1
       attr_accessor :beta2
+      attr_accessor :eps
       
       def self.from_hash(hash)
-        self.new(hash[:learning_rate], beta1: hash[:beta1], beta2: hash[:beta2])
+        self.new(hash[:learning_rate], beta1: hash[:beta1], beta2: hash[:beta2], eps: hash[:eps])
       end
 
-      def initialize(learning_rate = 0.001, beta1: 0.9, beta2: 0.999)
+      def initialize(learning_rate = 0.001, beta1: 0.9, beta2: 0.999, eps: 1e-7)
         super(learning_rate)
         @beta1 = beta1
         @beta2 = beta2
+        @eps = eps
         @iter = 0
         @m = {}
         @v = {}
@@ -177,7 +186,7 @@ module DNN
       end
 
       def to_hash
-        super({beta1: @beta1, beta2: @beta2})
+        super({beta1: @beta1, beta2: @beta2, eps: @eps})
       end
 
       private def update_param(param, lr)
@@ -185,7 +194,7 @@ module DNN
         @v[param] ||= 0
         @m[param] += (1 - @beta1) * (param.grad - @m[param])
         @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
-        param.data -= lr * @m[param] / NMath.sqrt(@v[param] + 1e-7)
+        param.data -= lr * @m[param] / NMath.sqrt(@v[param] + @eps)
       end
     end
 

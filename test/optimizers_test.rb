@@ -26,7 +26,7 @@ end
 
 
 class TestSGD < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Optimizers::SGD",
       learning_rate: 0.1,
@@ -70,7 +70,7 @@ end
 
 
 class TestNesterov < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Optimizers::Nesterov",
       learning_rate: 0.1,
@@ -95,13 +95,15 @@ end
 
 
 class TestAdaGrad < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Optimizers::AdaGrad",
       learning_rate: 0.001,
+      eps: 1e-4,
     }
     adagrad = AdaGrad.from_hash(hash)
     assert_equal 0.001, adagrad.learning_rate
+    assert_equal 1e-4, adagrad.eps
   end
 
   def test_update
@@ -113,19 +115,31 @@ class TestAdaGrad < MiniTest::Unit::TestCase
     adagrad.update(dense.params)
     assert_equal -0.01, dense.params[:weight].data.mean.round(3)
   end
+
+  def test_to_hash
+    expected_hash = {
+      class: "DNN::Optimizers::AdaGrad",
+      learning_rate: 0.01,
+      eps: 1e-7,
+    }
+    rmsprop = RMSProp.new
+    assert_equal expected_hash, rmsprop.to_hash
+  end
 end
 
 
 class TestRMSProp < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Optimizers::RMSProp",
       learning_rate: 0.01,
       alpha: 0.8,
+      eps: 1e-4,
     }
     rmsprop = RMSProp.from_hash(hash)
     assert_equal 0.01, rmsprop.learning_rate
     assert_equal 0.8, rmsprop.alpha
+    assert_equal 1e-4, rmsprop.eps
   end
 
   def test_update
@@ -142,6 +156,7 @@ class TestRMSProp < MiniTest::Unit::TestCase
       class: "DNN::Optimizers::RMSProp",
       learning_rate: 0.001,
       alpha: 0.9,
+      eps: 1e-7,
     }
     rmsprop = RMSProp.new
     assert_equal expected_hash, rmsprop.to_hash
@@ -150,13 +165,15 @@ end
 
 
 class TestAdaGrad < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Optimizers::AdaDelta",
       rho: 0.96,
+      eps: 1e-4,
     }
     adadelta = AdaDelta.from_hash(hash)
     assert_equal 0.96, adadelta.rho
+    assert_equal 1e-4, adadelta.eps
   end
 
   def test_update
@@ -173,6 +190,7 @@ class TestAdaGrad < MiniTest::Unit::TestCase
       class: "DNN::Optimizers::AdaDelta",
       learning_rate: nil,
       rho: 0.95,
+      eps: 1e-6,
     }
     adadelta = AdaDelta.new
     assert_equal expected_hash, adadelta.to_hash
@@ -181,16 +199,18 @@ end
 
 
 class TestAdam < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Optimizers::Adam",
       learning_rate: 0.01,
       beta1: 0.8,
       beta2: 0.9,
+      eps: 1e-4,
     }
     adam = Adam.from_hash(hash)
     assert_equal 0.8, adam.beta1
     assert_equal 0.9, adam.beta2
+    assert_equal 1e-4, adam.eps
   end
 
   def test_update
@@ -210,6 +230,7 @@ class TestAdam < MiniTest::Unit::TestCase
       learning_rate: 0.001,
       beta1: 0.9,
       beta2: 0.999,
+      eps: 1e-7,
     }
     adam = Adam.new
     assert_equal expected_hash, adam.to_hash
