@@ -16,7 +16,7 @@ class TestUtils < MiniTest::Unit::TestCase
     assert_kind_of Numo::SFloat, y2
   end
 
-  def test_load_hash
+  def test_from_hash
     relu = Utils.from_hash({class: "DNN::Activations::ReLU"})
     assert_kind_of ReLU, relu
   end

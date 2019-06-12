@@ -154,7 +154,7 @@ end
 
 
 class TestConv2D < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Layers::Conv2D",
       num_filters: 16,
@@ -257,7 +257,7 @@ class TestConv2D < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    conv2d = Conv2D.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2)
+    conv2d = Conv2D.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
     expected_hash = {
       class: "DNN::Layers::Conv2D",
       num_filters: 16,
@@ -268,6 +268,7 @@ class TestConv2D < MiniTest::Unit::TestCase
       padding: true,
       l1_lambda: 0.1,
       l2_lambda: 0.2,
+      use_bias: false,
     }
     assert_equal expected_hash, conv2d.to_hash
   end
@@ -275,7 +276,7 @@ end
 
 
 class TestDeconv2D < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Layers::Deconv2D",
       num_filters: 16,
@@ -369,7 +370,7 @@ class TestDeconv2D < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    deconv2d = Deconv2D.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2)
+    deconv2d = Deconv2D.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
     expected_hash = {
       class: "DNN::Layers::Deconv2D",
       num_filters: 16,
@@ -380,6 +381,7 @@ class TestDeconv2D < MiniTest::Unit::TestCase
       padding: true,
       l1_lambda: 0.1,
       l2_lambda: 0.2,
+      use_bias: false
     }
     assert_equal expected_hash, deconv2d.to_hash
   end
@@ -387,7 +389,7 @@ end
 
 
 class TestMaxPool2D < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Layers::MaxPool2D",
       pool_size: [3, 3],
@@ -450,7 +452,7 @@ end
 
 
 class TestAvgPoo2D < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Layers::AvgPool2D",
       pool_size: [3, 3],
@@ -482,7 +484,7 @@ end
 
 
 class TestUnPool2D < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Layers::UnPool2D",
       unpool_size: [2, 2],
