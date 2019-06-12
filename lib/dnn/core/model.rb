@@ -97,12 +97,8 @@ module DNN
     # @param [DNN::Layers::Layer] layer Layer to add to the model.
     # @return [DNN::Model] return self.
     def <<(layer)
-      # Due to a bug in saving nested models, temporarily prohibit model nesting.
-      # if !layer.is_a?(Layers::Layer) && !layer.is_a?(Model)
-      #   raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Model class.")
-      # end
-      unless layer.is_a?(Layers::Layer)
-        raise TypeError.new("layer:#{layer.class.name} is not an instance of the DNN::Layers::Layer class.")
+      if !layer.is_a?(Layers::Layer) && !layer.is_a?(Model)
+        raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Model class.")
       end
       @layers << layer
       self
@@ -122,7 +118,7 @@ module DNN
       @compiled = true
       layers_check
       @optimizer = optimizer
-      @loss = loss
+      @loss_func = loss
       build
       layers_shape_check
     end
@@ -140,20 +136,22 @@ module DNN
       @compiled = true
       layers_check
       @optimizer = optimizer
-      @loss = loss
+      @loss_func = loss
       layers_shape_check
     end
 
     def build(super_model = nil)
       @super_model = super_model
       shape = if super_model
-        super_model.output_shape
+        super_model.get_prev_layer(self).output_shape
       else
         @layers.first.build
       end
-      @layers[1..-1].each do |layer|
+      layers = super_model ? @layers : @layers[1..-1]
+      layers.each do |layer|
         if layer.is_a?(Model)
           layer.build(self)
+          layer.recompile(@optimizer, @loss_func)
         else
           layer.build(shape)
         end
@@ -174,13 +172,13 @@ module DNN
     # @return [DNN::Optimizers::Optimizer] optimizer Return the optimizer to use for learning.
     def optimizer
       raise DNN_Error.new("The model is not compiled.") unless compiled?
-      @optimizer ? @optimizer : @super_model.optimizer
+      @optimizer
     end
 
     # @return [DNN::Losses::Loss] loss Return the loss to use for learning.
-    def loss
+    def loss_func
       raise DNN_Error.new("The model is not compiled.") unless compiled?
-      @loss ? @loss : @super_model.loss
+      @loss_func
     end
 
     # @return [Bool] Returns whether the model is learning.
@@ -255,11 +253,10 @@ module DNN
       check_xy_type(x, y)
       input_data_shape_check(x, y)
       x, y = batch_proc.call(x, y) if batch_proc
-      out = forward(x, true)
-      loss_value = @loss.forward(out, y, get_all_layers)
-      dout = @loss.backward(y)
-      backward(dout)
-      @loss.regularizes_backward(get_all_layers)
+      x = forward(x, true)
+      loss_value = @loss_func.forward(x, y, get_all_layers)
+      dy = @loss_func.backward(y, get_all_layers)
+      backward(dy)
       update
       loss_value
     end
@@ -277,12 +274,12 @@ module DNN
       (x.shape[0].to_f / batch_size).ceil.times do |i|
         x_batch, y_batch = dataset.next_batch(batch_size)
         x_batch, y_batch = batch_proc.call(x_batch, y_batch) if batch_proc
-        out = forward(x_batch, false)
+        x_batch = forward(x_batch, false)
         batch_size.times do |j|
           if @layers.last.output_shape == [1]
-            correct += 1 if out[j, 0].round == y_batch[j, 0].round
+            correct += 1 if x_batch[j, 0].round == y_batch[j, 0].round
           else
-            correct += 1 if out[j, true].max_index == y_batch[j, true].max_index
+            correct += 1 if x_batch[j, true].max_index == y_batch[j, true].max_index
           end
         end
       end
@@ -302,6 +299,17 @@ module DNN
     def predict1(x)
       check_xy_type(x)
       predict(x.reshape(1, *x.shape))[0, false]
+    end
+
+    # Get loss value.
+    # @param [Numo::SFloat] x Input data.
+    # @param [Numo::SFloat] y Output data.
+    # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
+    def loss(x, y)
+      check_xy_type(x, y)
+      input_data_shape_check(x, y)
+      x = forward(x, false)
+      @loss_func.forward(x, y, get_all_layers)
     end
 
     # @return [DNN::Model] Copy this model.
@@ -328,31 +336,30 @@ module DNN
       }.flatten
     end
   
-    # TODO
-    # It is not good to write the Layer class name directly in the Model class. I will fix it later.
     def forward(x, learning_phase)
       @layers.each do |layer|
-        x = if layer.is_a?(Layers::Dropout) || layer.is_a?(Layers::BatchNormalization) || layer.is_a?(Model)
+        x = if layer.is_a?(Model)
           layer.forward(x, learning_phase)
         else
+          layer.learning_phase = learning_phase
           layer.forward(x)
         end
       end
       x
     end
   
-    def backward(dout)
+    def backward(dy)
       @layers.reverse.each do |layer|
-        dout = layer.backward(dout)
+        dy = layer.backward(dy)
       end
-      dout
+      dy
     end
 
     def update
       return unless @trainable
       @layers.each do |layer|
         if layer.is_a?(Layers::HasParamLayer)
-          layer.update(@optimizer)
+          layer.update(optimizer)
         elsif layer.is_a?(Model)
           layer.update
         end
@@ -379,13 +386,13 @@ module DNN
 
     def to_hash
       hash_layers = @layers.map { |layer| layer.to_hash }
-      {class: Model.name, layers: hash_layers, optimizer: @optimizer.to_hash, loss: @loss.to_hash}
+      {class: Model.name, layers: hash_layers, optimizer: @optimizer.to_hash, loss: @loss_func.to_hash}
     end
 
     private
 
     def layers_check
-      unless @layers.first.is_a?(Layers::InputLayer)
+      if !@layers.first.is_a?(Layers::InputLayer) && !@super_model
         raise TypeError.new("The first layer is not an InputLayer.")
       end
     end
