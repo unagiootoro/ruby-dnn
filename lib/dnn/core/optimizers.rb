@@ -198,5 +198,35 @@ module DNN
       end
     end
 
+
+    class RMSPropGraves < Optimizer
+      attr_accessor :alpha
+      attr_accessor :eps
+      
+      def self.from_hash(hash)
+        self.new(hash[:learning_rate], alpha: hash[:alpha], eps: hash[:eps])
+      end
+
+      def initialize(learning_rate = 0.0001, alpha: 0.95, eps: 0.0001)
+        super(learning_rate)
+        @alpha = alpha
+        @eps = eps
+        @m = {}
+        @v = {}
+      end
+
+      def to_hash
+        super({alpha: @alpha, eps: @eps})
+      end
+
+      private def update_param(param)
+        @m[param] ||= 0
+        @v[param] ||= 0
+        @m[param] = @alpha * @m[param] + (1 - @alpha) * param.grad
+        @v[param] = @alpha * @v[param] + (1 - @alpha) * param.grad**2
+        param.data -= (@learning_rate / NMath.sqrt(@v[param] - @m[param]**2 + @eps)) * param.grad
+      end
+    end
+
   end
 end

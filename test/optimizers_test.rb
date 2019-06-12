@@ -236,3 +236,39 @@ class TestAdam < MiniTest::Unit::TestCase
     assert_equal expected_hash, adam.to_hash
   end
 end
+
+
+class TestRMSPropGraves < MiniTest::Unit::TestCase
+  def test_from_hash
+    hash = {
+      class: "DNN::Optimizers::RMSPropGraves",
+      learning_rate: 0.001,
+      alpha: 0.8,
+      eps: 1e-7,
+    }
+    rmsprop = RMSPropGraves.from_hash(hash)
+    assert_equal 0.001, rmsprop.learning_rate
+    assert_equal 0.8, rmsprop.alpha
+    assert_equal 1e-7, rmsprop.eps
+  end
+
+  def test_update
+    dense = Dense.new(10, weight_initializer: Zeros.new)
+    dense.build([10])
+    rmsprop = RMSPropGraves.new(0.01, alpha: 0.5)
+    dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    rmsprop.update(dense.params)
+    assert_equal -0.02, dense.params[:weight].data.mean.round(4)
+  end
+
+  def test_to_hash
+    expected_hash = {
+      class: "DNN::Optimizers::RMSPropGraves",
+      learning_rate: 0.0001,
+      alpha: 0.95,
+      eps: 0.0001,
+    }
+    rmsprop = RMSPropGraves.new
+    assert_equal expected_hash, rmsprop.to_hash
+  end
+end
