@@ -50,7 +50,7 @@ end
 
 
 class TestInputLayer < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {class: "DNN::Layers::InputLayer", input_shape: [10]}
     layer = InputLayer.from_hash(hash)
     assert_equal [10], layer.output_shape
@@ -87,7 +87,7 @@ end
 
 
 class TestDense < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Layers::Dense",
       num_nodes: 100,
@@ -205,6 +205,7 @@ class TestDense < MiniTest::Unit::TestCase
       bias_initializer: dense.bias_initializer.to_hash,
       l1_lambda: 0,
       l2_lambda: 0,
+      use_bias: true,
     }
     assert_equal expected_hash, dense.to_hash
   end
@@ -269,7 +270,7 @@ end
 
 
 class TestDropout < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Layers::Dropout",
       dropout_ratio: 0.3,
@@ -285,28 +286,32 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_forward
     dropout = Dropout.new(0.5, seed: 0)
     dropout.build([100])
-    num = dropout.forward(Numo::SFloat.ones(100), true).sum.round
+    dropout.learning_phase = true
+    num = dropout.forward(Numo::SFloat.ones(100)).sum.round
     assert num.between?(30, 70)
   end
 
   def test_forward2
     dropout = Dropout.new(0.3, use_scale: true)
     dropout.build([1])
-    num = dropout.forward(Numo::SFloat.ones(10), false).sum.round(1)
+    dropout.learning_phase = false
+    num = dropout.forward(Numo::SFloat.ones(10)).sum.round(1)
     assert_equal 7.0, num
   end
 
   def test_forward3
     dropout = Dropout.new(0.3, use_scale: false)
     dropout.build([1])
-    num = dropout.forward(Numo::SFloat.ones(10), false).sum.round(1)
+    dropout.learning_phase = false
+    num = dropout.forward(Numo::SFloat.ones(10)).sum.round(1)
     assert_equal 10.0, num
   end
 
   def test_backward
     dropout = Dropout.new
     dropout.build([1])
-    y = dropout.forward(Numo::SFloat.ones(10), true)
+    dropout.learning_phase = true
+    y = dropout.forward(Numo::SFloat.ones(10))
     dy = dropout.backward(Numo::SFloat.ones(10))
     assert_equal y.round, dy.round
   end
@@ -325,7 +330,7 @@ end
 
 
 class TestBatchNormalization < MiniTest::Unit::TestCase
-  def test_load_hash
+  def test_from_hash
     hash = {
       class: "DNN::Layers::BatchNormalization",
       axis: 1,
@@ -334,6 +339,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm = BatchNormalization.from_hash(hash)
     assert_equal 1, batch_norm.axis
     assert_equal 0.8, batch_norm.momentum
+    assert_equal 1e-7, batch_norm.eps
   end
 
   def test_forward
@@ -343,7 +349,8 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.params[:beta].data = Numo::SFloat.new(10).fill(10)
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
-    assert_equal expected, batch_norm.forward(x, true).round(4)
+    batch_norm.learning_phase = true
+    assert_equal expected, batch_norm.forward(x).round(4)
   end
 
   def test_forward2
@@ -355,14 +362,16 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.params[:running_var].data = Numo::SFloat.new(10).fill(25)
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
-    assert_equal expected, batch_norm.forward(x, false).round(4)
+    batch_norm.learning_phase = false
+    assert_equal expected, batch_norm.forward(x).round(4)
   end
 
   def test_backward
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
-    batch_norm.forward(x, true)
+    batch_norm.learning_phase = true
+    batch_norm.forward(x)
     grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], batch_norm.params[:gamma].grad
@@ -374,8 +383,9 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
       class: "DNN::Layers::BatchNormalization",
       axis: 1,
       momentum: 0.8,
+      eps: 1e-4,
     }
-    batch_norm = BatchNormalization.new(axis: 1, momentum: 0.8)
+    batch_norm = BatchNormalization.new(axis: 1, momentum: 0.8, eps: 1e-4)
     batch_norm.build([10])
     assert_equal expected_hash, batch_norm.to_hash
   end

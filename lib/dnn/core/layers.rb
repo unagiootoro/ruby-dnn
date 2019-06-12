@@ -3,6 +3,9 @@ module DNN
 
     # Super class of all optimizer classes.
     class Layer
+      # @param [Bool] Set true if learning.
+      attr_accessor :learning_phase
+      # @return [Array] Return the shape of the input data.
       attr_reader :input_shape
 
       def initialize
@@ -10,12 +13,15 @@ module DNN
       end
 
       # Build the layer.
+      # @param [Array] input_shape Setting the shape of the input data.
       def build(input_shape)
         @input_shape = input_shape
+        @learning_phase = true
         @built = true
       end
       
       # Does the layer have already been built?
+      # @return [Bool] If layer have already been built then return true.
       def built?
         @built
       end
@@ -30,6 +36,9 @@ module DNN
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update'")
       end
 
+      # Please reimplement this method as needed.
+      # The default implementation return input_shape.
+      # @return [Array] Return the shape of the output data.
       def output_shape
         @input_shape
       end
@@ -119,9 +128,7 @@ module DNN
         @l1_lambda = l1_lambda
         @l2_lambda = l2_lambda
         @params[:weight] = @weight = Param.new(nil, 0)
-        # For compatibility on or before with v0.9.3, setting use_bias to nil use bias.
-        # Therefore, setting use_bias to nil is deprecated.
-        if use_bias || use_bias == nil
+        if use_bias
           @params[:bias] = @bias = Param.new(nil, 0)
         else
           @bias = nil
@@ -144,7 +151,8 @@ module DNN
         super({weight_initializer: @weight_initializer.to_hash,
                bias_initializer: @bias_initializer.to_hash,
                l1_lambda: @l1_lambda,
-               l2_lambda: @l2_lambda}.merge(merge_hash))
+               l2_lambda: @l2_lambda,
+               use_bias: use_bias}.merge(merge_hash))
       end
     end
     
@@ -270,7 +278,7 @@ module DNN
         @mask = nil
       end
 
-      def forward(x, learning_phase)
+      def forward(x)
         if learning_phase
           Xumo::SFloat.srand(@seed)
           @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
@@ -296,7 +304,9 @@ module DNN
       # @return [Integer] The axis to normalization.
       attr_reader :axis
       # @return [Float] Exponential moving average of mean and variance.
-      attr_reader :momentum
+      attr_accessor :momentum
+      # @return [Float] Value to avoid division by zero.
+      attr_accessor :eps
 
       def self.from_hash(hash)
         self.new(axis: hash[:axis], momentum: hash[:momentum])
@@ -304,13 +314,12 @@ module DNN
 
       # @param [integer] axis The axis to normalization.
       # @param [Float] momentum Exponential moving average of mean and variance.
-      def initialize(axis: 0, momentum: 0.9)
+      # @param [Float] eps Value to avoid division by zero.
+      def initialize(axis: 0, momentum: 0.9, eps: 1e-7)
         super()
-        # For compatibility on or before with v0.9.3, setting axis to nil will use 0.
-        # Therefore, setting axis to nil is deprecated.
-        axis ||= 0
         @axis = axis
         @momentum = momentum
+        @eps = eps
       end
 
       def build(input_shape)
@@ -321,19 +330,19 @@ module DNN
         @params[:running_var] = @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
       end
 
-      def forward(x, learning_phase)
+      def forward(x)
         if learning_phase
           mean = x.mean(axis: @axis, keepdims: true)
           @xc = x - mean
           var = (@xc**2).mean(axis: @axis, keepdims: true)
-          @std = NMath.sqrt(var + 1e-7)
+          @std = NMath.sqrt(var + @eps)
           xn = @xc / @std
           @xn = xn
           @running_mean.data = @momentum * @running_mean.data + (1 - @momentum) * mean
           @running_var.data = @momentum * @running_var.data + (1 - @momentum) * var
         else
           xc = x - @running_mean.data
-          xn = xc / NMath.sqrt(@running_var.data + 1e-7)
+          xn = xc / NMath.sqrt(@running_var.data + @eps)
         end
         @gamma.data * xn + @beta.data
       end
@@ -352,7 +361,7 @@ module DNN
       end
 
       def to_hash
-        super({axis: @axis, momentum: @momentum})
+        super({axis: @axis, momentum: @momentum, eps: @eps})
       end
     end
   end
