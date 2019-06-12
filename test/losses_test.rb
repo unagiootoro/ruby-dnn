@@ -26,23 +26,24 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     assert_equal 15, loss.forward(out_x, y, [dense]).round(4)
   end
 
-  def test_regularizes_backward
-    loss = MeanSquaredError.new
-    dense = Dense.new(2, l1_lambda: 1, l2_lambda: 1)
-    dense.build([1])
-    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
-    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
-    loss.regularizes_backward([InputLayer.new(1), dense])
-    assert_equal Numo::SFloat[[-3, 3]], dense.params[:weight].grad.round(4)
-  end
-
   def test_backward
     loss = MeanSquaredError.new
     x = Xumo::SFloat[[0, 1]]
     y = Xumo::SFloat[[2, 4]]
     loss.forward(x, y, [])
-    grad = loss.backward(y)
+    grad = loss.backward(y, [])
     assert_equal Xumo::SFloat[[-2, -3]], grad.round(4)
+  end
+
+  def backward
+    loss = MeanSquaredError.new
+    dense = Dense.new(2, l1_lambda: 1, l2_lambda: 1)
+    dense.build([1])
+    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
+    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
+    loss.forward(0)
+    loss.backward(0, [InputLayer.new(1), dense])
+    assert_equal Numo::SFloat[[-3, 3]], dense.params[:weight].grad.round(4)
   end
 
   def test_to_hash
@@ -66,7 +67,7 @@ class TestMeanAbsoluteError < MiniTest::Unit::TestCase
     x = Xumo::SFloat[[-1, 2]]
     y = Xumo::SFloat[[2, 4]]
     loss.forward(x, y, [])
-    grad = loss.backward(y)
+    grad = loss.backward(y, [])
     assert_equal Xumo::SFloat[[-1, -1]], grad.round(4)
   end
 end
@@ -94,7 +95,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
     x = Xumo::SFloat[[-1, 2]]
     y = Xumo::SFloat[[-3, 4]]
     loss.forward(x, y, [])
-    grad = loss.backward(y)
+    grad = loss.backward(y, [])
     assert_equal Xumo::SFloat[[1, -1]], grad.round(4)
   end
 
@@ -103,7 +104,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
     x = Xumo::SFloat[[-1, 2]]
     y = Xumo::SFloat[[-0.5, 1.7]]
     loss.forward(x, y, [])
-    grad = loss.backward(y)
+    grad = loss.backward(y, [])
     assert_equal Xumo::SFloat[[-0.5, 0.3]], grad.round(4)
   end
 end
@@ -123,7 +124,7 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
     x = Xumo::SFloat[[0, 1, 2]]
     y = Xumo::SFloat[[0, 0, 1]]
     loss.forward(x, y, [])
-    grad = loss.backward(y)
+    grad = loss.backward(y, [])
     assert_equal Xumo::SFloat[[0.09, 0.2447, -0.3348]], grad.round(4)
   end
 end
@@ -143,7 +144,7 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     x = Xumo::SFloat[[0, 1]]
     y = Xumo::SFloat[[1, 0]]
     loss.forward(x, y, [])
-    grad = loss.backward(y)
+    grad = loss.backward(y, [])
     assert_equal Xumo::SFloat[[-0.5, 0.7311]], grad.round(4)
   end
 end
