@@ -60,13 +60,21 @@ module DNN
     end
 
 
-    class Nesterov < SGD
+    class Nesterov < Optimizer
+      attr_accessor :momentum
+      
       def self.from_hash(hash)
         self.new(hash[:learning_rate], momentum: hash[:momentum])
       end
 
       def initialize(learning_rate = 0.01, momentum: 0.9)
-        super(learning_rate, momentum: momentum)
+        super(learning_rate)
+        @momentum = momentum
+        @v = {}
+      end
+
+      def to_hash
+        super({momentum: @momentum})
       end
     
       private def update_param(param)
