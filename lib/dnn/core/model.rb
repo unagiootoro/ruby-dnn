@@ -104,39 +104,39 @@ module DNN
       self
     end
 
-    # Set optimizer and loss to model and build all layers.
+    # Set optimizer and loss_func to model and build all layers.
     # @param [DNN::Optimizers::Optimizer] optimizer Optimizer to use for learning.
-    # @param [DNN::Losses::Loss] loss Lptimizer to use for learning.
-    def compile(optimizer, loss)
+    # @param [DNN::Losses::Loss] loss_func Loss function to use for learning.
+    def compile(optimizer, loss_func)
       raise DNN_Error.new("The model is already compiled.") if compiled?
       unless optimizer.is_a?(Optimizers::Optimizer)
         raise TypeError.new("optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class.")
       end
-      unless loss.is_a?(Losses::Loss)
-        raise TypeError.new("loss:#{loss.class} is not an instance of DNN::Losses::Loss class.")
+      unless loss_func.is_a?(Losses::Loss)
+        raise TypeError.new("loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss class.")
       end
       @compiled = true
       layers_check
       @optimizer = optimizer
-      @loss_func = loss
+      @loss_func = loss_func
       build
       layers_shape_check
     end
 
-    # Set optimizer and loss to model and recompile. But does not build layers.
+    # Set optimizer and loss_func to model and recompile. But does not build layers.
     # @param [DNN::Optimizers::Optimizer] optimizer Optimizer to use for learning.
-    # @param [DNN::Losses::Loss] loss Lptimizer to use for learning.
-    def recompile(optimizer, loss)
+    # @param [DNN::Losses::Loss] loss_func Loss function to use for learning.
+    def recompile(optimizer, loss_func)
       unless optimizer.is_a?(Optimizers::Optimizer)
         raise TypeError.new("optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class.")
       end
-      unless loss.is_a?(Losses::Loss)
-        raise TypeError.new("loss:#{loss.class} is not an instance of DNN::Losses::Loss class.")
+      unless loss_func.is_a?(Losses::Loss)
+        raise TypeError.new("loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss class.")
       end
       @compiled = true
       layers_check
       @optimizer = optimizer
-      @loss_func = loss
+      @loss_func = loss_func
       layers_shape_check
     end
 
@@ -242,7 +242,7 @@ module DNN
         if verbose && test
           acc, test_loss = accurate(test[0], test[1], batch_size,
                                     before_batch_cbk: before_batch_cbk, after_batch_cbk: after_batch_cbk)
-          print "  accurate: #{acc}, loss: #{sprintf('%.8f', test_loss)}"
+          print "  accurate: #{acc}, test loss: #{sprintf('%.8f', test_loss)}"
         end
         puts "" if verbose
         after_epoch_cbk.call(epoch) if after_epoch_cbk
@@ -299,7 +299,7 @@ module DNN
         sum_loss += loss_value.is_a?(Numo::SFloat) ? loss_value.mean : loss_value
       end
       mean_loss = sum_loss / batch_size
-      [correct.to_f / x.shape[0], sum_loss]
+      [correct.to_f / x.shape[0], mean_loss]
     end
 
     # Predict data.
