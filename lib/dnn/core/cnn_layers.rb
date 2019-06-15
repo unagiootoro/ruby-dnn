@@ -1,7 +1,7 @@
 module DNN
   module Layers
     # This module is used for convolution.
-    module Conv2DModule
+    module Conv2D_Utils
       private
 
       # img[bsize, out_h, out_w, ch] to col[bsize * out_h * out_w, fil_h * fil_w * ch]
@@ -80,7 +80,7 @@ module DNN
     
     
     class Conv2D < Connection
-      include Conv2DModule
+      include Conv2D_Utils
 
       # @return [Integer] number of filters.
       attr_reader :num_filters
@@ -186,7 +186,7 @@ module DNN
 
 
     class Deconv2D < Connection
-      include Conv2DModule
+      include Conv2D_Utils
 
       # @return [Integer] number of filters.
       attr_reader :num_filters
@@ -294,7 +294,7 @@ module DNN
     
     # Super class of all pooling2D class.
     class Pool2D < Layer
-      include Conv2DModule
+      include Conv2D_Utils
 
       # @return [Array] Return pooling size. Pooling size is of the form [height, width].
       attr_reader :pool_size
@@ -403,6 +403,8 @@ module DNN
 
 
     class UnPool2D < Layer
+      include Conv2D_Utils
+      
       # @return [Array] Return unpooling size. unpooling size is of the form [height, width].
       attr_reader :unpool_size
 
@@ -425,8 +427,6 @@ module DNN
         @out_size = [out_h, out_w]
         @num_channel = input_shape[2]
       end
-
-      include Conv2DModule
 
       def forward(x)
         @x_shape = x.shape

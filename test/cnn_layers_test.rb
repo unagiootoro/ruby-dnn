@@ -6,8 +6,8 @@ include Activations
 include Optimizers
 include Losses
 
-class TestConv2DModule < MiniTest::Unit::TestCase
-  include Conv2DModule
+class TestConv2D_Utils < MiniTest::Unit::TestCase
+  include Conv2D_Utils
 
   # im2col test.
   def test_im2col
