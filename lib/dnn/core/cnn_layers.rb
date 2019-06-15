@@ -185,7 +185,7 @@ module DNN
     end
 
 
-    class Deconv2D < Connection
+    class Conv2D_Transpose < Connection
       include Conv2D_Utils
 
       # @return [Integer] number of filters.
@@ -198,7 +198,7 @@ module DNN
       attr_reader :padding
 
       def self.from_hash(hash)
-        Deconv2D.new(hash[:num_filters], hash[:filter_size],
+        Conv2D_Transpose.new(hash[:num_filters], hash[:filter_size],
                    weight_initializer: Utils.from_hash(hash[:weight_initializer]),
                    bias_initializer: Utils.from_hash(hash[:bias_initializer]),
                    strides: hash[:strides],

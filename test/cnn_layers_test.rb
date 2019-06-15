@@ -275,10 +275,10 @@ class TestConv2D < MiniTest::Unit::TestCase
 end
 
 
-class TestDeconv2D < MiniTest::Unit::TestCase
+class TestConv2D_Transpose < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
-      class: "DNN::Layers::Deconv2D",
+      class: "DNN::Layers::Conv2D_Transpose",
       num_filters: 16,
       filter_size: [3, 3],
       weight_initializer: RandomNormal.new.to_hash,
@@ -289,101 +289,101 @@ class TestDeconv2D < MiniTest::Unit::TestCase
       l2_lambda: 0,
       use_bias: true,
     }
-    deconv2d = Deconv2D.from_hash(hash)
-    assert_equal 16, deconv2d.num_filters
-    assert_equal [3, 3], deconv2d.filter_size
-    assert_equal [2, 2], deconv2d.strides
-    assert_equal true, deconv2d.padding
+    conv2d_t = Conv2D_Transpose.from_hash(hash)
+    assert_equal 16, conv2d_t.num_filters
+    assert_equal [3, 3], conv2d_t.filter_size
+    assert_equal [2, 2], conv2d_t.strides
+    assert_equal true, conv2d_t.padding
   end
 
   def test_initialize
-    deconv2d = Deconv2D.new(16, 3)
-    assert_equal [3, 3], deconv2d.filter_size
+    conv2d_t = Conv2D_Transpose.new(16, 3)
+    assert_equal [3, 3], conv2d_t.filter_size
   end
 
   def test_initialize2
-    deconv2d = Deconv2D.new(16, 3, strides: 2)
-    assert_equal [2, 2], deconv2d.strides
+    conv2d_t = Conv2D_Transpose.new(16, 3, strides: 2)
+    assert_equal [2, 2], conv2d_t.strides
   end
 
   def test_build
-    deconv2d = Deconv2D.new(16, [4, 6], strides: [1, 2])
-    deconv2d.build([29, 14, 3])
-    assert_equal [32, 32], deconv2d.instance_variable_get(:@out_size)
+    conv2d_t = Conv2D_Transpose.new(16, [4, 6], strides: [1, 2])
+    conv2d_t.build([29, 14, 3])
+    assert_equal [32, 32], conv2d_t.instance_variable_get(:@out_size)
   end
 
   def test_build2
-    deconv2d = Deconv2D.new(16, [4, 6], strides: [1, 2], padding: true)
-    deconv2d.build([32, 16, 3])
-    assert_equal [32, 32], deconv2d.instance_variable_get(:@out_size)
+    conv2d_t = Conv2D_Transpose.new(16, [4, 6], strides: [1, 2], padding: true)
+    conv2d_t.build([32, 16, 3])
+    assert_equal [32, 32], conv2d_t.instance_variable_get(:@out_size)
   end
 
   def test_build3
-    deconv2d = Deconv2D.new(16, 4, padding: 3)
-    deconv2d.build([32, 32, 3])
-    assert_equal [32, 32], deconv2d.instance_variable_get(:@out_size)
+    conv2d_t = Conv2D_Transpose.new(16, 4, padding: 3)
+    conv2d_t.build([32, 32, 3])
+    assert_equal [32, 32], conv2d_t.instance_variable_get(:@out_size)
   end
 
   def test_forward
     x = Numo::SFloat.new(1, 16, 16, 3).seq
-    deconv2d = Deconv2D.new(8, 2, strides: 2)
-    deconv2d.build([16, 16, 3])
-    assert_equal [1, 32, 32, 8], deconv2d.forward(x).shape
+    conv2d_t = Conv2D_Transpose.new(8, 2, strides: 2)
+    conv2d_t.build([16, 16, 3])
+    assert_equal [1, 32, 32, 8], conv2d_t.forward(x).shape
   end
 
   def test_backward
     x = Numo::SFloat.new(1, 16, 16, 3).seq
     dy = Numo::SFloat.new(1, 32, 32, 8).seq
-    deconv2d = Deconv2D.new(8, 2, strides: 2)
-    deconv2d.build([16, 16, 3])
-    deconv2d.forward(x)
-    assert_equal [1, 16, 16, 3], deconv2d.backward(dy).shape
-    assert_equal deconv2d.params[:weight].data.shape, deconv2d.params[:weight].grad.shape
-    assert_equal deconv2d.params[:bias].data.shape, deconv2d.params[:bias].grad.shape
+    conv2d_t = Conv2D_Transpose.new(8, 2, strides: 2)
+    conv2d_t.build([16, 16, 3])
+    conv2d_t.forward(x)
+    assert_equal [1, 16, 16, 3], conv2d_t.backward(dy).shape
+    assert_equal conv2d_t.params[:weight].data.shape, conv2d_t.params[:weight].grad.shape
+    assert_equal conv2d_t.params[:bias].data.shape, conv2d_t.params[:bias].grad.shape
   end
 
   def test_output_shape
-    deconv2d = Deconv2D.new(16, [4, 6], strides: [1, 2])
-    deconv2d.build([29, 14, 3])
-    assert_equal [32, 32, 16], deconv2d.output_shape
+    conv2d_t = Conv2D_Transpose.new(16, [4, 6], strides: [1, 2])
+    conv2d_t.build([29, 14, 3])
+    assert_equal [32, 32, 16], conv2d_t.output_shape
   end
 
   def test_filters
-    deconv2d = Deconv2D.new(16, [4, 5])
-    deconv2d.build([32, 32, 3])
-    assert_equal [4, 5, 16, 3], deconv2d.filters.shape
+    conv2d_t = Conv2D_Transpose.new(16, [4, 5])
+    conv2d_t.build([32, 32, 3])
+    assert_equal [4, 5, 16, 3], conv2d_t.filters.shape
   end
 
   def test_filters_set
-    deconv2d = Deconv2D.new(16, [4, 5])
-    deconv2d.build([32, 32, 3])
-    deconv2d.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
-    assert_equal [4 * 5 * 16, 3], deconv2d.params[:weight].data.shape
+    conv2d_t = Conv2D_Transpose.new(16, [4, 5])
+    conv2d_t.build([32, 32, 3])
+    conv2d_t.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
+    assert_equal [4 * 5 * 16, 3], conv2d_t.params[:weight].data.shape
   end
 
   def test_filters_set2
-    deconv2d = Deconv2D.new(16, [4, 5])
-    deconv2d.build([32, 32, 3])
-    expected = deconv2d.params[:weight].data
-    deconv2d.filters = expected
-    assert_equal expected, deconv2d.params[:weight].data
+    conv2d_t = Conv2D_Transpose.new(16, [4, 5])
+    conv2d_t.build([32, 32, 3])
+    expected = conv2d_t.params[:weight].data
+    conv2d_t.filters = expected
+    assert_equal expected, conv2d_t.params[:weight].data
   end
 
   def test_to_hash
-    deconv2d = Deconv2D.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
+    conv2d_t = Conv2D_Transpose.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
     expected_hash = {
-      class: "DNN::Layers::Deconv2D",
+      class: "DNN::Layers::Conv2D_Transpose",
       num_filters: 16,
       filter_size: [5, 5],
-      weight_initializer: deconv2d.weight_initializer.to_hash,
-      bias_initializer: deconv2d.bias_initializer.to_hash,
+      weight_initializer: conv2d_t.weight_initializer.to_hash,
+      bias_initializer: conv2d_t.bias_initializer.to_hash,
       strides: [2, 2],
       padding: true,
       l1_lambda: 0.1,
       l2_lambda: 0.2,
       use_bias: false
     }
-    assert_equal expected_hash, deconv2d.to_hash
+    assert_equal expected_hash, conv2d_t.to_hash
   end
 end
 
