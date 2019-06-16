@@ -1,5 +1,6 @@
 require "dnn"
 require "dnn/lib/mnist"
+# If you use numo/linalg then please uncomment out.
 # require "numo/linalg/autoloader"
 
 include DNN::Layers
