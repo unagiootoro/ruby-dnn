@@ -262,7 +262,7 @@ module DNN
     
     class Dropout < Layer
       # @return [Float] dropout ratio.
-      attr_reader :dropout_ratio
+      attr_accessor :dropout_ratio
       # @return [Float] Use 'weight scaling inference rule'.
       attr_reader :use_scale
 
