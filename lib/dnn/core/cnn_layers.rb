@@ -153,8 +153,10 @@ module DNN
 
       def backward(dy)
         dy = dy.reshape(dy.shape[0..2].reduce(:*), dy.shape[3])
-        @weight.grad += @col.transpose.dot(dy)
-        @bias.grad += dy.sum(0) if @bias
+        if @trainable
+          @weight.grad += @col.transpose.dot(dy)
+          @bias.grad += dy.sum(0) if @bias
+        end
         dcol = dy.dot(@weight.data.transpose)
         dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
         @padding ? zero_padding_bwd(dx, @pad_size) : dx
@@ -261,8 +263,10 @@ module DNN
       def backward(dy)
         dy = zero_padding(dy, @pad_size) if @padding
         col = im2col(dy, *input_shape[0..1], *@filter_size, @strides)
-        @weight.grad += col.transpose.dot(@x)
-        @bias.grad += col.reshape(col.shape[0] * @filter_size.reduce(:*), @num_filters).sum(0) if @bias
+        if @trainable
+          @weight.grad += col.transpose.dot(@x)
+          @bias.grad += col.reshape(col.shape[0] * @filter_size.reduce(:*), @num_filters).sum(0) if @bias
+        end
         dx = col.dot(@weight.data)
         dx.reshape(dy.shape[0], *input_shape)
       end

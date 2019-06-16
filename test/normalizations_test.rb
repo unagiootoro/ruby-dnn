@@ -54,6 +54,18 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]], batch_norm.params[:beta].grad
   end
 
+  def test_backward2
+    batch_norm = BatchNormalization.new
+    batch_norm.trainable = false
+    batch_norm.build([10])
+    x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
+    batch_norm.learning_phase = true
+    batch_norm.forward(x)
+    batch_norm.backward(Numo::SFloat.ones(*x.shape))
+    assert_equal 0, batch_norm.params[:gamma].grad
+    assert_equal 0, batch_norm.params[:beta].grad
+  end
+
   def test_to_hash
     expected_hash = {
       class: "DNN::Layers::BatchNormalization",

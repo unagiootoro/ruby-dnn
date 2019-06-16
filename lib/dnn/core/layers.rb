@@ -202,8 +202,10 @@ module DNN
       end
     
       def backward(dy)
-        @weight.grad += @x.transpose.dot(dy)
-        @bias.grad += dy.sum(0) if @bias
+        if @trainable
+          @weight.grad += @x.transpose.dot(dy)
+          @bias.grad += dy.sum(0) if @bias
+        end
         dy.dot(@weight.data.transpose)
       end
     

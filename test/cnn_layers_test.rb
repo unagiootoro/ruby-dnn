@@ -229,6 +229,18 @@ class TestConv2D < MiniTest::Unit::TestCase
     assert_nil conv2d.params[:bias]
   end
 
+  def test_backward3
+    x = Numo::SFloat.new(1, 32, 32, 3).seq
+    dy = Numo::SFloat.new(1, 28, 28, 16).seq
+    conv2d = Conv2D.new(16, 5)
+    conv2d.trainable = false
+    conv2d.build([32, 32, 3])
+    conv2d.forward(x)
+    conv2d.backward(dy)
+    assert_equal 0, conv2d.params[:weight].grad
+    assert_equal 0, conv2d.params[:bias].grad
+  end
+
   def test_output_shape
     conv2d = Conv2D.new(16, [4, 5], strides: [1, 2])
     conv2d.build([32, 32, 3])

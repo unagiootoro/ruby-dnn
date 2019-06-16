@@ -102,11 +102,12 @@ module DNN
 
 
     class SimpleRNN_Dense
-      def initialize(weight, recurrent_weight, bias, activation)
+      def initialize(weight, recurrent_weight, bias, activation, trainable = true)
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
         @activation = activation.clone
+        @trainable = trainable
       end
 
       def forward(x, h)
@@ -119,9 +120,11 @@ module DNN
 
       def backward(dh2)
         dh2 = @activation.backward(dh2)
-        @weight.grad += @x.transpose.dot(dh2)
-        @recurrent_weight.grad += @h.transpose.dot(dh2)
-        @bias.grad += dh2.sum(0) if @bias
+        if @trainable
+          @weight.grad += @x.transpose.dot(dh2)
+          @recurrent_weight.grad += @h.transpose.dot(dh2)
+          @bias.grad += dh2.sum(0) if @bias
+        end
         dx = dh2.dot(@weight.data.transpose)
         dh = dh2.dot(@recurrent_weight.data.transpose)
         [dx, dh]
@@ -190,10 +193,11 @@ module DNN
 
 
     class LSTM_Dense
-      def initialize(weight, recurrent_weight, bias)
+      def initialize(weight, recurrent_weight, bias, trainable = true)
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
+        @trainable = trainable
         @tanh = Tanh.new
         @g_tanh = Tanh.new
         @forget_sigmoid = Sigmoid.new
@@ -231,9 +235,11 @@ module DNN
 
         da = Xumo::SFloat.hstack([dforget, dg, din, dout])
 
-        @weight.grad += @x.transpose.dot(da)
-        @recurrent_weight.grad += @h.transpose.dot(da)
-        @bias.grad += da.sum(0) if @bias
+        if @trainable
+          @weight.grad += @x.transpose.dot(da)
+          @recurrent_weight.grad += @h.transpose.dot(da)
+          @bias.grad += da.sum(0) if @bias
+        end
         dx = da.dot(@weight.data.transpose)
         dh = da.dot(@recurrent_weight.data.transpose)
         dc = dc2_tmp * @forget
@@ -305,9 +311,6 @@ module DNN
       end
 
       def backward(dh2s)
-        @weight.grad += Xumo::SFloat.zeros(*@weight.data.shape)
-        @recurrent_weight.grad += Xumo::SFloat.zeros(*@recurrent_weight.data.shape)
-        @bias.grad += Xumo::SFloat.zeros(*@bias.data.shape) if @bias
         unless @return_sequences
           dh = dh2s
           dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
@@ -332,10 +335,11 @@ module DNN
 
 
     class GRU_Dense
-      def initialize(weight, recurrent_weight, bias)
+      def initialize(weight, recurrent_weight, bias, trainable = true)
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
+        @trainable = trainable
         @update_sigmoid = Sigmoid.new
         @reset_sigmoid = Sigmoid.new
         @tanh = Tanh.new
@@ -368,24 +372,30 @@ module DNN
         dtanh_h = @tanh.backward(dh2 * (1 - @update))
         dh = dh2 * @update
 
-        dweight_h = @x.transpose.dot(dtanh_h)
+        if @trainable
+          dweight_h = @x.transpose.dot(dtanh_h)
+          dweight2_h = (@h * @reset).transpose.dot(dtanh_h)
+          dbias_h = dtanh_h.sum(0) if @bias
+        end
         dx = dtanh_h.dot(@weight_h.transpose)
-        dweight2_h = (@h * @reset).transpose.dot(dtanh_h)
         dh += dtanh_h.dot(@weight2_h.transpose) * @reset
-        dbias_h = dtanh_h.sum(0) if @bias
 
         dreset = @reset_sigmoid.backward(dtanh_h.dot(@weight2_h.transpose) * @h)
         dupdate = @update_sigmoid.backward(dh2 * @h - dh2 * @tanh_h)
         da = Xumo::SFloat.hstack([dupdate, dreset])
-        dweight_a = @x.transpose.dot(da)
+        if @trainable
+          dweight_a = @x.transpose.dot(da)
+          dweight2_a = @h.transpose.dot(da)
+          dbias_a = da.sum(0) if @bias
+        end
         dx += da.dot(@weight_a.transpose)
-        dweight2_a = @h.transpose.dot(da)
         dh += da.dot(@weight2_a.transpose)
-        dbias_a = da.sum(0) if @bias
 
-        @weight.grad += Xumo::SFloat.hstack([dweight_a, dweight_h])
-        @recurrent_weight.grad += Xumo::SFloat.hstack([dweight2_a, dweight2_h])
-        @bias.grad += Xumo::SFloat.hstack([dbias_a, dbias_h]) if @bias
+        if @trainable
+          @weight.grad += Xumo::SFloat.hstack([dweight_a, dweight_h])
+          @recurrent_weight.grad += Xumo::SFloat.hstack([dweight2_a, dweight2_h])
+          @bias.grad += Xumo::SFloat.hstack([dbias_a, dbias_h]) if @bias
+        end
         [dx, dh]
       end
     end

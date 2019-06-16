@@ -178,6 +178,18 @@ class TestDense < MiniTest::Unit::TestCase
     assert_in_delta 2.0, dense.params[:bias].grad
   end
 
+  def test_backward4
+    dense = Dense.new(2)
+    dense.trainable = false
+    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.params[:bias].data = Numo::SFloat[5, 10]
+    dense.forward(x)
+    grad = dense.backward(Numo::SFloat[1])
+    assert_equal 0, dense.params[:weight].grad
+    assert_equal 0, dense.params[:bias].grad
+  end
+
   def test_output_shape
     dense = Dense.new(10)
     assert_equal [10], dense.output_shape
