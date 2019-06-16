@@ -145,7 +145,8 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16).fill(0)
     b.grad = 0
 
-    dense = SimpleRNN_Dense.new(w, w2, b, Tanh.new, false)
+    dense = SimpleRNN_Dense.new(w, w2, b, Tanh.new)
+    dense.trainable = false
     dense.forward(x, h)
     dx, dh = dense.backward(dh2)
     assert_equal 0, dense.instance_variable_get(:@weight).grad
@@ -211,11 +212,14 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   def test_backward3
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
-    rnn = SimpleRNN.new(64, use_bias: false)
+    rnn = SimpleRNN.new(64)
+    rnn.trainable = false
     rnn.build([16, 64])
     rnn.forward(x)
     rnn.backward(y)
-    assert_nil rnn.params[:bias]
+    assert_equal 0, rnn.params[:weight].grad
+    assert_equal 0, rnn.params[:recurrent_weight].grad
+    assert_equal 0, rnn.params[:bias].grad
   end
 
   def test_to_hash
@@ -324,7 +328,8 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
-    dense = LSTM_Dense.new(w, w2, b, false)
+    dense = LSTM_Dense.new(w, w2, b)
+    dense.trainable = false
     dense.forward(x, h, c)
     dense.backward(dh2, dc2)
     assert_equal 0, dense.instance_variable_get(:@weight).grad
@@ -383,6 +388,19 @@ class TestLSTM < MiniTest::Unit::TestCase
     lstm.forward(x)
     lstm.backward(y)
     assert_nil lstm.params[:bias]
+  end
+
+  def test_backward3
+    x = Numo::SFloat.new(1, 16, 64).seq
+    y = Numo::SFloat.new(1, 16, 64).seq
+    lstm = LSTM.new(64)
+    lstm.trainable = false
+    lstm.build([16, 64])
+    lstm.forward(x)
+    lstm.backward(y)
+    assert_equal 0, lstm.params[:weight].grad
+    assert_equal 0, lstm.params[:recurrent_weight].grad
+    assert_equal 0, lstm.params[:bias].grad
   end
 
   def test_to_hash
@@ -491,7 +509,8 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     b = Param.new
     b.data = Numo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
-    dense = GRU_Dense.new(w, w2, b, false)
+    dense = GRU_Dense.new(w, w2, b)
+    dense.trainable = false
     dense.forward(x, h)
     dx, dh = dense.backward(dh2)
     assert_equal 0, dense.instance_variable_get(:@weight).grad

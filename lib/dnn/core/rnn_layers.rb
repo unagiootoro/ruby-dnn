@@ -41,6 +41,7 @@ module DNN
         h = (@stateful && @hidden.data) ? @hidden.data : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
+          @layers[t].trainable = @trainable
           h = @layers[t].forward(x, h)
           hs[true, t, false] = h
         end
@@ -49,9 +50,6 @@ module DNN
       end
 
       def backward(dh2s)
-        @weight.grad += Xumo::SFloat.zeros(*@weight.data.shape)
-        @recurrent_weight.grad += Xumo::SFloat.zeros(*@recurrent_weight.data.shape)
-        @bias.grad += Xumo::SFloat.zeros(*@bias.data.shape) if @bias
         unless @return_sequences
           dh = dh2s
           dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
@@ -102,12 +100,14 @@ module DNN
 
 
     class SimpleRNN_Dense
-      def initialize(weight, recurrent_weight, bias, activation, trainable = true)
+      attr_accessor :trainable
+
+      def initialize(weight, recurrent_weight, bias, activation)
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
         @activation = activation.clone
-        @trainable = trainable
+        @trainable = true
       end
 
       def forward(x, h)
@@ -193,16 +193,18 @@ module DNN
 
 
     class LSTM_Dense
-      def initialize(weight, recurrent_weight, bias, trainable = true)
+      attr_accessor :trainable
+
+      def initialize(weight, recurrent_weight, bias)
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
-        @trainable = trainable
         @tanh = Tanh.new
         @g_tanh = Tanh.new
         @forget_sigmoid = Sigmoid.new
         @in_sigmoid = Sigmoid.new
         @out_sigmoid = Sigmoid.new
+        @trainable = true
       end
 
       def forward(x, h, c)
@@ -302,6 +304,7 @@ module DNN
         c ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
+          @layers[t].trainable = @trainable
           h, c = @layers[t].forward(x, h, c)
           hs[true, t, false] = h
         end
@@ -335,14 +338,16 @@ module DNN
 
 
     class GRU_Dense
-      def initialize(weight, recurrent_weight, bias, trainable = true)
+      attr_accessor :trainable
+
+      def initialize(weight, recurrent_weight, bias)
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
-        @trainable = trainable
         @update_sigmoid = Sigmoid.new
         @reset_sigmoid = Sigmoid.new
         @tanh = Tanh.new
+        @trainable = true
       end
 
       def forward(x, h)
