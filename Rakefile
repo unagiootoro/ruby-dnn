@@ -19,8 +19,7 @@ end
 task :default => [:test, :build_dataset_loader, :build_image_io]
 
 task :doc do
-  src_list = ["lib/dnn/version.rb"]
-  src_list += Dir["lib/dnn/core/*.rb"]
-  src_list += Dir["lib/dnn/lib/*.rb"]
+  src_list = Dir["lib/dnn/core/*.rb"]
+  src_list += Dir["lib/dnn/*.rb"]
   sh "yardoc #{src_list.join(' ')}"
 end

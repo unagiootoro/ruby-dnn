@@ -1,5 +1,5 @@
 require "zlib"
-require_relative "../core/error"
+require_relative "core/error"
 require_relative "downloader"
 
 module DNN
@@ -13,6 +13,7 @@ module DNN
 
     def self.downloads
       return if Dir.exist?(mnist_dir)
+      Dir.mkdir("#{__dir__}/downloads") unless Dir.exist?("#{__dir__}/downloads")
       Dir.mkdir(mnist_dir)
       Downloader.download(URL_TRAIN_IMAGES, mnist_dir)
       Downloader.download(URL_TRAIN_LABELS, mnist_dir)
@@ -73,7 +74,7 @@ module DNN
     end
 
     def self.mnist_dir
-      __dir__ + "/mnist"
+      "#{__dir__}/downloads/mnist"
     end
 
     def self.url_to_file_name(url)

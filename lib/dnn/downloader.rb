@@ -5,7 +5,11 @@ module DNN
   class DNN_DownloadError < DNN_Error; end
 
   class Downloader
-    def self.download(url, dir_path = __dir__)
+    def self.download(url, dir_path = nil)
+      unless dir_path
+        Dir.mkdir("#{__dir__}/downloads") unless Dir.exist?("#{__dir__}/downloads")
+        dir_path = "#{__dir__}/downloads"
+      end
       Downloader.new(url).download(dir_path)
     rescue => ex
       raise DNN_DownloadError.new(ex.message)

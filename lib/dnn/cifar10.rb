@@ -1,6 +1,6 @@
 require "zlib"
 require "archive/tar/minitar"
-require_relative "../../../ext/cifar10_loader/cifar10_loader"
+require_relative "../../ext/cifar10_loader/cifar10_loader"
 require_relative "downloader"
 
 URL_CIFAR10 = "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz"
@@ -13,12 +13,12 @@ module DNN
     private_class_method :load_binary
 
     def self.downloads
-      return if Dir.exist?(__dir__ + "/" + CIFAR10_DIR)
+      return if Dir.exist?(__dir__ + "/downloads/" + CIFAR10_DIR)
       Downloader.download(URL_CIFAR10)
-      cifar10_binary_file_name = __dir__ + "/" + URL_CIFAR10.match(%r`.+/(.+)`)[1]
+      cifar10_binary_file_name = __dir__ + "/downloads/" + URL_CIFAR10.match(%r`.+/(.+)`)[1]
       begin
         Zlib::GzipReader.open(cifar10_binary_file_name) do |gz|
-          Archive::Tar::Minitar::unpack(gz, __dir__)
+          Archive::Tar::Minitar::unpack(gz, __dir__ + "/downloads")
         end
       ensure
         File.unlink(cifar10_binary_file_name)
@@ -29,7 +29,7 @@ module DNN
       downloads
       bin = ""
       (1..5).each do |i|
-        fname = __dir__ + "/#{CIFAR10_DIR}/data_batch_#{i}.bin"
+        fname = __dir__ + "/downloads/#{CIFAR10_DIR}/data_batch_#{i}.bin"
         raise DNN_CIFAR10_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
         bin << File.binread(fname)
       end
@@ -41,7 +41,7 @@ module DNN
 
     def self.load_test
       downloads
-      fname = __dir__ + "/#{CIFAR10_DIR}/test_batch.bin"
+      fname = __dir__ + "/downloads/#{CIFAR10_DIR}/test_batch.bin"
       raise DNN_CIFAR10_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
       bin = File.binread(fname)
       x_bin, y_bin = load_binary(bin, 10000)

@@ -1,5 +1,5 @@
 require "dnn"
-require "dnn/lib/mnist"
+require "dnn/mnist"
 # If you use numo/linalg then please uncomment out.
 # require "numo/linalg/autoloader"
 
