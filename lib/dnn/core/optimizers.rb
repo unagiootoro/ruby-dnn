@@ -3,6 +3,7 @@ module DNN
 
     # Super class of all optimizer classes.
     class Optimizer
+      # @return [Float] Return the Learning rate.
       attr_accessor :learning_rate
 
       def initialize(learning_rate)
@@ -32,12 +33,15 @@ module DNN
 
 
     class SGD < Optimizer
+      # @return [Float] Return the momentum coefficient.
       attr_accessor :momentum
 
       def self.from_hash(hash)
         self.new(hash[:learning_rate], momentum: hash[:momentum])
       end
 
+      # @param [Float] learning_rate Learning rate.
+      # @param [Float] momentum momentum coefficient.
       def initialize(learning_rate = 0.01, momentum: 0)
         super(learning_rate)
         @momentum = momentum
@@ -67,6 +71,8 @@ module DNN
         self.new(hash[:learning_rate], momentum: hash[:momentum])
       end
 
+      # @param [Float] learning_rate Learning rate.
+      # @param [Float] momentum momentum coefficient.
       def initialize(learning_rate = 0.01, momentum: 0.9)
         super(learning_rate)
         @momentum = momentum
@@ -87,8 +93,11 @@ module DNN
     
     
     class AdaGrad < Optimizer
+      # @return [Float] Return the eps value.
       attr_accessor :eps
 
+      # @param [Float] learning_rate Learning rate.
+      # @param [Float] eps Value to avoid division by zero.
       def initialize(learning_rate = 0.01, eps: 1e-7)
         super(learning_rate)
         @eps = eps
@@ -106,15 +115,20 @@ module DNN
       end
     end
     
-    
+
     class RMSProp < Optimizer
+      # @return [Float] Return the alpha value.
       attr_accessor :alpha
+      # @return [Float] Return the eps value.
       attr_accessor :eps
 
       def self.from_hash(hash)
         self.new(hash[:learning_rate], alpha: hash[:alpha], eps: hash[:eps])
       end
-    
+
+      # @param [Float] learning_rate Learning rate.
+      # @param [Float] alpha Moving average index of past slopes.
+      # @param [Float] eps Value to avoid division by zero.
       def initialize(learning_rate = 0.001, alpha: 0.9, eps: 1e-7)
         super(learning_rate)
         @alpha = alpha
@@ -135,13 +149,17 @@ module DNN
 
 
     class AdaDelta < Optimizer
+      # @return [Float] Return the rho value.
       attr_accessor :rho
+      # @return [Float] Return the eps value.
       attr_accessor :eps
 
       def self.from_hash(hash)
         self.new(rho: hash[:rho], eps: hash[:eps])
       end
 
+      # @param [Float] rho Moving average index of past slopes.
+      # @param [Float] eps Value to avoid division by zero.
       def initialize(rho: 0.95, eps: 1e-6)
         super(nil)
         @rho = rho
@@ -166,14 +184,21 @@ module DNN
 
 
     class Adam < Optimizer
+      # @return [Float] Return the beta1 value.
       attr_accessor :beta1
+      # @return [Float] Return the beta2 value.
       attr_accessor :beta2
+      # @return [Float] Return the eps value.
       attr_accessor :eps
       
       def self.from_hash(hash)
         self.new(hash[:learning_rate], beta1: hash[:beta1], beta2: hash[:beta2], eps: hash[:eps])
       end
 
+      # @param [Float] learning_rate Learning rate.
+      # @param [Float] beta1 Moving average index of beta1.
+      # @param [Float] beta2 Moving average index of beta2.
+      # @param [Float] eps Value to avoid division by zero.
       def initialize(learning_rate = 0.001, beta1: 0.9, beta2: 0.999, eps: 1e-7)
         super(learning_rate)
         @beta1 = beta1
@@ -208,13 +233,18 @@ module DNN
 
 
     class RMSPropGraves < Optimizer
+      # @return [Float] Return the alpha value.
       attr_accessor :alpha
+      # @return [Float] Return the eps value.
       attr_accessor :eps
       
       def self.from_hash(hash)
         self.new(hash[:learning_rate], alpha: hash[:alpha], eps: hash[:eps])
       end
 
+      # @param [Float] learning_rate Learning rate.
+      # @param [Float] alpha Moving average index of past slopes.
+      # @param [Float] eps Value to avoid division by zero.
       def initialize(learning_rate = 0.0001, alpha: 0.95, eps: 0.0001)
         super(learning_rate)
         @alpha = alpha

@@ -75,14 +75,16 @@ module DNN
 
 
     class LeakyReLU < Layers::Layer
+      # @return [Float] Return the alpha value.
       attr_reader :alpha
-
-      def initialize(alpha = 0.3)
-        @alpha = alpha
-      end
 
       def self.from_hash(hash)
         self.new(hash[:alpha])
+      end
+
+      # @param [Float] alpha The slope when the output value is negative.
+      def initialize(alpha = 0.3)
+        @alpha = alpha
       end
 
       def forward(x)
@@ -105,12 +107,14 @@ module DNN
 
 
     class ELU < Layers::Layer
+      # @return [Float] Return the alpha value.
       attr_reader :alpha
 
       def self.from_hash(hash)
         self.new(hash[:alpha])
       end
 
+      # @param [Float] alpha The slope when the output value is negative.
       def initialize(alpha = 1.0)
         @alpha = alpha
       end
