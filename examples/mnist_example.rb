@@ -26,11 +26,9 @@ model = Model.new
 model << InputLayer.new(784)
 
 model << Dense.new(256)
-model << BatchNormalization.new
 model << ReLU.new
 
 model << Dense.new(256)
-model << BatchNormalization.new
 model << ReLU.new
 
 model << Dense.new(10)
