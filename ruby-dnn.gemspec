@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{ruby-dnn is a ruby deep learning library.}
   spec.homepage      = "https://github.com/unagiootoro/ruby-dnn.git"
   spec.license       = "MIT"
-  spec.extensions    = ["ext/cifar10_loader/extconf.rb", "ext/rb_stb_image/extconf.rb"]
+  spec.extensions    = ["ext/cifar_loader/extconf.rb", "ext/rb_stb_image/extconf.rb"]
 
   spec.add_dependency "numo-narray"
   spec.add_dependency "archive-tar-minitar"
