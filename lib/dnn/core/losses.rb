@@ -22,8 +22,10 @@ module DNN
         backward_loss(y)
       end
 
-      def to_hash
-        {class: self.class.name}
+      def to_hash(merge_hash = nil)
+        hash = {class: self.class.name}
+        hash.merge!(merge_hash) if merge_hash
+        hash
       end
 
       private
@@ -105,8 +107,24 @@ module DNN
 
 
     class SoftmaxCrossEntropy < Loss
+      # @return [Float] Return the eps value.
+      attr_accessor :eps
+
+      def self.from_hash(hash)
+        SoftmaxCrossEntropy.new(eps: hash[:eps])
+      end
+
       def self.softmax(x)
         NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
+      end
+
+      # @param [Float] Value to avoid nan.
+      def initialize(eps: 1e-7)
+        @eps = eps
+      end
+
+      def to_hash
+        super(eps: @eps)
       end
 
       private
@@ -114,7 +132,7 @@ module DNN
       def forward_loss(x, y)
         @x = SoftmaxCrossEntropy.softmax(x)
         batch_size = y.shape[0]
-        -(y * NMath.log(@x)).sum / batch_size
+        -(y * NMath.log(@x + @eps)).sum / batch_size
       end
 
       def backward_loss(y)
@@ -124,14 +142,26 @@ module DNN
 
 
     class SigmoidCrossEntropy < Loss
-      def initialize
-        @sigmoid = Sigmoid.new
+      # @return [Float] Return the eps value.
+      attr_accessor :eps
+
+      def self.from_hash(hash)
+        SigmoidCrossEntropy.new(eps: hash[:eps])
+      end
+
+      # @param [Float] Value to avoid nan.
+      def initialize(eps: 1e-7)
+        @eps = eps
+      end
+
+      def to_hash
+        super(eps: @eps)
       end
 
       private
 
       def forward_loss(x, y)
-        @x = @sigmoid.forward(x)
+        @x = Sigmoid.new.forward(x)
         batch_size = y.shape[0]
         -(y * NMath.log(@x) + (1 - y) * NMath.log(1 - @x))
       end

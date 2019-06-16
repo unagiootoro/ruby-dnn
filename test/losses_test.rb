@@ -111,6 +111,12 @@ end
 
 
 class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
+  def test_from_hash
+    hash = {class: "DNN::Losses::SoftmaxCrossEntropy", eps: 1e-4}
+    loss = SoftmaxCrossEntropy.from_hash(hash)
+    assert_equal 1e-4, loss.eps
+  end
+
   def test_forward
     loss = SoftmaxCrossEntropy.new
     x = Xumo::SFloat[[0, 1, 2]]
@@ -127,10 +133,21 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
     grad = loss.backward(y, [])
     assert_equal Xumo::SFloat[[0.09, 0.2447, -0.3348]], grad.round(4)
   end
+
+  def test_to_hash
+    expected_hash = {class: "DNN::Losses::SoftmaxCrossEntropy", eps: 1e-7}
+    assert_equal expected_hash, SoftmaxCrossEntropy.new.to_hash
+  end
 end
 
 
 class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
+  def test_from_hash
+    hash = {class: "DNN::Losses::SigmoidCrossEntropy", eps: 1e-4}
+    loss = SigmoidCrossEntropy.from_hash(hash)
+    assert_equal 1e-4, loss.eps
+  end
+
   def test_forward
     loss = SigmoidCrossEntropy.new
     x = Xumo::SFloat[[0, 1]]
@@ -146,5 +163,10 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     loss.forward(x, y, [])
     grad = loss.backward(y, [])
     assert_equal Xumo::SFloat[[-0.5, 0.7311]], grad.round(4)
+  end
+
+  def test_to_hash
+    expected_hash = {class: "DNN::Losses::SigmoidCrossEntropy", eps: 1e-7}
+    assert_equal expected_hash, SigmoidCrossEntropy.new.to_hash
   end
 end
