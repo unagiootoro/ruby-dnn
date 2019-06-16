@@ -21,9 +21,43 @@ Or install it yourself as:
 
 ## Usage
 
+### MNIST MLP example
+
+```ruby
+model = Model.new
+
+model << InputLayer.new(784)
+
+model << Dense.new(256)
+model << BatchNormalization.new
+model << ReLU.new
+
+model << Dense.new(256)
+model << BatchNormalization.new
+model << ReLU.new
+
+model << Dense.new(10)
+
+model.compile(RMSProp.new, SoftmaxCrossEntropy.new)
+
+model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
+
+```
+
 Currently, only simple Japanese documents are available.
 Please refer to examples for basic usage.
 If you want to know more detailed information, please refer to the source code.
+
+## Implemented
+|| Implemented classes |
+|:-----------|------------:|
+| Connections | Dense, Conv2D, Conv2D_Transpose, SimpleRNN, LSTM, GRU |
+| Layers | Flatten, Reshape, Dropout, BatchNormalization, MaxPool2D, AvgPool2D, UnPool2D |
+| Activations | Sigmoid, Tanh, Softsign, Softplus, Swish, ReLU, LeakyReLU, ELU |
+| Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, Adam, RMSPropGraves |
+| Losses | MeanSquaredError, MeanAbsoluteError, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
+
+
 
 ## Development
 
@@ -41,4 +75,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the Dnn project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/dnn/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the ruby-dnn project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/dnn/blob/master/CODE_OF_CONDUCT.md).
