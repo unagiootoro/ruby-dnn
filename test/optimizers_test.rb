@@ -110,7 +110,6 @@ class TestAdaGrad < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adagrad = AdaGrad.new
-    model.compile(adagrad)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     adagrad.update(dense.params)
     assert_equal -0.01, dense.params[:weight].data.mean.round(3)
@@ -122,8 +121,8 @@ class TestAdaGrad < MiniTest::Unit::TestCase
       learning_rate: 0.01,
       eps: 1e-7,
     }
-    rmsprop = RMSProp.new
-    assert_equal expected_hash, rmsprop.to_hash
+    adagrad = AdaGrad.new
+    assert_equal expected_hash, adagrad.to_hash
   end
 end
 
@@ -164,7 +163,7 @@ class TestRMSProp < MiniTest::Unit::TestCase
 end
 
 
-class TestAdaGrad < MiniTest::Unit::TestCase
+class TestAdaDelta < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::AdaDelta",
@@ -202,12 +201,13 @@ class TestAdam < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::Adam",
-      learning_rate: 0.01,
+      alpha: 0.01,
       beta1: 0.8,
       beta2: 0.9,
       eps: 1e-4,
     }
     adam = Adam.from_hash(hash)
+    assert_equal 0.01, adam.alpha
     assert_equal 0.8, adam.beta1
     assert_equal 0.9, adam.beta2
     assert_equal 1e-4, adam.eps
@@ -216,7 +216,7 @@ class TestAdam < MiniTest::Unit::TestCase
   def test_update
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
-    adam = Adam.new(0.01, beta1: 0.8, beta2: 0.9)
+    adam = Adam.new(alpha: 0.01, beta1: 0.8, beta2: 0.9)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     adam.update(dense.params)
     dense.params[:weight].grad = Numo::SFloat.ones(*dense.params[:weight].data.shape)
@@ -227,7 +227,8 @@ class TestAdam < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::Adam",
-      learning_rate: 0.001,
+      learning_rate: nil,
+      alpha: 0.001,
       beta1: 0.9,
       beta2: 0.999,
       eps: 1e-7,

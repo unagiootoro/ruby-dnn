@@ -49,7 +49,7 @@ module DNN
       end
 
       def to_hash
-        super({momentum: @momentum})
+        super(momentum: @momentum)
       end
 
       private def update_param(param)
@@ -80,7 +80,7 @@ module DNN
       end
 
       def to_hash
-        super({momentum: @momentum})
+        super(momentum: @momentum)
       end
     
       private def update_param(param)
@@ -113,6 +113,10 @@ module DNN
         @g[param] += param.grad**2
         param.data -= (@learning_rate / NMath.sqrt(@g[param] + @eps)) * param.grad
       end
+
+      def to_hash
+        super(eps: @eps)
+      end
     end
     
 
@@ -137,7 +141,7 @@ module DNN
       end
 
       def to_hash
-        super({alpha: @alpha, eps: @eps})
+        super(alpha: @alpha, eps: @eps)
       end
 
       private def update_param(param)
@@ -169,7 +173,7 @@ module DNN
       end
 
       def to_hash
-        super({rho: @rho, eps: @eps})
+        super(rho: @rho, eps: @eps)
       end
 
       private def update_param(param)
@@ -184,6 +188,8 @@ module DNN
 
 
     class Adam < Optimizer
+      # @return [Float] Return the alpha value.
+      attr_accessor :alpha
       # @return [Float] Return the beta1 value.
       attr_accessor :beta1
       # @return [Float] Return the beta2 value.
@@ -192,15 +198,16 @@ module DNN
       attr_accessor :eps
       
       def self.from_hash(hash)
-        self.new(hash[:learning_rate], beta1: hash[:beta1], beta2: hash[:beta2], eps: hash[:eps])
+        self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2], eps: hash[:eps])
       end
 
       # @param [Float] learning_rate Learning rate.
       # @param [Float] beta1 Moving average index of beta1.
       # @param [Float] beta2 Moving average index of beta2.
       # @param [Float] eps Value to avoid division by zero.
-      def initialize(learning_rate = 0.001, beta1: 0.9, beta2: 0.999, eps: 1e-7)
-        super(learning_rate)
+      def initialize(alpha: 0.001, beta1: 0.9, beta2: 0.999, eps: 1e-7)
+        super(nil)
+        @alpha = alpha
         @beta1 = beta1
         @beta2 = beta2
         @eps = eps
@@ -211,23 +218,23 @@ module DNN
 
       def update(params)
         @iter += 1
-        lr = @learning_rate * Math.sqrt(1 - @beta2**@iter) / (1 - @beta1**@iter) 
+        learning_rate = @alpha * Math.sqrt(1 - @beta2**@iter) / (1 - @beta1**@iter) 
         params.select { |key, param| param.grad }.each_value do |param|
-          update_param(param, lr)
+          update_param(param, learning_rate)
           param.grad = 0
         end
       end
 
       def to_hash
-        super({beta1: @beta1, beta2: @beta2, eps: @eps})
+        super(alpha: @alpha, beta1: @beta1, beta2: @beta2, eps: @eps)
       end
 
-      private def update_param(param, lr)
+      private def update_param(param, learning_rate)
         @m[param] ||= 0
         @v[param] ||= 0
         @m[param] += (1 - @beta1) * (param.grad - @m[param])
         @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
-        param.data -= lr * @m[param] / NMath.sqrt(@v[param] + @eps)
+        param.data -= learning_rate * @m[param] / NMath.sqrt(@v[param] + @eps)
       end
     end
 
@@ -254,7 +261,7 @@ module DNN
       end
 
       def to_hash
-        super({alpha: @alpha, eps: @eps})
+        super(alpha: @alpha, eps: @eps)
       end
 
       private def update_param(param)
