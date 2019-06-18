@@ -10,9 +10,12 @@ module DNN
         @learning_rate = learning_rate
       end
 
-      # Update params.
-      def update(params)
-        params.select { |key, param| param.grad }.each_value do |param|
+      # Update layers has param.
+      def update(layers)
+        target_params = layers.select { |layer| layer.is_a?(HasParamLayer) && layer.trainable }
+                              .map { |layer| layer.params.values }.flatten
+                              .select { |param| param.grad }
+        target_params.each do |param|
           update_param(param)
           param.grad = 0
         end
@@ -216,10 +219,13 @@ module DNN
         @v = {}
       end
 
-      def update(params)
+      def update(layers)
         @iter += 1
         learning_rate = @alpha * Math.sqrt(1 - @beta2**@iter) / (1 - @beta1**@iter) 
-        params.select { |key, param| param.grad }.each_value do |param|
+        target_params = layers.select { |layer| layer.is_a?(HasParamLayer) && layer.trainable }
+                              .map { |layer| layer.params.values }.flatten
+                              .select { |param| param.grad }
+        target_params.each do |param|
           update_param(param, learning_rate)
           param.grad = 0
         end

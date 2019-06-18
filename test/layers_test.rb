@@ -38,17 +38,6 @@ class TestLayer < MiniTest::Unit::TestCase
 end
 
 
-class TestHasParamLayer < MiniTest::Unit::TestCase
-  def test_update
-    layer = HasParamLayer.new
-    weight = Param.new(Numo::SFloat.ones(1), Numo::SFloat.ones(1))
-    layer.instance_variable_set(:@params, {weight: weight})
-    layer.update(SGD.new)
-    assert_equal Numo::SFloat[0.99], layer.params[:weight].data
-  end
-end
-
-
 class TestInputLayer < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {class: "DNN::Layers::InputLayer", input_shape: [10]}

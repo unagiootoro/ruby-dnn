@@ -373,13 +373,14 @@ module DNN
 
     def update
       return unless @trainable
-      @layers.each do |layer|
-        if layer.is_a?(Layers::HasParamLayer)
-          layer.update(optimizer)
-        elsif layer.is_a?(Model)
-          layer.update
+      all_trainable_layers = @layers.map { |layer|
+        if layer.is_a?(Model)
+          layer.trainable ? layer.get_all_layers : nil
+        else
+          layer
         end
-      end
+      }.flatten.compact
+      @optimizer.update(all_trainable_layers)
     end
 
     def get_prev_layer(layer)

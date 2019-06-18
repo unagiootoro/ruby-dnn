@@ -64,11 +64,6 @@ module DNN
         @params = {}
         @trainable = true
       end
-    
-      # Update the parameters.
-      def update(optimizer)
-        optimizer.update(@params) if @trainable
-      end
     end
     
     
