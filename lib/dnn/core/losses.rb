@@ -118,7 +118,7 @@ module DNN
         NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
       end
 
-      # @param [Float] Value to avoid nan.
+      # @param [Float] eps Value to avoid nan.
       def initialize(eps: 1e-7)
         @eps = eps
       end
@@ -149,7 +149,7 @@ module DNN
         SigmoidCrossEntropy.new(eps: hash[:eps])
       end
 
-      # @param [Float] Value to avoid nan.
+      # @param [Float] eps Value to avoid nan.
       def initialize(eps: 1e-7)
         @eps = eps
       end

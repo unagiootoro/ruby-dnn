@@ -2,7 +2,7 @@
 class DNN::Dataset
   # @param [Numo::SFloat] x_datas input datas.
   # @param [Numo::SFloat] y_datas output datas.
-  # @param [Bool] ramdom Set true to return batches randomly. Setting false returns batches in order of index.
+  # @param [Bool] random Set true to return batches randomly. Setting false returns batches in order of index.
   def initialize(x_datas, y_datas, random = true)
     @x_datas = x_datas
     @y_datas = y_datas

@@ -312,7 +312,7 @@ module DNN
       end
 
       # @param [Array | Integer] pool_size Pooling size. Pooling size is of the form [height, width].
-      # @param [Array | Integer | NilClass] Strides stride length. Stride length is of the form [height, width].
+      # @param [Array | Integer | NilClass] strides stride length. Stride length is of the form [height, width].
       #   If you set nil, treat pool_size as strides.
       # @param [Array | Bool] padding Padding size or whether to padding. Padding size is of the form [height, width].
       def initialize(pool_size, strides: nil, padding: false)

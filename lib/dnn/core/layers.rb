@@ -3,7 +3,7 @@ module DNN
 
     # Super class of all optimizer classes.
     class Layer
-      # @param [Bool] Set true if learning.
+      # @return [Bool] learning_phase Return the true if learning.
       attr_accessor :learning_phase
       # @return [Array] Return the shape of the input data.
       attr_reader :input_shape

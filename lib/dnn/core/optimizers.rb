@@ -204,7 +204,7 @@ module DNN
         self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2], eps: hash[:eps])
       end
 
-      # @param [Float] learning_rate Learning rate.
+      # @param [Float] alpha Value used to calculate learning rate.
       # @param [Float] beta1 Moving average index of beta1.
       # @param [Float] beta2 Moving average index of beta2.
       # @param [Float] eps Value to avoid division by zero.

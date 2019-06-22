@@ -196,8 +196,8 @@ module DNN
     #     specify [x_test, y_test]. Don't test to the model, specify nil.                     
     # @param [Bool] verbose Set true to display the log. If false is set, the log is not displayed.
     # @param [Lambda] before_epoch_cbk Process performed before one training.
-    # @param [Lambda] before_epoch_cbk Process performed after one training.
-    # @param [Lambda] after_epoch_cbk Set the proc to be performed before batch processing.
+    # @param [Lambda] after_epoch_cbk Process performed after one training.
+    # @param [Lambda] before_batch_cbk Set the proc to be performed before batch processing.
     # @param [Lambda] after_batch_cbk Set the proc to be performed after batch processing.
     def train(x, y, epochs,
               batch_size: 1,
