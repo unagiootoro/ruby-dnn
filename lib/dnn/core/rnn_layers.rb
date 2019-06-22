@@ -11,23 +11,31 @@ module DNN
       attr_reader :stateful
       # @return [Bool] Set the false, only the last of each cell of RNN is left.
       attr_reader :return_sequences
+      # @return [DNN::Initializers::Initializer] Recurrent weight initializer.
+      attr_reader :recurrent_weight_initializer
+      # @return [DNN::Regularizers::Regularizer] Recurrent weight regularization.
+      attr_reader :recurrent_weight_regularizer
 
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
                      weight_initializer: RandomNormal.new,
+                     recurrent_weight_initializer: RandomNormal.new,
                      bias_initializer: Zeros.new,
-                     l1_lambda: 0,
-                     l2_lambda: 0,
+                     weight_regularizer: nil,
+                     recurrent_weight_regularizer: nil,
+                     bias_regularizer: nil,
                      use_bias: true)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
-              l1_lambda: l1_lambda, l2_lambda: l2_lambda, use_bias: use_bias)
+              weight_regularizer: weight_regularizer, bias_regularizer: bias_regularizer, use_bias: use_bias)
         @num_nodes = num_nodes
         @stateful = stateful
         @return_sequences = return_sequences
         @layers = []
         @hidden = @params[:hidden] = Param.new
         @params[:recurrent_weight] = @recurrent_weight = Param.new(nil, 0)
+        @recurrent_weight_initializer = recurrent_weight_initializer
+        @recurrent_weight_regularizer = recurrent_weight_regularizer
       end
 
       def build(input_shape)
@@ -73,7 +81,9 @@ module DNN
         hash = {
           num_nodes: @num_nodes,
           stateful: @stateful,
-          return_sequences: @return_sequences
+          return_sequences: @return_sequences,
+          recurrent_weight_initializer: @recurrent_weight_initializer.to_hash,
+          recurrent_weight_regularizer: @recurrent_weight_regularizer&.to_hash,
         }
         hash.merge!(merge_hash) if merge_hash
         super(hash)
@@ -86,15 +96,16 @@ module DNN
 
       def regularizers
         regularizers = []
-        if @l1_lambda > 0
-          regularizers << Lasso.new(@l1_lambda, @weight)
-          regularizers << Lasso.new(@l1_lambda, @recurrent_weight)
-        end
-        if @l2_lambda > 0
-          regularizers << Ridge.new(@l2_lambda, @weight)
-          regularizers << Ridge.new(@l2_lambda, @recurrent_weight)
-        end
+        regularizers << @weight_regularizer if @weight_regularizer
+        regularizers << @recurrent_weight_regularizer if @recurrent_weight_regularizer
+        regularizers << @bias_regularizer if @bias_regularizer
         regularizers
+      end
+
+      private def init_weight_and_bias
+        super
+        @recurrent_weight_initializer.init_param(self, @recurrent_weight)
+        @recurrent_weight_regularizer.param = @recurrent_weight if @recurrent_weight_regularizer
       end
     end
 
@@ -143,9 +154,11 @@ module DNN
                               return_sequences: hash[:return_sequences],
                               activation: Utils.from_hash(hash[:activation]),
                               weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                              recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
                               bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                              l1_lambda: hash[:l1_lambda],
-                              l2_lambda: hash[:l2_lambda],
+                              weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                              recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
+                              bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
                               use_bias: hash[:use_bias])
         simple_rnn
       end
@@ -155,17 +168,21 @@ module DNN
                      return_sequences: true,
                      activation: Tanh.new,
                      weight_initializer: RandomNormal.new,
+                     recurrent_weight_initializer: RandomNormal.new,
                      bias_initializer: Zeros.new,
-                     l1_lambda: 0,
-                     l2_lambda: 0,
+                     weight_regularizer: nil,
+                     recurrent_weight_regularizer: nil,
+                     bias_regularizer: nil,
                      use_bias: true)
         super(num_nodes,
               stateful: stateful,
               return_sequences: return_sequences,
               weight_initializer: weight_initializer,
+              recurrent_weight_initializer: recurrent_weight_initializer,
               bias_initializer: bias_initializer,
-              l1_lambda: l1_lambda,
-              l2_lambda: l2_lambda,
+              weight_regularizer: weight_regularizer,
+              recurrent_weight_regularizer: recurrent_weight_regularizer,
+              bias_regularizer: bias_regularizer,
               use_bias: use_bias)
         @activation = activation
       end
@@ -174,13 +191,9 @@ module DNN
         super
         num_prev_nodes = input_shape[1]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
-        @weight_initializer.init_param(self, @weight)
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes)
-        @weight_initializer.init_param(self, @recurrent_weight)
-        if @bias
-          @bias.data = Xumo::SFloat.new(@num_nodes)
-          @bias_initializer.init_param(self, @bias) 
-        end
+        @bias.data = Xumo::SFloat.new(@num_nodes) if @bias
+        init_weight_and_bias
         @time_length.times do |t|
           @layers << SimpleRNN_Dense.new(@weight, @recurrent_weight, @bias, @activation)
         end
@@ -256,9 +269,11 @@ module DNN
                         stateful: hash[:stateful],
                         return_sequences: hash[:return_sequences],
                         weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                        recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
                         bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                        l1_lambda: hash[:l1_lambda],
-                        l2_lambda: hash[:l2_lambda],
+                        weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                        recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
+                        bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
                         use_bias: hash[:use_bias])
         lstm
       end
@@ -267,9 +282,11 @@ module DNN
                      stateful: false,
                      return_sequences: true,
                      weight_initializer: RandomNormal.new,
+                     recurrent_weight_initializer: RandomNormal.new,
                      bias_initializer: Zeros.new,
-                     l1_lambda: 0,
-                     l2_lambda: 0,
+                     weight_regularizer: nil,
+                     recurrent_weight_regularizer: nil,
+                     bias_regularizer: nil,
                      use_bias: true)
         super
         @cell = @params[:cell] = Param.new
@@ -279,13 +296,9 @@ module DNN
         super
         num_prev_nodes = input_shape[1]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes * 4)
-        @weight_initializer.init_param(self, @weight)
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 4)
-        @weight_initializer.init_param(self, @recurrent_weight)
-        if @bias
-          @bias.data = Xumo::SFloat.new(@num_nodes * 4) 
-          @bias_initializer.init_param(self, @bias) 
-        end
+        @bias.data = Xumo::SFloat.new(@num_nodes * 4) if @bias
+        init_weight_and_bias
         @time_length.times do |t|
           @layers << LSTM_Dense.new(@weight, @recurrent_weight, @bias)
         end
@@ -412,9 +425,11 @@ module DNN
                        stateful: hash[:stateful],
                        return_sequences: hash[:return_sequences],
                        weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                       recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
                        bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                       l1_lambda: hash[:l1_lambda],
-                       l2_lambda: hash[:l2_lambda],
+                       weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                       recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
+                       bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
                        use_bias: hash[:use_bias])
         gru
       end
@@ -423,9 +438,11 @@ module DNN
                      stateful: false,
                      return_sequences: true,
                      weight_initializer: RandomNormal.new,
+                     recurrent_weight_initializer: RandomNormal.new,
                      bias_initializer: Zeros.new,
-                     l1_lambda: 0,
-                     l2_lambda: 0,
+                     weight_regularizer: nil,
+                     recurrent_weight_regularizer: nil,
+                     bias_regularizer: nil,
                      use_bias: true)
         super
       end
@@ -434,13 +451,9 @@ module DNN
         super
         num_prev_nodes = @input_shape[1]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes * 3)
-        @weight_initializer.init_param(self, @weight)
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 3)
-        @weight_initializer.init_param(self, @recurrent_weight)
-        if @bias
-          @bias.data = Xumo::SFloat.new(@num_nodes * 3)
-          @bias_initializer.init_param(self, @bias) 
-        end
+        @bias.data = Xumo::SFloat.new(@num_nodes * 3) if @bias
+        init_weight_and_bias
         @time_length.times do |t|
           @layers << GRU_Dense.new(@weight, @recurrent_weight, @bias)
         end

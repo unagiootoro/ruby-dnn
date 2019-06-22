@@ -33,7 +33,7 @@ module DNN
 
       # Backward propagation.
       def backward(dy)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update'")
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward'")
       end
 
       # Please reimplement this method as needed.
@@ -98,30 +98,30 @@ module DNN
 
     # It is a superclass of all connection layers.
     class Connection < HasParamLayer
-      # @return [DNN::Initializers] weight initializer.
+      # @return [DNN::Initializers::Initializer] Weight initializer.
       attr_reader :weight_initializer
-      # @return [DNN::Initializers] bias initializer.
+      # @return [DNN::Initializers::Initializer] Bias initializer.
       attr_reader :bias_initializer
-      # @return [Float] L1 regularization.
-      attr_reader :l1_lambda
-      # @return [Float] L2 regularization.
-      attr_reader :l2_lambda
+      # @return [DNN::Regularizers::Regularizer] Weight regularization.
+      attr_reader :weight_regularizer
+      # @return [DNN::Regularizers::Regularizer] Bias regularization.
+      attr_reader :bias_regularizer
 
-      # @param [DNN::Initializers] weight_initializer weight initializer.
-      # @param [DNN::Initializers] bias_initializer bias initializer.
-      # @param [Float] l1_lambda L1 regularization
-      # @param [Float] l2_lambda L2 regularization
+      # @param [DNN::Initializers::Initializer] weight_initializer Weight initializer.
+      # @param [DNN::Initializers::Initializer] bias_initializer Bias initializer.
+      # @param [DNN::Regularizers::Regularizer] weight_regularizer Weight regularization.
+      # @param [DNN::Regularizers::Regularizer] bias_regularizer Bias regularization.
       # @param [Bool] use_bias whether to use bias.
       def initialize(weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
-                     l1_lambda: 0,
-                     l2_lambda: 0,
+                     weight_regularizer: nil,
+                     bias_regularizer: nil,
                      use_bias: true)
         super()
         @weight_initializer = weight_initializer
         @bias_initializer = bias_initializer
-        @l1_lambda = l1_lambda
-        @l2_lambda = l2_lambda
+        @weight_regularizer = weight_regularizer
+        @bias_regularizer = bias_regularizer
         @params[:weight] = @weight = Param.new(nil, 0)
         if use_bias
           @params[:bias] = @bias = Param.new(nil, 0)
@@ -132,8 +132,8 @@ module DNN
 
       def regularizers
         regularizers = []
-        regularizers << Lasso.new(@l1_lambda, @weight) if @l1_lambda > 0
-        regularizers << Ridge.new(@l2_lambda, @weight) if @l2_lambda > 0
+        regularizers << @weight_regularizer if @weight_regularizer
+        regularizers << @bias_regularizer if @bias_regularizer
         regularizers
       end
 
@@ -145,9 +145,18 @@ module DNN
       def to_hash(merge_hash)
         super({weight_initializer: @weight_initializer.to_hash,
                bias_initializer: @bias_initializer.to_hash,
-               l1_lambda: @l1_lambda,
-               l2_lambda: @l2_lambda,
+               weight_regularizer: @weight_regularizer&.to_hash,
+               bias_regularizer: @bias_regularizer&.to_hash,
                use_bias: use_bias}.merge(merge_hash))
+      end
+
+      private def init_weight_and_bias
+        @weight_initializer.init_param(self, @weight)
+        @weight_regularizer.param = @weight if @weight_regularizer
+        if @bias
+          @bias_initializer.init_param(self, @bias)
+          @bias_regularizer.param = @bias if @bias_regularizer
+        end
       end
     end
     
@@ -161,8 +170,8 @@ module DNN
         self.new(hash[:num_nodes],
                  weight_initializer: Utils.from_hash(hash[:weight_initializer]),
                  bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                 l1_lambda: hash[:l1_lambda],
-                 l2_lambda: hash[:l2_lambda],
+                 weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                 bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
                  use_bias: hash[:use_bias])
       end
 
@@ -170,11 +179,11 @@ module DNN
       def initialize(num_nodes,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
-                     l1_lambda: 0,
-                     l2_lambda: 0,
+                     weight_regularizer: nil,
+                     bias_regularizer: nil,
                      use_bias: true)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
-              l1_lambda: l1_lambda, l2_lambda: l2_lambda, use_bias: use_bias)
+              weight_regularizer: weight_regularizer, bias_regularizer: bias_regularizer, use_bias: use_bias)
         @num_nodes = num_nodes
       end
 
@@ -182,13 +191,10 @@ module DNN
         super
         num_prev_nodes = input_shape[0]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
-        @weight_initializer.init_param(self, @weight)
-        if @bias
-          @bias.data = Xumo::SFloat.new(@num_nodes)
-          @bias_initializer.init_param(self, @bias) 
-        end
+        @bias.data = Xumo::SFloat.new(@num_nodes) if @bias
+        init_weight_and_bias
       end
-    
+
       def forward(x)
         @x = x
         y = x.dot(@weight.data)

@@ -4,6 +4,8 @@ include DNN
 include Layers
 include Activations
 include Optimizers
+include Initializers
+include Regularizers
 
 class TestLayer < MiniTest::Unit::TestCase
   def test_initialize
@@ -80,26 +82,18 @@ class TestDense < MiniTest::Unit::TestCase
     hash = {
       class: "DNN::Layers::Dense",
       num_nodes: 100,
-      weight_initializer: {
-        class: "DNN::Initializers::RandomUniform",
-        min: -0.05,
-        max: 0.05,
-      },
-      bias_initializer: {
-        class: "DNN::Initializers::RandomUniform",
-        min: -0.05,
-        max: 0.05,
-      },
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_initializer: RandomUniform.new.to_hash,
+      bias_initializer: RandomNormal.new.to_hash,
+      weight_regularizer: L1.new.to_hash,
+      bias_regularizer: L2.new.to_hash,
       use_bias: false,
     }
     dense = Dense.from_hash(hash)
     assert_equal 100, dense.num_nodes
     assert_kind_of RandomUniform, dense.weight_initializer
-    assert_kind_of RandomUniform, dense.bias_initializer
-    assert_equal 0.1, dense.l1_lambda
-    assert_equal 0.2, dense.l2_lambda
+    assert_kind_of RandomNormal, dense.bias_initializer
+    assert_kind_of L1, dense.weight_regularizer
+    assert_kind_of L2, dense.bias_regularizer
     assert_equal false, dense.use_bias
   end
 
@@ -185,10 +179,10 @@ class TestDense < MiniTest::Unit::TestCase
   end
 
   def test_regularizers
-    dense = Dense.new(1, l1_lambda: 1, l2_lambda: 1)
+    dense = Dense.new(1, weight_regularizer: L1.new, bias_regularizer: L2.new)
     dense.build([10])
-    assert_kind_of Lasso, dense.regularizers[0]
-    assert_kind_of Ridge, dense.regularizers[1]
+    assert_kind_of L1, dense.regularizers[0]
+    assert_kind_of L2, dense.regularizers[1]
   end
 
   def test_regularizers2
@@ -198,14 +192,14 @@ class TestDense < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    dense = Dense.new(100)
+    dense = Dense.new(100, weight_regularizer: L1.new, bias_regularizer: L2.new)
     expected_hash = {
       class: "DNN::Layers::Dense",
       num_nodes: 100,
       weight_initializer: dense.weight_initializer.to_hash,
       bias_initializer: dense.bias_initializer.to_hash,
-      l1_lambda: 0,
-      l2_lambda: 0,
+      weight_regularizer: dense.weight_regularizer.to_hash,
+      bias_regularizer: dense.bias_regularizer.to_hash,
       use_bias: true,
     }
     assert_equal expected_hash, dense.to_hash

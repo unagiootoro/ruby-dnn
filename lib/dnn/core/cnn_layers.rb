@@ -95,11 +95,11 @@ module DNN
         Conv2D.new(hash[:num_filters], hash[:filter_size],
                    weight_initializer: Utils.from_hash(hash[:weight_initializer]),
                    bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                   weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                   bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                   use_bias: hash[:use_bias],
                    strides: hash[:strides],
-                   padding: hash[:padding],
-                   l1_lambda: hash[:l1_lambda],
-                   l2_lambda: hash[:l2_lambda],
-                   use_bias: hash[:use_bias])
+                   padding: hash[:padding])
       end
       
       # @param [Integer] num_filters Number of filters.
@@ -109,13 +109,13 @@ module DNN
       def initialize(num_filters, filter_size,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
+                     weight_regularizer: nil,
+                     bias_regularizer: nil,
+                     use_bias: true,
                      strides: 1,
-                     padding: false,
-                     l1_lambda: 0,
-                     l2_lambda: 0,
-                     use_bias: true)
+                     padding: false)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
-              l1_lambda: l1_lambda, l2_lambda: l2_lambda, use_bias: use_bias)
+              weight_regularizer: weight_regularizer, bias_regularizer: bias_regularizer, use_bias: use_bias)
         @num_filters = num_filters
         @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
         @strides = strides.is_a?(Integer) ? [strides, strides] : strides
@@ -126,11 +126,8 @@ module DNN
         super
         prev_h, prev_w, num_prev_filter = *input_shape
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
-        @weight_initializer.init_param(self, @weight)
-        if @bias
-          @bias.data = Xumo::SFloat.new(@num_filters)
-          @bias_initializer.init_param(self, @bias) 
-        end
+        @bias.data = Xumo::SFloat.new(@num_filters) if @bias
+        init_weight_and_bias
         if @padding == true
           out_h, out_w = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
           @pad_size = calc_padding_size(prev_h, prev_w, out_h, out_w, @strides)
@@ -203,10 +200,11 @@ module DNN
         Conv2D_Transpose.new(hash[:num_filters], hash[:filter_size],
                    weight_initializer: Utils.from_hash(hash[:weight_initializer]),
                    bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                   weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                   bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                   use_bias: hash[:use_bias],
                    strides: hash[:strides],
-                   padding: hash[:padding],
-                   l1_lambda: hash[:l1_lambda],
-                   l2_lambda: hash[:l2_lambda])
+                   padding: hash[:padding])
       end
       
       # @param [Integer] num_filters Number of filters.
@@ -216,13 +214,13 @@ module DNN
       def initialize(num_filters, filter_size,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
+                     weight_regularizer: nil,
+                     bias_regularizer: nil,
+                     use_bias: true,
                      strides: 1,
-                     padding: false,
-                     l1_lambda: 0,
-                     l2_lambda: 0,
-                     use_bias: true)
+                     padding: false)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
-              l1_lambda: l1_lambda, l2_lambda: l2_lambda, use_bias: use_bias)
+              weight_regularizer: weight_regularizer, bias_regularizer: bias_regularizer, use_bias: use_bias)
         @num_filters = num_filters
         @filter_size = filter_size.is_a?(Integer) ? [filter_size, filter_size] : filter_size
         @strides = strides.is_a?(Integer) ? [strides, strides] : strides
@@ -234,9 +232,11 @@ module DNN
         prev_h, prev_w, num_prev_filter = *input_shape
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
         @weight_initializer.init_param(self, @weight)
+        @weight_regularizer.param = @weight if @weight_regularizer
         if @bias
           @bias.data = Xumo::SFloat.new(@num_filters)
-          @bias_initializer.init_param(self, @bias) 
+          @bias_initializer.init_param(self, @bias)
+          @bias_regularizer.param = @bias if @bias_regularizer
         end
         if @padding == true
           out_h, out_w = calc_deconv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)

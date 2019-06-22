@@ -18,7 +18,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
 
   def test_forward2
     loss = MeanSquaredError.new
-    dense = Dense.new(1, l1_lambda: 1, l2_lambda: 1)
+    dense = Dense.new(1, weight_regularizer: L1L2.new(1, 1))
     dense.build([10])
     dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
     out_x = Xumo::SFloat[[0, 1]]
@@ -37,7 +37,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
 
   def backward
     loss = MeanSquaredError.new
-    dense = Dense.new(2, l1_lambda: 1, l2_lambda: 1)
+    dense = Dense.new(2, weight_regularizer: L1L2.new(1, 1))
     dense.build([1])
     dense.params[:weight].data = Numo::SFloat[[-2, 2]]
     dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)

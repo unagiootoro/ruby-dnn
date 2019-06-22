@@ -5,6 +5,7 @@ include Layers
 include Activations
 include Optimizers
 include Losses
+include Regularizers
 
 class TestConv2D_Utils < MiniTest::Unit::TestCase
   include Conv2D_Utils
@@ -163,15 +164,16 @@ class TestConv2D < MiniTest::Unit::TestCase
       bias_initializer: Zeros.new.to_hash,
       strides: [2, 2],
       padding: true,
-      l1_lambda: 0,
+      weight_regularizer: L1.new.to_hash,
+      bias_initializer: L2.new.to_hash,
       l2_lambda: 0,
       use_bias: false,
     }
     conv2d = Conv2D.from_hash(hash)
+    assert_equal false, conv2d.use_bias
     assert_equal 16, conv2d.num_filters
     assert_equal [3, 3], conv2d.filter_size
     assert_equal [2, 2], conv2d.strides
-    assert_equal false, conv2d.use_bias
     assert_equal true, conv2d.padding
   end
 
@@ -269,7 +271,7 @@ class TestConv2D < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    conv2d = Conv2D.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
+    conv2d = Conv2D.new(16, 5, strides: 2, padding: true, weight_regularizer: L1.new, bias_regularizer: L2.new, use_bias: false)
     expected_hash = {
       class: "DNN::Layers::Conv2D",
       num_filters: 16,
@@ -278,8 +280,8 @@ class TestConv2D < MiniTest::Unit::TestCase
       bias_initializer: conv2d.bias_initializer.to_hash,
       strides: [2, 2],
       padding: true,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: conv2d.weight_regularizer.to_hash,
+      bias_regularizer: conv2d.bias_regularizer.to_hash,
       use_bias: false,
     }
     assert_equal expected_hash, conv2d.to_hash
@@ -297,8 +299,8 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
       bias_initializer: Zeros.new.to_hash,
       strides: [2, 2],
       padding: true,
-      l1_lambda: 0,
-      l2_lambda: 0,
+      weight_regularizer: L1.new.to_hash,
+      bias_initializer: L2.new.to_hash,
       use_bias: true,
     }
     conv2d_t = Conv2D_Transpose.from_hash(hash)
@@ -382,7 +384,7 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    conv2d_t = Conv2D_Transpose.new(16, 5, strides: 2, padding: true, l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
+    conv2d_t = Conv2D_Transpose.new(16, 5, strides: 2, padding: true, weight_regularizer: L1.new, bias_regularizer: L2.new, use_bias: false)
     expected_hash = {
       class: "DNN::Layers::Conv2D_Transpose",
       num_filters: 16,
@@ -391,8 +393,8 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
       bias_initializer: conv2d_t.bias_initializer.to_hash,
       strides: [2, 2],
       padding: true,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: conv2d_t.weight_regularizer.to_hash,
+      bias_regularizer: conv2d_t.bias_regularizer.to_hash,
       use_bias: false
     }
     assert_equal expected_hash, conv2d_t.to_hash

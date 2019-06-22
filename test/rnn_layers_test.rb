@@ -5,13 +5,18 @@ include Layers
 include Activations
 include Optimizers
 include Losses
+include Regularizers
+
 
 class TestRNN < MiniTest::Unit::TestCase
   def test_initialize
     rnn = RNN.new(64, stateful: true, return_sequences: false,
                   weight_initializer: RandomUniform.new,
+                  recurrent_weight_initializer: RandomUniform.new,
                   bias_initializer: RandomUniform.new,
-                  l1_lambda: 0.1, l2_lambda: 0.2)
+                  weight_regularizer: L1.new,
+                  recurrent_weight_regularizer: L2.new,
+                  bias_regularizer: L1L2.new)
     assert_equal 64, rnn.num_nodes
     assert_equal true, rnn.stateful
     assert_equal false, rnn.return_sequences
@@ -44,15 +49,17 @@ class TestRNN < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    rnn = RNN.new(64, stateful: true, return_sequences: false,
-                  l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
+    rnn = RNN.new(64, stateful: true, return_sequences: false, use_bias: false,
+                  weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)
     expected_hash = {
       class: "DNN::Layers::RNN",
       num_nodes: 64,
       weight_initializer: rnn.weight_initializer.to_hash,
+      recurrent_weight_initializer: rnn.recurrent_weight_initializer.to_hash,
       bias_initializer: rnn.bias_initializer.to_hash,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: rnn.weight_regularizer.to_hash,
+      recurrent_weight_regularizer: rnn.recurrent_weight_regularizer.to_hash,
+      bias_regularizer: rnn.bias_regularizer.to_hash,
       use_bias: false,
       stateful: true,
       return_sequences: false,
@@ -61,12 +68,13 @@ class TestRNN < MiniTest::Unit::TestCase
   end
 
   def test_regularizers
-    dense = RNN.new(1, l1_lambda: 1, l2_lambda: 1)
+    dense = RNN.new(1, weight_regularizer: L1.new,
+                       recurrent_weight_regularizer: L2.new,
+                       bias_regularizer: L1L2.new)
     dense.build([10])
-    assert_kind_of Lasso, dense.regularizers[0]
-    assert_kind_of Lasso, dense.regularizers[1]
-    assert_kind_of Ridge, dense.regularizers[2]
-    assert_kind_of Ridge, dense.regularizers[3]
+    assert_kind_of L1, dense.regularizers[0]
+    assert_kind_of L2, dense.regularizers[1]
+    assert_kind_of L1L2, dense.regularizers[2]
   end
 
   def test_regularizers2
@@ -163,9 +171,11 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
       class: "DNN::Layers::SimpleRNN",
       num_nodes: 64,
       weight_initializer: RandomUniform.new.to_hash,
+      recurrent_weight_initializer: RandomUniform.new.to_hash,
       bias_initializer: RandomUniform.new.to_hash,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: L1.new.to_hash,
+      recurrent_weight_regularizer: L2.new.to_hash,
+      bias_regularizer: L1L2.new.to_hash,
       use_bias: false,
       stateful: true,
       return_sequences: false,
@@ -174,9 +184,11 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     rnn = SimpleRNN.from_hash(hash)
     assert_equal 64, rnn.num_nodes
     assert_kind_of RandomUniform, rnn.weight_initializer
+    assert_kind_of RandomUniform, rnn.recurrent_weight_initializer
     assert_kind_of RandomUniform, rnn.bias_initializer
-    assert_equal 0.1, rnn.l1_lambda
-    assert_equal 0.2, rnn.l2_lambda
+    assert_kind_of L1, rnn.weight_regularizer
+    assert_kind_of L2, rnn.recurrent_weight_regularizer
+    assert_kind_of L1L2, rnn.bias_regularizer
     assert_equal false, rnn.use_bias
     assert_equal true, rnn.stateful
     assert_equal false, rnn.return_sequences
@@ -223,15 +235,17 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    rnn = SimpleRNN.new(64, stateful: true, return_sequences: false,
-                        l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false, activation: ReLU.new)
+    rnn = SimpleRNN.new(64, stateful: true, return_sequences: false, use_bias: false, activation: ReLU.new,
+                        weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)
     expected_hash = {
       class: "DNN::Layers::SimpleRNN",
       num_nodes: 64,
       weight_initializer: rnn.weight_initializer.to_hash,
+      recurrent_weight_initializer: rnn.recurrent_weight_initializer.to_hash,
       bias_initializer: rnn.bias_initializer.to_hash,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: rnn.weight_regularizer.to_hash,
+      recurrent_weight_regularizer: rnn.recurrent_weight_regularizer.to_hash,
+      bias_regularizer: rnn.bias_regularizer.to_hash,
       use_bias: false,
       stateful: true,
       return_sequences: false,
@@ -241,7 +255,9 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   end
 
   def test_build
-    rnn = SimpleRNN.new(64, weight_initializer: Const.new(2), bias_initializer: Const.new(2))
+    rnn = SimpleRNN.new(64, weight_initializer: Const.new(2),
+                            recurrent_weight_initializer: Const.new(2),
+                            bias_initializer: Const.new(2))
     rnn.build([16, 32])
     assert_equal Numo::SFloat.new(32, 64).fill(2), rnn.params[:weight].data
     assert_equal Numo::SFloat.new(64, 64).fill(2), rnn.params[:recurrent_weight].data
@@ -346,9 +362,11 @@ class TestLSTM < MiniTest::Unit::TestCase
       class: "DNN::Layers::LSTM",
       num_nodes: 64,
       weight_initializer: RandomUniform.new.to_hash,
+      recurrent_weight_initializer: RandomUniform.new.to_hash,
       bias_initializer: RandomUniform.new.to_hash,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: L1.new.to_hash,
+      recurrent_weight_regularizer: L2.new.to_hash,
+      bias_regularizer: L1L2.new.to_hash,
       use_bias: false,
       stateful: true,
       return_sequences: false,
@@ -356,9 +374,11 @@ class TestLSTM < MiniTest::Unit::TestCase
     lstm = LSTM.from_hash(hash)
     assert_equal 64, lstm.num_nodes
     assert_kind_of RandomUniform, lstm.weight_initializer
+    assert_kind_of RandomUniform, lstm.recurrent_weight_initializer
     assert_kind_of RandomUniform, lstm.bias_initializer
-    assert_equal 0.1, lstm.l1_lambda
-    assert_equal 0.2, lstm.l2_lambda
+    assert_kind_of L1, lstm.weight_regularizer
+    assert_kind_of L2, lstm.recurrent_weight_regularizer
+    assert_kind_of L1L2, lstm.bias_regularizer
     assert_equal false, lstm.use_bias
     assert_equal true, lstm.stateful
     assert_equal false, lstm.return_sequences
@@ -404,15 +424,17 @@ class TestLSTM < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    lstm = LSTM.new(64, stateful: true, return_sequences: false,
-                        l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
+    lstm = LSTM.new(64, stateful: true, return_sequences: false, use_bias: false,
+                    weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)
     expected_hash = {
       class: "DNN::Layers::LSTM",
       num_nodes: 64,
       weight_initializer: lstm.weight_initializer.to_hash,
+      recurrent_weight_initializer: lstm.recurrent_weight_initializer.to_hash,
       bias_initializer: lstm.bias_initializer.to_hash,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: lstm.weight_regularizer.to_hash,
+      recurrent_weight_regularizer: lstm.recurrent_weight_regularizer.to_hash,
+      bias_regularizer: lstm.bias_regularizer.to_hash,
       use_bias: false,
       stateful: true,
       return_sequences: false,
@@ -431,7 +453,9 @@ class TestLSTM < MiniTest::Unit::TestCase
   end
 
   def test_build
-    lstm = LSTM.new(64, weight_initializer: Const.new(2), bias_initializer: Const.new(2))
+    lstm = LSTM.new(64, weight_initializer: Const.new(2),
+                    recurrent_weight_initializer: Const.new(2),
+                    bias_initializer: Const.new(2))
     lstm.build([16, 32])
     assert_equal Numo::SFloat.new(32, 256).fill(2), lstm.params[:weight].data
     assert_equal Numo::SFloat.new(64, 256).fill(2), lstm.params[:recurrent_weight].data
@@ -527,9 +551,11 @@ class TestGRU < MiniTest::Unit::TestCase
       class: "DNN::Layers::GRU",
       num_nodes: 64,
       weight_initializer: RandomUniform.new.to_hash,
+      recurrent_weight_initializer: RandomUniform.new.to_hash,
       bias_initializer: RandomUniform.new.to_hash,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: L1.new.to_hash,
+      recurrent_weight_regularizer: L2.new.to_hash,
+      bias_regularizer: L1L2.new.to_hash,
       use_bias: false,
       stateful: true,
       return_sequences: false,
@@ -537,24 +563,28 @@ class TestGRU < MiniTest::Unit::TestCase
     gru = GRU.from_hash(hash)
     assert_equal 64, gru.num_nodes
     assert_kind_of RandomUniform, gru.weight_initializer
+    assert_kind_of RandomUniform, gru.recurrent_weight_initializer
     assert_kind_of RandomUniform, gru.bias_initializer
-    assert_equal 0.1, gru.l1_lambda
-    assert_equal 0.2, gru.l2_lambda
+    assert_kind_of L1, gru.weight_regularizer
+    assert_kind_of L2, gru.recurrent_weight_regularizer
+    assert_kind_of L1L2, gru.bias_regularizer
     assert_equal false, gru.use_bias
     assert_equal true, gru.stateful
     assert_equal false, gru.return_sequences
   end
 
   def test_to_hash
-    gru = GRU.new(64, stateful: true, return_sequences: false,
-                        l1_lambda: 0.1, l2_lambda: 0.2, use_bias: false)
+    gru = GRU.new(64, stateful: true, return_sequences: false, use_bias: false,
+                  weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)
     expected_hash = {
       class: "DNN::Layers::GRU",
       num_nodes: 64,
       weight_initializer: gru.weight_initializer.to_hash,
+      recurrent_weight_initializer: gru.recurrent_weight_initializer.to_hash,
       bias_initializer: gru.bias_initializer.to_hash,
-      l1_lambda: 0.1,
-      l2_lambda: 0.2,
+      weight_regularizer: gru.weight_regularizer.to_hash,
+      recurrent_weight_regularizer: gru.recurrent_weight_regularizer.to_hash,
+      bias_regularizer: gru.bias_regularizer.to_hash,
       use_bias: false,
       stateful: true,
       return_sequences: false,
@@ -563,7 +593,9 @@ class TestGRU < MiniTest::Unit::TestCase
   end
 
   def test_build
-    gru = GRU.new(64, weight_initializer: Const.new(2), bias_initializer: Const.new(2))
+    gru = GRU.new(64, weight_initializer: Const.new(2),
+                  recurrent_weight_initializer: Const.new(2),
+                  bias_initializer: Const.new(2))
     gru.build([16, 32])
     assert_equal Numo::SFloat.new(32, 192).fill(2), gru.params[:weight].data
     assert_equal Numo::SFloat.new(64, 192).fill(2), gru.params[:recurrent_weight].data
