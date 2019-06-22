@@ -287,9 +287,14 @@ module DNN
         x_batch, y_batch = dataset.next_batch(batch_size)
         x_batch, y_batch = before_batch_cbk.call(x_batch, y_batch) if before_batch_cbk
         x_batch = forward(x_batch, false)
+        sigmoid = Sigmoid.new
         batch_size.times do |j|
           if @layers.last.output_shape == [1]
-            correct += 1 if x_batch[j, 0].round == y_batch[j, 0].round
+            if @loss_func.is_a?(SigmoidCrossEntropy)
+              correct += 1 if sigmoid.forward(x_batch[j, 0]).round == y_batch[j, 0].round
+            else
+              correct += 1 if x_batch[j, 0].round == y_batch[j, 0].round
+            end
           else
             correct += 1 if x_batch[j, true].max_index == y_batch[j, true].max_index
           end
