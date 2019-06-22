@@ -379,7 +379,7 @@ module DNN
         else
           layer
         end
-      }.flatten.compact
+      }.flatten.compact.uniq
       @optimizer.update(all_trainable_layers)
     end
 
