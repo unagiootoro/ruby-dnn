@@ -49,7 +49,7 @@ If you want to know more detailed information, please refer to the source code.
 ## Implemented
 || Implemented classes |
 |:-----------|------------:|
-| Connections | Dense, Conv2D, Conv2D_Transpose, SimpleRNN, LSTM, GRU |
+| Connections | Dense, Conv2D, Conv2D_Transpose, Embedding, SimpleRNN, LSTM, GRU |
 | Layers | Flatten, Reshape, Dropout, BatchNormalization, MaxPool2D, AvgPool2D, UnPool2D |
 | Activations | Sigmoid, Tanh, Softsign, Softplus, Swish, ReLU, LeakyReLU, ELU |
 | Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, Adam, RMSPropGraves |
@@ -77,4 +77,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the ruby-dnn project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/dnn/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the ruby-dnn project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/unagiootoro/ruby-dnn/blob/master/CODE_OF_CONDUCT.md).
