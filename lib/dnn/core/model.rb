@@ -285,7 +285,7 @@ module DNN
       sum_loss = 0
       (x.shape[0].to_f / batch_size).ceil.times do |i|
         x_batch, y_batch = dataset.next_batch(batch_size)
-        x_batch, y_batch = before_batch_cbk.call(x_batch, y_batch, true) if before_batch_cbk
+        x_batch, y_batch = before_batch_cbk.call(x_batch, y_batch, false) if before_batch_cbk
         x_batch = forward(x_batch, false)
         sigmoid = Sigmoid.new
         batch_size.times do |j|
