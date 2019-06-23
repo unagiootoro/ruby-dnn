@@ -193,7 +193,7 @@ module DNN
     # @param [Integer] epochs Number of training.
     # @param [Integer] batch_size Batch size used for one training.
     # @param [Array or NilClass] test If you to test the model for every 1 epoch,
-    #     specify [x_test, y_test]. Don't test to the model, specify nil.                     
+    #                            specify [x_test, y_test]. Don't test to the model, specify nil.
     # @param [Bool] verbose Set true to display the log. If false is set, the log is not displayed.
     # @param [Lambda] before_epoch_cbk Process performed before one training.
     # @param [Lambda] after_epoch_cbk Process performed after one training.
@@ -260,13 +260,13 @@ module DNN
       raise DNN_Error.new("The model is not compiled.") unless compiled?
       check_xy_type(x, y)
       input_data_shape_check(x, y)
-      x, y = before_batch_cbk.call(x, y) if before_batch_cbk
+      x, y = before_batch_cbk.call(x, y, true) if before_batch_cbk
       x = forward(x, true)
       loss_value = @loss_func.forward(x, y, get_all_layers)
       dy = @loss_func.backward(y, get_all_layers)
       backward(dy)
       update
-      after_batch_cbk.call(loss_value) if after_batch_cbk
+      after_batch_cbk.call(loss_value, true) if after_batch_cbk
       loss_value
     end
   
@@ -285,7 +285,7 @@ module DNN
       sum_loss = 0
       (x.shape[0].to_f / batch_size).ceil.times do |i|
         x_batch, y_batch = dataset.next_batch(batch_size)
-        x_batch, y_batch = before_batch_cbk.call(x_batch, y_batch) if before_batch_cbk
+        x_batch, y_batch = before_batch_cbk.call(x_batch, y_batch, true) if before_batch_cbk
         x_batch = forward(x_batch, false)
         sigmoid = Sigmoid.new
         batch_size.times do |j|
@@ -300,7 +300,7 @@ module DNN
           end
         end
         loss_value = @loss_func.forward(x_batch, y_batch, get_all_layers)
-        after_batch_cbk.call(loss_value) if after_batch_cbk
+        after_batch_cbk.call(loss_value, false) if after_batch_cbk
         sum_loss += loss_value.is_a?(Numo::SFloat) ? loss_value.mean : loss_value
       end
       mean_loss = sum_loss / batch_size
