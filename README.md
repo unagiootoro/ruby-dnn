@@ -30,11 +30,9 @@ model = Model.new
 model << InputLayer.new(784)
 
 model << Dense.new(256)
-model << BatchNormalization.new
 model << ReLU.new
 
 model << Dense.new(256)
-model << BatchNormalization.new
 model << ReLU.new
 
 model << Dense.new(10)
@@ -45,8 +43,7 @@ model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
 
 ```
 
-Currently, only simple Japanese documents are available.
-Please refer to examples for basic usage.
+Please refer to examples for basic usage.  
 If you want to know more detailed information, please refer to the source code.
 
 ## Implemented
@@ -58,7 +55,11 @@ If you want to know more detailed information, please refer to the source code.
 | Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, Adam, RMSPropGraves |
 | Losses | MeanSquaredError, MeanAbsoluteError, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
 
-
+## TODO
+● Add CI badge.  
+● Write a test.  
+● Write a document.  
+● Support to GPU.  
 
 ## Development
 
