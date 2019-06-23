@@ -414,8 +414,8 @@ module DNN
     private
 
     def layers_check
-      if !@layers.first.is_a?(Layers::InputLayer) && !@super_model
-        raise TypeError.new("The first layer is not an InputLayer.")
+      if !@layers.first.is_a?(Layers::InputLayer) && !@layers.first.is_a?(Layers::Embedding) && !@super_model
+        raise TypeError.new("The first layer is not an InputLayer or Embedding.")
       end
     end
 
