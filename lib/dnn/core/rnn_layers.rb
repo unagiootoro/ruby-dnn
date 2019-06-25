@@ -39,6 +39,9 @@ module DNN
       end
 
       def build(input_shape)
+        unless input_shape.length == 2
+          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 2 dimensional.")
+        end
         super
         @time_length = @input_shape[0]
       end

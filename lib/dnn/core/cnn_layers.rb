@@ -123,6 +123,9 @@ module DNN
       end
 
       def build(input_shape)
+        unless input_shape.length == 3
+          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
+        end
         super
         prev_h, prev_w, num_prev_filter = *input_shape
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
@@ -228,16 +231,14 @@ module DNN
       end
 
       def build(input_shape)
+        unless input_shape.length == 3
+          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
+        end
         super
         prev_h, prev_w, num_prev_filter = *input_shape
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
-        @weight_initializer.init_param(self, @weight)
-        @weight_regularizer.param = @weight if @weight_regularizer
-        if @bias
-          @bias.data = Xumo::SFloat.new(@num_filters)
-          @bias_initializer.init_param(self, @bias)
-          @bias_regularizer.param = @bias if @bias_regularizer
-        end
+        @bias.data = Xumo::SFloat.new(@num_filters) if @bias
+        init_weight_and_bias
         if @padding == true
           out_h, out_w = calc_deconv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
           @pad_size = calc_padding_size(out_h, out_w, prev_h, prev_w, @strides)
@@ -327,6 +328,9 @@ module DNN
       end
 
       def build(input_shape)
+        unless input_shape.length == 3
+          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
+        end
         super
         prev_h, prev_w = input_shape[0..1]
         @num_channel = input_shape[2]
@@ -423,6 +427,9 @@ module DNN
       end
 
       def build(input_shape)
+        unless input_shape.length == 3
+          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
+        end
         super
         prev_h, prev_w = input_shape[0..1]
         unpool_h, unpool_w = @unpool_size
