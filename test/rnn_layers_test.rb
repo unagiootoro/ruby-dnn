@@ -71,7 +71,7 @@ class TestRNN < MiniTest::Unit::TestCase
     dense = RNN.new(1, weight_regularizer: L1.new,
                        recurrent_weight_regularizer: L2.new,
                        bias_regularizer: L1L2.new)
-    dense.build([10])
+    dense.build([1, 10])
     assert_kind_of L1, dense.regularizers[0]
     assert_kind_of L2, dense.regularizers[1]
     assert_kind_of L1L2, dense.regularizers[2]
@@ -79,7 +79,7 @@ class TestRNN < MiniTest::Unit::TestCase
 
   def test_regularizers2
     dense = RNN.new(1)
-    dense.build([10])
+    dense.build([1, 10])
     assert_equal [], dense.regularizers
   end
 end
@@ -156,7 +156,7 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     dense = SimpleRNN_Dense.new(w, w2, b, Tanh.new)
     dense.trainable = false
     dense.forward(x, h)
-    dx, dh = dense.backward(dh2)
+    dense.backward(dh2)
     assert_equal 0, dense.instance_variable_get(:@weight).grad
     assert_equal 0, dense.instance_variable_get(:@recurrent_weight).grad
     assert_equal 0, dense.instance_variable_get(:@bias).grad
@@ -536,7 +536,7 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     dense = GRU_Dense.new(w, w2, b)
     dense.trainable = false
     dense.forward(x, h)
-    dx, dh = dense.backward(dh2)
+    dense.backward(dh2)
     assert_equal 0, dense.instance_variable_get(:@weight).grad
     assert_equal 0, dense.instance_variable_get(:@recurrent_weight).grad
     assert_equal 0, dense.instance_variable_get(:@bias).grad
