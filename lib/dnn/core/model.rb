@@ -281,12 +281,13 @@ module DNN
       dataset = Dataset.new(x, y, false)
       correct = 0
       sum_loss = 0
-      (x.shape[0].to_f / batch_size).ceil.times do |i|
+      max_iter = (x.shape[0].to_f / batch_size)
+      max_iter.ceil.times do |i|
         x_batch, y_batch = dataset.next_batch(batch_size)
         x_batch, y_batch = before_batch_cbk.call(x_batch, y_batch, false) if before_batch_cbk
         x_batch = forward(x_batch, false)
         sigmoid = Sigmoid.new
-        batch_size.times do |j|
+        x_batch.shape[0].times do |j|
           if @layers.last.output_shape == [1]
             if @loss_func.is_a?(SigmoidCrossEntropy)
               correct += 1 if sigmoid.forward(x_batch[j, 0]).round == y_batch[j, 0].round
@@ -299,9 +300,9 @@ module DNN
         end
         loss_value = @loss_func.forward(x_batch, y_batch, get_all_layers)
         after_batch_cbk.call(loss_value, false) if after_batch_cbk
-        sum_loss += loss_value.is_a?(Numo::SFloat) ? loss_value.mean : loss_value
+        sum_loss += loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value
       end
-      mean_loss = sum_loss / batch_size
+      mean_loss = sum_loss / max_iter
       [correct.to_f / x.shape[0], mean_loss]
     end
 
