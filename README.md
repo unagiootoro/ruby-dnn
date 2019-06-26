@@ -57,7 +57,7 @@ If you want to know more detailed information, please refer to the source code.
 | Losses | MeanSquaredError, MeanAbsoluteError, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
 
 ## TODO
-● Add CI badge.  
+● Support to define by run model.  
 ● Write a test.  
 ● Write a document.  
 ● Support to GPU.  
