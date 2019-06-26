@@ -1,5 +1,6 @@
 # ruby-dnn
-[![Gem Version](https://badge.fury.io/rb/ruby-dnn.svg)](https://badge.fury.io/rb/ruby-dnn)
+[![Gem Version](https://badge.fury.io/rb/ruby-dnn.svg)](https://badge.fury.io/rb/ruby-dnn)  
+[![Build Status](https://travis-ci.org/unagiootoro/ruby-dnn.svg?branch=master)](https://travis-ci.org/unagiootoro/ruby-dnn)
 
 ruby-dnn is a ruby deep learning library. This library supports full connected neural network and convolution neural network.
 Currently, you can get 99% accuracy with MNIST and 74% with CIFAR 10.
