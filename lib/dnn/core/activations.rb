@@ -61,15 +61,15 @@ module DNN
     
     class ReLU < Layers::Layer
       def forward(x)
-        @x = x.clone
+        @x = x
         x[x < 0] = 0
         x
       end
     
       def backward(dy)
-        @x[@x > 0] = 1
-        @x[@x <= 0] = 0
-        dy * @x
+        dx = Xumo::SFloat.ones(@x.shape)
+        dx[@x <= 0] = 0
+        dy * dx
       end
     end
 
@@ -88,16 +88,16 @@ module DNN
       end
 
       def forward(x)
-        @x = x.clone
+        @x = x
         a = Xumo::SFloat.ones(x.shape)
         a[x <= 0] = @alpha
         x * a
       end
 
       def backward(dy)
-        @x[@x > 0] = 1
-        @x[@x <= 0] = @alpha
-        dy * @x
+        dx = Xumo::SFloat.ones(@x.shape)
+        dx[@x <= 0] = @alpha
+        dy * dx
       end
 
       def to_hash
