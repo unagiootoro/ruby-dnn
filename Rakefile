@@ -9,7 +9,7 @@ Rake::TestTask.new(:test) do |t|
 end
 
 task :build_dataset_loader do
-  sh "cd ext/cifar10_loader; ruby extconf.rb; make"
+  sh "cd ext/cifar_loader; ruby extconf.rb; make"
 end
 
 task :build_image_io do
