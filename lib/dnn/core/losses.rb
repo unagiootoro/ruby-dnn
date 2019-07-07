@@ -72,6 +72,22 @@ module DNN
     end
 
 
+    class Hinge < Loss
+      def forward_loss(y, t)
+        @y = y
+        @a = 1 - y * t
+        @a[@a < 0] = 0
+        @a
+      end
+
+      def backward_loss(t)
+        a = Xumo::SFloat.ones(*@a.shape)
+        a[@a <= 0] = 0
+        a * -t
+      end
+    end
+
+
     class HuberLoss < Loss
       def forward(y, t, layers)
         @loss_value = super(y, t, layers)

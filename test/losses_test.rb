@@ -12,8 +12,8 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     loss = MeanSquaredError.new
     y = Xumo::SFloat[[0, 1]]
     t = Xumo::SFloat[[2, 4]]
-    out_x = loss.forward(y, t, [])
-    assert_equal 6.5, out_x.round(4)
+    out_y = loss.forward(y, t, [])
+    assert_equal 6.5, out_y.round(4)
   end
 
   def test_forward2
@@ -21,9 +21,9 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     dense = Dense.new(1, weight_regularizer: L1L2.new(1, 1))
     dense.build([10])
     dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
-    out_x = Xumo::SFloat[[0, 1]]
+    out_y = Xumo::SFloat[[0, 1]]
     t = Xumo::SFloat[[0, 1]]
-    assert_equal 15, loss.forward(out_x, t, [dense]).round(4)
+    assert_equal 15, loss.forward(out_y, t, [dense]).round(4)
   end
 
   def test_backward
@@ -58,8 +58,8 @@ class TestMeanAbsoluteError < MiniTest::Unit::TestCase
     loss = MeanAbsoluteError.new
     y = Xumo::SFloat[[0, 1]]
     t = Xumo::SFloat[[2, 4]]
-    out_x = loss.forward(y, t, [])
-    assert_equal 5, out_x.round(4)
+    out_y = loss.forward(y, t, [])
+    assert_equal 5, out_y.round(4)
   end
 
   def test_backward
@@ -73,21 +73,41 @@ class TestMeanAbsoluteError < MiniTest::Unit::TestCase
 end
 
 
+class TestHinge < MiniTest::Unit::TestCase
+  def test_forward
+    loss = Hinge.new
+    y = Xumo::SFloat[[1, 1]]
+    t = Xumo::SFloat[[0.7, 1.5]]
+    out_y = loss.forward(y, t, [])
+    assert_equal Xumo::SFloat[[0.3, 0]], out_y.round(4)
+  end
+
+  def test_backward
+    loss = Hinge.new
+    y = Xumo::SFloat[[1, 1]]
+    t = Xumo::SFloat[[0.7, 1.5]]
+    loss.forward(y, t, [])
+    grad = loss.backward(t, [])
+    assert_equal Xumo::SFloat[[-0.7, 0]], grad.round(4)
+  end
+end
+
+
 class TestHuberLoss < MiniTest::Unit::TestCase
   def test_forward
     loss = HuberLoss.new
     y = Xumo::SFloat[[0, 1]]
     t = Xumo::SFloat[[2, 4]]
-    out_x = loss.forward(y, t, [])
-    assert_equal 5, out_x.round(4)
+    out_y = loss.forward(y, t, [])
+    assert_equal 5, out_y.round(4)
   end
 
   def test_forward2
     loss = HuberLoss.new
     y = Xumo::SFloat[[0, 1.0]]
     t = Xumo::SFloat[[0.5, 1.25]]
-    out_x = loss.forward(y, t, [])
-    assert_equal 0.1563, out_x.round(4)
+    out_y = loss.forward(y, t, [])
+    assert_equal 0.1563, out_y.round(4)
   end
 
   def test_backward
@@ -121,8 +141,8 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
     loss = SoftmaxCrossEntropy.new
     y = Xumo::SFloat[[0, 1, 2]]
     t = Xumo::SFloat[[0, 0, 1]]
-    out_x = loss.forward(y, t, [])
-    assert_equal 0.4076, out_x.round(4)
+    out_y = loss.forward(y, t, [])
+    assert_equal 0.4076, out_y.round(4)
   end
 
   def test_backward
@@ -152,8 +172,8 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     loss = SigmoidCrossEntropy.new
     y = Xumo::SFloat[[0, 1]]
     t = Xumo::SFloat[[1, 0]]
-    out_x = loss.forward(y, t, [])
-    assert_equal Xumo::SFloat[[0.6931, 1.3133]], out_x.round(4)
+    out_y = loss.forward(y, t, [])
+    assert_equal Xumo::SFloat[[0.6931, 1.3133]], out_y.round(4)
   end
 
   def test_backward
