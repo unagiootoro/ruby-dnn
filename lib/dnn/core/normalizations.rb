@@ -2,6 +2,8 @@ module DNN
   module Layers
 
     class BatchNormalization < HasParamLayer
+      # @return [Bool] learning_phase Return the true if learning.
+      attr_accessor :learning_phase
       # @return [Integer] The axis to normalization.
       attr_reader :axis
       # @return [Float] Exponential moving average of mean and variance.
@@ -21,6 +23,11 @@ module DNN
         @axis = axis
         @momentum = momentum
         @eps = eps
+      end
+
+      def call(input, learning_phase)
+        self.learning_phase = learning_phase
+        super(input)
       end
 
       def build(input_shape)

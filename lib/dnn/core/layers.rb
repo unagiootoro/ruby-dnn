@@ -3,13 +3,24 @@ module DNN
 
     # Super class of all optimizer classes.
     class Layer
-      # @return [Bool] learning_phase Return the true if learning.
-      attr_accessor :learning_phase
       # @return [Array] Return the shape of the input data.
       attr_reader :input_shape
 
+      def self.call(x, *args)
+        self.new(*args).(x)
+      end
+
       def initialize
         @built = false
+      end
+
+      def call(input)
+        x, prev_link = *input
+        build(x.shape[1..-1]) unless built?
+        y = forward(x)
+        link = Link.new(prev_link, self)
+        prev_link.next = link
+        [y, link]
       end
 
       # Build the layer.
@@ -75,6 +86,11 @@ module DNN
       def initialize(input_dim_or_shape)
         super()
         @input_shape = input_dim_or_shape.is_a?(Array) ? input_dim_or_shape : [input_dim_or_shape]
+      end
+
+      def call(x)
+        build
+        [x, Link.new(nil, self)]
       end
 
       def build
@@ -267,6 +283,8 @@ module DNN
 
     
     class Dropout < Layer
+      # @return [Bool] learning_phase Return the true if learning.
+      attr_accessor :learning_phase
       # @return [Float] dropout ratio.
       attr_accessor :dropout_ratio
       # @return [Float] Use 'weight scaling inference rule'.
@@ -282,11 +300,17 @@ module DNN
         @seed = seed
         @use_scale = use_scale
         @mask = nil
+        @rnd = Random.new(@seed)
+      end
+
+      def call(input, learning_phase)
+        self.learning_phase = learning_phase
+        super(input)
       end
 
       def forward(x)
         if learning_phase
-          Xumo::SFloat.srand(@seed)
+          Xumo::SFloat.srand(@rnd.rand(1 << 31))
           @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
           x[@mask] = 0
         else
