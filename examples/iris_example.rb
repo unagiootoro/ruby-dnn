@@ -14,9 +14,6 @@ x, y = Iris.load(true)
 x_train, y_train = x[0...100, true], y[0...100]
 x_test, y_test = x[100...150, true], y[100...150]
 
-x_train /= 255
-x_test /= 255
-
 y_train = DNN::Utils.to_categorical(y_train, 3, Numo::SFloat)
 y_test = DNN::Utils.to_categorical(y_test, 3, Numo::SFloat)
 
