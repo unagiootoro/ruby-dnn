@@ -4,13 +4,13 @@ include DNN::Layers
 include DNN::Activations
 include DNN::Optimizers
 include DNN::Losses
-Model = DNN::Model
+include DNN::Models
 Utils = DNN::Utils
 
 x = Numo::SFloat[[0, 0], [1, 0], [0, 1], [1, 1]]
 y = Numo::SFloat[[0], [1], [1], [0]]
 
-model = Model.new
+model = Sequential.new
 
 model << InputLayer.new(2)
 model << Dense.new(16)

@@ -7,7 +7,7 @@ include DNN::Layers
 include DNN::Activations
 include DNN::Optimizers
 include DNN::Losses
-Model = DNN::Model
+include DNN::Models
 CIFAR10 = DNN::CIFAR10
 
 x_train, y_train = CIFAR10.load_train
@@ -22,7 +22,7 @@ x_test /= 255
 y_train = DNN::Utils.to_categorical(y_train, 10, Numo::SFloat)
 y_test = DNN::Utils.to_categorical(y_test, 10, Numo::SFloat)
 
-model = Model.new
+model = Sequential.new
 
 model << InputLayer.new([32, 32, 3])
 

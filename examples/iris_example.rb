@@ -7,7 +7,7 @@ include DNN::Layers
 include DNN::Activations
 include DNN::Optimizers
 include DNN::Losses
-Model = DNN::Model
+include DNN::Models
 Iris = DNN::Iris
 
 x, y = Iris.load(true)
@@ -17,7 +17,7 @@ x_test, y_test = x[100...150, true], y[100...150]
 y_train = DNN::Utils.to_categorical(y_train, 3, Numo::SFloat)
 y_test = DNN::Utils.to_categorical(y_test, 3, Numo::SFloat)
 
-model = Model.new
+model = Sequential.new
 
 model << InputLayer.new(4)
 

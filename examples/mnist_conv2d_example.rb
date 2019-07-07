@@ -7,7 +7,7 @@ include DNN::Layers
 include DNN::Activations
 include DNN::Optimizers
 include DNN::Losses
-Model = DNN::Model
+include DNN::Models
 MNIST = DNN::MNIST
 
 x_train, y_train = MNIST.load_train
@@ -22,7 +22,7 @@ x_test /= 255
 y_train = DNN::Utils.to_categorical(y_train, 10, Numo::SFloat)
 y_test = DNN::Utils.to_categorical(y_test, 10, Numo::SFloat)
 
-model = Model.new
+model = Sequential.new
 
 model << InputLayer.new([28, 28, 1])
 
