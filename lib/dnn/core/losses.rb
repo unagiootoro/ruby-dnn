@@ -2,8 +2,8 @@ module DNN
   module Losses
 
     class Loss
-      def forward(x, y, layers)
-        loss_value = forward_loss(x, y)
+      def forward(y, t, layers)
+        loss_value = forward_loss(y, t)
         regularizers = layers.select { |layer| layer.is_a?(Connection) }
                              .map { |layer| layer.regularizers }.flatten
         
@@ -13,13 +13,13 @@ module DNN
         loss_value
       end
 
-      def backward(y, layers)
+      def backward(t, layers)
         layers.select { |layer| layer.is_a?(Connection) }.each do |layer|
           layer.regularizers.each do |regularizer|
             regularizer.backward
           end
         end
-        backward_loss(y)
+        backward_loss(t)
       end
 
       def to_hash(merge_hash = nil)
@@ -30,11 +30,11 @@ module DNN
 
       private
 
-      def forward_loss(x, y)
+      def forward_loss(y, t)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward_loss'")
       end
 
-      def backward_loss(y)
+      def backward_loss(t)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward_loss'")
       end
     end
@@ -42,14 +42,14 @@ module DNN
     class MeanSquaredError < Loss
       private
 
-      def forward_loss(x, y)
-        @x = x
-        batch_size = y.shape[0]
-        0.5 * ((x - y)**2).sum / batch_size
+      def forward_loss(y, t)
+        @y = y
+        batch_size = t.shape[0]
+        0.5 * ((y - t)**2).sum / batch_size
       end
 
-      def backward_loss(y)
-        @x - y
+      def backward_loss(t)
+        @y - t
       end
     end
 
@@ -57,14 +57,14 @@ module DNN
     class MeanAbsoluteError < Loss
       private
 
-      def forward_loss(x, y)
-        @x = x
-        batch_size = y.shape[0]
-        (x - y).abs.sum / batch_size
+      def forward_loss(y, t)
+        @y = y
+        batch_size = t.shape[0]
+        (y - t).abs.sum / batch_size
       end
 
-      def backward_loss(y)
-        dy = @x - y
+      def backward_loss(t)
+        dy = @y - t
         dy[dy >= 0] = 1
         dy[dy < 0] = -1
         dy
@@ -73,20 +73,20 @@ module DNN
 
 
     class HuberLoss < Loss
-      def forward(x, y, layers)
-        @loss_value = super(x, y, layers)
+      def forward(y, t, layers)
+        @loss_value = super(y, t, layers)
       end
 
       private
 
-      def forward_loss(x, y)
-        @x = x
-        loss_value = loss_l1(y)
-        loss_value > 1 ? loss_value : loss_l2(y)
+      def forward_loss(y, t)
+        @y = y
+        loss_value = loss_l1(t)
+        loss_value > 1 ? loss_value : loss_l2(t)
       end
 
-      def backward_loss(y)
-        dy = @x - y
+      def backward_loss(t)
+        dy = @y - t
         if @loss_value > 1
           dy[dy >= 0] = 1
           dy[dy < 0] = -1
@@ -94,14 +94,14 @@ module DNN
         dy
       end
 
-      def loss_l1(y)
-        batch_size = y.shape[0]
-        (@x - y).abs.sum / batch_size
+      def loss_l1(t)
+        batch_size = t.shape[0]
+        (@y - t).abs.sum / batch_size
       end
 
-      def loss_l2(y)
-        batch_size = y.shape[0]
-        0.5 * ((@x - y)**2).sum / batch_size
+      def loss_l2(t)
+        batch_size = t.shape[0]
+        0.5 * ((@y - t)**2).sum / batch_size
       end
     end
 
@@ -114,8 +114,8 @@ module DNN
         SoftmaxCrossEntropy.new(eps: hash[:eps])
       end
 
-      def self.softmax(x)
-        NMath.exp(x) / NMath.exp(x).sum(1).reshape(x.shape[0], 1)
+      def self.softmax(y)
+        NMath.exp(y) / NMath.exp(y).sum(1).reshape(y.shape[0], 1)
       end
 
       # @param [Float] eps Value to avoid nan.
@@ -129,14 +129,14 @@ module DNN
 
       private
 
-      def forward_loss(x, y)
-        @x = SoftmaxCrossEntropy.softmax(x)
-        batch_size = y.shape[0]
-        -(y * NMath.log(@x + @eps)).sum / batch_size
+      def forward_loss(y, t)
+        @y = SoftmaxCrossEntropy.softmax(y)
+        batch_size = t.shape[0]
+        -(t * NMath.log(@y + @eps)).sum / batch_size
       end
 
-      def backward_loss(y)
-        @x - y
+      def backward_loss(t)
+        @y - t
       end
     end
 
@@ -160,14 +160,14 @@ module DNN
 
       private
 
-      def forward_loss(x, y)
-        @x = Sigmoid.new.forward(x)
-        batch_size = y.shape[0]
-        -(y * NMath.log(@x) + (1 - y) * NMath.log(1 - @x))
+      def forward_loss(y, t)
+        @y = Sigmoid.new.forward(y)
+        batch_size = t.shape[0]
+        -(t * NMath.log(@y) + (1 - t) * NMath.log(1 - @y))
       end
 
-      def backward_loss(y)
-        @x - y
+      def backward_loss(t)
+        @y - t
       end
     end
 
