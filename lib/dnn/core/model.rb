@@ -188,7 +188,11 @@ module DNN
         correct = 0
         y.shape[0].times do |i|
           if y.shape[1..-1] == [1]
-            correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0) || (y[i, 0] >= 0 && t[i, 0] >= 0)
+            if @loss_func.is_a?(Losses::SigmoidCrossEntropy)
+              correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0.5) || (y[i, 0] >= 0 && t[i, 0] >= 0.5)
+            else
+              correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0) || (y[i, 0] >= 0 && t[i, 0] >= 0)
+            end
           else
             correct += 1 if y[i, true].max_index == t[i, true].max_index
           end
