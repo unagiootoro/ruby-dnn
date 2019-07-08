@@ -21,6 +21,11 @@ module DNN
         @weight_initializer = weight_initializer
       end
 
+      def call(x)
+        build unless built?
+        [forward(x), Link.new(nil, self)]
+      end
+
       def build
         @built = true
         @params[:weight] = @weight = Param.new(Xumo::SFloat.new(@input_length), 0)

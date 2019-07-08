@@ -90,7 +90,7 @@ module DNN
 
       def call(x)
         build
-        [x, Link.new(nil, self)]
+        [forward(x), Link.new(nil, self)]
       end
 
       def build
