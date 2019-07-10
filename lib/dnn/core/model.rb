@@ -26,7 +26,7 @@ module DNN
         hash = JSON.parse(json_str, symbolize_names: true)
         has_param_layers_params = hash[:params]
         has_param_layers_index = 0
-        has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
+        has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
         has_param_layers.each do |layer|
           hash_params = has_param_layers_params[has_param_layers_index]
           hash_params.each do |key, (shape, base64_param)|
@@ -41,7 +41,7 @@ module DNN
       # Convert model parameters to json string.
       # @return [String] json string.
       def params_to_json
-        has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
+        has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
         has_param_layers_params = has_param_layers.map do |layer|
           layer.params.map { |key, param|
             base64_data = Base64.encode64(param.data.to_binary)
