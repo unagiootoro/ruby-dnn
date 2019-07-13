@@ -70,7 +70,6 @@ module DNN
     
       def initialize
         super()
-        @params = {}
         @trainable = true
       end
 
