@@ -1,5 +1,5 @@
-include DNN
-include Regularizers
+include DNN::Regularizers
+Param = DNN::Param
 
 class TestL1 < MiniTest::Unit::TestCase
   def test_from_hash

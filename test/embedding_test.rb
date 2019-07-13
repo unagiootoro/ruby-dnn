@@ -1,10 +1,9 @@
 require "test_helper"
 
-include DNN
-include Layers
-include Activations
-include Optimizers
-include Initializers
+include DNN::Layers
+include DNN::Activations
+include DNN::Optimizers
+include DNN::Initializers
 
 class TestEmbedding < MiniTest::Unit::TestCase
   def test_from_hash

@@ -1,11 +1,10 @@
 require "test_helper"
 
-include DNN
-include Layers
-include Activations
-include Optimizers
-include Losses
-include Regularizers
+include DNN::Layers
+include DNN::Activations
+include DNN::Optimizers
+include DNN::Losses
+include DNN::Regularizers
 
 class TestConv2D_Utils < MiniTest::Unit::TestCase
   include Conv2D_Utils
@@ -258,7 +257,7 @@ class TestConv2D < MiniTest::Unit::TestCase
   def test_filters_set
     conv2d = Conv2D.new(16, [4, 5])
     conv2d.build([32, 32, 3])
-    conv2d.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
+    conv2d.filters = Numo::SFloat.zeros(4, 5, 3, 16)
     assert_equal [4 * 5 * 3, 16], conv2d.weight.data.shape
   end
 
@@ -371,7 +370,7 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
   def test_filters_set
     conv2d_t = Conv2D_Transpose.new(16, [4, 5])
     conv2d_t.build([32, 32, 3])
-    conv2d_t.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
+    conv2d_t.filters = Numo::SFloat.zeros(4, 5, 3, 16)
     assert_equal [4 * 5 * 16, 3], conv2d_t.weight.data.shape
   end
 

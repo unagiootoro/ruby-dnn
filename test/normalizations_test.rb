@@ -1,9 +1,8 @@
 require "test_helper"
 
-include DNN
-include Layers
-include Activations
-include Optimizers
+include DNN::Layers
+include DNN::Activations
+include DNN::Optimizers
 
 class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_from_hash

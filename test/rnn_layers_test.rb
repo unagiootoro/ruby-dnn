@@ -1,12 +1,11 @@
 require "test_helper"
 
-include DNN
-include Layers
-include Activations
-include Optimizers
-include Losses
-include Regularizers
-
+include DNN::Layers
+include DNN::Activations
+include DNN::Optimizers
+include DNN::Losses
+include DNN::Regularizers
+Param = DNN::Param
 
 class TestRNN < MiniTest::Unit::TestCase
   def test_initialize

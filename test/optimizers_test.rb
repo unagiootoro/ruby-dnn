@@ -1,10 +1,9 @@
 require "test_helper"
 
-include DNN
-include Activations
-include Layers
-include Initializers
-include Optimizers
+include DNN::Activations
+include DNN::Layers
+include DNN::Initializers
+include DNN::Optimizers
 
 class TestOptimizer < MiniTest::Unit::TestCase
   def test_initialize

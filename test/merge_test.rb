@@ -1,11 +1,10 @@
 require "test_helper"
 
-include DNN
-include MergeLayers
-include Activations
-include Optimizers
-include Initializers
-include Regularizers
+include DNN::MergeLayers
+include DNN::Activations
+include DNN::Optimizers
+include DNN::Initializers
+include DNN::Regularizers
 
 class TestAdd < MiniTest::Unit::TestCase
   def test_forward

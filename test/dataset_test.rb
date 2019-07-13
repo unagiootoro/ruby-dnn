@@ -1,6 +1,6 @@
 require "test_helper"
 
-include DNN
+Dataset = DNN::Dataset
 
 class TestDataset < MiniTest::Unit::TestCase
   def test_next_batch

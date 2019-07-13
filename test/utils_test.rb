@@ -1,7 +1,6 @@
 require "test_helper"
 
-include DNN
-include Activations
+Utils = DNN::Utils
 
 class TestUtils < MiniTest::Unit::TestCase
   def test_to_categorical
@@ -27,12 +26,12 @@ class TestUtils < MiniTest::Unit::TestCase
   end
 
   def test_sigmoid
-    out = Utils.sigmoid(Xumo::SFloat[0, 1])
-    assert_equal Xumo::SFloat[0.5, 0.7311], out.round(4)
+    out = Utils.sigmoid(Numo::SFloat[0, 1])
+    assert_equal Numo::SFloat[0.5, 0.7311], out.round(4)
   end
 
   def test_softmax
-    out = Utils.softmax(Xumo::SFloat[[0, 1, 2]])
-    assert_equal Xumo::SFloat[[0.09, 0.2447, 0.6652]], out.round(4)
+    out = Utils.softmax(Numo::SFloat[[0, 1, 2]])
+    assert_equal Numo::SFloat[[0.09, 0.2447, 0.6652]], out.round(4)
   end
 end
