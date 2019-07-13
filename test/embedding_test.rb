@@ -23,7 +23,7 @@ class TestEmbedding < MiniTest::Unit::TestCase
   def test_forward
     embed = Embedding.new(2, 3)
     embed.build
-    embed.params[:weight].data = Numo::SFloat.cast([0.1, 0.2, 0.3])
+    embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
     x = Numo::Int32.cast([[0, 1], [0, 2]])
     expected = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
     assert_equal expected, embed.forward(x).round(4)
@@ -32,13 +32,13 @@ class TestEmbedding < MiniTest::Unit::TestCase
   def test_backward
     embed = Embedding.new(2, 3)
     embed.build
-    embed.params[:weight].data = Numo::SFloat.cast([0.1, 0.2, 0.3])
+    embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
     x = Numo::Int32.cast([[0, 1], [2, 2]])
     dy = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
     expected = Numo::SFloat.cast([0.1, 0.2, 0.4])
     embed.forward(x)
     embed.backward(dy)
-    assert_equal expected, embed.params[:weight].grad.round(4)
+    assert_equal expected, embed.weight.grad.round(4)
   end
 
   def test_to_hash
@@ -51,5 +51,14 @@ class TestEmbedding < MiniTest::Unit::TestCase
       weight_initializer: embed.weight_initializer.to_hash,
     }
     assert_equal expected_hash, embed.to_hash
+  end
+
+  def test_get_params
+    embed = Embedding.new(10, 5)
+    embed.build
+    expected_hash = {
+      weight: embed.weight,
+    }
+    assert_equal expected_hash, embed.get_params
   end
 end

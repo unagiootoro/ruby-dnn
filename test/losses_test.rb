@@ -20,7 +20,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     loss = MeanSquaredError.new
     dense = Dense.new(1, weight_regularizer: L1L2.new(1, 1))
     dense.build([10])
-    dense.params[:weight].data = Numo::SFloat.ones(*dense.params[:weight].data.shape)
+    dense.weight.data = Numo::SFloat.ones(*dense.weight.data.shape)
     out_y = Xumo::SFloat[[0, 1]]
     t = Xumo::SFloat[[0, 1]]
     assert_equal 15, loss.forward(out_y, t, [dense]).round(4)
@@ -39,11 +39,11 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     loss = MeanSquaredError.new
     dense = Dense.new(2, weight_regularizer: L1L2.new(1, 1))
     dense.build([1])
-    dense.params[:weight].data = Numo::SFloat[[-2, 2]]
-    dense.params[:weight].grad = Numo::SFloat.zeros(*dense.params[:weight].data.shape)
+    dense.weight.data = Numo::SFloat[[-2, 2]]
+    dense.weight.grad = Numo::SFloat.zeros(*dense.weight.data.shape)
     loss.forward(0)
     loss.backward(0, [InputLayer.new(1), dense])
-    assert_equal Numo::SFloat[[-3, 3]], dense.params[:weight].grad.round(4)
+    assert_equal Numo::SFloat[[-3, 3]], dense.weight.grad.round(4)
   end
 
   def test_to_hash

@@ -102,15 +102,15 @@ class TestDense < MiniTest::Unit::TestCase
     dense.build([50])
     assert_kind_of RandomNormal, dense.weight_initializer
     assert_kind_of Zeros, dense.bias_initializer
-    assert_equal [50, 100], dense.params[:weight].data.shape
-    assert_equal [100], dense.params[:bias].data.shape
+    assert_equal [50, 100], dense.weight.data.shape
+    assert_equal [100], dense.bias.data.shape
   end
 
   def test_forward
     dense = Dense.new(2)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.params[:bias].data = Numo::SFloat[5, 10]
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Numo::SFloat[5, 10]
     y = dense.forward(x)
     assert_equal Numo::SFloat[[65, 130], [155, 310]], y
   end
@@ -118,59 +118,58 @@ class TestDense < MiniTest::Unit::TestCase
   def test_forward2
     dense = Dense.new(2, use_bias: false)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
     y = dense.forward(x)
     assert_equal Numo::SFloat[[60, 120], [150, 300]], y
-    assert_nil dense.params[:bias]
+    assert_nil dense.bias
   end
 
   def test_backward
     dense = Dense.new(2)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.params[:bias].data = Numo::SFloat[5, 10]
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Numo::SFloat[5, 10]
     dense.forward(x)
     grad = dense.backward(Numo::SFloat[1])
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
-    assert_equal Numo::SFloat[5, 7, 9], dense.params[:weight].grad.round(4)
-    assert_in_delta 1.0, dense.params[:bias].grad
+    assert_equal Numo::SFloat[5, 7, 9], dense.weight.grad.round(4)
+    assert_in_delta 1.0, dense.bias.grad
   end
 
   def test_backward2
     dense = Dense.new(2, use_bias: false)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
     dense.forward(x)
     grad = dense.backward(Numo::SFloat[1])
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
-    assert_equal Numo::SFloat[5, 7, 9], dense.params[:weight].grad.round(4)
-    assert_nil dense.params[:bias]
+    assert_equal Numo::SFloat[5, 7, 9], dense.weight.grad.round(4)
+    assert_nil dense.bias
   end
 
   def test_backward3
     dense = Dense.new(2)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.params[:bias].data = Numo::SFloat[5, 10]
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Numo::SFloat[5, 10]
     dense.forward(x)
     dense.forward(x)
     dense.backward(Numo::SFloat[1])
     grad = dense.backward(Numo::SFloat[1])
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
-    assert_equal Numo::SFloat[10, 14, 18], dense.params[:weight].grad.round(4)
-    assert_in_delta 2.0, dense.params[:bias].grad
+    assert_equal Numo::SFloat[10, 14, 18], dense.weight.grad.round(4)
+    assert_in_delta 2.0, dense.bias.grad
   end
 
   def test_backward4
     dense = Dense.new(2)
     dense.trainable = false
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    dense.params[:weight].data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.params[:bias].data = Numo::SFloat[5, 10]
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Numo::SFloat[5, 10]
     dense.forward(x)
-    grad = dense.backward(Numo::SFloat[1])
-    assert_equal 0, dense.params[:weight].grad
-    assert_equal 0, dense.params[:bias].grad
+    assert_equal 0, dense.weight.grad
+    assert_equal 0, dense.bias.grad
   end
 
   def test_output_shape
@@ -203,6 +202,16 @@ class TestDense < MiniTest::Unit::TestCase
       use_bias: true,
     }
     assert_equal expected_hash, dense.to_hash
+  end
+
+  def test_get_params
+    dense = Dense.new(10)
+    dense.build([10])
+    expected_hash = {
+      weight: dense.weight,
+      bias: dense.bias,
+    }
+    assert_equal expected_hash, dense.get_params
   end
 end
 

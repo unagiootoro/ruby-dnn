@@ -43,9 +43,9 @@ class TestRNN < MiniTest::Unit::TestCase
   def test_reset_state
     rnn = RNN.new(64)
     rnn.build([16, 64])
-    rnn.params[:hidden].data = Numo::SFloat.ones(16, 64)
+    rnn.hidden.data = Numo::SFloat.ones(16, 64)
     rnn.reset_state
-    assert_equal Numo::SFloat.zeros(16, 64), rnn.params[:hidden].data
+    assert_equal Numo::SFloat.zeros(16, 64), rnn.hidden.data
   end
 
   def test_to_hash
@@ -68,19 +68,31 @@ class TestRNN < MiniTest::Unit::TestCase
   end
 
   def test_regularizers
-    dense = RNN.new(1, weight_regularizer: L1.new,
+    rnn = RNN.new(1, weight_regularizer: L1.new,
                        recurrent_weight_regularizer: L2.new,
                        bias_regularizer: L1L2.new)
-    dense.build([1, 10])
-    assert_kind_of L1, dense.regularizers[0]
-    assert_kind_of L2, dense.regularizers[1]
-    assert_kind_of L1L2, dense.regularizers[2]
+    rnn.build([1, 10])
+    assert_kind_of L1, rnn.regularizers[0]
+    assert_kind_of L2, rnn.regularizers[1]
+    assert_kind_of L1L2, rnn.regularizers[2]
   end
 
   def test_regularizers2
-    dense = RNN.new(1)
-    dense.build([1, 10])
-    assert_equal [], dense.regularizers
+    rnn = RNN.new(1)
+    rnn.build([1, 10])
+    assert_equal [], rnn.regularizers
+  end
+
+  def test_get_params
+    rnn = RNN.new(1)
+    rnn.build([1, 10])
+    expected_hash = {
+      weight: rnn.weight,
+      recurrent_weight: rnn.recurrent_weight,
+      bias: rnn.bias,
+      hidden: rnn.hidden,
+    }
+    assert_equal expected_hash, rnn.get_params
   end
 end
 
@@ -218,7 +230,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     rnn.build([16, 64])
     rnn.forward(x)
     rnn.backward(y)
-    assert_nil rnn.params[:bias]
+    assert_nil rnn.bias
   end
 
   def test_backward3
@@ -229,9 +241,9 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     rnn.build([16, 64])
     rnn.forward(x)
     rnn.backward(y)
-    assert_equal 0, rnn.params[:weight].grad
-    assert_equal 0, rnn.params[:recurrent_weight].grad
-    assert_equal 0, rnn.params[:bias].grad
+    assert_equal 0, rnn.weight.grad
+    assert_equal 0, rnn.recurrent_weight.grad
+    assert_equal 0, rnn.bias.grad
   end
 
   def test_to_hash
@@ -259,9 +271,9 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
                             recurrent_weight_initializer: Const.new(2),
                             bias_initializer: Const.new(2))
     rnn.build([16, 32])
-    assert_equal Numo::SFloat.new(32, 64).fill(2), rnn.params[:weight].data
-    assert_equal Numo::SFloat.new(64, 64).fill(2), rnn.params[:recurrent_weight].data
-    assert_equal Numo::SFloat.new(64).fill(2), rnn.params[:bias].data
+    assert_equal Numo::SFloat.new(32, 64).fill(2), rnn.weight.data
+    assert_equal Numo::SFloat.new(64, 64).fill(2), rnn.recurrent_weight.data
+    assert_equal Numo::SFloat.new(64).fill(2), rnn.bias.data
     assert_kind_of SimpleRNN_Dense, rnn.instance_variable_get(:@layers)[15]
   end
 end
@@ -407,7 +419,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     lstm.build([16, 64])
     lstm.forward(x)
     lstm.backward(y)
-    assert_nil lstm.params[:bias]
+    assert_nil lstm.bias
   end
 
   def test_backward3
@@ -418,9 +430,31 @@ class TestLSTM < MiniTest::Unit::TestCase
     lstm.build([16, 64])
     lstm.forward(x)
     lstm.backward(y)
-    assert_equal 0, lstm.params[:weight].grad
-    assert_equal 0, lstm.params[:recurrent_weight].grad
-    assert_equal 0, lstm.params[:bias].grad
+    assert_equal 0, lstm.weight.grad
+    assert_equal 0, lstm.recurrent_weight.grad
+    assert_equal 0, lstm.bias.grad
+  end
+
+
+  def test_reset_state
+    lstm = LSTM.new(64)
+    lstm.build([16, 64])
+    lstm.hidden.data = Numo::SFloat.ones(16, 64)
+    lstm.cell.data = Numo::SFloat.ones(16, 64)
+    lstm.reset_state
+    assert_equal Numo::SFloat.zeros(16, 64), lstm.hidden.data
+    assert_equal Numo::SFloat.zeros(16, 64), lstm.cell.data
+  end
+
+  def test_build
+    lstm = LSTM.new(64, weight_initializer: Const.new(2),
+                    recurrent_weight_initializer: Const.new(2),
+                    bias_initializer: Const.new(2))
+    lstm.build([16, 32])
+    assert_equal Numo::SFloat.new(32, 256).fill(2), lstm.weight.data
+    assert_equal Numo::SFloat.new(64, 256).fill(2), lstm.recurrent_weight.data
+    assert_equal Numo::SFloat.new(256).fill(2), lstm.bias.data
+    assert_kind_of LSTM_Dense, lstm.instance_variable_get(:@layers)[15]
   end
 
   def test_to_hash
@@ -442,25 +476,17 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal expected_hash, lstm.to_hash
   end
 
-  def test_reset_state
-    lstm = LSTM.new(64)
-    lstm.build([16, 64])
-    lstm.params[:hidden].data = Numo::SFloat.ones(16, 64)
-    lstm.params[:cell].data = Numo::SFloat.ones(16, 64)
-    lstm.reset_state
-    assert_equal Numo::SFloat.zeros(16, 64), lstm.params[:hidden].data
-    assert_equal Numo::SFloat.zeros(16, 64), lstm.params[:cell].data
-  end
-
-  def test_build
-    lstm = LSTM.new(64, weight_initializer: Const.new(2),
-                    recurrent_weight_initializer: Const.new(2),
-                    bias_initializer: Const.new(2))
-    lstm.build([16, 32])
-    assert_equal Numo::SFloat.new(32, 256).fill(2), lstm.params[:weight].data
-    assert_equal Numo::SFloat.new(64, 256).fill(2), lstm.params[:recurrent_weight].data
-    assert_equal Numo::SFloat.new(256).fill(2), lstm.params[:bias].data
-    assert_kind_of LSTM_Dense, lstm.instance_variable_get(:@layers)[15]
+  def test_get_params
+    lstm = LSTM.new(1)
+    lstm.build([1, 10])
+    expected_hash = {
+      weight: lstm.weight,
+      recurrent_weight: lstm.recurrent_weight,
+      bias: lstm.bias,
+      hidden: lstm.hidden,
+      cell: lstm.cell,
+    }
+    assert_equal expected_hash, lstm.get_params
   end
 end
 
@@ -597,9 +623,9 @@ class TestGRU < MiniTest::Unit::TestCase
                   recurrent_weight_initializer: Const.new(2),
                   bias_initializer: Const.new(2))
     gru.build([16, 32])
-    assert_equal Numo::SFloat.new(32, 192).fill(2), gru.params[:weight].data
-    assert_equal Numo::SFloat.new(64, 192).fill(2), gru.params[:recurrent_weight].data
-    assert_equal Numo::SFloat.new(192).fill(2), gru.params[:bias].data
+    assert_equal Numo::SFloat.new(32, 192).fill(2), gru.weight.data
+    assert_equal Numo::SFloat.new(64, 192).fill(2), gru.recurrent_weight.data
+    assert_equal Numo::SFloat.new(192).fill(2), gru.bias.data
     assert_kind_of GRU_Dense, gru.instance_variable_get(:@layers)[15]
   end
 end

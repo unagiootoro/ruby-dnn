@@ -16,7 +16,7 @@ module DNN
       # Update layers has param.
       def update(layers)
         target_params = layers.select { |layer| layer.is_a?(HasParamLayer) && layer.trainable }
-                              .map { |layer| layer.params.values }.flatten
+                              .map { |layer| layer.get_params.values }.flatten.compact
                               .select { |param| param.grad }
         clipping(target_params) if @clip_norm
         target_params.each do |param|
@@ -236,7 +236,7 @@ module DNN
         @iter += 1
         learning_rate = @alpha * Math.sqrt(1 - @beta2**@iter) / (1 - @beta1**@iter) 
         target_params = layers.select { |layer| layer.is_a?(HasParamLayer) && layer.trainable }
-                              .map { |layer| layer.params.values }.flatten
+                              .map { |layer| layer.get_params.values }.flatten
                               .select { |param| param.grad }
         target_params.each do |param|
           param.grad = param.grad.clip(nil, @clip_norm) if @clip_norm && param.grad.is_a?(Xumo::SFloat)

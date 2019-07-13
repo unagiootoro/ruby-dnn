@@ -65,7 +65,7 @@ module DNN
     
     # This class is a superclass of all classes with learning parameters.
     class HasParamLayer < Layer
-      # @return [Bool] trainable Setting false prevents learning of parameters.
+      # @return [Bool] Setting false prevents learning of parameters.
       attr_accessor :trainable
     
       def initialize

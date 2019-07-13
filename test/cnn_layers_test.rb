@@ -165,7 +165,7 @@ class TestConv2D < MiniTest::Unit::TestCase
       strides: [2, 2],
       padding: true,
       weight_regularizer: L1.new.to_hash,
-      bias_initializer: L2.new.to_hash,
+      bias_regularizer: L2.new.to_hash,
       l2_lambda: 0,
       use_bias: false,
     }
@@ -228,7 +228,7 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d.build([32, 32, 3])
     conv2d.forward(x)
     conv2d.backward(dy)
-    assert_nil conv2d.params[:bias]
+    assert_nil conv2d.bias
   end
 
   def test_backward3
@@ -239,8 +239,8 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d.build([32, 32, 3])
     conv2d.forward(x)
     conv2d.backward(dy)
-    assert_equal 0, conv2d.params[:weight].grad
-    assert_equal 0, conv2d.params[:bias].grad
+    assert_equal 0, conv2d.weight.grad
+    assert_equal 0, conv2d.bias.grad
   end
 
   def test_output_shape
@@ -259,15 +259,15 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d = Conv2D.new(16, [4, 5])
     conv2d.build([32, 32, 3])
     conv2d.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
-    assert_equal [4 * 5 * 3, 16], conv2d.params[:weight].data.shape
+    assert_equal [4 * 5 * 3, 16], conv2d.weight.data.shape
   end
 
   def test_filters_set2
     conv2d = Conv2D.new(16, [4, 5])
     conv2d.build([32, 32, 3])
-    expected = conv2d.params[:weight].data
+    expected = conv2d.weight.data
     conv2d.filters = expected
-    assert_equal expected, conv2d.params[:weight].data
+    assert_equal expected, conv2d.weight.data
   end
 
   def test_to_hash
@@ -300,7 +300,7 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
       strides: [2, 2],
       padding: true,
       weight_regularizer: L1.new.to_hash,
-      bias_initializer: L2.new.to_hash,
+      bias_regularizer: L2.new.to_hash,
       use_bias: true,
     }
     conv2d_t = Conv2D_Transpose.from_hash(hash)
@@ -352,8 +352,8 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
     conv2d_t.build([16, 16, 3])
     conv2d_t.forward(x)
     assert_equal [1, 16, 16, 3], conv2d_t.backward(dy).shape
-    assert_equal conv2d_t.params[:weight].data.shape, conv2d_t.params[:weight].grad.shape
-    assert_equal conv2d_t.params[:bias].data.shape, conv2d_t.params[:bias].grad.shape
+    assert_equal conv2d_t.weight.data.shape, conv2d_t.weight.grad.shape
+    assert_equal conv2d_t.bias.data.shape, conv2d_t.bias.grad.shape
   end
 
   def test_output_shape
@@ -372,15 +372,15 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
     conv2d_t = Conv2D_Transpose.new(16, [4, 5])
     conv2d_t.build([32, 32, 3])
     conv2d_t.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
-    assert_equal [4 * 5 * 16, 3], conv2d_t.params[:weight].data.shape
+    assert_equal [4 * 5 * 16, 3], conv2d_t.weight.data.shape
   end
 
   def test_filters_set2
     conv2d_t = Conv2D_Transpose.new(16, [4, 5])
     conv2d_t.build([32, 32, 3])
-    expected = conv2d_t.params[:weight].data
+    expected = conv2d_t.weight.data
     conv2d_t.filters = expected
-    assert_equal expected, conv2d_t.params[:weight].data
+    assert_equal expected, conv2d_t.weight.data
   end
 
   def test_to_hash
@@ -521,12 +521,11 @@ class TestUnPool2D < MiniTest::Unit::TestCase
     unpool2d = UnPool2D.new(2)
     unpool2d.build([8, 8, 3])
     unpool2d.forward(x)
-    dout2 = unpool2d.backward(dy).round(4)
-    assert_equal [1, 8, 8, 3], dout2.shape
+    dy2 = unpool2d.backward(dy).round(4)
+    assert_equal [1, 8, 8, 3], dy2.shape
   end
 
   def test_output_shape
-    x = Numo::SFloat.new(1, 8, 8, 3).seq
     unpool2d = UnPool2D.new(2)
     unpool2d.build([8, 8, 3])
     assert_equal [16, 16, 3], unpool2d.output_shape

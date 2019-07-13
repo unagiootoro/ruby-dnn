@@ -66,12 +66,6 @@ module DNN
       end
 
       def calc_padding_size(prev_h, prev_w, out_h, out_w, strides)
-        pad_h = (prev_h.to_f / strides[0]).ceil - out_h
-        pad_w = (prev_w.to_f / strides[1]).ceil - out_w
-        [pad_h, pad_w]
-      end
-
-      def calc_padding_size(prev_h, prev_w, out_h, out_w, strides)
         pad_h = ((prev_h.to_f / strides[0]).ceil - out_h) * strides[0]
         pad_w = ((prev_w.to_f / strides[1]).ceil - out_w) * strides[1]
         [pad_h, pad_w]

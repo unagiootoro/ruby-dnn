@@ -4,6 +4,8 @@ module DNN
     class Embedding < HasParamLayer
       # @return [Integer] Return the input length.
       attr_reader :input_length
+      # @return [DNN::Param] Weight parameter.
+      attr_reader :weight
       # @return [Initializers::Initializer] Return the weight initializer.
       attr_reader :weight_initializer
 
@@ -28,7 +30,7 @@ module DNN
 
       def build
         @built = true
-        @params[:weight] = @weight = Param.new(Xumo::SFloat.new(@input_length), 0)
+        @weight = Param.new(Xumo::SFloat.new(@input_length), 0)
         @weight_initializer.init_param(self, @weight)
         @input_shape
       end
@@ -54,6 +56,10 @@ module DNN
 
       def to_hash
         super(input_shape: @input_shape, input_length: @input_length, weight_initializer: @weight_initializer.to_hash)
+      end
+
+      def get_params
+        {weight: @weight}
       end
     end
 

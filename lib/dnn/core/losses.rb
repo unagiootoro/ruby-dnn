@@ -178,7 +178,6 @@ module DNN
 
       def forward_loss(y, t)
         @y = Sigmoid.new.forward(y)
-        batch_size = t.shape[0]
         -(t * NMath.log(@y) + (1 - t) * NMath.log(1 - @y))
       end
 

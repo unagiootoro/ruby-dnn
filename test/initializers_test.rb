@@ -32,9 +32,9 @@ class TestConst < MiniTest::Unit::TestCase
     initializer = Const.new(1)
     dense = Dense.new(10)
     dense.build([10])
-    zeros = Numo::SFloat.ones(dense.params[:weight].data.shape)
-    initializer.init_param(self, dense.params[:weight])
-    assert_equal zeros, dense.params[:weight].data
+    zeros = Numo::SFloat.ones(dense.weight.data.shape)
+    initializer.init_param(self, dense.weight)
+    assert_equal zeros, dense.weight.data
   end
 
   def test_to_hash
@@ -54,9 +54,9 @@ class TestZeros < MiniTest::Unit::TestCase
     initializer = Zeros.new
     dense = Dense.new(10)
     dense.build([10])
-    zeros = Numo::SFloat.zeros(dense.params[:weight].data.shape)
-    initializer.init_param(self, dense.params[:weight])
-    assert_equal zeros, dense.params[:weight].data
+    zeros = Numo::SFloat.zeros(dense.weight.data.shape)
+    initializer.init_param(self, dense.weight)
+    assert_equal zeros, dense.weight.data
   end
 end
 
@@ -80,11 +80,11 @@ class TestRandomNormal < MiniTest::Unit::TestCase
     initializer = RandomNormal.new(0, 0.05, 0)
     dense = Dense.new(10)
     dense.build([10])
-    initializer.init_param(dense, dense.params[:weight])
+    initializer.init_param(dense, dense.weight)
 
     Numo::SFloat.srand(0)
     expected = Numo::SFloat.new(10, 10).rand_norm(0, 0.05).round(4)
-    assert_equal expected, dense.params[:weight].data.round(4)
+    assert_equal expected, dense.weight.data.round(4)
   end
 
   def test_to_hash
@@ -104,7 +104,7 @@ class TestRandomUniform < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {min: -0.1, max: 0.1, seed: 3}
     initializer = RandomUniform.from_hash(hash)
-    assert_equal -0.1, initializer.min
+    assert_equal(-0.1, initializer.min)
     assert_equal 0.1, initializer.max
     assert_equal 3, initializer.instance_variable_get(:@seed)
   end
@@ -113,11 +113,11 @@ class TestRandomUniform < MiniTest::Unit::TestCase
     initializer = RandomUniform.new(-0.05, 0.05, 0)
     dense = Dense.new(10)
     dense.build([10])
-    initializer.init_param(dense, dense.params[:weight])
+    initializer.init_param(dense, dense.weight)
 
     Numo::SFloat.srand(0)
     expected = Numo::SFloat.new(10, 10).rand(-0.05, 0.05).round(4)
-    assert_equal  expected, dense.params[:weight].data.round(4)
+    assert_equal  expected, dense.weight.data.round(4)
   end
 
   def test_to_hash
@@ -138,11 +138,11 @@ class TestXavier < MiniTest::Unit::TestCase
     initializer = Xavier.new(0)
     dense = Dense.new(10)
     dense.build([10])
-    initializer.init_param(dense, dense.params[:weight])
+    initializer.init_param(dense, dense.weight)
 
     Numo::SFloat.srand(0)
     expected = (Numo::SFloat.new(10, 10).rand_norm / Math.sqrt(10)).round(4)
-    assert_equal expected, dense.params[:weight].data.round(4)
+    assert_equal expected, dense.weight.data.round(4)
   end
 end
 
@@ -152,10 +152,10 @@ class TestHe < MiniTest::Unit::TestCase
     initializer = He.new(0)
     dense = Dense.new(10)
     dense.build([10])
-    initializer.init_param(dense, dense.params[:weight])
+    initializer.init_param(dense, dense.weight)
 
     Numo::SFloat.srand(0)
     expected = (Numo::SFloat.new(10, 10).rand_norm / Math.sqrt(10) * Math.sqrt(2)).round(4)
-    assert_equal expected, dense.params[:weight].data.round(4)
+    assert_equal expected, dense.weight.data.round(4)
   end
 end

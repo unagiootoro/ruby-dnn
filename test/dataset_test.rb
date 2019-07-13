@@ -19,7 +19,7 @@ class TestDataset < MiniTest::Unit::TestCase
     dataset = Dataset.new(x_datas, x_datas, false)
 
     dataset.next_batch(7)
-    x, y = dataset.next_batch(7)
+    x, * = dataset.next_batch(7)
     assert_equal Numo::SFloat[7, 8, 9], x.flatten
   end
 end

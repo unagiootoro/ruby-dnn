@@ -32,7 +32,7 @@ module DNN
           hash_params.each do |key, (shape, base64_param)|
             bin = Base64.decode64(base64_param)
             data = Xumo::SFloat.from_binary(bin).reshape(*shape)
-            layer.params[key].data = data
+            layer.get_params[key].data = data
           end
           has_param_layers_index += 1
         end
@@ -43,7 +43,7 @@ module DNN
       def params_to_json
         has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
         has_param_layers_params = has_param_layers.map do |layer|
-          layer.params.map { |key, param|
+          layer.get_params.map { |key, param|
             base64_data = Base64.encode64(param.data.to_binary)
             [key, [param.data.shape, base64_data]]
           }.to_h

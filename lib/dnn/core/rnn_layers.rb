@@ -7,6 +7,10 @@ module DNN
 
       # @return [Integer] number of nodes.
       attr_reader :num_nodes
+      # @return [DNN::Param] Recurrent weight parameter.
+      attr_reader :recurrent_weight
+      # @return [DNN::Param] Hidden parameter that Stateful RNN has.
+      attr_reader :hidden
       # @return [Bool] Maintain state between batches.
       attr_reader :stateful
       # @return [Bool] Set the false, only the last of each cell of RNN is left.
@@ -32,8 +36,8 @@ module DNN
         @stateful = stateful
         @return_sequences = return_sequences
         @layers = []
-        @hidden = @params[:hidden] = Param.new
-        @params[:recurrent_weight] = @recurrent_weight = Param.new(nil, 0)
+        @hidden = Param.new
+        @recurrent_weight = Param.new(nil, 0)
         @recurrent_weight_initializer = recurrent_weight_initializer
         @recurrent_weight_regularizer = recurrent_weight_regularizer
       end
@@ -93,7 +97,7 @@ module DNN
       end
 
       def get_params
-        {weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias}
+        {weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden}
       end
 
       # Reset the state of RNN.
@@ -271,6 +275,9 @@ module DNN
 
 
     class LSTM < RNN
+      # @return [DNN::Param] Hidden parameter that Stateful RNN has.
+      attr_reader :cell
+
       def self.from_hash(hash)
         lstm = self.new(hash[:num_nodes],
                         stateful: hash[:stateful],
@@ -296,7 +303,7 @@ module DNN
                      bias_regularizer: nil,
                      use_bias: true)
         super
-        @cell = @params[:cell] = Param.new
+        @cell = Param.new
       end
 
       def build(input_shape)
@@ -353,6 +360,10 @@ module DNN
       def reset_state
         super()
         @cell.data = @cell.data.fill(0) if @cell.data
+      end
+
+      def get_params
+        {weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden, cell: @cell}
       end
     end
 
