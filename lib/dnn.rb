@@ -5,10 +5,6 @@ else
   Xumo = Numo
 end
 
-module DNN
-  NMath = Xumo::NMath
-end
-
 require_relative "dnn/version"
 require_relative "dnn/core/error"
 require_relative "dnn/core/model"

@@ -51,14 +51,14 @@ module DNN
           mean = x.mean(axis: @axis, keepdims: true)
           @xc = x - mean
           var = (@xc**2).mean(axis: @axis, keepdims: true)
-          @std = NMath.sqrt(var + @eps)
+          @std = Xumo::NMath.sqrt(var + @eps)
           xn = @xc / @std
           @xn = xn
           @running_mean.data = @momentum * @running_mean.data + (1 - @momentum) * mean
           @running_var.data = @momentum * @running_var.data + (1 - @momentum) * var
         else
           xc = x - @running_mean.data
-          xn = xc / NMath.sqrt(@running_var.data + @eps)
+          xn = xc / Xumo::NMath.sqrt(@running_var.data + @eps)
         end
         @gamma.data * xn + @beta.data
       end

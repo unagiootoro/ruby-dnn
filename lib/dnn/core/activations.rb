@@ -3,7 +3,7 @@ module DNN
 
     class Sigmoid < Layers::Layer
       def forward(x)
-        @y = 1 / (1 + NMath.exp(-x))
+        @y = 1 / (1 + Xumo::NMath.exp(-x))
       end
     
       def backward(dy)
@@ -14,7 +14,7 @@ module DNN
 
     class Tanh < Layers::Layer
       def forward(x)
-        @y = NMath.tanh(x)
+        @y = Xumo::NMath.tanh(x)
       end
       
       def backward(dy)
@@ -38,11 +38,11 @@ module DNN
     class Softplus < Layers::Layer
       def forward(x)
         @x = x
-        NMath.log(1 + NMath.exp(x))
+        Xumo::NMath.log(1 + Xumo::NMath.exp(x))
       end
 
       def backward(dy)
-        dy * (1 / (1 + NMath.exp(-@x)))
+        dy * (1 / (1 + Xumo::NMath.exp(-@x)))
       end
     end
 
@@ -50,11 +50,11 @@ module DNN
     class Swish < Layers::Layer
       def forward(x)
         @x = x
-        @y = x * (1 / (1 + NMath.exp(-x)))
+        @y = x * (1 / (1 + Xumo::NMath.exp(-x)))
       end
     
       def backward(dy)
-        dy * (@y + (1 / (1 + NMath.exp(-@x))) * (1 - @y))
+        dy * (@y + (1 / (1 + Xumo::NMath.exp(-@x))) * (1 - @y))
       end
     end
     
@@ -126,7 +126,7 @@ module DNN
         x1 *= x
         x2 = Xumo::SFloat.zeros(x.shape)
         x2[x < 0] = 1
-        x2 *= @alpha * NMath.exp(x) - @alpha
+        x2 *= @alpha * Xumo::NMath.exp(x) - @alpha
         x1 + x2
       end
 
@@ -135,7 +135,7 @@ module DNN
         dx[@x < 0] = 0
         dx2 = Xumo::SFloat.zeros(@x.shape)
         dx2[@x < 0] = 1
-        dx2 *= @alpha * NMath.exp(@x)
+        dx2 *= @alpha * Xumo::NMath.exp(@x)
         dy * (dx + dx2)
       end
 

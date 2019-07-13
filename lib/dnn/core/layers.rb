@@ -81,6 +81,10 @@ module DNN
     
     
     class InputLayer < Layer
+      def self.call(x)
+        self.new(x.shape).call(x)
+      end
+
       def self.from_hash(hash)
         self.new(hash[:input_shape])
       end

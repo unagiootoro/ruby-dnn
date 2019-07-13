@@ -73,6 +73,8 @@ module DNN
 
 
     class Hinge < Loss
+      private
+      
       def forward_loss(y, t)
         @y = y
         @a = 1 - y * t
@@ -131,7 +133,7 @@ module DNN
       end
 
       def self.softmax(y)
-        NMath.exp(y) / NMath.exp(y).sum(1).reshape(y.shape[0], 1)
+        Xumo::NMath.exp(y) / Xumo::NMath.exp(y).sum(1).reshape(y.shape[0], 1)
       end
 
       # @param [Float] eps Value to avoid nan.
@@ -148,7 +150,7 @@ module DNN
       def forward_loss(y, t)
         @y = SoftmaxCrossEntropy.softmax(y)
         batch_size = t.shape[0]
-        -(t * NMath.log(@y + @eps)).sum / batch_size
+        -(t * Xumo::NMath.log(@y + @eps)).sum / batch_size
       end
 
       def backward_loss(t)
@@ -178,7 +180,7 @@ module DNN
 
       def forward_loss(y, t)
         @y = Sigmoid.new.forward(y)
-        -(t * NMath.log(@y) + (1 - t) * NMath.log(1 - @y))
+        -(t * Xumo::NMath.log(@y) + (1 - t) * Xumo::NMath.log(1 - @y))
       end
 
       def backward_loss(t)

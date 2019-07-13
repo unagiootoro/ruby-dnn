@@ -127,7 +127,7 @@ module DNN
       private def update_param(param)
         @g[param] ||= 0
         @g[param] += param.grad**2
-        param.data -= (@learning_rate / NMath.sqrt(@g[param] + @eps)) * param.grad
+        param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
       end
 
       def to_hash
@@ -163,7 +163,7 @@ module DNN
       private def update_param(param)
         @g[param] ||= 0
         @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
-        param.data -= (@learning_rate / NMath.sqrt(@g[param] + @eps)) * param.grad
+        param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
       end
     end
 
@@ -196,7 +196,7 @@ module DNN
         @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
         @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
         @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
-        v = (NMath.sqrt(@s[param] + @eps) / NMath.sqrt(@h[param] + @eps)) * param.grad
+        v = (Xumo::NMath.sqrt(@s[param] + @eps) / Xumo::NMath.sqrt(@h[param] + @eps)) * param.grad
         @s[param] = @rho * @s[param] + (1 - @rho) * v**2
         param.data -= v
       end
@@ -254,7 +254,7 @@ module DNN
         @v[param] ||= 0
         @m[param] += (1 - @beta1) * (param.grad - @m[param])
         @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
-        param.data -= learning_rate * @m[param] / NMath.sqrt(@v[param] + @eps)
+        param.data -= learning_rate * @m[param] / Xumo::NMath.sqrt(@v[param] + @eps)
       end
     end
 
@@ -289,7 +289,7 @@ module DNN
         @v[param] ||= 0
         @m[param] = @alpha * @m[param] + (1 - @alpha) * param.grad
         @v[param] = @alpha * @v[param] + (1 - @alpha) * param.grad**2
-        param.data -= (@learning_rate / NMath.sqrt(@v[param] - @m[param]**2 + @eps)) * param.grad
+        param.data -= (@learning_rate / Xumo::NMath.sqrt(@v[param] - @m[param]**2 + @eps)) * param.grad
       end
     end
 
