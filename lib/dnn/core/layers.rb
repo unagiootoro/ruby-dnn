@@ -67,13 +67,16 @@ module DNN
     class HasParamLayer < Layer
       # @return [Bool] trainable Setting false prevents learning of parameters.
       attr_accessor :trainable
-      # @return [Array] The parameters of the layer.
-      attr_reader :params
     
       def initialize
         super()
         @params = {}
         @trainable = true
+      end
+
+      # @return [Array] The parameters of the layer.
+      def get_params
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'get_params'")
       end
     end
     
@@ -114,6 +117,10 @@ module DNN
 
     # It is a superclass of all connection layers.
     class Connection < HasParamLayer
+      # @return [DNN::Param] Weight parameter.
+      attr_reader :weight
+      # @return [DNN::Param] Bias parameter.
+      attr_reader :bias
       # @return [DNN::Initializers::Initializer] Weight initializer.
       attr_reader :weight_initializer
       # @return [DNN::Initializers::Initializer] Bias initializer.
@@ -138,9 +145,9 @@ module DNN
         @bias_initializer = bias_initializer
         @weight_regularizer = weight_regularizer
         @bias_regularizer = bias_regularizer
-        @params[:weight] = @weight = Param.new(nil, 0)
+        @weight = Param.new(nil, 0)
         if use_bias
-          @params[:bias] = @bias = Param.new(nil, 0)
+          @bias = Param.new(nil, 0)
         else
           @bias = nil
         end
@@ -164,6 +171,10 @@ module DNN
                weight_regularizer: @weight_regularizer&.to_hash,
                bias_regularizer: @bias_regularizer&.to_hash,
                use_bias: use_bias}.merge(merge_hash))
+      end
+
+      def get_params
+        {weight: @weight, bias: @bias}
       end
 
       private def init_weight_and_bias

@@ -2,7 +2,15 @@ module DNN
   module Layers
 
     class BatchNormalization < HasParamLayer
-      # @return [Bool] learning_phase Return the true if learning.
+      # @return [DNN::Param] Gamma parameter.
+      attr_reader :gamma
+      # @return [DNN::Param] Beta parameter.
+      attr_reader :beta
+      # @return [DNN::Param] Exponential running average of mean.
+      attr_reader :running_mean
+      # @return [DNN::Param] Exponential running average of var.
+      attr_reader :running_var
+      # @return [Bool] Return the true if learning.
       attr_accessor :learning_phase
       # @return [Integer] The axis to normalization.
       attr_reader :axis
@@ -32,10 +40,10 @@ module DNN
 
       def build(input_shape)
         super
-        @params[:gamma] = @gamma = Param.new(Xumo::SFloat.ones(*output_shape), 0)
-        @params[:beta] = @beta = Param.new(Xumo::SFloat.zeros(*output_shape), 0)
-        @params[:running_mean] = @running_mean = Param.new(Xumo::SFloat.zeros(*output_shape))
-        @params[:running_var] = @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
+        @gamma = Param.new(Xumo::SFloat.ones(*output_shape), 0)
+        @beta = Param.new(Xumo::SFloat.zeros(*output_shape), 0)
+        @running_mean = Param.new(Xumo::SFloat.zeros(*output_shape))
+        @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
       end
 
       def forward(x)
@@ -71,7 +79,11 @@ module DNN
       end
 
       def to_hash
-        super({axis: @axis, momentum: @momentum, eps: @eps})
+        super(axis: @axis, momentum: @momentum, eps: @eps)
+      end
+
+      def get_params
+        {gamma: @gamma, beta: @beta, running_mean: @running_mean, running_var: @running_var}
       end
     end
 

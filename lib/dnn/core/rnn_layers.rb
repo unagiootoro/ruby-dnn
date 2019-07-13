@@ -92,6 +92,10 @@ module DNN
         super(hash)
       end
 
+      def get_params
+        {weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias}
+      end
+
       # Reset the state of RNN.
       def reset_state
         @hidden.data = @hidden.data.fill(0) if @hidden.data
