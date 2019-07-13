@@ -411,7 +411,7 @@ module DNN
         end
         layers = super_model ? @layers : @layers[1..-1]
         layers.each do |layer|
-          if layer.is_a?(BaseModel)
+          if layer.is_a?(Sequential)
             layer.build(self)
             layer.setup(@optimizer, @loss_func)
           else
@@ -489,7 +489,7 @@ module DNN
 
       def to_hash
         hash_layers = @layers.map { |layer| layer.to_hash }
-        {class: BaseModel.name, layers: hash_layers, optimizer: @optimizer.to_hash, loss: @loss_func.to_hash}
+        {class: self.class.name, layers: hash_layers, optimizer: @optimizer.to_hash, loss: @loss_func.to_hash}
       end
 
       private
