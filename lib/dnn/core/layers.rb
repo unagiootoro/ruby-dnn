@@ -85,8 +85,9 @@ module DNN
     
     
     class InputLayer < Layer
-      def self.call(x)
-        self.new(x.shape[1..-1]).(x)
+      def self.call(input)
+        shape = input.is_a?(Array) ? input[0].shape : input.shape
+        self.new(shape[1..-1]).(input)
       end
 
       def self.from_hash(hash)
@@ -99,9 +100,17 @@ module DNN
         @input_shape = input_dim_or_shape.is_a?(Array) ? input_dim_or_shape : [input_dim_or_shape]
       end
 
-      def call(x)
+      def call(input)
         build
-        [forward(x), Link.new(nil, self)]
+        if input.is_a?(Array)
+          x, prev_link = *input
+          link = Link.new(prev_link, self)
+          prev_link.next = link
+        else
+          x = input
+          link = Link.new(prev_link, self)
+        end
+        [forward(x), link]
       end
 
       def build
@@ -349,5 +358,4 @@ module DNN
     end
     
   end
-  
 end
