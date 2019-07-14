@@ -179,7 +179,7 @@ module DNN
         before_batch_cbk.call(false) if before_batch_cbk
         x = forward(x, false)
         correct = evaluate(x, y)
-        loss_value = loss(x, y)
+        loss_value = @loss_func.forward(x, y, get_all_layers)
         after_batch_cbk.call(loss_value, false) if after_batch_cbk
         [correct, loss_value]
       end
@@ -198,10 +198,6 @@ module DNN
           end
         end
         correct
-      end
-
-      private def loss(y, t)
-        @loss_func.forward(y, t, get_all_layers)
       end
 
       # Predict data.
@@ -414,7 +410,7 @@ module DNN
           if layer.is_a?(Sequential)
             layer.build(self)
             layer.setup(@optimizer, @loss_func)
-          else
+          elsif layer.is_a?(Layer)
             layer.build(shape)
           end
           shape = layer.output_shape
