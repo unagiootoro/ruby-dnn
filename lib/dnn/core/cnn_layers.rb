@@ -1,7 +1,8 @@
 module DNN
   module Layers
+    
     # This module is used for convolution.
-    module Conv2D_Utils
+    module Conv2DUtils
       private
 
       # img[bsize, out_h, out_w, ch] to col[bsize * out_h * out_w, fil_h * fil_w * ch]
@@ -74,7 +75,7 @@ module DNN
     
     
     class Conv2D < Connection
-      include Conv2D_Utils
+      include Conv2DUtils
 
       # @return [Integer] number of filters.
       attr_reader :num_filters
@@ -181,8 +182,8 @@ module DNN
     end
 
 
-    class Conv2D_Transpose < Connection
-      include Conv2D_Utils
+    class Conv2DTranspose < Connection
+      include Conv2DUtils
 
       # @return [Integer] number of filters.
       attr_reader :num_filters
@@ -194,7 +195,7 @@ module DNN
       attr_reader :padding
 
       def self.from_hash(hash)
-        Conv2D_Transpose.new(hash[:num_filters], hash[:filter_size],
+        Conv2DTranspose.new(hash[:num_filters], hash[:filter_size],
                    weight_initializer: Utils.from_hash(hash[:weight_initializer]),
                    bias_initializer: Utils.from_hash(hash[:bias_initializer]),
                    weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
@@ -293,7 +294,7 @@ module DNN
     
     # Super class of all pooling2D class.
     class Pool2D < Layer
-      include Conv2D_Utils
+      include Conv2DUtils
 
       # @return [Array] Return pooling size. Pooling size is of the form [height, width].
       attr_reader :pool_size
@@ -405,7 +406,7 @@ module DNN
 
 
     class UnPool2D < Layer
-      include Conv2D_Utils
+      include Conv2DUtils
       
       # @return [Array] Return unpooling size. unpooling size is of the form [height, width].
       attr_reader :unpool_size
@@ -461,5 +462,6 @@ module DNN
         super({unpool_size: @unpool_size})
       end
     end
+
   end
 end

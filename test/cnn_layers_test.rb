@@ -7,7 +7,7 @@ include DNN::Losses
 include DNN::Regularizers
 
 class TestConv2D_Utils < MiniTest::Unit::TestCase
-  include Conv2D_Utils
+  include Conv2DUtils
 
   # im2col test.
   def test_im2col
@@ -291,7 +291,7 @@ end
 class TestConv2D_Transpose < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
-      class: "DNN::Layers::Conv2D_Transpose",
+      class: "DNN::Layers::Conv2DTranspose",
       num_filters: 16,
       filter_size: [3, 3],
       weight_initializer: RandomNormal.new.to_hash,
@@ -302,7 +302,7 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
       bias_regularizer: L2.new.to_hash,
       use_bias: true,
     }
-    conv2d_t = Conv2D_Transpose.from_hash(hash)
+    conv2d_t = Conv2DTranspose.from_hash(hash)
     assert_equal 16, conv2d_t.num_filters
     assert_equal [3, 3], conv2d_t.filter_size
     assert_equal [2, 2], conv2d_t.strides
@@ -310,36 +310,36 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
   end
 
   def test_initialize
-    conv2d_t = Conv2D_Transpose.new(16, 3)
+    conv2d_t = Conv2DTranspose.new(16, 3)
     assert_equal [3, 3], conv2d_t.filter_size
   end
 
   def test_initialize2
-    conv2d_t = Conv2D_Transpose.new(16, 3, strides: 2)
+    conv2d_t = Conv2DTranspose.new(16, 3, strides: 2)
     assert_equal [2, 2], conv2d_t.strides
   end
 
   def test_build
-    conv2d_t = Conv2D_Transpose.new(16, [4, 6], strides: [1, 2])
+    conv2d_t = Conv2DTranspose.new(16, [4, 6], strides: [1, 2])
     conv2d_t.build([29, 14, 3])
     assert_equal [32, 32], conv2d_t.instance_variable_get(:@out_size)
   end
 
   def test_build2
-    conv2d_t = Conv2D_Transpose.new(16, [4, 6], strides: [1, 2], padding: true)
+    conv2d_t = Conv2DTranspose.new(16, [4, 6], strides: [1, 2], padding: true)
     conv2d_t.build([32, 16, 3])
     assert_equal [32, 32], conv2d_t.instance_variable_get(:@out_size)
   end
 
   def test_build3
-    conv2d_t = Conv2D_Transpose.new(16, 4, padding: 3)
+    conv2d_t = Conv2DTranspose.new(16, 4, padding: 3)
     conv2d_t.build([32, 32, 3])
     assert_equal [32, 32], conv2d_t.instance_variable_get(:@out_size)
   end
 
   def test_forward
     x = Numo::SFloat.new(1, 16, 16, 3).seq
-    conv2d_t = Conv2D_Transpose.new(8, 2, strides: 2)
+    conv2d_t = Conv2DTranspose.new(8, 2, strides: 2)
     conv2d_t.build([16, 16, 3])
     assert_equal [1, 32, 32, 8], conv2d_t.forward(x).shape
   end
@@ -347,7 +347,7 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
   def test_backward
     x = Numo::SFloat.new(1, 16, 16, 3).seq
     dy = Numo::SFloat.new(1, 32, 32, 8).seq
-    conv2d_t = Conv2D_Transpose.new(8, 2, strides: 2)
+    conv2d_t = Conv2DTranspose.new(8, 2, strides: 2)
     conv2d_t.build([16, 16, 3])
     conv2d_t.forward(x)
     assert_equal [1, 16, 16, 3], conv2d_t.backward(dy).shape
@@ -356,26 +356,26 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
   end
 
   def test_output_shape
-    conv2d_t = Conv2D_Transpose.new(16, [4, 6], strides: [1, 2])
+    conv2d_t = Conv2DTranspose.new(16, [4, 6], strides: [1, 2])
     conv2d_t.build([29, 14, 3])
     assert_equal [32, 32, 16], conv2d_t.output_shape
   end
 
   def test_filters
-    conv2d_t = Conv2D_Transpose.new(16, [4, 5])
+    conv2d_t = Conv2DTranspose.new(16, [4, 5])
     conv2d_t.build([32, 32, 3])
     assert_equal [4, 5, 16, 3], conv2d_t.filters.shape
   end
 
   def test_filters_set
-    conv2d_t = Conv2D_Transpose.new(16, [4, 5])
+    conv2d_t = Conv2DTranspose.new(16, [4, 5])
     conv2d_t.build([32, 32, 3])
     conv2d_t.filters = Numo::SFloat.zeros(4, 5, 3, 16)
     assert_equal [4 * 5 * 16, 3], conv2d_t.weight.data.shape
   end
 
   def test_filters_set2
-    conv2d_t = Conv2D_Transpose.new(16, [4, 5])
+    conv2d_t = Conv2DTranspose.new(16, [4, 5])
     conv2d_t.build([32, 32, 3])
     expected = conv2d_t.weight.data
     conv2d_t.filters = expected
@@ -383,9 +383,9 @@ class TestConv2D_Transpose < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    conv2d_t = Conv2D_Transpose.new(16, 5, strides: 2, padding: true, weight_regularizer: L1.new, bias_regularizer: L2.new, use_bias: false)
+    conv2d_t = Conv2DTranspose.new(16, 5, strides: 2, padding: true, weight_regularizer: L1.new, bias_regularizer: L2.new, use_bias: false)
     expected_hash = {
-      class: "DNN::Layers::Conv2D_Transpose",
+      class: "DNN::Layers::Conv2DTranspose",
       num_filters: 16,
       filter_size: [5, 5],
       weight_initializer: conv2d_t.weight_initializer.to_hash,
