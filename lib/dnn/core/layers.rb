@@ -14,6 +14,8 @@ module DNN
         @built = false
       end
 
+      # Forward propagation and create a link.
+      # @param [Array] input Array of the form [x_input_data, prev_link].
       def call(input)
         x, prev_link = *input
         build(x.shape[1..-1]) unless built?
@@ -38,11 +40,13 @@ module DNN
       end
 
       # Forward propagation.
+      # @param [Numo::SFloat] x Input data.
       def forward(x)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
       end
 
       # Backward propagation.
+      # @param [Numo::SFloat] dy Differential value of output data.
       def backward(dy)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward'")
       end
@@ -82,13 +86,14 @@ module DNN
     
     class InputLayer < Layer
       def self.call(x)
-        self.new(x.shape).call(x)
+        self.new(x.shape[1..-1]).(x)
       end
 
       def self.from_hash(hash)
         self.new(hash[:input_shape])
       end
 
+      # @param [Array] input_dim_or_shape Setting the shape or dimension of the input data.
       def initialize(input_dim_or_shape)
         super()
         @input_shape = input_dim_or_shape.is_a?(Array) ? input_dim_or_shape : [input_dim_or_shape]
