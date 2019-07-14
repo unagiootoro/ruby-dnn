@@ -50,12 +50,13 @@ module DNN
       end
 
       def forward(x1, x2)
-        @dim = x1.shape[@axis]
+        @x1_dim = x1.shape[@axis]
+        @x2_dim = x2.shape[@axis]
         x1.concatenate(x2, axis: @axis)
       end
 
       def backward(dy)
-        dy.split(2, axis: @axis)
+        dy.split([@x1_dim, @x1_dim + @x2_dim], axis: @axis)
       end
     end
 

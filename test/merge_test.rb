@@ -49,9 +49,9 @@ class TestConcatenate < MiniTest::Unit::TestCase
 
   def test_backward
     con = Concatenate.new
-    con.forward(Numo::SFloat[[1, 2]], Numo::SFloat[[3, 4]])
-    dx1, dx2 = con.backward(Numo::SFloat[[5, 6, 7, 8]])
-    assert_equal Numo::SFloat[[5, 6]], dx1
-    assert_equal Numo::SFloat[[7, 8]], dx2
+    con.forward(Numo::SFloat[[1, 2, 3]], Numo::SFloat[[4, 5]])
+    dx1, dx2 = con.backward(Numo::SFloat[[6, 7, 8, 9, 10]])
+    assert_equal Numo::SFloat[[6, 7, 8]], dx1
+    assert_equal Numo::SFloat[[9, 10]], dx2
   end
 end
