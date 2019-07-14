@@ -59,7 +59,7 @@ module DNN
         magic, num_images = f.read(8).unpack("N2")
         rows, cols = f.read(8).unpack("N2")
         images = Numo::UInt8.from_binary(f.read)
-        images = images.reshape(num_images, cols, rows)
+        images = images.reshape(num_images, cols, rows, 1)
       end
       images
     end
