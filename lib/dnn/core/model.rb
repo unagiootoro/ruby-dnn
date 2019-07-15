@@ -140,7 +140,6 @@ module DNN
       def train_on_batch(x, y, before_batch_cbk: nil, after_batch_cbk: nil)
         raise DNN_Error.new("The model is not compiled.") unless compiled?
         check_xy_type(x, y)
-        # input_data_shape_check(x, y)
         before_batch_cbk.call(true) if before_batch_cbk
         x = forward(x, true)
         loss_value = @loss_func.forward(x, y, get_all_layers)
@@ -159,7 +158,6 @@ module DNN
       # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
       def accurate(x, y, batch_size = 100, before_batch_cbk: nil, after_batch_cbk: nil)
         check_xy_type(x, y)
-        # input_data_shape_check(x, y)
         batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
         dataset = Dataset.new(x, y, false)
         total_correct = 0
@@ -204,7 +202,6 @@ module DNN
       # @param [Numo::SFloat] x Input data.
       def predict(x)
         check_xy_type(x)
-        # input_data_shape_check(x)
         forward(x, false)
       end
 
@@ -394,7 +391,9 @@ module DNN
         raise DNN_Error.new("The model is already compiled.") if compiled?
         setup(optimizer, loss_func)
         @compiled = true
-        layers_check
+        if !@layers.first.is_a?(Layers::InputLayer) && !@layers.first.is_a?(Layers::Embedding) && !@super_model
+          raise TypeError.new("The first layer is not an InputLayer or Embedding.")
+        end
         build
       end
 
@@ -486,23 +485,6 @@ module DNN
       def to_hash
         hash_layers = @layers.map { |layer| layer.to_hash }
         {class: self.class.name, layers: hash_layers, optimizer: @optimizer.to_hash, loss: @loss_func.to_hash}
-      end
-
-      private
-
-      def layers_check
-        if !@layers.first.is_a?(Layers::InputLayer) && !@layers.first.is_a?(Layers::Embedding) && !@super_model
-          raise TypeError.new("The first layer is not an InputLayer or Embedding.")
-        end
-      end
-
-      def input_data_shape_check(x, y = nil)
-        unless @layers.first.input_shape == x.shape[1..-1]
-          raise DNN_ShapeError.new("The shape of x does not match the input shape. x shape is #{x.shape[1..-1]}, but input shape is #{@layers.first.input_shape}.")
-        end
-        if y && @layers.last.output_shape != y.shape[1..-1]
-          raise DNN_ShapeError.new("The shape of y does not match the input shape. y shape is #{y.shape[1..-1]}, but output shape is #{@layers.last.output_shape}.")
-        end
       end
     end
 
