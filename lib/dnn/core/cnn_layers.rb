@@ -60,7 +60,7 @@ module DNN
         [out_h, out_w]
       end
 
-      def calc_deconv2d_out_size(prev_h, prev_w, fil_h, fil_w, pad_h, pad_w, strides)
+      def calc_conv2d_transpose_out_size(prev_h, prev_w, fil_h, fil_w, pad_h, pad_w, strides)
         out_h = (prev_h - 1) * strides[0] + fil_h - pad_h
         out_w = (prev_w - 1) * strides[1] + fil_w - pad_w
         [out_h, out_w]
@@ -235,14 +235,14 @@ module DNN
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         if @padding == true
-          out_h, out_w = calc_deconv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
+          out_h, out_w = calc_conv2d_transpose_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
           @pad_size = calc_padding_size(out_h, out_w, prev_h, prev_w, @strides)
         elsif @padding.is_a?(Array)
           @pad_size = @padding
         else
           @pad_size = [0, 0]
         end
-        @out_size = calc_deconv2d_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
+        @out_size = calc_conv2d_transpose_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
 
       def forward(x)

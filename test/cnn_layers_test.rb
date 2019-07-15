@@ -143,6 +143,14 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
     assert_equal [32, 32], calc_conv2d_out_size(32, 32, 1, 1, 0, 0, [1, 1])
   end
 
+  def test_calc_conv2d_transpose_out_size
+    assert_equal [32, 31], calc_conv2d_transpose_out_size(29, 14, 4, 5, 0, 0, [1, 2])
+  end
+
+  def test_calc_conv2d_transpose_out_size2
+    assert_equal [32, 32], calc_conv2d_transpose_out_size(32, 32, 1, 1, 0, 0, [1, 1])
+  end
+
   def test_calc_padding_size
     assert_equal [3, 4], calc_padding_size(32, 32, 29, 14, [1, 2])
   end
