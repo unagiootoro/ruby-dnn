@@ -55,12 +55,13 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
 
   def test_backward2
     batch_norm = BatchNormalization.new
-    batch_norm.trainable = false
     batch_norm.build([10])
+    batch_norm.trainable = false
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     batch_norm.learning_phase = true
     batch_norm.forward(x)
-    batch_norm.backward(Numo::SFloat.ones(*x.shape))
+    grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
+    assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
     assert_equal 0, batch_norm.gamma.grad
     assert_equal 0, batch_norm.beta.grad
   end

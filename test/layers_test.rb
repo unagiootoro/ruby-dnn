@@ -167,7 +167,9 @@ class TestDense < MiniTest::Unit::TestCase
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
     dense.bias.data = Numo::SFloat[5, 10]
     dense.forward(x)
-    assert_equal 0, dense.weight.grad
+    grad = dense.backward(Numo::SFloat[1])
+    assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
+    assert_equal 0, dense.weight.grad.round(4)
     assert_equal 0, dense.bias.grad
   end
 
