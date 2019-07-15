@@ -3,6 +3,9 @@ module DNN
 
     class Loss
       def forward(y, t, layers)
+        unless y.shape == t.shape
+          raise DNN_ShapeError.new("The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}.")
+        end
         loss_value = forward_loss(y, t)
         regularizers = layers.select { |layer| layer.is_a?(Connection) }
                              .map { |layer| layer.regularizers }.flatten

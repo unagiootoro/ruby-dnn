@@ -119,6 +119,9 @@ module DNN
       end
 
       def forward(x)
+        unless x.shape[1..-1] == @input_shape
+          raise DNN_ShapeError.new("The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}.")
+        end
         x
       end
     

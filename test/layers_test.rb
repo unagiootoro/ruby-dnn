@@ -57,14 +57,14 @@ class TestInputLayer < MiniTest::Unit::TestCase
   end
 
   def test_forward
-    layer = InputLayer.new(10)
-    x = Numo::SFloat[0, 1]
+    layer = InputLayer.new(2)
+    x = Numo::SFloat[[0, 1]]
     assert_equal x, layer.forward(x)
   end
 
   def test_backward
-    layer = InputLayer.new(10)
-    dy = Numo::SFloat[0, 1]
+    layer = InputLayer.new(2)
+    dy = Numo::SFloat[[0, 1]]
     assert_equal dy, layer.backward(dy)
   end
 
