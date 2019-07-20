@@ -357,13 +357,9 @@ module DNN
         @stack.first.input_shape
       end
     
-      def call(x, learning_phase)
+      def call(x)
         @stack.each do |layer|
-          if layer.respond_to?(:learning_phase)
-            x = layer.(x, learning_phase)
-          else
-            x = layer.(x)
-          end
+          x = layer.(x)
         end
         x
       end
