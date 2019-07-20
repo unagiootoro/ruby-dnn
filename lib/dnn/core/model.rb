@@ -5,9 +5,9 @@ require "base64"
 module DNN
   module Models
 
-    class BaseModel
-      # @return [Bool] Setting false prevents learning of parameters.
-      attr_accessor :trainable
+    # This class deals with the model of the network.
+    class Model
+      attr_reader :learning_phase
 
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
@@ -16,8 +16,9 @@ module DNN
       end
 
       def initialize
-        @trainable = true
         @optimizer = nil
+        @last_link = nil
+        @setup_completed = false
       end
 
       # Load json model parameters.
@@ -26,7 +27,7 @@ module DNN
         hash = JSON.parse(json_str, symbolize_names: true)
         has_param_layers_params = hash[:params]
         has_param_layers_index = 0
-        has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
+        has_param_layers = layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
         has_param_layers.each do |layer|
           hash_params = has_param_layers_params[has_param_layers_index]
           hash_params.each do |key, (shape, base64_param)|
@@ -41,7 +42,7 @@ module DNN
       # Convert model parameters to json string.
       # @return [String] json string.
       def params_to_json
-        has_param_layers = get_all_layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
+        has_param_layers = layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
         has_param_layers_params = has_param_layers.map do |layer|
           layer.get_params.map { |key, param|
             base64_data = Base64.encode64(param.data.to_binary)
@@ -52,7 +53,7 @@ module DNN
         JSON.dump(hash)
       end
 
-      # Set optimizer and loss_func to model and recompile. But does not build layers.
+      # Set optimizer and loss_func to model.
       # @param [DNN::Optimizers::Optimizer] optimizer Optimizer to use for learning.
       # @param [DNN::Losses::Loss] loss_func Loss function to use for learning.
       def setup(optimizer, loss_func)
@@ -62,13 +63,13 @@ module DNN
         unless loss_func.is_a?(Losses::Loss)
           raise TypeError.new("loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss class.")
         end
-        @compiled = true
+        @setup_completed = true
         @optimizer = optimizer
         @loss_func = loss_func
       end
 
       # Start training.
-      # Compile the model before use this method.
+      # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
       # @param [Integer] epochs Number of training.
@@ -92,7 +93,7 @@ module DNN
                 after_train_on_batch_cbk: nil,
                 before_test_on_batch_cbk: nil,
                 after_test_on_batch_cbk: nil)
-        raise DNN_Error.new("The model is not compiled.") unless compiled?
+        raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         check_xy_type(x, y)
         dataset = Dataset.new(x, y)
         num_train_datas = x.shape[0]
@@ -125,7 +126,7 @@ module DNN
             print log if verbose
           end
           if verbose && test
-            acc, test_loss = accurate(test[0], test[1], batch_size, before_test_on_batch_cbk: before_test_on_batch_cbk,
+            acc, test_loss = accurate(test[0], test[1], batch_size: batch_size, before_test_on_batch_cbk: before_test_on_batch_cbk,
                                       after_test_on_batch_cbk: after_test_on_batch_cbk)
             print "  accurate: #{acc}, test loss: #{sprintf('%.8f', test_loss)}"
           end
@@ -135,21 +136,21 @@ module DNN
       end
     
       # Training once.
-      # Compile the model before use this method.
+      # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
       # @param [Lambda] before_train_on_batch_cbk Set the proc to be performed before train on batch processing.
       # @param [Lambda] after_train_on_batch_cbk Set the proc to be performed after train on batch processing.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
       def train_on_batch(x, y, before_train_on_batch_cbk: nil, after_train_on_batch_cbk: nil)
-        raise DNN_Error.new("The model is not compiled.") unless compiled?
+        raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         check_xy_type(x, y)
         before_train_on_batch_cbk.call if before_train_on_batch_cbk
         x = forward(x, true)
-        loss_value = @loss_func.forward(x, y, get_all_layers)
-        dy = @loss_func.backward(y, get_all_layers)
+        loss_value = @loss_func.forward(x, y, layers)
+        dy = @loss_func.backward(y, layers)
         backward(dy)
-        update
+        @optimizer.update(layers.uniq)
         after_train_on_batch_cbk.call(loss_value) if after_train_on_batch_cbk
         loss_value
       end
@@ -160,7 +161,7 @@ module DNN
       # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
       # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
       # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
-      def accurate(x, y, batch_size = 100, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
+      def accurate(x, y, batch_size: 100, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
         check_xy_type(x, y)
         batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
         dataset = Dataset.new(x, y, false)
@@ -182,7 +183,7 @@ module DNN
         before_test_on_batch_cbk.call if before_test_on_batch_cbk
         x = forward(x, false)
         correct = evaluate(x, y)
-        loss_value = @loss_func.forward(x, y, get_all_layers)
+        loss_value = @loss_func.forward(x, y, layers)
         after_test_on_batch_cbk.call(loss_value) if after_test_on_batch_cbk
         [correct, loss_value]
       end
@@ -230,64 +231,31 @@ module DNN
         end
       end
 
-      # @return [DNN::BaseModel] Copy this model.
+      # @return [DNN::Model] Copy this model.
       def copy
         Marshal.load(Marshal.dump(self))
       end
 
       # Get the all layers.
       # @return [Array] all layers array.
-      def get_all_layers
-        layers.map { |layer|
-          layer.is_a?(BaseModel) ? layer.get_all_layers : layer
-        }.flatten
-      end
-
-      def update
-        return unless trainable
-        all_trainable_layers = layers.map { |layer|
-          if layer.is_a?(BaseModel)
-            layer.trainable ? layer.get_all_layers : nil
+      def layers
+        layers = []
+        get_layers = -> link do
+          return unless link
+          layers.unshift(link.layer)
+          if link.is_a?(TwoInputLink)
+            get_layers.(link.prev1)
+            get_layers.(link.prev2)
           else
-            layer
+            get_layers.(link.prev)
           end
-        }.flatten.compact.uniq
-        @optimizer.update(all_trainable_layers)
-      end
-
-      # @return [DNN::Optimizers::Optimizer] optimizer Return the optimizer to use for learning.
-      def optimizer
-        raise DNN_Error.new("The model is not compiled.") unless compiled?
-        @optimizer
-      end
-
-      # @return [DNN::Losses::Loss] loss Return the loss to use for learning.
-      def loss_func
-        raise DNN_Error.new("The model is not compiled.") unless compiled?
-        @loss_func
-      end
-
-      # @return [Bool] Returns whether the model is learning.
-      def compiled?
-        @compiled
-      end
-
-      private def check_xy_type(x, y = nil)
-        unless x.is_a?(Xumo::SFloat)
-          raise TypeError.new("x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class.")
         end
-        if y && !y.is_a?(Xumo::SFloat)
-          raise TypeError.new("y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class.")
-        end
+        get_layers.(@last_link)
+        layers
       end
-    end
 
-
-    # This class deals with the model of the network.
-    class Model < BaseModel
-      def initialize
-        super
-        @last_link = nil
+      def has_param_layers
+        layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
       end
 
       # Get the layer that the model has.
@@ -301,24 +269,42 @@ module DNN
         end
       end
 
-      def layers
-        layers = []
-        get_layers = -> link do
-          return unless link
-          layers << link.layer
-          if link.is_a?(TwoInputLink)
-            get_layers.(link.prev1)
-            get_layers.(link.prev2)
-          else
-            get_layers.(link.prev)
-          end
-        end
-        get_layers.(@last_link)
-        layers.reverse
+      # @return [DNN::Optimizers::Optimizer] optimizer Return the optimizer to use for learning.
+      def optimizer
+        raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
+        @optimizer
       end
-    
+
+      # @return [DNN::Losses::Loss] loss Return the loss to use for learning.
+      def loss_func
+        raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
+        @loss_func
+      end
+
+      # @return [Bool] Returns whether the model is learning.
+      def setup_completed?
+        @setup_completed
+      end
+
+      # @return [Array] Return the input shape of the model.
+      def input_shape
+        get_first_link = -> link do
+          return link unless link.prev
+          get_first_link.(link.prev)
+        end
+        get_first_link.(@last_link).layer.input_shape
+      end
+
+      # @return [Array] Return the output shape of the model.
+      def output_shape
+        @last_link.layer.output_shape
+      end
+
+      private
+
       def forward(x, learning_phase)
-        y, @last_link = call(x, learning_phase)
+        @learning_phase = learning_phase
+        y, @last_link = call([x, nil, self])
         y
       end
     
@@ -336,168 +322,50 @@ module DNN
         bwd.(@last_link, dy)
       end
 
-      def input_shape
-        get_first_link = -> link do
-          return link unless link.prev
-          get_first_link.(link.prev)
+      def check_xy_type(x, y = nil)
+        unless x.is_a?(Xumo::SFloat)
+          raise TypeError.new("x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class.")
         end
-        get_first_link.(@last_link).layer.input_shape
+        if y && !y.is_a?(Xumo::SFloat)
+          raise TypeError.new("y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class.")
+        end
       end
-
-      def output_shape
-        @last_link.layer.output_shape
-      end
-
     end
 
 
-    # This class deals with the model of the network.
-    class Sequential < BaseModel
+    class Sequential < Model
       # @return [Array] All layers possessed by the model.
-      attr_accessor :layers
-
-      # Load json model.
-      # @param [String] json_str json string to load model.
-      # @return [DNN::Sequential]
-      def self.load_json(json_str)
-        hash = JSON.parse(json_str, symbolize_names: true)
-        model = self.from_hash(hash)
-        model.compile(Utils.from_hash(hash[:optimizer]), Utils.from_hash(hash[:loss]))
-        model
-      end
-
-      def self.from_hash(hash)
-        model = self.new
-        model.layers = hash[:layers].map { |hash_layer| Utils.from_hash(hash_layer) }
-        model
-      end
+      attr_accessor :stack
     
       def initialize
         super
-        @layers = []
-        @compiled = false
-      end
-
-      # Convert model to json string.
-      # @return [String] json string.
-      def to_json
-        hash = self.to_hash
-        hash[:version] = VERSION
-        JSON.pretty_generate(hash)
+        @stack = []
       end
 
       # Add layer to the model.
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
-      # @return [DNN::BaseModel] return self.
+      # @return [DNN::Model] return self.
       def <<(layer)
-        if !layer.is_a?(Layers::Layer) && !layer.is_a?(BaseModel)
-          raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::BaseModel class.")
+        if !layer.is_a?(Layers::Layer) && !layer.is_a?(Model)
+          raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class.")
         end
-        @layers << layer
+        @stack << layer
         self
       end
 
-      # Set optimizer and loss_func to model and build all layers.
-      # @param [DNN::Optimizers::Optimizer] optimizer Optimizer to use for learning.
-      # @param [DNN::Losses::Loss] loss_func Loss function to use for learning.
-      def compile(optimizer, loss_func)
-        raise DNN_Error.new("The model is already compiled.") if compiled?
-        setup(optimizer, loss_func)
-        @compiled = true
-        if !@layers.first.is_a?(Layers::InputLayer) && !@layers.first.is_a?(Layers::Embedding) && !@super_model
-          raise TypeError.new("The first layer is not an InputLayer or Embedding.")
-        end
-        build
-      end
-
-      def build(super_model = nil)
-        @super_model = super_model
-        shape = if super_model
-          super_model.get_prev_layer(self).output_shape
-        else
-          @layers.first.build
-        end
-        layers = super_model ? @layers : @layers[1..-1]
-        layers.each do |layer|
-          if layer.is_a?(Sequential)
-            layer.build(self)
-            layer.setup(@optimizer, @loss_func)
-          elsif layer.is_a?(Layer)
-            layer.build(shape)
-          end
-          shape = layer.output_shape
-        end
-      end
-
-      # @return [Array] Return the input shape of the model.
       def input_shape
-        @layers.first.input_shape
-      end
-
-      # @return [Array] Return the output shape of the model.
-      def output_shape
-        @layers.last.output_shape
-      end
-
-      private def first_layer
-        @layers.first
-      end
-
-      private def last_layer
-        @layers.last
-      end
-
-      # Get the layer that the model has.
-      def get_layer(*args)
-        if args.length == 1
-          index = args[0]
-          @layers[index]
-        else
-          layer_class, index = args
-          @layers.select { |layer| layer.is_a?(layer_class) }[index]
-        end
+        @stack.first.input_shape
       end
     
-      def forward(x, learning_phase)
-        @layers.each do |layer|
-          x = if layer.is_a?(BaseModel)
-            layer.forward(x, learning_phase)
+      def call(x, learning_phase)
+        @stack.each do |layer|
+          if layer.respond_to?(:learning_phase)
+            x = layer.(x, learning_phase)
           else
-            layer.learning_phase = learning_phase if layer.respond_to?(:learning_phase)
-            layer.forward(x)
+            x = layer.(x)
           end
         end
         x
-      end
-    
-      def backward(dy)
-        @layers.reverse.each do |layer|
-          dy = layer.backward(dy)
-        end
-        dy
-      end
-
-      def get_prev_layer(layer)
-        layer_index = @layers.index(layer)
-        prev_layer = if layer_index == 0
-          if @super_model
-            @super_model.layers[@super_model.layers.index(self) - 1]
-          else
-            self
-          end
-        else
-          @layers[layer_index - 1]
-        end
-        if prev_layer.is_a?(Layers::Layer)
-          prev_layer
-        elsif prev_layer.is_a?(BaseModel)
-          prev_layer.layers.last
-        end
-      end
-
-      def to_hash
-        hash_layers = @layers.map { |layer| layer.to_hash }
-        {class: self.class.name, layers: hash_layers, optimizer: @optimizer.to_hash, loss: @loss_func.to_hash}
       end
     end
 

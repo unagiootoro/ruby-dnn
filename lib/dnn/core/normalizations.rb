@@ -33,11 +33,6 @@ module DNN
         @eps = eps
       end
 
-      def call(input, learning_phase)
-        self.learning_phase = learning_phase
-        super(input)
-      end
-
       def build(input_shape)
         super
         @gamma = Param.new(Xumo::SFloat.ones(*output_shape), 0)

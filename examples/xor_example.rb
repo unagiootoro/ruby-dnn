@@ -17,7 +17,7 @@ model << Dense.new(16)
 model << ReLU.new
 model << Dense.new(1)
 
-model.compile(SGD.new, SigmoidCrossEntropy.new)
+model.setup(SGD.new, SigmoidCrossEntropy.new)
 
 model.train(x, y, 20000, batch_size: 4, verbose: false)
 

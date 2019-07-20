@@ -31,6 +31,6 @@ model << LSTM.new(200, return_sequences: false)
 
 model << Dense.new(10)
 
-model.compile(Adam.new, SoftmaxCrossEntropy.new)
+model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])

@@ -26,6 +26,6 @@ model << ReLU.new
 
 model << Dense.new(3)
 
-model.compile(Adam.new, SoftmaxCrossEntropy.new)
+model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 1000, batch_size: 10, test: [x_test, y_test])

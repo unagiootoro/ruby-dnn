@@ -32,13 +32,13 @@ class MLP < Model
     @bn2 = BatchNormalization.new
   end
 
-  def call(x, learning_phase)
-    x = InputLayer.new(784).(x)
+  def call(x)
+    x = InputLayer.(x)
     x = @l1.(x)
-    x = @bn1.(x, learning_phase)
+    x = @bn1.(x)
     x = ReLU.(x)
     x = @l2.(x)
-    x = @bn2.(x, learning_phase)
+    x = @bn2.(x)
     x = ReLU.(x)
     x = @l3.(x)
     x

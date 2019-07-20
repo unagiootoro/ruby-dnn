@@ -45,6 +45,6 @@ model << Dropout.new(0.5)
 
 model << Dense.new(10)
 
-model.compile(Adam.new, SoftmaxCrossEntropy.new)
+model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])

@@ -1,7 +1,7 @@
 module DNN
   module Layers
 
-    # Super class of all optimizer classes.
+    # Super class of all layer classes.
     class Layer
       # @return [Array] Return the shape of the input data.
       attr_reader :input_shape
@@ -17,12 +17,13 @@ module DNN
       # Forward propagation and create a link.
       # @param [Array] input Array of the form [x_input_data, prev_link].
       def call(input)
-        x, prev_link = *input
+        x, prev_link, model = *input
         build(x.shape[1..-1]) unless built?
+        self.learning_phase = model.learning_phase if self.respond_to?(:learning_phase)
         y = forward(x)
         link = Link.new(prev_link, self)
         prev_link.next = link
-        [y, link]
+        [y, link, model]
       end
 
       # Build the layer.
@@ -102,15 +103,14 @@ module DNN
 
       def call(input)
         build
-        if input.is_a?(Array)
-          x, prev_link = *input
+        x, prev_link, model = *input
+        if prev_link
           link = Link.new(prev_link, self)
           prev_link.next = link
         else
-          x = input
-          link = Link.new(prev_link, self)
+          link = Link.new(nil, self)
         end
-        [forward(x), link]
+        [forward(x), link, model]
       end
 
       def build
@@ -314,7 +314,7 @@ module DNN
 
     
     class Dropout < Layer
-      # @return [Bool] learning_phase Return the true if learning.
+      # @return [Bool] Return the true if learning.
       attr_accessor :learning_phase
       # @return [Float] dropout ratio.
       attr_accessor :dropout_ratio
@@ -332,11 +332,6 @@ module DNN
         @use_scale = use_scale
         @mask = nil
         @rnd = Random.new(@seed)
-      end
-
-      def call(input, learning_phase)
-        self.learning_phase = learning_phase
-        super(input)
       end
 
       def forward(x)
