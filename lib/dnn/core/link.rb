@@ -7,7 +7,6 @@ module DNN
     def initialize(prev = nil, layer = nil)
       @prev = prev
       @layer = layer
-      @data = nil
     end
   end
 
