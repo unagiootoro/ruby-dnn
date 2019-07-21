@@ -4,12 +4,12 @@ module DNN
     # Super class of all optimizer classes.
     class Optimizer
       # @return [Float] Return the learning rate.
-      attr_accessor :learning_rate
+      attr_accessor :lr
       # @return [Float] Return the gradient clip value.
       attr_accessor :clip_norm
 
-      def initialize(learning_rate, clip_norm: nil)
-        @learning_rate = learning_rate
+      def initialize(lr, clip_norm: nil)
+        @lr = lr
         @clip_norm = clip_norm
       end
 
@@ -19,21 +19,20 @@ module DNN
                               .map { |layer| layer.get_params.values }.flatten.compact
                               .select { |param| param.grad }
         clipping(target_params) if @clip_norm
+        update_params(target_params)
         target_params.each do |param|
-          update_param(param)
           param.grad = 0
         end
       end
 
       def to_hash(merge_hash = nil)
-        hash = {class: self.class.name, learning_rate: @learning_rate, clip_norm: @clip_norm}
+        hash = {class: self.class.name, lr: @lr, clip_norm: @clip_norm}
         hash.merge!(merge_hash) if merge_hash
         hash
       end
 
-      # Update param.
-      # Classes that inherit from this class must implement this method.
-      private def update_param(param)
+      # Update params.
+      private def update_params(params)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update_param'")
       end
 
@@ -53,13 +52,13 @@ module DNN
       attr_accessor :momentum
 
       def self.from_hash(hash)
-        self.new(hash[:learning_rate], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
+        self.new(hash[:lr], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
       end
 
-      # @param [Float] learning_rate Learning rate.
+      # @param [Float] lr Learning rate.
       # @param [Float] momentum momentum coefficient.
-      def initialize(learning_rate = 0.01, momentum: 0, clip_norm: nil)
-        super(learning_rate, clip_norm: clip_norm)
+      def initialize(lr = 0.01, momentum: 0, clip_norm: nil)
+        super(lr, clip_norm: clip_norm)
         @momentum = momentum
         @v = {}
       end
@@ -68,14 +67,16 @@ module DNN
         super(momentum: @momentum)
       end
 
-      private def update_param(param)
-        amount = param.grad * @learning_rate
-        if @momentum > 0
-          @v[param] ||= 0
-          amount += @momentum * @v[param]
-          @v[param] = amount
+      private def update_params(params)
+        params.each do |param|
+          amount = param.grad * @lr
+          if @momentum > 0
+            @v[param] ||= 0
+            amount += @momentum * @v[param]
+            @v[param] = amount
+          end
+          param.data -= amount
         end
-        param.data -= amount
       end
     end
 
@@ -84,13 +85,13 @@ module DNN
       attr_accessor :momentum
       
       def self.from_hash(hash)
-        self.new(hash[:learning_rate], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
+        self.new(hash[:lr], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
       end
 
-      # @param [Float] learning_rate Learning rate.
+      # @param [Float] lr Learning rate.
       # @param [Float] momentum momentum coefficient.
-      def initialize(learning_rate = 0.01, momentum: 0.9, clip_norm: nil)
-        super(learning_rate, clip_norm: clip_norm)
+      def initialize(lr = 0.01, momentum: 0.9, clip_norm: nil)
+        super(lr, clip_norm: clip_norm)
         @momentum = momentum
         @v = {}
       end
@@ -99,11 +100,13 @@ module DNN
         super(momentum: @momentum)
       end
     
-      private def update_param(param)
-        @v[param] ||= 0
-        amount = param.grad * @learning_rate
-        @v[param] = @v[param] * @momentum - amount
-        param.data = (param.data + @momentum**2 * @v[param]) - (1 + @momentum) * amount
+      private def update_params(params)
+        params.each do |param|
+          @v[param] ||= 0
+          amount = param.grad * @lr
+          @v[param] = @v[param] * @momentum - amount
+          param.data = (param.data + @momentum**2 * @v[param]) - (1 + @momentum) * amount
+        end
       end
     end
     
@@ -113,21 +116,23 @@ module DNN
       attr_accessor :eps
 
       def self.from_hash(hash)
-        self.new(hash[:learning_rate], eps: hash[:eps], clip_norm: hash[:clip_norm])
+        self.new(hash[:lr], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
 
-      # @param [Float] learning_rate Learning rate.
+      # @param [Float] lr Learning rate.
       # @param [Float] eps Value to avoid division by zero.
-      def initialize(learning_rate = 0.01, eps: 1e-7, clip_norm: nil)
-        super(learning_rate, clip_norm: clip_norm)
+      def initialize(lr = 0.01, eps: 1e-7, clip_norm: nil)
+        super(lr, clip_norm: clip_norm)
         @eps = eps
         @g = {}
       end
     
-      private def update_param(param)
-        @g[param] ||= 0
-        @g[param] += param.grad**2
-        param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
+      private def update_params(params)
+        params.each do |param|
+          @g[param] ||= 0
+          @g[param] += param.grad**2
+          param.data -= (@lr / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
+        end
       end
 
       def to_hash
@@ -143,14 +148,14 @@ module DNN
       attr_accessor :eps
 
       def self.from_hash(hash)
-        self.new(hash[:learning_rate], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
+        self.new(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
 
-      # @param [Float] learning_rate Learning rate.
+      # @param [Float] lr Learning rate.
       # @param [Float] alpha Moving average index of past slopes.
       # @param [Float] eps Value to avoid division by zero.
-      def initialize(learning_rate = 0.001, alpha: 0.9, eps: 1e-7, clip_norm: nil)
-        super(learning_rate, clip_norm: clip_norm)
+      def initialize(lr = 0.001, alpha: 0.9, eps: 1e-7, clip_norm: nil)
+        super(lr, clip_norm: clip_norm)
         @alpha = alpha
         @eps = eps
         @g = {}
@@ -160,10 +165,12 @@ module DNN
         super(alpha: @alpha, eps: @eps)
       end
 
-      private def update_param(param)
-        @g[param] ||= 0
-        @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
-        param.data -= (@learning_rate / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
+      private def update_params(params)
+        params.each do |param|
+          @g[param] ||= 0
+          @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
+          param.data -= (@lr / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
+        end
       end
     end
 
@@ -192,13 +199,15 @@ module DNN
         super(rho: @rho, eps: @eps)
       end
 
-      private def update_param(param)
-        @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
-        @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
-        @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
-        v = (Xumo::NMath.sqrt(@s[param] + @eps) / Xumo::NMath.sqrt(@h[param] + @eps)) * param.grad
-        @s[param] = @rho * @s[param] + (1 - @rho) * v**2
-        param.data -= v
+      private def update_params(params)
+        params.each do |param|
+          @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
+          v = (Xumo::NMath.sqrt(@s[param] + @eps) / Xumo::NMath.sqrt(@h[param] + @eps)) * param.grad
+          @s[param] = @rho * @s[param] + (1 - @rho) * v**2
+          param.data -= v
+        end
       end
     end
 
@@ -227,34 +236,25 @@ module DNN
         @beta1 = beta1
         @beta2 = beta2
         @eps = eps
-        @iter = 0
+        @t = 0
         @m = {}
         @v = {}
-      end
-
-      def update(layers)
-        @iter += 1
-        learning_rate = @alpha * Math.sqrt(1 - @beta2**@iter) / (1 - @beta1**@iter) 
-        target_params = layers.select { |layer| layer.is_a?(HasParamLayer) && layer.trainable }
-                              .map { |layer| layer.get_params.values }.flatten
-                              .select { |param| param.grad }
-        target_params.each do |param|
-          param.grad = param.grad.clip(nil, @clip_norm) if @clip_norm && param.grad.is_a?(Xumo::SFloat)
-          update_param(param, learning_rate)
-          param.grad = 0
-        end
       end
 
       def to_hash
         super(alpha: @alpha, beta1: @beta1, beta2: @beta2, eps: @eps)
       end
 
-      private def update_param(param, learning_rate)
-        @m[param] ||= 0
-        @v[param] ||= 0
-        @m[param] += (1 - @beta1) * (param.grad - @m[param])
-        @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
-        param.data -= learning_rate * @m[param] / Xumo::NMath.sqrt(@v[param] + @eps)
+      private def update_params(params)
+        @t += 1
+        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t) 
+        params.each do |param|
+          @m[param] ||= 0
+          @v[param] ||= 0
+          @m[param] += (1 - @beta1) * (param.grad - @m[param])
+          @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
+          param.data -= lr * @m[param] / Xumo::NMath.sqrt(@v[param] + @eps)
+        end
       end
     end
 
@@ -266,14 +266,14 @@ module DNN
       attr_accessor :eps
       
       def self.from_hash(hash)
-        self.new(hash[:learning_rate], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
+        self.new(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
 
-      # @param [Float] learning_rate Learning rate.
+      # @param [Float] lr Learning rate.
       # @param [Float] alpha Moving average index of past slopes.
       # @param [Float] eps Value to avoid division by zero.
-      def initialize(learning_rate = 0.0001, alpha: 0.95, eps: 0.0001, clip_norm: nil)
-        super(learning_rate, clip_norm: clip_norm)
+      def initialize(lr = 0.0001, alpha: 0.95, eps: 0.0001, clip_norm: nil)
+        super(lr, clip_norm: clip_norm)
         @alpha = alpha
         @eps = eps
         @m = {}
@@ -284,12 +284,14 @@ module DNN
         super(alpha: @alpha, eps: @eps)
       end
 
-      private def update_param(param)
-        @m[param] ||= 0
-        @v[param] ||= 0
-        @m[param] = @alpha * @m[param] + (1 - @alpha) * param.grad
-        @v[param] = @alpha * @v[param] + (1 - @alpha) * param.grad**2
-        param.data -= (@learning_rate / Xumo::NMath.sqrt(@v[param] - @m[param]**2 + @eps)) * param.grad
+      private def update_params(params)
+        params.each do |param|
+          @m[param] ||= 0
+          @v[param] ||= 0
+          @m[param] = @alpha * @m[param] + (1 - @alpha) * param.grad
+          @v[param] = @alpha * @v[param] + (1 - @alpha) * param.grad**2
+          param.data -= (@lr / Xumo::NMath.sqrt(@v[param] - @m[param]**2 + @eps)) * param.grad
+        end
       end
     end
 

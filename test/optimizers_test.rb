@@ -8,7 +8,7 @@ include DNN::Optimizers
 class TestOptimizer < MiniTest::Unit::TestCase
   def test_initialize
     optimizer = Optimizer.new(0.1)
-    assert_equal 0.1, optimizer.learning_rate
+    assert_equal 0.1, optimizer.lr
   end
 
   def test_to_hash
@@ -16,7 +16,7 @@ class TestOptimizer < MiniTest::Unit::TestCase
     hash = optimizer.to_hash({momentum: 0.9})
     expected_hash = {
       class: "DNN::Optimizers::Optimizer",
-      learning_rate: 0.1,
+      lr: 0.1,
       momentum: 0.9,
       clip_norm: nil,
     }
@@ -29,12 +29,12 @@ class TestSGD < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::SGD",
-      learning_rate: 0.1,
+      lr: 0.1,
       momentum: 0.9,
       clip_norm: 1.0,
     }
     sgd = SGD.from_hash(hash)
-    assert_equal 0.1, sgd.learning_rate
+    assert_equal 0.1, sgd.lr
     assert_equal 0.9, sgd.momentum
     assert_equal 1.0, sgd.clip_norm
   end
@@ -73,7 +73,7 @@ class TestSGD < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::SGD",
-      learning_rate: 0.01,
+      lr: 0.01,
       momentum: 0,
       clip_norm: nil,
     }
@@ -87,12 +87,12 @@ class TestNesterov < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::Nesterov",
-      learning_rate: 0.1,
+      lr: 0.1,
       momentum: 0.8,
       clip_norm: 1.0,
     }
     nesterov = Nesterov.from_hash(hash)
-    assert_equal 0.1, nesterov.learning_rate
+    assert_equal 0.1, nesterov.lr
     assert_equal 0.8, nesterov.momentum
     assert_equal 1.0, nesterov.clip_norm
   end
@@ -111,7 +111,7 @@ class TestNesterov < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::Nesterov",
-      learning_rate: 0.01,
+      lr: 0.01,
       momentum: 0.9,
       clip_norm: nil,
     }
@@ -125,12 +125,12 @@ class TestAdaGrad < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::AdaGrad",
-      learning_rate: 0.001,
+      lr: 0.001,
       eps: 1e-4,
       clip_norm: 1.0,
     }
     adagrad = AdaGrad.from_hash(hash)
-    assert_equal 0.001, adagrad.learning_rate
+    assert_equal 0.001, adagrad.lr
     assert_equal 1e-4, adagrad.eps
     assert_equal 1.0, adagrad.clip_norm
   end
@@ -147,7 +147,7 @@ class TestAdaGrad < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::AdaGrad",
-      learning_rate: 0.01,
+      lr: 0.01,
       eps: 1e-7,
       clip_norm: nil,
     }
@@ -161,13 +161,13 @@ class TestRMSProp < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::RMSProp",
-      learning_rate: 0.01,
+      lr: 0.01,
       alpha: 0.8,
       eps: 1e-4,
       clip_norm: 1.0,
     }
     rmsprop = RMSProp.from_hash(hash)
-    assert_equal 0.01, rmsprop.learning_rate
+    assert_equal 0.01, rmsprop.lr
     assert_equal 0.8, rmsprop.alpha
     assert_equal 1e-4, rmsprop.eps
     assert_equal 1.0, rmsprop.clip_norm
@@ -185,7 +185,7 @@ class TestRMSProp < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::RMSProp",
-      learning_rate: 0.001,
+      lr: 0.001,
       alpha: 0.9,
       eps: 1e-7,
       clip_norm: nil,
@@ -222,7 +222,7 @@ class TestAdaDelta < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::AdaDelta",
-      learning_rate: nil,
+      lr: nil,
       rho: 0.95,
       eps: 1e-6,
       clip_norm: nil,
@@ -265,7 +265,7 @@ class TestAdam < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::Adam",
-      learning_rate: nil,
+      lr: nil,
       alpha: 0.001,
       beta1: 0.9,
       beta2: 0.999,
@@ -282,13 +282,13 @@ class TestRMSPropGraves < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::RMSPropGraves",
-      learning_rate: 0.001,
+      lr: 0.001,
       alpha: 0.8,
       eps: 1e-7,
       clip_norm: 1.0,
     }
     rmsprop = RMSPropGraves.from_hash(hash)
-    assert_equal 0.001, rmsprop.learning_rate
+    assert_equal 0.001, rmsprop.lr
     assert_equal 0.8, rmsprop.alpha
     assert_equal 1e-7, rmsprop.eps
     assert_equal 1.0, rmsprop.clip_norm
@@ -306,7 +306,7 @@ class TestRMSPropGraves < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::RMSPropGraves",
-      learning_rate: 0.0001,
+      lr: 0.0001,
       alpha: 0.95,
       eps: 0.0001,
       clip_norm: nil,
