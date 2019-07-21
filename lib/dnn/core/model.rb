@@ -346,15 +346,15 @@ module DNN
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
       # @return [DNN::Model] return self.
       def <<(layer)
-        unless layer.is_a?(Layers::Layer)
-          raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class.")
+        unless layer.is_a?(Layers::Layer) || layer.is_a?(Models::Model)
+          raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
         end
         @stack << layer
         self
       end
 
-      def input_shape
-        @stack.first.input_shape
+      def layers
+        @stack.map { |layer| layer.is_a?(Models::Model) ? layer.layers : layer }.flatten
       end
     
       def call(x)
