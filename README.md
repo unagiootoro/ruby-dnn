@@ -41,7 +41,6 @@ model << Dense.new(10)
 model.compile(RMSProp.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
-
 ```
 
 When create a model with 'define by run' style:  
@@ -53,17 +52,13 @@ class MLP < Model
     @l1 = Dense.new(256)
     @l2 = Dense.new(256)
     @l3 = Dense.new(10)
-    @bn1 = BatchNormalization.new
-    @bn2 = BatchNormalization.new
   end
 
-  def call(x, learning_phase)
-    x = InputLayer.new(784).(x)
+  def call(x)
+    x = InputLayer.(x)
     x = @l1.(x)
-    x = @bn1.(x, learning_phase)
     x = ReLU.(x)
     x = @l2.(x)
-    x = @bn2.(x, learning_phase)
     x = ReLU.(x)
     x = @l3.(x)
     x
@@ -75,7 +70,6 @@ model = MLP.new
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
-
 ```
 
 Please refer to examples for basic usage.  
@@ -87,7 +81,7 @@ If you want to know more detailed information, please refer to the source code.
 | Connections | Dense, Conv2D, Conv2DTranspose, Embedding, SimpleRNN, LSTM, GRU |
 | Layers | Flatten, Reshape, Dropout, BatchNormalization, MaxPool2D, AvgPool2D, UnPool2D |
 | Activations | Sigmoid, Tanh, Softsign, Softplus, Swish, ReLU, LeakyReLU, ELU |
-| Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, Adam, RMSPropGraves |
+| Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, RMSPropGraves, Adam, AdaBound |
 | Losses | MeanSquaredError, MeanAbsoluteError, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
 
 ## TODO
