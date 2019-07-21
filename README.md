@@ -82,7 +82,7 @@ If you want to know more detailed information, please refer to the source code.
 | Layers | Flatten, Reshape, Dropout, BatchNormalization, MaxPool2D, AvgPool2D, UnPool2D |
 | Activations | Sigmoid, Tanh, Softsign, Softplus, Swish, ReLU, LeakyReLU, ELU |
 | Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, RMSPropGraves, Adam, AdaBound |
-| Losses | MeanSquaredError, MeanAbsoluteError, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
+| Losses | MeanSquaredError, MeanAbsoluteError, Hinge, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
 
 ## TODO
 ● Write a test.  
