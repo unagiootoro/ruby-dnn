@@ -233,51 +233,6 @@ class TestAdaDelta < MiniTest::Unit::TestCase
 end
 
 
-class TestAdam < MiniTest::Unit::TestCase
-  def test_from_hash
-    hash = {
-      class: "DNN::Optimizers::Adam",
-      alpha: 0.01,
-      beta1: 0.8,
-      beta2: 0.9,
-      eps: 1e-4,
-      clip_norm: 1.0,
-    }
-    adam = Adam.from_hash(hash)
-    assert_equal 0.01, adam.alpha
-    assert_equal 0.8, adam.beta1
-    assert_equal 0.9, adam.beta2
-    assert_equal 1e-4, adam.eps
-    assert_equal 1.0, adam.clip_norm
-  end
-
-  def test_update
-    dense = Dense.new(10, weight_initializer: Zeros.new)
-    dense.build([10])
-    adam = Adam.new(alpha: 0.01, beta1: 0.8, beta2: 0.9)
-    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
-    adam.update([dense])
-    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
-    adam.update([dense])
-    assert_equal(-0.02, dense.weight.data.mean.round(3))
-  end
-
-  def test_to_hash
-    expected_hash = {
-      class: "DNN::Optimizers::Adam",
-      lr: nil,
-      alpha: 0.001,
-      beta1: 0.9,
-      beta2: 0.999,
-      eps: 1e-7,
-      clip_norm: nil,
-    }
-    adam = Adam.new
-    assert_equal expected_hash, adam.to_hash
-  end
-end
-
-
 class TestRMSPropGraves < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
@@ -313,5 +268,66 @@ class TestRMSPropGraves < MiniTest::Unit::TestCase
     }
     rmsprop = RMSPropGraves.new
     assert_equal expected_hash, rmsprop.to_hash
+  end
+end
+
+
+class TestAdam < MiniTest::Unit::TestCase
+  def test_from_hash
+    hash = {
+      class: "DNN::Optimizers::Adam",
+      alpha: 0.01,
+      beta1: 0.8,
+      beta2: 0.9,
+      eps: 1e-4,
+      amsgrad: true,
+      clip_norm: 1.0,
+    }
+    adam = Adam.from_hash(hash)
+    assert_equal 0.01, adam.alpha
+    assert_equal 0.8, adam.beta1
+    assert_equal 0.9, adam.beta2
+    assert_equal 1e-4, adam.eps
+    assert_equal true, adam.amsgrad
+    assert_equal 1.0, adam.clip_norm
+  end
+
+  def test_update
+    dense = Dense.new(10, weight_initializer: Zeros.new)
+    dense.build([10])
+    adam = Adam.new(alpha: 0.01, beta1: 0.8, beta2: 0.9)
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
+    adam.update([dense])
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
+    adam.update([dense])
+    assert_equal(-0.02, dense.weight.data.mean.round(3))
+  end
+
+  def test_update2
+    dense = Dense.new(10, weight_initializer: Zeros.new)
+    dense.build([10])
+    adam = Adam.new(alpha: 0.01, beta1: 0.8, beta2: 0.9, amsgrad: true)
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape) * 10
+    adam.update([dense])
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
+    adam.update([dense])
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
+    adam.update([dense])
+    assert_equal(-0.022, dense.weight.data.mean.round(3))
+  end
+
+  def test_to_hash
+    expected_hash = {
+      class: "DNN::Optimizers::Adam",
+      lr: nil,
+      alpha: 0.001,
+      beta1: 0.9,
+      beta2: 0.999,
+      eps: 1e-7,
+      amsgrad: false,
+      clip_norm: nil,
+    }
+    adam = Adam.new
+    assert_equal expected_hash, adam.to_hash
   end
 end

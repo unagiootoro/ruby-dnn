@@ -21,7 +21,7 @@ module DNN
         clipping(target_params) if @clip_norm
         update_params(target_params)
         target_params.each do |param|
-          param.grad = 0
+          param.grad = Xumo::SFloat.zeros(*param.data.shape)
         end
       end
 
@@ -71,7 +71,7 @@ module DNN
         params.each do |param|
           amount = param.grad * @lr
           if @momentum > 0
-            @v[param] ||= 0
+            @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
             amount += @momentum * @v[param]
             @v[param] = amount
           end
@@ -102,7 +102,7 @@ module DNN
     
       private def update_params(params)
         params.each do |param|
-          @v[param] ||= 0
+          @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           amount = param.grad * @lr
           @v[param] = @v[param] * @momentum - amount
           param.data = (param.data + @momentum**2 * @v[param]) - (1 + @momentum) * amount
@@ -129,7 +129,7 @@ module DNN
     
       private def update_params(params)
         params.each do |param|
-          @g[param] ||= 0
+          @g[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @g[param] += param.grad**2
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
         end
@@ -167,7 +167,7 @@ module DNN
 
       private def update_params(params)
         params.each do |param|
-          @g[param] ||= 0
+          @g[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
         end
@@ -212,53 +212,6 @@ module DNN
     end
 
 
-    class Adam < Optimizer
-      # @return [Float] Return the alpha value.
-      attr_accessor :alpha
-      # @return [Float] Return the beta1 value.
-      attr_accessor :beta1
-      # @return [Float] Return the beta2 value.
-      attr_accessor :beta2
-      # @return [Float] Return the eps value.
-      attr_accessor :eps
-      
-      def self.from_hash(hash)
-        self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2], eps: hash[:eps], clip_norm: hash[:clip_norm])
-      end
-
-      # @param [Float] alpha Value used to calculate learning rate.
-      # @param [Float] beta1 Moving average index of beta1.
-      # @param [Float] beta2 Moving average index of beta2.
-      # @param [Float] eps Value to avoid division by zero.
-      def initialize(alpha: 0.001, beta1: 0.9, beta2: 0.999, eps: 1e-7, clip_norm: nil)
-        super(nil, clip_norm: clip_norm)
-        @alpha = alpha
-        @beta1 = beta1
-        @beta2 = beta2
-        @eps = eps
-        @t = 0
-        @m = {}
-        @v = {}
-      end
-
-      def to_hash
-        super(alpha: @alpha, beta1: @beta1, beta2: @beta2, eps: @eps)
-      end
-
-      private def update_params(params)
-        @t += 1
-        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t) 
-        params.each do |param|
-          @m[param] ||= 0
-          @v[param] ||= 0
-          @m[param] += (1 - @beta1) * (param.grad - @m[param])
-          @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
-          param.data -= lr * @m[param] / Xumo::NMath.sqrt(@v[param] + @eps)
-        end
-      end
-    end
-
-
     class RMSPropGraves < Optimizer
       # @return [Float] Return the alpha value.
       attr_accessor :alpha
@@ -286,12 +239,81 @@ module DNN
 
       private def update_params(params)
         params.each do |param|
-          @m[param] ||= 0
-          @v[param] ||= 0
+          @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param] = @alpha * @m[param] + (1 - @alpha) * param.grad
           @v[param] = @alpha * @v[param] + (1 - @alpha) * param.grad**2
           param.data -= (@lr / Xumo::NMath.sqrt(@v[param] - @m[param]**2 + @eps)) * param.grad
         end
+      end
+    end
+
+
+    class Adam < Optimizer
+      # @return [Float] Return the alpha value.
+      attr_accessor :alpha
+      # @return [Float] Return the beta1 value.
+      attr_accessor :beta1
+      # @return [Float] Return the beta2 value.
+      attr_accessor :beta2
+      # @return [Float] Return the eps value.
+      attr_accessor :eps
+      # @return [Bool] Return the enable amsgrad.
+      attr_reader :amsgrad
+      
+      def self.from_hash(hash)
+        self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2],
+                 eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
+      end
+
+      # @param [Float] alpha Value used to calculate learning rate.
+      # @param [Float] beta1 Moving average index of beta1.
+      # @param [Float] beta2 Moving average index of beta2.
+      # @param [Float] eps Value to avoid division by zero.
+      # @param [Bool] amsgrad Setting the true enable amsgrad.
+      def initialize(alpha: 0.001, beta1: 0.9, beta2: 0.999, eps: 1e-7, amsgrad: false, clip_norm: nil)
+        super(nil, clip_norm: clip_norm)
+        @alpha = alpha
+        @beta1 = beta1
+        @beta2 = beta2
+        @eps = eps
+        @amsgrad = amsgrad
+        @t = 0
+        @m = {}
+        @v = {}
+        @s = {} if amsgrad
+      end
+
+      def to_hash
+        super(alpha: @alpha, beta1: @beta1, beta2: @beta2, eps: @eps, amsgrad: @amsgrad)
+      end
+
+      private def update_params(params)
+        @t += 1
+        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t) 
+        params.each do |param|
+          @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @m[param] += (1 - @beta1) * (param.grad - @m[param])
+          @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
+          if @amsgrad
+            @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+            @s[param] = max_sv(@s[param], @v[param])
+            param.data -= lr * @m[param] / Xumo::NMath.sqrt(@s[param] + @eps)
+          else
+            param.data -= lr * @m[param] / Xumo::NMath.sqrt(@v[param] + @eps)
+          end
+        end
+      end
+
+      private def max_sv(s, v)
+        s_max = Xumo::SFloat.zeros(*s.shape)
+        s_max[s >= v] = 1
+        s_max *= s
+        v_max = Xumo::SFloat.zeros(*v.shape)
+        v_max[s < v] = 1
+        v_max *= v
+        s_max + v_max
       end
     end
 
