@@ -331,3 +331,70 @@ class TestAdam < MiniTest::Unit::TestCase
     assert_equal expected_hash, adam.to_hash
   end
 end
+
+
+class TestAdaBound < MiniTest::Unit::TestCase
+  def test_from_hash
+    hash = {
+      class: "DNN::Optimizers::AdaBound",
+      alpha: 0.01,
+      beta1: 0.8,
+      beta2: 0.9,
+      final_lr: 0.01,
+      gamma: 0.01,
+      eps: 1e-4,
+      amsgrad: true,
+      clip_norm: 1.0,
+    }
+    adabound = AdaBound.from_hash(hash)
+    assert_equal 0.01, adabound.alpha
+    assert_equal 0.8, adabound.beta1
+    assert_equal 0.9, adabound.beta2
+    assert_equal 0.01, adabound.final_lr
+    assert_equal 0.01, adabound.gamma
+    assert_equal 1e-4, adabound.eps
+    assert_equal true, adabound.amsgrad
+    assert_equal 1.0, adabound.clip_norm
+  end
+
+  def test_update
+    dense = Dense.new(10, weight_initializer: Zeros.new)
+    dense.build([10])
+    adabound = AdaBound.new(alpha: 0.01, beta1: 0.8, beta2: 0.9)
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
+    adabound.update([dense])
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
+    adabound.update([dense])
+    assert_equal(-0.02, dense.weight.data.mean.round(3))
+  end
+
+  def test_update2
+    dense = Dense.new(10, weight_initializer: Zeros.new)
+    dense.build([10])
+    adabound = AdaBound.new(alpha: 0.01, beta1: 0.8, beta2: 0.9, amsgrad: true)
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape) * 10
+    adabound.update([dense])
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
+    adabound.update([dense])
+    dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
+    adabound.update([dense])
+    assert_equal(-0.022, dense.weight.data.mean.round(3))
+  end
+
+  def test_to_hash
+    expected_hash = {
+      class: "DNN::Optimizers::AdaBound",
+      lr: nil,
+      alpha: 0.001,
+      beta1: 0.9,
+      beta2: 0.999,
+      final_lr: 0.1,
+      gamma: 0.001,
+      eps: 1e-7,
+      amsgrad: false,
+      clip_norm: nil,
+    }
+    adabound = AdaBound.new
+    assert_equal expected_hash, adabound.to_hash
+  end
+end

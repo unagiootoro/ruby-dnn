@@ -258,7 +258,7 @@ module DNN
       attr_accessor :beta2
       # @return [Float] Return the eps value.
       attr_accessor :eps
-      # @return [Bool] Return the enable amsgrad.
+      # @return [Boolean] Return the enable amsgrad.
       attr_reader :amsgrad
       
       def self.from_hash(hash)
@@ -270,7 +270,7 @@ module DNN
       # @param [Float] beta1 Moving average index of beta1.
       # @param [Float] beta2 Moving average index of beta2.
       # @param [Float] eps Value to avoid division by zero.
-      # @param [Bool] amsgrad Setting the true enable amsgrad.
+      # @param [Boolean] amsgrad Setting the true enable amsgrad.
       def initialize(alpha: 0.001, beta1: 0.9, beta2: 0.999, eps: 1e-7, amsgrad: false, clip_norm: nil)
         super(nil, clip_norm: clip_norm)
         @alpha = alpha
@@ -285,7 +285,10 @@ module DNN
       end
 
       def to_hash
-        super(alpha: @alpha, beta1: @beta1, beta2: @beta2, eps: @eps, amsgrad: @amsgrad)
+        {
+          class: self.class.name, lr: nil, alpha: @alpha, beta1: @beta1, beta2: @beta2,
+          eps: @eps, amsgrad: @amsgrad, clip_norm: @clip_norm
+        }
       end
 
       private def update_params(params)
@@ -307,13 +310,72 @@ module DNN
       end
 
       private def max_sv(s, v)
-        s_max = Xumo::SFloat.zeros(*s.shape)
+        s_max = Xumo::SFloat.zeros(*v.shape)
         s_max[s >= v] = 1
         s_max *= s
         v_max = Xumo::SFloat.zeros(*v.shape)
         v_max[s < v] = 1
         v_max *= v
         s_max + v_max
+      end
+    end
+
+
+    class AdaBound < Adam
+      # @return [Float] Return the final_lr value.
+      attr_accessor :final_lr
+      # @return [Float] Return the gamma value.
+      attr_accessor :gamma
+      
+      def self.from_hash(hash)
+        self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2],
+                 final_lr: hash[:final_lr], gamma: hash[:gamma], eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
+      end
+
+      # @param [Float] alpha Value used to calculate learning rate.
+      # @param [Float] beta1 Moving average index of beta1.
+      # @param [Float] beta2 Moving average index of beta2.
+      # @param [Float] eps Value to avoid division by zero.
+      # @param [Float] final_lr Final learning rate.
+      # @param [Float] gamma Lower and upper range value.
+      def initialize(alpha: 0.001, beta1: 0.9, beta2: 0.999, final_lr: 0.1, gamma: 0.001, eps: 1e-7, amsgrad: false, clip_norm: nil)
+        super(alpha: alpha, beta1: beta1, beta2: beta2, eps: eps, amsgrad: amsgrad, clip_norm: clip_norm)
+        @final_lr = final_lr
+        @gamma = gamma
+      end
+
+      def to_hash
+        {
+          class: self.class.name, lr: nil, alpha: @alpha, beta1: @beta1, beta2: @beta2,
+          final_lr: @final_lr, gamma: @gamma, eps: @eps, amsgrad: amsgrad, clip_norm: @clip_norm
+        }
+      end
+
+      private def update_params(params)
+        @t += 1
+        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t)
+        final_lr = @final_lr * lr / @alpha
+        lower_bound = final_lr * (1 - 1 / (@gamma * @t + 1))
+        upper_bound = final_lr * (1 + 1 / (@gamma * @t))
+        params.each do |param|
+          @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+          @m[param] += (1 - @beta1) * (param.grad - @m[param])
+          @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
+          if @amsgrad
+            @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
+            @s[param] = max_sv(@s[param], @v[param])
+            param.data -= clip_lr(lr / (Xumo::NMath.sqrt(@s[param]) + @eps), lower_bound, upper_bound) * @m[param]
+          else
+            param.data -= clip_lr(lr / (Xumo::NMath.sqrt(@v[param]) + @eps), lower_bound, upper_bound) * @m[param]
+          end
+        end
+      end
+
+      private def clip_lr(lr, lower_bound, upper_bound)
+        lr[lr < lower_bound] = lower_bound
+        lr[lr > upper_bound] = upper_bound
+        lr
       end
     end
 
