@@ -10,7 +10,7 @@ module DNN
       attr_reader :running_mean
       # @return [DNN::Param] Exponential running average of var.
       attr_reader :running_var
-      # @return [Bool] Return the true if learning.
+      # @return [Boolean] Return the true if learning.
       attr_accessor :learning_phase
       # @return [Integer] The axis to normalization.
       attr_reader :axis

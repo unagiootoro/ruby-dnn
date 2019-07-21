@@ -83,7 +83,7 @@ module DNN
       attr_reader :filter_size
       # @return [Array] Return stride length. stride length is of the form [height, width].
       attr_reader :strides
-      # @return [Array | Bool] Return padding size or whether to padding.
+      # @return [Array | Boolean] Return padding size or whether to padding.
       attr_reader :padding
 
       def self.from_hash(hash)
@@ -100,7 +100,7 @@ module DNN
       # @param [Integer] num_filters Number of filters.
       # @param [Array | Integer] filter_size Filter size. Filter size is of the form [height, width].
       # @param [Array | Integer] strides Stride length. Stride length is of the form [height, width].
-      # @param [Array | Bool] padding Padding size or whether to padding. Padding size is of the form [height, width].
+      # @param [Array | Boolean] padding Padding size or whether to padding. Padding size is of the form [height, width].
       def initialize(num_filters, filter_size,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
@@ -300,7 +300,7 @@ module DNN
       attr_reader :pool_size
       # @return [Array] Return stride length. Stride length is of the form [height, width].
       attr_reader :strides
-      # @return [Array | Bool] Return padding size or whether to padding.
+      # @return [Array | Boolean] Return padding size or whether to padding.
       attr_reader :padding
 
       def self.from_hash(pool2d_class, hash)
@@ -310,7 +310,7 @@ module DNN
       # @param [Array | Integer] pool_size Pooling size. Pooling size is of the form [height, width].
       # @param [Array | Integer | NilClass] strides stride length. Stride length is of the form [height, width].
       #   If you set nil, treat pool_size as strides.
-      # @param [Array | Bool] padding Padding size or whether to padding. Padding size is of the form [height, width].
+      # @param [Array | Boolean] padding Padding size or whether to padding. Padding size is of the form [height, width].
       def initialize(pool_size, strides: nil, padding: false)
         super()
         @pool_size = pool_size.is_a?(Integer) ? [pool_size, pool_size] : pool_size

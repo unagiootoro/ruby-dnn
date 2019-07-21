@@ -11,9 +11,9 @@ module DNN
       attr_reader :recurrent_weight
       # @return [DNN::Param] Hidden parameter that Stateful RNN has.
       attr_reader :hidden
-      # @return [Bool] Maintain state between batches.
+      # @return [Boolean] Maintain state between batches.
       attr_reader :stateful
-      # @return [Bool] Set the false, only the last of each cell of RNN is left.
+      # @return [Boolean] Set the false, only the last of each cell of RNN is left.
       attr_reader :return_sequences
       # @return [DNN::Initializers::Initializer] Recurrent weight initializer.
       attr_reader :recurrent_weight_initializer

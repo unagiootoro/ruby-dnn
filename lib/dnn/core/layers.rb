@@ -35,7 +35,7 @@ module DNN
       end
       
       # Does the layer have already been built?
-      # @return [Bool] If layer have already been built then return true.
+      # @return [Boolean] If layer have already been built then return true.
       def built?
         @built
       end
@@ -70,7 +70,7 @@ module DNN
     
     # This class is a superclass of all classes with learning parameters.
     class HasParamLayer < Layer
-      # @return [Bool] Setting false prevents learning of parameters.
+      # @return [Boolean] Setting false prevents learning of parameters.
       attr_accessor :trainable
     
       def initialize
@@ -154,7 +154,7 @@ module DNN
       # @param [DNN::Initializers::Initializer] bias_initializer Bias initializer.
       # @param [DNN::Regularizers::Regularizer] weight_regularizer Weight regularization.
       # @param [DNN::Regularizers::Regularizer] bias_regularizer Bias regularization.
-      # @param [Bool] use_bias whether to use bias.
+      # @param [Boolean] use_bias whether to use bias.
       def initialize(weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
                      weight_regularizer: nil,
@@ -180,7 +180,7 @@ module DNN
         regularizers
       end
 
-      # @return [Bool] Return whether to use bias.
+      # @return [Boolean] Return whether to use bias.
       def use_bias
         @bias ? true : false
       end
@@ -314,7 +314,7 @@ module DNN
 
     
     class Dropout < Layer
-      # @return [Bool] Return the true if learning.
+      # @return [Boolean] Return the true if learning.
       attr_accessor :learning_phase
       # @return [Float] dropout ratio.
       attr_accessor :dropout_ratio
