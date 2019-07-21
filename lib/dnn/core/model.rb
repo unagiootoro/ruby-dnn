@@ -76,7 +76,7 @@ module DNN
       # @param [Integer] batch_size Batch size used for one training.
       # @param [Array or NilClass] test If you to test the model for every 1 epoch,
       #                            specify [x_test, y_test]. Don't test to the model, specify nil.
-      # @param [Bool] verbose Set true to display the log. If false is set, the log is not displayed.
+      # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       # @param [Lambda] before_epoch_cbk Process performed before one training.
       # @param [Lambda] after_epoch_cbk Process performed after one training.
       # @param [Lambda] before_train_on_batch_cbk Set the proc to be performed before train on batch processing.
@@ -281,7 +281,7 @@ module DNN
         @loss_func
       end
 
-      # @return [Bool] Returns whether the model is learning.
+      # @return [Boolean] Returns whether the model is learning.
       def setup_completed?
         @setup_completed
       end
@@ -346,7 +346,7 @@ module DNN
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
       # @return [DNN::Model] return self.
       def <<(layer)
-        if !layer.is_a?(Layers::Layer) && !layer.is_a?(Model)
+        unless layer.is_a?(Layers::Layer)
           raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class.")
         end
         @stack << layer
