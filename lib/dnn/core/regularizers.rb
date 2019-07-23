@@ -58,7 +58,7 @@ module DNN
       end
 
       def forward(x)
-        x + 0.5 * @l2_lambda * (@param.data**2).sum
+        x + 0.5 * @l2_lambda * (@param.data ** 2).sum
       end
 
       def backward
@@ -85,7 +85,7 @@ module DNN
 
       def forward(x)
         l1 = @l1_lambda * @param.data.abs.sum
-        l2 = 0.5 * @l2_lambda * (@param.data**2).sum
+        l2 = 0.5 * @l2_lambda * (@param.data ** 2).sum
         x + l1 + l2
       end
 

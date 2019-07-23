@@ -45,7 +45,7 @@ module DNN
         if learning_phase
           mean = x.mean(axis: @axis, keepdims: true)
           @xc = x - mean
-          var = (@xc**2).mean(axis: @axis, keepdims: true)
+          var = (@xc ** 2).mean(axis: @axis, keepdims: true)
           @std = Xumo::NMath.sqrt(var + @eps)
           xn = @xc / @std
           @xn = xn
@@ -66,7 +66,7 @@ module DNN
         end
         dxn = @gamma.data * dy
         dxc = dxn / @std
-        dstd = -((dxn * @xc) / (@std**2)).sum(axis: @axis, keepdims: true)
+        dstd = -((dxn * @xc) / (@std ** 2)).sum(axis: @axis, keepdims: true)
         dvar = 0.5 * dstd / @std
         dxc += (2.0 / batch_size) * @xc * dvar
         dmean = dxc.sum(axis: @axis, keepdims: true)

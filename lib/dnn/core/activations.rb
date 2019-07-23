@@ -18,7 +18,7 @@ module DNN
       end
       
       def backward(dy)
-        dy * (1 - @y**2)
+        dy * (1 - @y ** 2)
       end
     end
 
@@ -30,7 +30,7 @@ module DNN
       end
 
       def backward(dy)
-        dy * (1 / (1 + @x.abs)**2)
+        dy * (1 / (1 + @x.abs) ** 2)
       end
     end
 

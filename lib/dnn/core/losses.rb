@@ -48,7 +48,7 @@ module DNN
       def forward_loss(y, t)
         @y = y
         batch_size = t.shape[0]
-        0.5 * ((y - t)**2).sum / batch_size
+        0.5 * ((y - t) ** 2).sum / batch_size
       end
 
       def backward_loss(t)
@@ -122,7 +122,7 @@ module DNN
 
       def loss_l2(t)
         batch_size = t.shape[0]
-        0.5 * ((@y - t)**2).sum / batch_size
+        0.5 * ((@y - t) ** 2).sum / batch_size
       end
     end
 
