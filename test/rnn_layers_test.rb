@@ -213,6 +213,14 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal [1, 16, 64], rnn.forward(x).shape
   end
 
+  def test_forward2
+    x = Numo::SFloat.new(1, 16, 64).seq
+    rnn = SimpleRNN.new(64, stateful: true)
+    rnn.build([16, 64])
+    rnn.forward(x)
+    assert_equal [1, 16, 64], rnn.forward(x).shape
+  end
+
   def test_backward
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
@@ -243,6 +251,17 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal 0, rnn.weight.grad
     assert_equal 0, rnn.recurrent_weight.grad
     assert_equal 0, rnn.bias.grad
+  end
+
+  def test_backward4
+    x = Numo::SFloat.new(1, 16, 64).seq
+    y = Numo::SFloat.new(1, 16, 64).seq
+    rnn = SimpleRNN.new(64, stateful: true)
+    rnn.build([16, 64])
+    rnn.forward(x)
+    rnn.backward(y)
+    rnn.forward(x)
+    assert_equal [1, 16, 64], rnn.backward(y).shape
   end
 
   def test_to_hash
@@ -402,6 +421,14 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal [1, 16, 64], lstm.forward(x).shape
   end
 
+  def test_forward2
+    x = Numo::SFloat.new(1, 16, 64).seq
+    lstm = LSTM.new(64, stateful: true)
+    lstm.build([16, 64])
+    lstm.forward(x)
+    assert_equal [1, 16, 64], lstm.forward(x).shape
+  end
+
   def test_backward
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
@@ -434,6 +461,16 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal 0, lstm.bias.grad
   end
 
+  def test_backward4
+    x = Numo::SFloat.new(1, 16, 64).seq
+    y = Numo::SFloat.new(1, 16, 64).seq
+    lstm = LSTM.new(64, stateful: true)
+    lstm.build([16, 64])
+    lstm.forward(x)
+    lstm.backward(y)
+    lstm.forward(x)
+    assert_equal [1, 16, 64], lstm.backward(y).shape
+  end
 
   def test_reset_state
     lstm = LSTM.new(64)
