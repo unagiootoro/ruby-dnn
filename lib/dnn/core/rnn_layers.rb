@@ -2,30 +2,28 @@ module DNN
   module Layers
 
     # Super class of all RNN classes.
-    class RNN < Connection
-      include Initializers
-
-      # @return [Integer] number of nodes.
+    class RNN < Connection      
       attr_reader :num_nodes
       # @return [DNN::Param] Recurrent weight parameter.
       attr_reader :recurrent_weight
       # @return [DNN::Param] Hidden parameter that Stateful RNN has.
       attr_reader :hidden
-      # @return [Boolean] Maintain state between batches.
       attr_reader :stateful
-      # @return [Boolean] Set the false, only the last of each cell of RNN is left.
       attr_reader :return_sequences
-      # @return [DNN::Initializers::Initializer] Recurrent weight initializer.
       attr_reader :recurrent_weight_initializer
-      # @return [DNN::Regularizers::Regularizer] Recurrent weight regularization.
       attr_reader :recurrent_weight_regularizer
 
+      # @param [Integer] num_nodes Number of nodes.
+      # @param [Boolean] stateful maintain state between batches.
+      # @param [Boolean] return_sequences Set the false, only the last of each cell of RNN is left.
+      # @return [DNN::Initializers::Initializer] recurrent_weight_initializer Recurrent weight initializer.
+      # @return [DNN::Regularizers::Regularizer] recurrent_weight_regularizer Recurrent weight regularization.
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: RandomNormal.new,
-                     recurrent_weight_initializer: RandomNormal.new,
-                     bias_initializer: Zeros.new,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     recurrent_weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      weight_regularizer: nil,
                      recurrent_weight_regularizer: nil,
                      bias_regularizer: nil,
@@ -178,9 +176,9 @@ module DNN
                      stateful: false,
                      return_sequences: true,
                      activation: Tanh.new,
-                     weight_initializer: RandomNormal.new,
-                     recurrent_weight_initializer: RandomNormal.new,
-                     bias_initializer: Zeros.new,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     recurrent_weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      weight_regularizer: nil,
                      recurrent_weight_regularizer: nil,
                      bias_regularizer: nil,
@@ -295,9 +293,9 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: RandomNormal.new,
-                     recurrent_weight_initializer: RandomNormal.new,
-                     bias_initializer: Zeros.new,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     recurrent_weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      weight_regularizer: nil,
                      recurrent_weight_regularizer: nil,
                      bias_regularizer: nil,
@@ -455,9 +453,9 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     weight_initializer: RandomNormal.new,
-                     recurrent_weight_initializer: RandomNormal.new,
-                     bias_initializer: Zeros.new,
+                     weight_initializer: Initializers::RandomNormal.new,
+                     recurrent_weight_initializer: Initializers::RandomNormal.new,
+                     bias_initializer: Initializers::Zeros.new,
                      weight_regularizer: nil,
                      recurrent_weight_regularizer: nil,
                      bias_regularizer: nil,
