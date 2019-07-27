@@ -5,7 +5,6 @@ include DNN::Activations
 include DNN::Optimizers
 include DNN::Losses
 include DNN::Regularizers
-Param = DNN::Param
 
 class TestRNN < MiniTest::Unit::TestCase
   def test_initialize
@@ -101,11 +100,11 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
   def test_forward
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16).fill(1)
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16).fill(1)
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16).fill(0)
 
     dense = SimpleRNN_Dense.new(w, w2, b, Tanh.new)
@@ -116,13 +115,13 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16).fill(0)
     b.grad = 0
 
@@ -137,10 +136,10 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
 
@@ -154,13 +153,13 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16).fill(0)
     b.grad = 0
 
@@ -302,11 +301,11 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     c = Numo::SFloat.new(1, 16).seq
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16 * 4).fill(1)
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 4).fill(0)
 
     dense = LSTM_Dense.new(w, w2, b)
@@ -321,13 +320,13 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     dh2 = Numo::SFloat.new(1, 16).seq
     c = Numo::SFloat.new(1, 16).seq
     dc2 = Numo::SFloat.new(1, 16).seq
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
@@ -345,10 +344,10 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     dh2 = Numo::SFloat.new(1, 16).seq
     c = Numo::SFloat.new(1, 16).seq
     dc2 = Numo::SFloat.new(1, 16).seq
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
 
@@ -364,13 +363,13 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     dh2 = Numo::SFloat.new(1, 16).seq
     c = Numo::SFloat.new(1, 16).seq
     dc2 = Numo::SFloat.new(1, 16).seq
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
@@ -531,11 +530,11 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
   def test_forward
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16 * 3).fill(1)
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16 * 3).fill(1)
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 3).fill(0)
 
     dense = GRU_Dense.new(w, w2, b)
@@ -546,13 +545,13 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
     dense = GRU_Dense.new(w, w2, b)
@@ -566,13 +565,13 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
 
@@ -586,13 +585,13 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = Param.new
+    w = DNN::Param.new
     w.data = Numo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
-    w2 = Param.new
+    w2 = DNN::Param.new
     w2.data = Numo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
-    b = Param.new
+    b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
     dense = GRU_Dense.new(w, w2, b)

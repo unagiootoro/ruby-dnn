@@ -1,5 +1,4 @@
 include DNN::Regularizers
-Param = DNN::Param
 
 class TestL1 < MiniTest::Unit::TestCase
   def test_from_hash
@@ -12,7 +11,7 @@ class TestL1 < MiniTest::Unit::TestCase
   end
 
   def test_forward
-    param = Param.new(Numo::SFloat[-2, 2])
+    param = DNN::Param.new(Numo::SFloat[-2, 2])
     l1 = L1.new(0.1)
     l1.param = param
     assert_equal 1.4, l1.forward(1)
@@ -21,7 +20,7 @@ class TestL1 < MiniTest::Unit::TestCase
   def test_backward
     x = Numo::SFloat.new(10).fill(-1)
     x[0..4] = 1
-    param = Param.new(Numo::SFloat[-2, 2], Numo::SFloat[-1, 1])
+    param = DNN::Param.new(Numo::SFloat[-2, 2], Numo::SFloat[-1, 1])
     l1 = L1.new(0.1)
     l1.param = param
     l1.backward
@@ -50,14 +49,14 @@ class TestL2 < MiniTest::Unit::TestCase
   end
 
   def test_forward
-    param = Param.new(Numo::SFloat[-2, 2])
+    param = DNN::Param.new(Numo::SFloat[-2, 2])
     l2 = L2.new(0.1)
     l2.param = param
     assert_equal 1.4, l2.forward(1)
   end
 
   def test_backward
-    param = Param.new(Numo::SFloat[-2, 2], Numo::SFloat[-1, 1])
+    param = DNN::Param.new(Numo::SFloat[-2, 2], Numo::SFloat[-1, 1])
     l2 = L2.new(0.1)
     l2.param = param
     l2.backward
@@ -88,14 +87,14 @@ class TestL1L2 < MiniTest::Unit::TestCase
   end
 
   def test_forward
-    param = Param.new(Numo::SFloat[-2, 2])
+    param = DNN::Param.new(Numo::SFloat[-2, 2])
     l1l2 = L1L2.new(0.1, 0.1)
     l1l2.param = param
     assert_in_delta 1.8, l1l2.forward(1)
   end
 
   def test_backward
-    param = Param.new(Numo::SFloat[-2, 2], Numo::SFloat[-1, 1])
+    param = DNN::Param.new(Numo::SFloat[-2, 2], Numo::SFloat[-1, 1])
     l1l2 = L1L2.new(0.1, 0.1)
     l1l2.param = param
     l1l2.backward
