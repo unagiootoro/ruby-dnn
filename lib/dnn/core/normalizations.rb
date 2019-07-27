@@ -2,21 +2,12 @@ module DNN
   module Layers
 
     class BatchNormalization < HasParamLayer
-      # @return [DNN::Param] Gamma parameter.
       attr_reader :gamma
-      # @return [DNN::Param] Beta parameter.
       attr_reader :beta
-      # @return [DNN::Param] Exponential running average of mean.
       attr_reader :running_mean
-      # @return [DNN::Param] Exponential running average of var.
       attr_reader :running_var
-      # @return [Boolean] Return the true if learning.
-      attr_accessor :learning_phase
-      # @return [Integer] The axis to normalization.
       attr_reader :axis
-      # @return [Float] Exponential moving average of mean and variance.
       attr_accessor :momentum
-      # @return [Float] Value to avoid division by zero.
       attr_accessor :eps
 
       def self.from_hash(hash)
@@ -33,6 +24,15 @@ module DNN
         @eps = eps
       end
 
+      def call(input)
+        x, prev_link, model = *input
+        build(x.shape[1..-1]) unless built?
+        y = forward(x, learning_phase)
+        link = Link.new(prev_link, self)
+        prev_link.next = link
+        [y, link, model]
+      end
+
       def build(input_shape)
         super
         @gamma = Param.new(Xumo::SFloat.ones(*output_shape), 0)
@@ -41,7 +41,7 @@ module DNN
         @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
       end
 
-      def forward(x)
+      def forward(x, learning_phase)
         if learning_phase
           mean = x.mean(axis: @axis, keepdims: true)
           @xc = x - mean

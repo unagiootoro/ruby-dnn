@@ -3,7 +3,6 @@ module DNN
 
     # Super class of all layer classes.
     class Layer
-      # @return [Array] Return the shape of the input data.
       attr_reader :input_shape
 
       def self.call(x, *args)
@@ -19,7 +18,6 @@ module DNN
       def call(input)
         x, prev_link, model = *input
         build(x.shape[1..-1]) unless built?
-        self.learning_phase = model.learning_phase if self.respond_to?(:learning_phase)
         y = forward(x)
         link = Link.new(prev_link, self)
         prev_link.next = link
@@ -137,17 +135,11 @@ module DNN
 
     # It is a superclass of all connection layers.
     class Connection < HasParamLayer
-      # @return [DNN::Param] Weight parameter.
       attr_reader :weight
-      # @return [DNN::Param] Bias parameter.
       attr_reader :bias
-      # @return [DNN::Initializers::Initializer] Weight initializer.
       attr_reader :weight_initializer
-      # @return [DNN::Initializers::Initializer] Bias initializer.
       attr_reader :bias_initializer
-      # @return [DNN::Regularizers::Regularizer] Weight regularization.
       attr_reader :weight_regularizer
-      # @return [DNN::Regularizers::Regularizer] Bias regularization.
       attr_reader :bias_regularizer
 
       # @param [DNN::Initializers::Initializer] weight_initializer Weight initializer.
@@ -208,9 +200,7 @@ module DNN
     end
     
     
-    # Full connnection layer.
     class Dense < Connection
-      # @return [Integer] number of nodes.
       attr_reader :num_nodes
 
       def self.from_hash(hash)
@@ -314,17 +304,16 @@ module DNN
 
     
     class Dropout < Layer
-      # @return [Boolean] Return the true if learning.
-      attr_accessor :learning_phase
-      # @return [Float] dropout ratio.
       attr_accessor :dropout_ratio
-      # @return [Float] Use 'weight scaling inference rule'.
       attr_reader :use_scale
 
       def self.from_hash(hash)
         self.new(hash[:dropout_ratio], seed: hash[:seed], use_scale: hash[:use_scale])
       end
 
+      # @param [Float] dropout_ratio Nodes dropout ratio.
+      # @param [Integer] seed Seed of random number used for masking.
+      # @param [Boolean] use_scale Use 'weight scaling inference rule'.
       def initialize(dropout_ratio = 0.5, seed: rand(1 << 31), use_scale: true)
         super()
         @dropout_ratio = dropout_ratio
@@ -334,7 +323,16 @@ module DNN
         @rnd = Random.new(@seed)
       end
 
-      def forward(x)
+      def call(input)
+        x, prev_link, model = *input
+        build(x.shape[1..-1]) unless built?
+        y = forward(x, learning_phase)
+        link = Link.new(prev_link, self)
+        prev_link.next = link
+        [y, link, model]
+      end
+
+      def forward(x, learning_phase)
         if learning_phase
           Xumo::SFloat.srand(@rnd.rand(1 << 31))
           @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
