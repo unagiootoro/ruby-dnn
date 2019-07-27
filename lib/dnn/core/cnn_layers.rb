@@ -77,13 +77,9 @@ module DNN
     class Conv2D < Connection
       include Conv2DUtils
 
-      # @return [Integer] number of filters.
       attr_reader :num_filters
-      # @return [Array] Return filter size. filter size is of the form [height, width].
       attr_reader :filter_size
-      # @return [Array] Return stride length. stride length is of the form [height, width].
       attr_reader :strides
-      # @return [Array | Boolean] Return padding size or whether to padding.
       attr_reader :padding
 
       def self.from_hash(hash)
@@ -185,13 +181,9 @@ module DNN
     class Conv2DTranspose < Connection
       include Conv2DUtils
 
-      # @return [Integer] number of filters.
       attr_reader :num_filters
-      # @return [Array] Return filter size. filter size is of the form [height, width].
       attr_reader :filter_size
-      # @return [Array] Return stride length. stride length is of the form [height, width].
       attr_reader :strides
-      # @return [Array] Return padding size.
       attr_reader :padding
 
       def self.from_hash(hash)
@@ -296,11 +288,8 @@ module DNN
     class Pool2D < Layer
       include Conv2DUtils
 
-      # @return [Array] Return pooling size. Pooling size is of the form [height, width].
       attr_reader :pool_size
-      # @return [Array] Return stride length. Stride length is of the form [height, width].
       attr_reader :strides
-      # @return [Array | Boolean] Return padding size or whether to padding.
       attr_reader :padding
 
       def self.from_hash(pool2d_class, hash)
@@ -408,7 +397,6 @@ module DNN
     class UnPool2D < Layer
       include Conv2DUtils
       
-      # @return [Array] Return unpooling size. unpooling size is of the form [height, width].
       attr_reader :unpool_size
 
       # @param [Array or Integer] unpool_size Unpooling size. unpooling size is of the form [height, width].

@@ -2,11 +2,8 @@ module DNN
   module Layers
 
     class Embedding < HasParamLayer
-      # @return [Integer] Return the input length.
       attr_reader :input_length
-      # @return [DNN::Param] Weight parameter.
       attr_reader :weight
-      # @return [Initializers::Initializer] Return the weight initializer.
       attr_reader :weight_initializer
 
       def self.from_hash(hash)

@@ -75,7 +75,6 @@ module DNN
 
 
     class LeakyReLU < Layers::Layer
-      # @return [Float] Return the alpha value.
       attr_reader :alpha
 
       def self.from_hash(hash)
@@ -107,7 +106,6 @@ module DNN
 
 
     class ELU < Layers::Layer
-      # @return [Float] Return the alpha value.
       attr_reader :alpha
 
       def self.from_hash(hash)

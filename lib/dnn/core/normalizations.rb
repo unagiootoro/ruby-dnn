@@ -14,7 +14,7 @@ module DNN
         self.new(axis: hash[:axis], momentum: hash[:momentum])
       end
 
-      # @param [integer] axis The axis to normalization.
+      # @param [Integer] axis The axis to normalization.
       # @param [Float] momentum Exponential moving average of mean and variance.
       # @param [Float] eps Value to avoid division by zero.
       def initialize(axis: 0, momentum: 0.9, eps: 1e-7)
