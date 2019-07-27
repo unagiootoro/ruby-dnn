@@ -95,13 +95,13 @@ module DNN
                 after_test_on_batch_cbk: nil)
         raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         check_xy_type(x, y)
-        dataset = Dataset.new(x, y)
+        iter = Iterator.new(x, y)
         num_train_datas = x.shape[0]
         (1..epochs).each do |epoch|
           before_epoch_cbk.call(epoch) if before_epoch_cbk
           puts "【 epoch #{epoch}/#{epochs} 】" if verbose
           (num_train_datas.to_f / batch_size).ceil.times do |index|
-            x_batch, y_batch = dataset.next_batch(batch_size)
+            x_batch, y_batch = iter.next_batch(batch_size)
             loss_value = train_on_batch(x_batch, y_batch, before_train_on_batch_cbk: before_train_on_batch_cbk,
                                         after_train_on_batch_cbk: after_train_on_batch_cbk)
             if loss_value.is_a?(Numo::SFloat)
@@ -164,18 +164,18 @@ module DNN
       def accurate(x, y, batch_size: 100, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
         check_xy_type(x, y)
         batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
-        dataset = Dataset.new(x, y, false)
+        iter = Iterator.new(x, y, false)
         total_correct = 0
         sum_loss = 0
-        max_iter = (x.shape[0].to_f / batch_size)
-        max_iter.ceil.times do |i|
-          x_batch, y_batch = dataset.next_batch(batch_size)
+        max_steps = (x.shape[0].to_f / batch_size)
+        max_steps.ceil.times do |i|
+          x_batch, y_batch = iter.next_batch(batch_size)
           correct, loss_value = test_on_batch(x_batch, y_batch, before_test_on_batch_cbk: before_test_on_batch_cbk,
                                               after_test_on_batch_cbk: after_test_on_batch_cbk)
           total_correct += correct
           sum_loss += loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value
         end
-        mean_loss = sum_loss / max_iter
+        mean_loss = sum_loss / max_steps
         [total_correct.to_f / x.shape[0], mean_loss]
       end
 
