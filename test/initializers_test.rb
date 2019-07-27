@@ -76,7 +76,7 @@ class TestRandomNormal < MiniTest::Unit::TestCase
   end
 
   def test_init_param
-    initializer = RandomNormal.new(0, 0.05, 0)
+    initializer = RandomNormal.new(0, 0.05, seed: 0)
     dense = Dense.new(10)
     dense.build([10])
     initializer.init_param(dense, dense.weight)
@@ -87,7 +87,7 @@ class TestRandomNormal < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    initializer = RandomNormal.new(1, 2, 3)
+    initializer = RandomNormal.new(1, 2, seed: 3)
     expected_hash = {
       class: "DNN::Initializers::RandomNormal",
       mean: 1,
@@ -109,7 +109,7 @@ class TestRandomUniform < MiniTest::Unit::TestCase
   end
 
   def test_init_param
-    initializer = RandomUniform.new(-0.05, 0.05, 0)
+    initializer = RandomUniform.new(-0.05, 0.05, seed: 0)
     dense = Dense.new(10)
     dense.build([10])
     initializer.init_param(dense, dense.weight)
@@ -120,7 +120,7 @@ class TestRandomUniform < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    initializer = RandomUniform.new(-0.1, 0.1, 3)
+    initializer = RandomUniform.new(-0.1, 0.1, seed: 3)
     expected_hash = {
       class: "DNN::Initializers::RandomUniform",
       min: -0.1,
@@ -134,7 +134,7 @@ end
 
 class TestXavier < MiniTest::Unit::TestCase
   def test_init_param
-    initializer = Xavier.new(0)
+    initializer = Xavier.new(seed: 0)
     dense = Dense.new(10)
     dense.build([10])
     initializer.init_param(dense, dense.weight)
@@ -148,7 +148,7 @@ end
 
 class TestHe < MiniTest::Unit::TestCase
   def test_init_param
-    initializer = He.new(0)
+    initializer = He.new(seed: 0)
     dense = Dense.new(10)
     dense.build([10])
     initializer.init_param(dense, dense.weight)

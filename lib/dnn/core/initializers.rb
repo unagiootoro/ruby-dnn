@@ -2,10 +2,15 @@ module DNN
   module Initializers
 
     class Initializer
-      def initialize(seed = false)
+      # @param [Boolean | Integer] seed Seed of random number used for masking.
+      #                            Set true to determine seed as random.
+      def initialize(seed: false)
         @seed = seed == true ? rand(1 << 31) : seed
       end
 
+      # Initialization of learning parameters.
+      # @param [DNN::Layers::Layer] layer Layer that owns learning parameters.
+      # @param [DNN::Param] param Learning parameter to be initialized.
       def init_param(layer, param)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_params'")
       end
@@ -32,6 +37,7 @@ module DNN
         self.new(hash[:const])
       end
 
+      # @param [Float] const Constant value of initialization.
       def initialize(const)
         super()
         @const = const
@@ -52,11 +58,13 @@ module DNN
       attr_reader :std
       
       def self.from_hash(hash)
-        self.new(hash[:mean], hash[:std], hash[:seed])
+        self.new(hash[:mean], hash[:std], seed: hash[:seed])
       end
 
-      def initialize(mean = 0, std = 0.05, seed = true)
-        super(seed)
+      # @param [Float] mean Average of initialization value.
+      # @param [Float] std Variance of initialization value.
+      def initialize(mean = 0, std = 0.05, seed: true)
+        super(seed: seed)
         @mean = mean
         @std = std
       end
@@ -77,11 +85,13 @@ module DNN
       attr_reader :max
 
       def self.from_hash(hash)
-        self.new(hash[:min], hash[:max], hash[:seed])
+        self.new(hash[:min], hash[:max], seed: hash[:seed])
       end
 
-      def initialize(min = -0.05, max = 0.05, seed = true)
-        super(seed)
+      # @param [Float] min Min of initialization value.
+      # @param [Float] max Max of initialization value.
+      def initialize(min = -0.05, max = 0.05, seed: true)
+        super(seed: seed)
         @min = min
         @max = max
       end
@@ -98,7 +108,7 @@ module DNN
     
     
     class Xavier < Initializer
-      def initialize(seed = true)
+      def initialize(seed: true)
         super
       end
 
@@ -111,7 +121,7 @@ module DNN
     
     
     class He < Initializer
-      def initialize(seed = true)
+      def initialize(seed: true)
         super
       end
 
