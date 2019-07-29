@@ -151,13 +151,13 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
     assert_equal [32, 32], calc_conv2d_transpose_out_size(32, 32, 1, 1, 0, 0, [1, 1])
   end
 
-  def test_calc_padding_size
-    assert_equal [3, 4], calc_padding_size(32, 32, 29, 14, [1, 2])
-  end
+  # def test_calc_padding_size
+  #   assert_equal [4, 3], calc_padding_size(32, 32, 5, 5, [1, 2])
+  # end
   
-  def test_calc_padding_size2
-    assert_equal [0, 3], calc_padding_size(32, 32, 32, 10, [1, 3])
-  end
+  # def test_calc_padding_size2
+  #   assert_equal [4, 0], calc_padding_size(32, 32, 4, 5, [2, 3])
+  # end
 end
 
 
@@ -211,6 +211,7 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d.build([32, 32, 3])
     assert_equal [32, 32], conv2d.instance_variable_get(:@out_size)
   end
+
 
   def test_forward
     x = Numo::SFloat.new(1, 32, 32, 3).seq
@@ -296,7 +297,7 @@ class TestConv2D < MiniTest::Unit::TestCase
 end
 
 
-class TestConv2D_Transpose < MiniTest::Unit::TestCase
+class TestConv2DTranspose < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Layers::Conv2DTranspose",

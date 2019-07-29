@@ -66,9 +66,11 @@ module DNN
         [out_h, out_w]
       end
 
-      def calc_padding_size(prev_h, prev_w, out_h, out_w, strides)
-        pad_h = ((prev_h.to_f / strides[0]).ceil - out_h) * strides[0]
-        pad_w = ((prev_w.to_f / strides[1]).ceil - out_w) * strides[1]
+      def calc_padding_size(prev_h, prev_w, fil_h, fil_w, strides)
+        out_h = prev_h / strides[0]
+        out_w = prev_w / strides[1]
+        pad_h = out_h * strides[0] - prev_h + fil_h - strides[0]
+        pad_w = out_w * strides[1] - prev_w + fil_w - strides[1]
         [pad_h, pad_w]
       end
     end
@@ -123,8 +125,7 @@ module DNN
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         if @padding == true
-          out_h, out_w = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
-          @pad_size = calc_padding_size(prev_h, prev_w, out_h, out_w, @strides)
+          @pad_size = calc_padding_size(prev_h, prev_w, *@filter_size, @strides)
         elsif @padding.is_a?(Array)
           @pad_size = @padding
         else
@@ -227,8 +228,7 @@ module DNN
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         if @padding == true
-          out_h, out_w = calc_conv2d_transpose_out_size(prev_h, prev_w, *@filter_size, 0, 0, @strides)
-          @pad_size = calc_padding_size(out_h, out_w, prev_h, prev_w, @strides)
+          @pad_size = calc_padding_size(prev_h, prev_w, *@filter_size, @strides)
         elsif @padding.is_a?(Array)
           @pad_size = @padding
         else
@@ -298,7 +298,7 @@ module DNN
 
       # @param [Array | Integer] pool_size Pooling size. Pooling size is of the form [height, width].
       # @param [Array | Integer | NilClass] strides stride length. Stride length is of the form [height, width].
-      #   If you set nil, treat pool_size as strides.
+      #                                     If you set nil, treat pool_size as strides.
       # @param [Array | Boolean] padding Padding size or whether to padding. Padding size is of the form [height, width].
       def initialize(pool_size, strides: nil, padding: false)
         super()
@@ -319,8 +319,7 @@ module DNN
         prev_h, prev_w = input_shape[0..1]
         @num_channel = input_shape[2]
         if @padding == true
-          out_h, out_w = calc_conv2d_out_size(prev_h, prev_w, *@pool_size, 0, 0, @strides)
-          @pad_size = calc_padding_size(prev_h, prev_w, out_h, out_w, @strides)
+          @pad_size = calc_padding_size(prev_h, prev_w, *@pool_size, @strides)
         elsif @padding.is_a?(Array)
           @pad_size = @padding
         else
@@ -399,7 +398,7 @@ module DNN
       
       attr_reader :unpool_size
 
-      # @param [Array or Integer] unpool_size Unpooling size. unpooling size is of the form [height, width].
+      # @param [Array | Integer] unpool_size Unpooling size. unpooling size is of the form [height, width].
       def initialize(unpool_size)
         super()
         @unpool_size = unpool_size.is_a?(Integer) ? [unpool_size, unpool_size] : unpool_size
