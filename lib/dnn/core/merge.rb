@@ -12,8 +12,6 @@ module DNN
         build(x1.shape[1..-1]) unless built?
         y = forward(x1, x2)
         link = TwoInputLink.new(prev_link1, prev_link2, self)
-        prev_link1.next = link
-        prev_link2.next = link
         [y, link]
       end
     end

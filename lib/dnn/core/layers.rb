@@ -20,7 +20,6 @@ module DNN
         build(x.shape[1..-1]) unless built?
         y = forward(x)
         link = Link.new(prev_link, self)
-        prev_link.next = link
         [y, link, model]
       end
 
@@ -102,12 +101,7 @@ module DNN
       def call(input)
         build
         x, prev_link, model = *input
-        if prev_link
-          link = Link.new(prev_link, self)
-          prev_link.next = link
-        else
-          link = Link.new(nil, self)
-        end
+        link = prev_link ? Link.new(prev_link, self) : Link.new(nil, self)
         [forward(x), link, model]
       end
 
@@ -328,7 +322,6 @@ module DNN
         build(x.shape[1..-1]) unless built?
         y = forward(x, model.learning_phase)
         link = Link.new(prev_link, self)
-        prev_link.next = link
         [y, link, model]
       end
 

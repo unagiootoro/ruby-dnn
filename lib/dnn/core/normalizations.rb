@@ -29,7 +29,6 @@ module DNN
         build(x.shape[1..-1]) unless built?
         y = forward(x, model.learning_phase)
         link = Link.new(prev_link, self)
-        prev_link.next = link
         [y, link, model]
       end
 

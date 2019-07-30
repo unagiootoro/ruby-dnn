@@ -1,7 +1,6 @@
 module DNN
   class Link
     attr_accessor :prev
-    attr_accessor :next
     attr_accessor :layer
 
     def initialize(prev = nil, layer = nil)
@@ -14,7 +13,6 @@ module DNN
   class TwoInputLink
     attr_accessor :prev1
     attr_accessor :prev2
-    attr_accessor :next
     attr_accessor :layer
 
     def initialize(prev1 = nil, prev2 = nil, layer = nil)
