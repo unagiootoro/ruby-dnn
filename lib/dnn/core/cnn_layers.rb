@@ -66,11 +66,19 @@ module DNN
         [out_h, out_w]
       end
 
-      def calc_padding_size(prev_h, prev_w, fil_h, fil_w, strides)
+      def calc_conv2d_padding_size(prev_h, prev_w, fil_h, fil_w, strides)
         out_h = prev_h / strides[0]
         out_w = prev_w / strides[1]
         pad_h = out_h * strides[0] - prev_h + fil_h - strides[0]
         pad_w = out_w * strides[1] - prev_w + fil_w - strides[1]
+        [pad_h, pad_w]
+      end
+
+      def calc_conv2d_transpose_padding_size(prev_h, prev_w, fil_h, fil_w, strides)
+        out_h = prev_h * strides[0]
+        out_w = prev_w * strides[1]
+        pad_h = (prev_h - 1) * strides[0] + fil_h - out_h
+        pad_w = (prev_w - 1) * strides[1] + fil_w - out_w
         [pad_h, pad_w]
       end
     end
@@ -125,7 +133,7 @@ module DNN
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         if @padding == true
-          @pad_size = calc_padding_size(prev_h, prev_w, *@filter_size, @strides)
+          @pad_size = calc_conv2d_padding_size(prev_h, prev_w, *@filter_size, @strides)
         elsif @padding.is_a?(Array)
           @pad_size = @padding
         else
@@ -228,7 +236,7 @@ module DNN
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         if @padding == true
-          @pad_size = calc_padding_size(prev_h, prev_w, *@filter_size, @strides)
+          @pad_size = calc_conv2d_transpose_padding_size(prev_h, prev_w, *@filter_size, @strides)
         elsif @padding.is_a?(Array)
           @pad_size = @padding
         else
@@ -319,7 +327,7 @@ module DNN
         prev_h, prev_w = input_shape[0..1]
         @num_channel = input_shape[2]
         if @padding == true
-          @pad_size = calc_padding_size(prev_h, prev_w, *@pool_size, @strides)
+          @pad_size = calc_conv2d_padding_size(prev_h, prev_w, *@pool_size, @strides)
         elsif @padding.is_a?(Array)
           @pad_size = @padding
         else

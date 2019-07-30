@@ -151,13 +151,21 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
     assert_equal [32, 32], calc_conv2d_transpose_out_size(32, 32, 1, 1, 0, 0, [1, 1])
   end
 
-  # def test_calc_padding_size
-  #   assert_equal [4, 3], calc_padding_size(32, 32, 5, 5, [1, 2])
-  # end
+  def test_calc_conv2d_padding_size
+    assert_equal [4, 3], calc_conv2d_padding_size(32, 32, 5, 5, [1, 2])
+  end
   
-  # def test_calc_padding_size2
-  #   assert_equal [4, 0], calc_padding_size(32, 32, 4, 5, [2, 3])
-  # end
+  def test_calc_conv2d_padding_size2
+    assert_equal [2, 0], calc_conv2d_padding_size(32, 32, 4, 5, [2, 3])
+  end
+
+  def test_calc_conv2d_transpose_padding_size
+    assert_equal [4, 3], calc_conv2d_transpose_padding_size(32, 32, 5, 5, [1, 2])
+  end
+  
+  def test_calc_conv2d_transpose_padding_size2
+    assert_equal [2, 2], calc_conv2d_transpose_padding_size(32, 32, 4, 5, [2, 3])
+  end
 end
 
 
@@ -210,6 +218,12 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d = Conv2D.new(16, 4, padding: 3)
     conv2d.build([32, 32, 3])
     assert_equal [32, 32], conv2d.instance_variable_get(:@out_size)
+  end
+
+  def test_build4
+    conv2d = Conv2D.new(16, [4, 3], strides: [2, 2], padding: true)
+    conv2d.build([28, 28, 3])
+    assert_equal [14, 14], conv2d.instance_variable_get(:@out_size)
   end
 
 
