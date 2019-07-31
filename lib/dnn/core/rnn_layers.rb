@@ -4,9 +4,7 @@ module DNN
     # Super class of all RNN classes.
     class RNN < Connection      
       attr_reader :num_nodes
-      # @return [DNN::Param] Recurrent weight parameter.
       attr_reader :recurrent_weight
-      # @return [DNN::Param] Hidden parameter that Stateful RNN has.
       attr_reader :hidden
       attr_reader :stateful
       attr_reader :return_sequences
@@ -16,8 +14,8 @@ module DNN
       # @param [Integer] num_nodes Number of nodes.
       # @param [Boolean] stateful maintain state between batches.
       # @param [Boolean] return_sequences Set the false, only the last of each cell of RNN is left.
-      # @return [DNN::Initializers::Initializer] recurrent_weight_initializer Recurrent weight initializer.
-      # @return [DNN::Regularizers::Regularizer] recurrent_weight_regularizer Recurrent weight regularization.
+      # @param [DNN::Initializers::Initializer] recurrent_weight_initializer Recurrent weight initializer.
+      # @param [DNN::Regularizers::Regularizer] recurrent_weight_regularizer Recurrent weight regularization.
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
@@ -175,7 +173,7 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     activation: Tanh.new,
+                     activation: Activations::Tanh.new,
                      weight_initializer: Initializers::RandomNormal.new,
                      recurrent_weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
@@ -221,11 +219,11 @@ module DNN
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
-        @tanh = Tanh.new
-        @g_tanh = Tanh.new
-        @forget_sigmoid = Sigmoid.new
-        @in_sigmoid = Sigmoid.new
-        @out_sigmoid = Sigmoid.new
+        @tanh = Activations::Tanh.new
+        @g_tanh = Activations::Tanh.new
+        @forget_sigmoid = Activations::Sigmoid.new
+        @in_sigmoid = Activations::Sigmoid.new
+        @out_sigmoid = Activations::Sigmoid.new
         @trainable = true
       end
 
@@ -273,7 +271,6 @@ module DNN
 
 
     class LSTM < RNN
-      # @return [DNN::Param] Hidden parameter that Stateful RNN has.
       attr_reader :cell
 
       def self.from_hash(hash)
@@ -373,9 +370,9 @@ module DNN
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
-        @update_sigmoid = Sigmoid.new
-        @reset_sigmoid = Sigmoid.new
-        @tanh = Tanh.new
+        @update_sigmoid = Activations::Sigmoid.new
+        @reset_sigmoid = Activations::Sigmoid.new
+        @tanh = Activations::Tanh.new
         @trainable = true
       end
 
