@@ -1,5 +1,5 @@
-# This class manages input datas and output datas together.
 module DNN
+  # This class manages input datas and output datas together.
   class Iterator
     # @param [Numo::SFloat] x_datas input datas.
     # @param [Numo::SFloat] y_datas output datas.
