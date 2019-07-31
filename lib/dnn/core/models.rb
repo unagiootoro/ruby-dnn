@@ -74,7 +74,7 @@ module DNN
       # @param [Numo::SFloat] y Output training data.
       # @param [Integer] epochs Number of training.
       # @param [Integer] batch_size Batch size used for one training.
-      # @param [Array or NilClass] test If you to test the model for every 1 epoch,
+      # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                            specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       # @param [Lambda] before_epoch_cbk Process performed before one training.
@@ -104,7 +104,7 @@ module DNN
             x_batch, y_batch = iter.next_batch(batch_size)
             loss_value = train_on_batch(x_batch, y_batch, before_train_on_batch_cbk: before_train_on_batch_cbk,
                                         after_train_on_batch_cbk: after_train_on_batch_cbk)
-            if loss_value.is_a?(Numo::SFloat)
+            if loss_value.is_a?(Xumo::SFloat)
               loss_value = loss_value.mean
             elsif loss_value.nan?
               puts "\nloss is nan" if verbose
@@ -125,10 +125,10 @@ module DNN
             log << "  #{num_trained_datas}/#{num_train_datas} loss: #{sprintf('%.8f', loss_value)}"
             print log if verbose
           end
-          if verbose && test
+          if test
             acc, test_loss = accurate(test[0], test[1], batch_size: batch_size, before_test_on_batch_cbk: before_test_on_batch_cbk,
                                       after_test_on_batch_cbk: after_test_on_batch_cbk)
-            print "  accurate: #{acc}, test loss: #{sprintf('%.8f', test_loss)}"
+            print "  accurate: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
           end
           puts "" if verbose
           after_epoch_cbk.call(epoch) if after_epoch_cbk
@@ -284,20 +284,6 @@ module DNN
       # @return [Boolean] Returns whether the model is learning.
       def setup_completed?
         @setup_completed
-      end
-
-      # @return [Array] Return the input shape of the model.
-      def input_shape
-        get_first_link = -> link do
-          return link unless link.prev
-          get_first_link.(link.prev)
-        end
-        get_first_link.(@last_link).layer.input_shape
-      end
-
-      # @return [Array] Return the output shape of the model.
-      def output_shape
-        @last_link.layer.output_shape
       end
 
       private
