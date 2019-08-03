@@ -433,6 +433,7 @@ class TestMaxPool2D < MiniTest::Unit::TestCase
       padding: true,
     }
     pool2d = MaxPool2D.from_hash(hash)
+    assert_kind_of MaxPool2D, pool2d
     assert_equal [3, 3], pool2d.pool_size
     assert_equal [2, 2], pool2d.strides
     assert_equal true, pool2d.padding
@@ -496,6 +497,7 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
       padding: true,
     }
     pool2d = AvgPool2D.from_hash(hash)
+    assert_kind_of AvgPool2D, pool2d
     assert_equal [3, 3], pool2d.pool_size
     assert_equal [2, 2], pool2d.strides
     assert_equal true, pool2d.padding

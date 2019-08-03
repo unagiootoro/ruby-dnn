@@ -179,10 +179,10 @@ module DNN
       end
 
       def to_hash
-        super({num_filters: @num_filters,
-               filter_size: @filter_size,
-               strides: @strides,
-               padding: @padding})
+        super(num_filters: @num_filters,
+              filter_size: @filter_size,
+              strides: @strides,
+              padding: @padding)
       end
     end
 
@@ -284,10 +284,10 @@ module DNN
       end
 
       def to_hash
-        super({num_filters: @num_filters,
-               filter_size: @filter_size,
-               strides: @strides,
-               padding: @padding})
+        super(num_filters: @num_filters,
+              filter_size: @filter_size,
+              strides: @strides,
+              padding: @padding)
       end
     end
 
@@ -300,8 +300,8 @@ module DNN
       attr_reader :strides
       attr_reader :padding
 
-      def self.from_hash(pool2d_class, hash)
-        pool2d_class.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
+      def self.from_hash(hash)
+        self.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
       end
 
       # @param [Array | Integer] pool_size Pooling size. Pooling size is of the form [height, width].
@@ -341,18 +341,14 @@ module DNN
       end
 
       def to_hash
-        super({pool_size: @pool_size,
-               strides: @strides,
-               padding: @padding})
+        super(pool_size: @pool_size,
+              strides: @strides,
+              padding: @padding)
       end
     end
     
     
     class MaxPool2D < Pool2D
-      def self.from_hash(hash)
-        Pool2D.from_hash(self, hash)
-      end
-
       def forward(x)
         x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
@@ -374,10 +370,6 @@ module DNN
 
 
     class AvgPool2D < Pool2D
-      def self.from_hash(hash)
-        Pool2D.from_hash(self, hash)
-      end
-
       def forward(x)
         x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
@@ -454,7 +446,7 @@ module DNN
       end
 
       def to_hash
-        super({unpool_size: @unpool_size})
+        super(unpool_size: @unpool_size)
       end
     end
 
