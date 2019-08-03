@@ -25,9 +25,10 @@ module DNN
         @weight_regularizer = weight_regularizer
       end
 
-      def call(x)
+      def call(input)
+        x, *, model = *input
         build unless built?
-        [forward(x), Link.new(nil, self)]
+        [forward(x), Link.new(nil, self), model]
       end
 
       def build

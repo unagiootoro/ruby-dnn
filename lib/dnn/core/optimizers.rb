@@ -324,10 +324,6 @@ module DNN
                  final_lr: hash[:final_lr], gamma: hash[:gamma], eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
       end
 
-      # @param [Float] alpha Value used to calculate learning rate.
-      # @param [Float] beta1 Moving average index of beta1.
-      # @param [Float] beta2 Moving average index of beta2.
-      # @param [Float] eps Value to avoid division by zero.
       # @param [Float] final_lr Final learning rate.
       # @param [Float] gamma Lower and upper range value.
       def initialize(alpha: 0.001, beta1: 0.9, beta2: 0.999, final_lr: 0.1, gamma: 0.001, eps: 1e-7, amsgrad: false, clip_norm: nil)
