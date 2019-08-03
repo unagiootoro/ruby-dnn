@@ -1,6 +1,6 @@
 module DNN
   module Layers
-    
+
     # This module is used for convolution.
     module Conv2DUtils
       private
@@ -82,8 +82,8 @@ module DNN
         [pad_h, pad_w]
       end
     end
-    
-    
+
+
     class Conv2D < Connection
       include Conv2DUtils
 
@@ -102,7 +102,7 @@ module DNN
                    strides: hash[:strides],
                    padding: hash[:padding])
       end
-      
+
       # @param [Integer] num_filters Number of filters.
       # @param [Array | Integer] filter_size Filter size. Filter size is of the form [height, width].
       # @param [Array | Integer] strides Stride length. Stride length is of the form [height, width].
@@ -132,12 +132,12 @@ module DNN
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
-        if @padding == true
-          @pad_size = calc_conv2d_padding_size(prev_h, prev_w, *@filter_size, @strides)
+        @pad_size = if @padding == true
+          calc_conv2d_padding_size(prev_h, prev_w, *@filter_size, @strides)
         elsif @padding.is_a?(Array)
-          @pad_size = @padding
+          @padding
         else
-          @pad_size = [0, 0]
+          [0, 0]
         end
         @out_size = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
@@ -197,15 +197,15 @@ module DNN
 
       def self.from_hash(hash)
         Conv2DTranspose.new(hash[:num_filters], hash[:filter_size],
-                   weight_initializer: Utils.from_hash(hash[:weight_initializer]),
-                   bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                   weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
-                   bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
-                   use_bias: hash[:use_bias],
-                   strides: hash[:strides],
-                   padding: hash[:padding])
+                            weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                            bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                            weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                            bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                            use_bias: hash[:use_bias],
+                            strides: hash[:strides],
+                            padding: hash[:padding])
       end
-      
+
       # @param [Integer] num_filters Number of filters.
       # @param [Array | Integer] filter_size Filter size. Filter size is of the form [height, width].
       # @param [Array | Integer] strides Stride length. Stride length is of the form [height, width].
@@ -235,12 +235,12 @@ module DNN
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
-        if @padding == true
-          @pad_size = calc_conv2d_transpose_padding_size(prev_h, prev_w, *@filter_size, @strides)
+        @pad_size = if @padding == true
+          calc_conv2d_transpose_padding_size(prev_h, prev_w, *@filter_size, @strides)
         elsif @padding.is_a?(Array)
-          @pad_size = @padding
+          @padding
         else
-          @pad_size = [0, 0]
+          [0, 0]
         end
         @out_size = calc_conv2d_transpose_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
@@ -291,7 +291,7 @@ module DNN
       end
     end
 
-    
+
     # Super class of all pooling2D class.
     class Pool2D < Layer
       include Conv2DUtils
@@ -326,12 +326,12 @@ module DNN
         super
         prev_h, prev_w = input_shape[0..1]
         @num_channel = input_shape[2]
-        if @padding == true
-          @pad_size = calc_conv2d_padding_size(prev_h, prev_w, *@pool_size, @strides)
+        @pad_size = if @padding == true
+          calc_conv2d_padding_size(prev_h, prev_w, *@pool_size, @strides)
         elsif @padding.is_a?(Array)
-          @pad_size = @padding
+          @padding
         else
-          @pad_size = [0, 0]
+          [0, 0]
         end
         @out_size = calc_conv2d_out_size(prev_h, prev_w, *@pool_size, *@pad_size, @strides)
       end
@@ -346,8 +346,8 @@ module DNN
               padding: @padding)
       end
     end
-    
-    
+
+
     class MaxPool2D < Pool2D
       def forward(x)
         x = zero_padding(x, @pad_size) if @padding
@@ -395,7 +395,7 @@ module DNN
 
     class UnPool2D < Layer
       include Conv2DUtils
-      
+
       attr_reader :unpool_size
 
       # @param [Array | Integer] unpool_size Unpooling size. unpooling size is of the form [height, width].

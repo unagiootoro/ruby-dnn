@@ -5,7 +5,7 @@ module DNN
       def self.call(x1, x2)
         self.new.call(x1, x2)
       end
-      
+
       def call(input1, input2)
         x1, prev_link1 = *input1
         x2, prev_link2 = *input2
@@ -27,7 +27,7 @@ module DNN
       end
     end
 
-    
+
     class Mul < MergeLayer
       def forward(x1, x2)
         @x1, @x2 = x1, x2

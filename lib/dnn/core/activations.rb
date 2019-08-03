@@ -5,7 +5,7 @@ module DNN
       def forward(x)
         @y = 1 / (1 + Xumo::NMath.exp(-x))
       end
-    
+
       def backward(dy)
         dy * (1 - @y) * @y
       end
@@ -16,7 +16,7 @@ module DNN
       def forward(x)
         @y = Xumo::NMath.tanh(x)
       end
-      
+
       def backward(dy)
         dy * (1 - @y ** 2)
       end
@@ -52,20 +52,20 @@ module DNN
         @x = x
         @y = x * (1 / (1 + Xumo::NMath.exp(-x)))
       end
-    
+
       def backward(dy)
         dy * (@y + (1 / (1 + Xumo::NMath.exp(-@x))) * (1 - @y))
       end
     end
-    
-    
+
+
     class ReLU < Layers::Layer
       def forward(x)
         @x = x
         x[x < 0] = 0
         x
       end
-    
+
       def backward(dy)
         dx = Xumo::SFloat.ones(@x.shape)
         dx[@x <= 0] = 0
@@ -100,7 +100,7 @@ module DNN
       end
 
       def to_hash
-        {class: self.class.name, alpha: alpha}
+        super(alpha: @alpha)
       end
     end
 
@@ -138,7 +138,7 @@ module DNN
       end
 
       def to_hash
-        {class: self.class.name, alpha: @alpha}
+        super(alpha: @alpha)
       end
     end
 

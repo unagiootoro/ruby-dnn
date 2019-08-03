@@ -30,8 +30,7 @@ module DNN
         @learning_phase = true
         @built = true
       end
-      
-      # Does the layer have already been built?
+
       # @return [Boolean] If layer have already been built then return true.
       def built?
         @built
@@ -63,13 +62,13 @@ module DNN
         hash
       end
     end
-    
-    
+
+
     # This class is a superclass of all classes with learning parameters.
     class HasParamLayer < Layer
       # @return [Boolean] Setting false prevents learning of parameters.
       attr_accessor :trainable
-    
+
       def initialize
         super()
         @trainable = true
@@ -80,8 +79,8 @@ module DNN
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'get_params'")
       end
     end
-    
-    
+
+
     class InputLayer < Layer
       def self.call(input)
         shape = input.is_a?(Array) ? input[0].shape : input.shape
@@ -116,13 +115,13 @@ module DNN
         end
         x
       end
-    
+
       def backward(dy)
         dy
       end
 
       def to_hash
-        super({input_shape: @input_shape})
+        super(input_shape: @input_shape)
       end
     end
 
@@ -192,8 +191,8 @@ module DNN
         end
       end
     end
-    
-    
+
+
     class Dense < Connection
       attr_reader :num_nodes
 
@@ -235,7 +234,7 @@ module DNN
         y += @bias.data if @bias
         y
       end
-    
+
       def backward(dy)
         if @trainable
           @weight.grad += @x.transpose.dot(dy)
@@ -243,22 +242,22 @@ module DNN
         end
         dy.dot(@weight.data.transpose)
       end
-    
+
       def output_shape
         [@num_nodes]
       end
 
       def to_hash
-        super({num_nodes: @num_nodes})
+        super(num_nodes: @num_nodes)
       end
     end
-    
+
 
     class Flatten < Layer
       def forward(x)
         x.reshape(x.shape[0], *output_shape)
       end
-    
+
       def backward(dy)
         dy.reshape(dy.shape[0], *@input_shape)
       end
@@ -292,11 +291,11 @@ module DNN
       end
 
       def to_hash
-        super({output_shape: @output_shape})
+        super(output_shape: @output_shape)
       end
     end
 
-    
+
     class Dropout < Layer
       attr_accessor :dropout_ratio
       attr_reader :use_scale
@@ -335,16 +334,16 @@ module DNN
         end
         x
       end
-    
+
       def backward(dy)
         dy[@mask] = 0
         dy
       end
 
       def to_hash
-        super({dropout_ratio: @dropout_ratio, seed: @seed, use_scale: @use_scale})
+        super(dropout_ratio: @dropout_ratio, seed: @seed, use_scale: @use_scale)
       end
     end
-    
+
   end
 end

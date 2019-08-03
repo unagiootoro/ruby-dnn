@@ -8,8 +8,8 @@ module DNN
         end
         loss_value = forward_loss(y, t)
         regularizers = layers.select { |layer| layer.is_a?(Connection) }
-                             .map { |layer| layer.regularizers }.flatten
-        
+                             .map(&:regularizers).flatten
+
         regularizers.each do |regularizer|
           loss_value = regularizer.forward(loss_value)
         end
@@ -18,9 +18,7 @@ module DNN
 
       def backward(t, layers)
         layers.select { |layer| layer.respond_to?(:regularizers) }.each do |layer|
-          layer.regularizers.each do |regularizer|
-            regularizer.backward
-          end
+          layer.regularizers.each(&:backward)
         end
         backward_loss(t)
       end
@@ -77,7 +75,7 @@ module DNN
 
     class Hinge < Loss
       private
-      
+
       def forward_loss(y, t)
         @y = y
         @a = 1 - y * t

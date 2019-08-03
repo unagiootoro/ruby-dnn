@@ -48,15 +48,15 @@ module DNN
       end
 
       def to_hash
-        super({const: @const})
+        super(const: @const)
       end
     end
-    
-    
+
+
     class RandomNormal < Initializer
       attr_reader :mean
       attr_reader :std
-      
+
       def self.from_hash(hash)
         self.new(hash[:mean], hash[:std], seed: hash[:seed])
       end
@@ -75,7 +75,7 @@ module DNN
       end
 
       def to_hash
-        super({mean: @mean, std: @std})
+        super(mean: @mean, std: @std)
       end
     end
 
@@ -102,11 +102,11 @@ module DNN
       end
 
       def to_hash
-        super({min: @min, max: @max})
+        super(min: @min, max: @max)
       end
     end
-    
-    
+
+
     class Xavier < Initializer
       def initialize(seed: true)
         super
@@ -118,8 +118,8 @@ module DNN
         param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes)
       end
     end
-    
-    
+
+
     class He < Initializer
       def initialize(seed: true)
         super

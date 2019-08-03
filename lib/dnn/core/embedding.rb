@@ -12,7 +12,7 @@ module DNN
                  weight_initializer: DNN::Utils.from_hash(hash[:weight_initializer]),
                  weight_regularizer: DNN::Utils.from_hash(hash[:weight_regularizer]))
       end
-      
+
       # @param [Integer | Array] input_dim_or_shape Set input data dimension or shape.
       # @param [Integer] input_length input Set the time series length of input data.
       def initialize(input_dim_or_shape, input_length,

@@ -2,7 +2,7 @@ module DNN
   module Layers
 
     # Super class of all RNN classes.
-    class RNN < Connection      
+    class RNN < Connection
       attr_reader :num_nodes
       attr_reader :recurrent_weight
       attr_reader :hidden
@@ -49,7 +49,7 @@ module DNN
       def forward(xs)
         @xs_shape = xs.shape
         hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
-        h = (@stateful && @hidden.data) ? @hidden.data : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
+        h = @stateful && @hidden.data ? @hidden.data : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
           @layers[t].trainable = @trainable
@@ -152,7 +152,7 @@ module DNN
 
     class SimpleRNN < RNN
       attr_reader :activation
-      
+
       def self.from_hash(hash)
         simple_rnn = self.new(hash[:num_nodes],
                               stateful: hash[:stateful],
@@ -457,7 +457,7 @@ module DNN
                      use_bias: true)
         super
       end
-    
+
       def build(input_shape)
         super
         num_prev_nodes = @input_shape[1]

@@ -82,7 +82,7 @@ module DNN
     class Nesterov < Optimizer
       attr_accessor :lr
       attr_accessor :momentum
-      
+
       def self.from_hash(hash)
         self.new(hash[:lr], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
       end
@@ -99,7 +99,7 @@ module DNN
       def to_hash
         super(lr: @lr, momentum: @momentum)
       end
-    
+
       private def update_params(params)
         params.each do |param|
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
@@ -109,8 +109,8 @@ module DNN
         end
       end
     end
-    
-    
+
+
     class AdaGrad < Optimizer
       attr_accessor :lr
       attr_accessor :eps
@@ -127,7 +127,7 @@ module DNN
         @eps = eps
         @g = {}
       end
-    
+
       private def update_params(params)
         params.each do |param|
           @g[param] ||= Xumo::SFloat.zeros(*param.data.shape)
@@ -140,7 +140,7 @@ module DNN
         super(lr: @lr, eps: @eps)
       end
     end
-    
+
 
     class RMSProp < Optimizer
       attr_accessor :lr
@@ -215,7 +215,7 @@ module DNN
       attr_accessor :lr
       attr_accessor :alpha
       attr_accessor :eps
-      
+
       def self.from_hash(hash)
         self.new(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
@@ -254,7 +254,7 @@ module DNN
       attr_accessor :beta2
       attr_accessor :eps
       attr_reader :amsgrad
-      
+
       def self.from_hash(hash)
         self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2],
                  eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
@@ -287,7 +287,7 @@ module DNN
 
       private def update_params(params)
         @t += 1
-        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t) 
+        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t)
         params.each do |param|
           @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
@@ -318,7 +318,7 @@ module DNN
     class AdaBound < Adam
       attr_accessor :final_lr
       attr_accessor :gamma
-      
+
       def self.from_hash(hash)
         self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2],
                  final_lr: hash[:final_lr], gamma: hash[:gamma], eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])

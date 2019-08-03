@@ -19,6 +19,7 @@ module DNN
         @optimizer = nil
         @last_link = nil
         @setup_completed = false
+        @built = false
       end
 
       # Load json model parameters.
@@ -38,7 +39,7 @@ module DNN
           has_param_layers_index += 1
         end
       end
-      
+
       # Convert model parameters to json string.
       # @return [String] json string.
       def params_to_json
@@ -98,7 +99,7 @@ module DNN
         iter = Iterator.new(x, y)
         num_train_datas = x.shape[0]
         (1..epochs).each do |epoch|
-          before_epoch_cbk.call(epoch) if before_epoch_cbk
+          before_epoch_cbk&.call(epoch)
           puts "【 epoch #{epoch}/#{epochs} 】" if verbose
           (num_train_datas.to_f / batch_size).ceil.times do |index|
             x_batch, y_batch = iter.next_batch(batch_size)
@@ -131,10 +132,10 @@ module DNN
             print "  accurate: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
           end
           puts "" if verbose
-          after_epoch_cbk.call(epoch) if after_epoch_cbk
+          after_epoch_cbk&.call(epoch)
         end
       end
-    
+
       # Training once.
       # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
@@ -145,16 +146,16 @@ module DNN
       def train_on_batch(x, y, before_train_on_batch_cbk: nil, after_train_on_batch_cbk: nil)
         raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         check_xy_type(x, y)
-        before_train_on_batch_cbk.call if before_train_on_batch_cbk
+        before_train_on_batch_cbk&.call
         x = forward(x, true)
         loss_value = @loss_func.forward(x, y, layers)
         dy = @loss_func.backward(y, layers)
         backward(dy)
         @optimizer.update(layers.uniq)
-        after_train_on_batch_cbk.call(loss_value) if after_train_on_batch_cbk
+        after_train_on_batch_cbk&.call(loss_value)
         loss_value
       end
-    
+
       # Evaluate model and get accurate of test data.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
@@ -180,11 +181,11 @@ module DNN
       end
 
       def test_on_batch(x, y, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
-        before_test_on_batch_cbk.call if before_test_on_batch_cbk
+        before_test_on_batch_cbk&.call
         x = forward(x, false)
         correct = evaluate(x, y)
         loss_value = @loss_func.forward(x, y, layers)
-        after_test_on_batch_cbk.call(loss_value) if after_test_on_batch_cbk
+        after_test_on_batch_cbk&.call(loss_value)
         [correct, loss_value]
       end
 
@@ -237,8 +238,9 @@ module DNN
       end
 
       # Get the all layers.
-      # @return [Array] all layers array.
+      # @return [Array] All layers array.
       def layers
+        raise DNN_Error.new("This model is not built. You need build this model using predict or train.") unless built?
         layers = []
         get_layers = -> link do
           return unless link
@@ -275,25 +277,31 @@ module DNN
         @optimizer
       end
 
-      # @return [DNN::Losses::Loss] loss Return the loss to use for learning.
+      # @return [DNN::Losses::Loss] loss_func Return the loss function to use for learning.
       def loss_func
         raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         @loss_func
       end
 
-      # @return [Boolean] Returns whether the model is learning.
+      # @return [Boolean] If model have already been setup completed then return true.
       def setup_completed?
         @setup_completed
+      end
+
+      # @return [Boolean] If model have already been built then return true.
+      def built?
+        @built
       end
 
       private
 
       def forward(x, learning_phase)
         @learning_phase = learning_phase
+        @built = true
         y, @last_link = call([x, nil, self])
         y
       end
-    
+
       def backward(dy)
         bwd = -> link, dy do
           return dy unless link
@@ -322,7 +330,7 @@ module DNN
     class Sequential < Model
       # @return [Array] All layers possessed by the model.
       attr_accessor :stack
-    
+
       def initialize
         super
         @stack = []
@@ -339,10 +347,6 @@ module DNN
         self
       end
 
-      def layers
-        @stack.map { |layer| layer.is_a?(Models::Model) ? layer.layers : layer }.flatten
-      end
-    
       def call(x)
         @stack.each do |layer|
           x = layer.(x)
