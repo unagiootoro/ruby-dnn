@@ -38,7 +38,7 @@ model << ReLU.new
 
 model << Dense.new(10)
 
-model.compile(RMSProp.new, SoftmaxCrossEntropy.new)
+model.setup(RMSProp.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
 ```
