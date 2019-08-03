@@ -17,7 +17,7 @@ module DNN
       end
 
       def backward(t, layers)
-        layers.select { |layer| layer.is_a?(Connection) }.each do |layer|
+        layers.select { |layer| layer.respond_to?(:regularizers) }.each do |layer|
           layer.regularizers.each do |regularizer|
             regularizer.backward
           end

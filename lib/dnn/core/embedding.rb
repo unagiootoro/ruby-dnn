@@ -5,19 +5,24 @@ module DNN
       attr_reader :input_length
       attr_reader :weight
       attr_reader :weight_initializer
+      attr_reader :weight_regularizer
 
       def self.from_hash(hash)
         self.new(hash[:input_shape], hash[:input_length],
-                 weight_initializer: DNN::Utils.from_hash(hash[:weight_initializer]))
+                 weight_initializer: DNN::Utils.from_hash(hash[:weight_initializer]),
+                 weight_regularizer: DNN::Utils.from_hash(hash[:weight_regularizer]))
       end
       
       # @param [Integer | Array] input_dim_or_shape Set input data dimension or shape.
       # @param [Integer] input_length input Set the time series length of input data.
-      def initialize(input_dim_or_shape, input_length, weight_initializer: Initializers::RandomUniform.new)
+      def initialize(input_dim_or_shape, input_length,
+                     weight_initializer: Initializers::RandomUniform.new,
+                     weight_regularizer: nil)
         super()
         @input_shape = input_dim_or_shape.is_a?(Array) ? input_dim_or_shape : [input_dim_or_shape]
         @input_length = input_length
         @weight_initializer = weight_initializer
+        @weight_regularizer = weight_regularizer
       end
 
       def call(x)
@@ -29,6 +34,7 @@ module DNN
         @built = true
         @weight = Param.new(Xumo::SFloat.new(@input_length), 0)
         @weight_initializer.init_param(self, @weight)
+        @weight_regularizer.param = @weight if @weight_regularizer
         @input_shape
       end
 
@@ -51,8 +57,13 @@ module DNN
         nil
       end
 
+      def regularizers
+        @weight_regularizer ? [@weight_regularizer] : []
+      end
+
       def to_hash
-        super(input_shape: @input_shape, input_length: @input_length, weight_initializer: @weight_initializer.to_hash)
+        super(input_shape: @input_shape, input_length: @input_length,
+              weight_initializer: @weight_initializer.to_hash, weight_regularizer: @weight_regularizer&.to_hash)
       end
 
       def get_params
