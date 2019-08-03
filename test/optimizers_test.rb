@@ -6,10 +6,6 @@ include DNN::Initializers
 include DNN::Optimizers
 
 class TestOptimizer < MiniTest::Unit::TestCase
-  def test_initialize
-    optimizer = Optimizer.new
-  end
-
   def test_to_hash
     optimizer = Optimizer.new
     hash = optimizer.to_hash({momentum: 0.9})
