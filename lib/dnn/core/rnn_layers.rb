@@ -151,8 +151,6 @@ module DNN
 
 
     class SimpleRNN < RNN
-      include Activations
-
       attr_reader :activation
       
       def self.from_hash(hash)
@@ -207,7 +205,7 @@ module DNN
       end
 
       def to_hash
-        super({activation: @activation.to_hash})
+        super(activation: @activation.to_hash)
       end
     end
 
