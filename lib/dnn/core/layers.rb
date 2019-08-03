@@ -137,8 +137,8 @@ module DNN
 
       # @param [DNN::Initializers::Initializer] weight_initializer Weight initializer.
       # @param [DNN::Initializers::Initializer] bias_initializer Bias initializer.
-      # @param [DNN::Regularizers::Regularizer] weight_regularizer Weight regularization.
-      # @param [DNN::Regularizers::Regularizer] bias_regularizer Bias regularization.
+      # @param [DNN::Regularizers::Regularizer | NilClass] weight_regularizer Weight regularization.
+      # @param [DNN::Regularizers::Regularizer | NilClass] bias_regularizer Bias regularization.
       # @param [Boolean] use_bias whether to use bias.
       def initialize(weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,

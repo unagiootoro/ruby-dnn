@@ -12,10 +12,10 @@ module DNN
       attr_reader :recurrent_weight_regularizer
 
       # @param [Integer] num_nodes Number of nodes.
-      # @param [Boolean] stateful maintain state between batches.
+      # @param [Boolean] stateful Maintain state between batches.
       # @param [Boolean] return_sequences Set the false, only the last of each cell of RNN is left.
       # @param [DNN::Initializers::Initializer] recurrent_weight_initializer Recurrent weight initializer.
-      # @param [DNN::Regularizers::Regularizer] recurrent_weight_regularizer Recurrent weight regularization.
+      # @param [DNN::Regularizers::Regularizer | NilClass] recurrent_weight_regularizer Recurrent weight regularization.
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
@@ -168,6 +168,7 @@ module DNN
         simple_rnn
       end
 
+      # @param [DNN::Layers::Layer] activation Activation function to use in a recurrent network.
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,

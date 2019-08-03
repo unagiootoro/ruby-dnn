@@ -26,6 +26,7 @@ module DNN
         L1.new(hash[:l1_lambda])
       end
 
+      # @param [Float] l1_lambda L1 regularizer coefficient.
       def initialize(l1_lambda = 0.01)
         @l1_lambda = l1_lambda
       end
@@ -53,6 +54,7 @@ module DNN
         L2.new(hash[:l2_lambda])
       end
 
+      # @param [Float] l2_lambda L2 regularizer coefficient.
       def initialize(l2_lambda = 0.01)
         @l2_lambda = l2_lambda
       end
@@ -78,6 +80,8 @@ module DNN
         L1L2.new(hash[:l1_lambda], hash[:l2_lambda])
       end
 
+      # @param [Float] l1_lambda L1 regularizer coefficient.
+      # @param [Float] l2_lambda L2 regularizer coefficient.
       def initialize(l1_lambda = 0.01, l2_lambda = 0.01)
         @l1_lambda = l1_lambda
         @l2_lambda = l2_lambda

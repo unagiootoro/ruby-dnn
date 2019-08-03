@@ -10,7 +10,7 @@ module DNN
         @clip_norm = clip_norm
       end
 
-      # Update layers has param.
+      # Update layers has params.
       def update(layers)
         target_params = layers.select { |layer| layer.is_a?(HasParamLayer) && layer.trainable }
                               .map { |layer| layer.get_params.values }.flatten.compact
@@ -88,7 +88,7 @@ module DNN
       end
 
       # @param [Float] lr Learning rate.
-      # @param [Float] momentum momentum coefficient.
+      # @param [Float] momentum Momentum coefficient.
       def initialize(lr = 0.01, momentum: 0.9, clip_norm: nil)
         super(clip_norm: clip_norm)
         @lr = lr

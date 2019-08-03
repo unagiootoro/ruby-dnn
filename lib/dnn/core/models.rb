@@ -23,7 +23,7 @@ module DNN
       end
 
       # Load json model parameters.
-      # @param [String] json_str json string to load model parameters.
+      # @param [String] json_str JSON string to load model parameters.
       def load_json_params(json_str)
         hash = JSON.parse(json_str, symbolize_names: true)
         has_param_layers_params = hash[:params]
@@ -40,8 +40,8 @@ module DNN
         end
       end
 
-      # Convert model parameters to json string.
-      # @return [String] json string.
+      # Convert model parameters to JSON string.
+      # @return [String] JSON string.
       def params_to_json
         has_param_layers = layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
         has_param_layers_params = has_param_layers.map do |layer|
@@ -76,7 +76,7 @@ module DNN
       # @param [Integer] epochs Number of training.
       # @param [Integer] batch_size Batch size used for one training.
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
-      #                            specify [x_test, y_test]. Don't test to the model, specify nil.
+      #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       # @param [Lambda] before_epoch_cbk Process performed before one training.
       # @param [Lambda] after_epoch_cbk Process performed after one training.
@@ -180,6 +180,12 @@ module DNN
         [total_correct.to_f / x.shape[0], mean_loss]
       end
 
+      # Evaluate once.
+      # @param [Numo::SFloat] x Input test data.
+      # @param [Numo::SFloat] y Output test data.
+      # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
+      # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
+      # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
       def test_on_batch(x, y, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
         before_test_on_batch_cbk&.call
         x = forward(x, false)
@@ -220,7 +226,7 @@ module DNN
       end
 
       # Save the model in marshal format.
-      # @param [String] file_name name to save model.
+      # @param [String] file_name Name to save model.
       def save(file_name)
         bin = Zlib::Deflate.deflate(Marshal.dump(self))
         begin
@@ -256,6 +262,8 @@ module DNN
         layers
       end
 
+      # Get the all has param layers.
+      # @return [Array] All has param layers array.
       def has_param_layers
         layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
       end
@@ -338,7 +346,7 @@ module DNN
 
       # Add layer to the model.
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
-      # @return [DNN::Model] return self.
+      # @return [DNN::Model] Return self.
       def <<(layer)
         unless layer.is_a?(Layers::Layer) || layer.is_a?(Models::Model)
           raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")

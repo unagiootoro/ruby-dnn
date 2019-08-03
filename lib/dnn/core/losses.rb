@@ -126,7 +126,6 @@ module DNN
 
 
     class SoftmaxCrossEntropy < Loss
-      # @return [Float] Return the eps value.
       attr_accessor :eps
 
       def self.from_hash(hash)
@@ -161,7 +160,6 @@ module DNN
 
 
     class SigmoidCrossEntropy < Loss
-      # @return [Float] Return the eps value.
       attr_accessor :eps
 
       def self.from_hash(hash)
