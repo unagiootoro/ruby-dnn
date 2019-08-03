@@ -3,13 +3,10 @@ module DNN
 
     # Super class of all optimizer classes.
     class Optimizer
-      # @return [Float] Return the learning rate.
-      attr_accessor :lr
-      # @return [Float] Return the gradient clip value.
       attr_accessor :clip_norm
 
-      def initialize(lr, clip_norm: nil)
-        @lr = lr
+      # @param [Float | NilClass] clip_norm Gradient clip norm.
+      def initialize(clip_norm: nil)
         @clip_norm = clip_norm
       end
 
@@ -26,7 +23,7 @@ module DNN
       end
 
       def to_hash(merge_hash = nil)
-        hash = {class: self.class.name, lr: @lr, clip_norm: @clip_norm}
+        hash = {class: self.class.name, clip_norm: @clip_norm}
         hash.merge!(merge_hash) if merge_hash
         hash
       end
@@ -48,7 +45,7 @@ module DNN
 
 
     class SGD < Optimizer
-      # @return [Float] Return the momentum coefficient.
+      attr_accessor :lr
       attr_accessor :momentum
 
       def self.from_hash(hash)
@@ -56,15 +53,16 @@ module DNN
       end
 
       # @param [Float] lr Learning rate.
-      # @param [Float] momentum momentum coefficient.
+      # @param [Float] momentum Momentum coefficient.
       def initialize(lr = 0.01, momentum: 0, clip_norm: nil)
-        super(lr, clip_norm: clip_norm)
+        super(clip_norm: clip_norm)
+        @lr = lr
         @momentum = momentum
         @v = {}
       end
 
       def to_hash
-        super(momentum: @momentum)
+        super(lr: @lr, momentum: @momentum)
       end
 
       private def update_params(params)
@@ -82,6 +80,7 @@ module DNN
 
 
     class Nesterov < Optimizer
+      attr_accessor :lr
       attr_accessor :momentum
       
       def self.from_hash(hash)
@@ -91,13 +90,14 @@ module DNN
       # @param [Float] lr Learning rate.
       # @param [Float] momentum momentum coefficient.
       def initialize(lr = 0.01, momentum: 0.9, clip_norm: nil)
-        super(lr, clip_norm: clip_norm)
+        super(clip_norm: clip_norm)
+        @lr = lr
         @momentum = momentum
         @v = {}
       end
 
       def to_hash
-        super(momentum: @momentum)
+        super(lr: @lr, momentum: @momentum)
       end
     
       private def update_params(params)
@@ -112,7 +112,7 @@ module DNN
     
     
     class AdaGrad < Optimizer
-      # @return [Float] Return the eps value.
+      attr_accessor :lr
       attr_accessor :eps
 
       def self.from_hash(hash)
@@ -122,7 +122,8 @@ module DNN
       # @param [Float] lr Learning rate.
       # @param [Float] eps Value to avoid division by zero.
       def initialize(lr = 0.01, eps: 1e-7, clip_norm: nil)
-        super(lr, clip_norm: clip_norm)
+        super(clip_norm: clip_norm)
+        @lr = lr
         @eps = eps
         @g = {}
       end
@@ -136,15 +137,14 @@ module DNN
       end
 
       def to_hash
-        super(eps: @eps)
+        super(lr: @lr, eps: @eps)
       end
     end
     
 
     class RMSProp < Optimizer
-      # @return [Float] Return the alpha value.
+      attr_accessor :lr
       attr_accessor :alpha
-      # @return [Float] Return the eps value.
       attr_accessor :eps
 
       def self.from_hash(hash)
@@ -155,14 +155,15 @@ module DNN
       # @param [Float] alpha Moving average index of past slopes.
       # @param [Float] eps Value to avoid division by zero.
       def initialize(lr = 0.001, alpha: 0.9, eps: 1e-7, clip_norm: nil)
-        super(lr, clip_norm: clip_norm)
+        super(clip_norm: clip_norm)
+        @lr = lr
         @alpha = alpha
         @eps = eps
         @g = {}
       end
 
       def to_hash
-        super(alpha: @alpha, eps: @eps)
+        super(lr: @lr, alpha: @alpha, eps: @eps)
       end
 
       private def update_params(params)
@@ -176,9 +177,7 @@ module DNN
 
 
     class AdaDelta < Optimizer
-      # @return [Float] Return the rho value.
       attr_accessor :rho
-      # @return [Float] Return the eps value.
       attr_accessor :eps
 
       def self.from_hash(hash)
@@ -188,7 +187,7 @@ module DNN
       # @param [Float] rho Moving average index of past slopes.
       # @param [Float] eps Value to avoid division by zero.
       def initialize(rho: 0.95, eps: 1e-6, clip_norm: nil)
-        super(nil, clip_norm: clip_norm)
+        super(clip_norm: clip_norm)
         @rho = rho
         @eps = eps
         @h = {}
@@ -213,9 +212,8 @@ module DNN
 
 
     class RMSPropGraves < Optimizer
-      # @return [Float] Return the alpha value.
+      attr_accessor :lr
       attr_accessor :alpha
-      # @return [Float] Return the eps value.
       attr_accessor :eps
       
       def self.from_hash(hash)
@@ -226,7 +224,8 @@ module DNN
       # @param [Float] alpha Moving average index of past slopes.
       # @param [Float] eps Value to avoid division by zero.
       def initialize(lr = 0.0001, alpha: 0.95, eps: 0.0001, clip_norm: nil)
-        super(lr, clip_norm: clip_norm)
+        super(clip_norm: clip_norm)
+        @lr = lr
         @alpha = alpha
         @eps = eps
         @m = {}
@@ -234,7 +233,7 @@ module DNN
       end
 
       def to_hash
-        super(alpha: @alpha, eps: @eps)
+        super(lr: @lr, alpha: @alpha, eps: @eps)
       end
 
       private def update_params(params)
@@ -250,15 +249,10 @@ module DNN
 
 
     class Adam < Optimizer
-      # @return [Float] Return the alpha value.
       attr_accessor :alpha
-      # @return [Float] Return the beta1 value.
       attr_accessor :beta1
-      # @return [Float] Return the beta2 value.
       attr_accessor :beta2
-      # @return [Float] Return the eps value.
       attr_accessor :eps
-      # @return [Boolean] Return the enable amsgrad.
       attr_reader :amsgrad
       
       def self.from_hash(hash)
@@ -272,7 +266,7 @@ module DNN
       # @param [Float] eps Value to avoid division by zero.
       # @param [Boolean] amsgrad Setting the true enable amsgrad.
       def initialize(alpha: 0.001, beta1: 0.9, beta2: 0.999, eps: 1e-7, amsgrad: false, clip_norm: nil)
-        super(nil, clip_norm: clip_norm)
+        super(clip_norm: clip_norm)
         @alpha = alpha
         @beta1 = beta1
         @beta2 = beta2
@@ -286,7 +280,7 @@ module DNN
 
       def to_hash
         {
-          class: self.class.name, lr: nil, alpha: @alpha, beta1: @beta1, beta2: @beta2,
+          class: self.class.name, alpha: @alpha, beta1: @beta1, beta2: @beta2,
           eps: @eps, amsgrad: @amsgrad, clip_norm: @clip_norm
         }
       end
@@ -322,9 +316,7 @@ module DNN
 
 
     class AdaBound < Adam
-      # @return [Float] Return the final_lr value.
       attr_accessor :final_lr
-      # @return [Float] Return the gamma value.
       attr_accessor :gamma
       
       def self.from_hash(hash)
@@ -346,7 +338,7 @@ module DNN
 
       def to_hash
         {
-          class: self.class.name, lr: nil, alpha: @alpha, beta1: @beta1, beta2: @beta2,
+          class: self.class.name, alpha: @alpha, beta1: @beta1, beta2: @beta2,
           final_lr: @final_lr, gamma: @gamma, eps: @eps, amsgrad: amsgrad, clip_norm: @clip_norm
         }
       end

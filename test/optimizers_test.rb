@@ -7,16 +7,14 @@ include DNN::Optimizers
 
 class TestOptimizer < MiniTest::Unit::TestCase
   def test_initialize
-    optimizer = Optimizer.new(0.1)
-    assert_equal 0.1, optimizer.lr
+    optimizer = Optimizer.new
   end
 
   def test_to_hash
-    optimizer = Optimizer.new(0.1)
+    optimizer = Optimizer.new
     hash = optimizer.to_hash({momentum: 0.9})
     expected_hash = {
       class: "DNN::Optimizers::Optimizer",
-      lr: 0.1,
       momentum: 0.9,
       clip_norm: nil,
     }
@@ -222,7 +220,6 @@ class TestAdaDelta < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::AdaDelta",
-      lr: nil,
       rho: 0.95,
       eps: 1e-6,
       clip_norm: nil,
@@ -319,7 +316,6 @@ class TestAdam < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::Adam",
-      lr: nil,
       alpha: 0.001,
       beta1: 0.9,
       beta2: 0.999,
@@ -384,7 +380,6 @@ class TestAdaBound < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Optimizers::AdaBound",
-      lr: nil,
       alpha: 0.001,
       beta1: 0.9,
       beta2: 0.999,
