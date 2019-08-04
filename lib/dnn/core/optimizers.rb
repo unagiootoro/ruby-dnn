@@ -34,7 +34,7 @@ module DNN
       end
 
       private def clipping(params)
-        norm = Math.sqrt(params.reduce(0) { |sum, param| sum + (param.grad == 0 ? 0 : (param.grad**2).sum) })
+        norm = Math.sqrt(params.reduce(0) { |sum, param| sum + (param.grad == 0 ? 0 : (param.grad ** 2).sum) })
         return if norm <= @clip_norm
         rate = @clip_norm / (norm + 1e-7)
         params.each do |param|
@@ -105,7 +105,7 @@ module DNN
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           amount = param.grad * @lr
           @v[param] = @v[param] * @momentum - amount
-          param.data = (param.data + @momentum**2 * @v[param]) - (1 + @momentum) * amount
+          param.data = (param.data + @momentum ** 2 * @v[param]) - (1 + @momentum) * amount
         end
       end
     end
@@ -131,7 +131,7 @@ module DNN
       private def update_params(params)
         params.each do |param|
           @g[param] ||= Xumo::SFloat.zeros(*param.data.shape)
-          @g[param] += param.grad**2
+          @g[param] += param.grad ** 2
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
         end
       end
@@ -169,7 +169,7 @@ module DNN
       private def update_params(params)
         params.each do |param|
           @g[param] ||= Xumo::SFloat.zeros(*param.data.shape)
-          @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
+          @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad ** 2
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
         end
       end
@@ -202,9 +202,9 @@ module DNN
         params.each do |param|
           @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
-          @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
+          @h[param] = @rho * @h[param] + (1 - @rho) * param.grad ** 2
           v = (Xumo::NMath.sqrt(@s[param] + @eps) / Xumo::NMath.sqrt(@h[param] + @eps)) * param.grad
-          @s[param] = @rho * @s[param] + (1 - @rho) * v**2
+          @s[param] = @rho * @s[param] + (1 - @rho) * v ** 2
           param.data -= v
         end
       end
@@ -241,8 +241,8 @@ module DNN
           @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param] = @alpha * @m[param] + (1 - @alpha) * param.grad
-          @v[param] = @alpha * @v[param] + (1 - @alpha) * param.grad**2
-          param.data -= (@lr / Xumo::NMath.sqrt(@v[param] - @m[param]**2 + @eps)) * param.grad
+          @v[param] = @alpha * @v[param] + (1 - @alpha) * param.grad ** 2
+          param.data -= (@lr / Xumo::NMath.sqrt(@v[param] - @m[param] ** 2 + @eps)) * param.grad
         end
       end
     end
@@ -287,30 +287,20 @@ module DNN
 
       private def update_params(params)
         @t += 1
-        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t)
+        lr = @alpha * Math.sqrt(1 - @beta2 ** @t) / (1 - @beta1 ** @t)
         params.each do |param|
           @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param] += (1 - @beta1) * (param.grad - @m[param])
-          @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
+          @v[param] += (1 - @beta2) * (param.grad ** 2 - @v[param])
           if @amsgrad
             @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
-            @s[param] = max_sv(@s[param], @v[param])
+            @s[param] = Xumo::SFloat.maximum(@s[param], @v[param])
             param.data -= lr * @m[param] / Xumo::NMath.sqrt(@s[param] + @eps)
           else
             param.data -= lr * @m[param] / Xumo::NMath.sqrt(@v[param] + @eps)
           end
         end
-      end
-
-      private def max_sv(s, v)
-        s_max = Xumo::SFloat.zeros(*v.shape)
-        s_max[s >= v] = 1
-        s_max *= s
-        v_max = Xumo::SFloat.zeros(*v.shape)
-        v_max[s < v] = 1
-        v_max *= v
-        s_max + v_max
       end
     end
 
@@ -341,7 +331,7 @@ module DNN
 
       private def update_params(params)
         @t += 1
-        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t)
+        lr = @alpha * Math.sqrt(1 - @beta2 ** @t) / (1 - @beta1 ** @t)
         final_lr = @final_lr * lr / @alpha
         lower_bound = final_lr * (1 - 1 / (@gamma * @t + 1))
         upper_bound = final_lr * (1 + 1 / (@gamma * @t))
@@ -349,10 +339,10 @@ module DNN
           @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param] += (1 - @beta1) * (param.grad - @m[param])
-          @v[param] += (1 - @beta2) * (param.grad**2 - @v[param])
+          @v[param] += (1 - @beta2) * (param.grad ** 2 - @v[param])
           if @amsgrad
             @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
-            @s[param] = max_sv(@s[param], @v[param])
+            @s[param] = Xumo::SFloat.maximum(@s[param], @v[param])
             param.data -= clip_lr(lr / (Xumo::NMath.sqrt(@s[param]) + @eps), lower_bound, upper_bound) * @m[param]
           else
             param.data -= clip_lr(lr / (Xumo::NMath.sqrt(@v[param]) + @eps), lower_bound, upper_bound) * @m[param]

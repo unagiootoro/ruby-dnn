@@ -77,10 +77,8 @@ module DNN
       private
 
       def forward_loss(y, t)
-        @y = y
         @a = 1 - y * t
-        @a[@a < 0] = 0
-        @a
+        Xumo::SFloat.maximum(0, @a)
       end
 
       def backward_loss(t)

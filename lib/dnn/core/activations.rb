@@ -62,8 +62,7 @@ module DNN
     class ReLU < Layers::Layer
       def forward(x)
         @x = x
-        x[x < 0] = 0
-        x
+        Xumo::SFloat.maximum(0, x)
       end
 
       def backward(dy)
