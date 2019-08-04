@@ -16,7 +16,7 @@ module DNN
       end
 
       def to_hash(merge_hash = nil)
-        hash = {class: self.class.name, seed: @seed}
+        hash = { class: self.class.name, seed: @seed }
         hash.merge!(merge_hash) if merge_hash
         hash
       end

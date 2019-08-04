@@ -77,7 +77,7 @@ module DNN
       end
 
       def get_params
-        {gamma: @gamma, beta: @beta, running_mean: @running_mean, running_var: @running_var}
+        { gamma: @gamma, beta: @beta, running_mean: @running_mean, running_var: @running_var }
       end
     end
 

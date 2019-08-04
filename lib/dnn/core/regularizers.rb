@@ -13,7 +13,7 @@ module DNN
       end
 
       def to_hash(merge_hash)
-        hash = {class: self.class.name}
+        hash = { class: self.class.name }
         hash.merge!(merge_hash)
         hash
       end
@@ -103,7 +103,6 @@ module DNN
       def to_hash
         super(l1_lambda: l1_lambda, l2_lambda: l2_lambda)
       end
-
     end
 
   end

@@ -57,7 +57,7 @@ module DNN
 
       # Layer to a hash.
       def to_hash(merge_hash = nil)
-        hash = {class: self.class.name}
+        hash = { class: self.class.name }
         hash.merge!(merge_hash) if merge_hash
         hash
       end
@@ -171,15 +171,15 @@ module DNN
       end
 
       def to_hash(merge_hash)
-        super({weight_initializer: @weight_initializer.to_hash,
-               bias_initializer: @bias_initializer.to_hash,
-               weight_regularizer: @weight_regularizer&.to_hash,
-               bias_regularizer: @bias_regularizer&.to_hash,
-               use_bias: use_bias}.merge(merge_hash))
+        super({ weight_initializer: @weight_initializer.to_hash,
+                bias_initializer: @bias_initializer.to_hash,
+                weight_regularizer: @weight_regularizer&.to_hash,
+                bias_regularizer: @bias_regularizer&.to_hash,
+                use_bias: use_bias }.merge(merge_hash))
       end
 
       def get_params
-        {weight: @weight, bias: @bias}
+        { weight: @weight, bias: @bias }
       end
 
       private def init_weight_and_bias
@@ -329,8 +329,8 @@ module DNN
           Xumo::SFloat.srand(@rnd.rand(1 << 31))
           @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
           x[@mask] = 0
-        else
-          x *= (1 - @dropout_ratio) if @use_scale
+        elsif @use_scale
+          x *= (1 - @dropout_ratio)
         end
         x
       end

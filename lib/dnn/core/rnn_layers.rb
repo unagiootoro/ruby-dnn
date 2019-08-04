@@ -93,7 +93,7 @@ module DNN
       end
 
       def get_params
-        {weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden}
+        { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden }
       end
 
       # Reset the state of RNN.
@@ -357,7 +357,7 @@ module DNN
       end
 
       def get_params
-        {weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden, cell: @cell}
+        { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden, cell: @cell }
       end
     end
 

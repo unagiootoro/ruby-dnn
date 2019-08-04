@@ -50,7 +50,7 @@ module DNN
             [key, [param.data.shape, base64_data]]
           }.to_h
         end
-        hash = {version: VERSION, params: has_param_layers_params}
+        hash = { version: VERSION, params: has_param_layers_params }
         JSON.dump(hash)
       end
 

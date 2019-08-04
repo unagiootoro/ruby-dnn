@@ -23,7 +23,7 @@ module DNN
       end
 
       def to_hash(merge_hash = nil)
-        hash = {class: self.class.name, clip_norm: @clip_norm}
+        hash = { class: self.class.name, clip_norm: @clip_norm }
         hash.merge!(merge_hash) if merge_hash
         hash
       end

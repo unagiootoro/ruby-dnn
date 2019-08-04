@@ -24,7 +24,7 @@ module DNN
       end
 
       def to_hash(merge_hash = nil)
-        hash = {class: self.class.name}
+        hash = { class: self.class.name }
         hash.merge!(merge_hash) if merge_hash
         hash
       end

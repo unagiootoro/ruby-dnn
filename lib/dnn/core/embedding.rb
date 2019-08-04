@@ -68,7 +68,7 @@ module DNN
       end
 
       def get_params
-        {weight: @weight}
+        { weight: @weight }
       end
     end
 
