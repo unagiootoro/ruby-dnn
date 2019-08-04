@@ -200,7 +200,7 @@ module DNN
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes)
         @bias.data = Xumo::SFloat.new(@num_nodes) if @bias
         init_weight_and_bias
-        @time_length.times do |t|
+        @time_length.times do
           @layers << SimpleRNN_Dense.new(@weight, @recurrent_weight, @bias, @activation)
         end
       end
@@ -307,7 +307,7 @@ module DNN
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 4)
         @bias.data = Xumo::SFloat.new(@num_nodes * 4) if @bias
         init_weight_and_bias
-        @time_length.times do |t|
+        @time_length.times do
           @layers << LSTM_Dense.new(@weight, @recurrent_weight, @bias)
         end
       end
@@ -466,7 +466,7 @@ module DNN
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 3)
         @bias.data = Xumo::SFloat.new(@num_nodes * 3) if @bias
         init_weight_and_bias
-        @time_length.times do |t|
+        @time_length.times do
           @layers << GRU_Dense.new(@weight, @recurrent_weight, @bias)
         end
       end

@@ -169,7 +169,7 @@ module DNN
         total_correct = 0
         sum_loss = 0
         max_steps = (x.shape[0].to_f / batch_size)
-        max_steps.ceil.times do |i|
+        max_steps.ceil.times do
           x_batch, y_batch = iter.next_batch(batch_size)
           correct, loss_value = test_on_batch(x_batch, y_batch, before_test_on_batch_cbk: before_test_on_batch_cbk,
                                               after_test_on_batch_cbk: after_test_on_batch_cbk)
@@ -231,7 +231,7 @@ module DNN
         bin = Zlib::Deflate.deflate(Marshal.dump(self))
         begin
           File.binwrite(file_name, bin)
-        rescue Errno::ENOENT => ex
+        rescue Errno::ENOENT
           dir_name = file_name.match(%r`(.*)/.+$`)[1]
           Dir.mkdir(dir_name)
           File.binwrite(file_name, bin)
