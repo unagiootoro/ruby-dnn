@@ -96,7 +96,7 @@ end
 
 
 
-class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
+class TestSimpleRNNDense < MiniTest::Unit::TestCase
   def test_forward
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
@@ -107,7 +107,7 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Numo::SFloat.new(16).fill(0)
 
-    dense = SimpleRNN_Dense.new(w, w2, b, Tanh.new)
+    dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
     assert_equal [1, 16], dense.forward(x, h).shape
   end
 
@@ -125,7 +125,7 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16).fill(0)
     b.grad = 0
 
-    dense = SimpleRNN_Dense.new(w, w2, b, Tanh.new)
+    dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
     dense.forward(x, h)
     dx, dh = dense.backward(dh2)
     assert_equal [1, 64], dx.shape
@@ -143,7 +143,7 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     w2.data = Numo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
 
-    dense = SimpleRNN_Dense.new(w, w2, nil, Tanh.new)
+    dense = SimpleRNNDense.new(w, w2, nil, Tanh.new)
     dense.forward(x, h)
     dense.backward(dh2)
     assert_nil dense.instance_variable_get(:@bias)
@@ -163,7 +163,7 @@ class TestSimpleRNN_Dense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16).fill(0)
     b.grad = 0
 
-    dense = SimpleRNN_Dense.new(w, w2, b, Tanh.new)
+    dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
     dense.trainable = false
     dense.forward(x, h)
     dense.backward(dh2)
@@ -291,12 +291,12 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat.new(32, 64).fill(2), rnn.weight.data
     assert_equal Numo::SFloat.new(64, 64).fill(2), rnn.recurrent_weight.data
     assert_equal Numo::SFloat.new(64).fill(2), rnn.bias.data
-    assert_kind_of SimpleRNN_Dense, rnn.instance_variable_get(:@layers)[15]
+    assert_kind_of SimpleRNNDense, rnn.instance_variable_get(:@layers)[15]
   end
 end
 
 
-class TestLSTM_Dense < MiniTest::Unit::TestCase
+class TestLSTMDense < MiniTest::Unit::TestCase
   def test_forward
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
@@ -308,7 +308,7 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 4).fill(0)
 
-    dense = LSTM_Dense.new(w, w2, b)
+    dense = LSTMDense.new(w, w2, b)
     h2, c2 = dense.forward(x, h, c)
     assert_equal [1, 16], h2.shape
     assert_equal [1, 16], c2.shape
@@ -330,7 +330,7 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
-    dense = LSTM_Dense.new(w, w2, b)
+    dense = LSTMDense.new(w, w2, b)
     dense.forward(x, h, c)
     dx, dh, dc = dense.backward(dh2, dc2)
     assert_equal [1, 64], dx.shape
@@ -351,7 +351,7 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
 
-    dense = LSTM_Dense.new(w, w2, nil)
+    dense = LSTMDense.new(w, w2, nil)
     dense.forward(x, h, c)
     dense.backward(dh2, dc2)
     assert_nil dense.instance_variable_get(:@bias)
@@ -373,7 +373,7 @@ class TestLSTM_Dense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
-    dense = LSTM_Dense.new(w, w2, b)
+    dense = LSTMDense.new(w, w2, b)
     dense.trainable = false
     dense.forward(x, h, c)
     dense.backward(dh2, dc2)
@@ -489,7 +489,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat.new(32, 256).fill(2), lstm.weight.data
     assert_equal Numo::SFloat.new(64, 256).fill(2), lstm.recurrent_weight.data
     assert_equal Numo::SFloat.new(256).fill(2), lstm.bias.data
-    assert_kind_of LSTM_Dense, lstm.instance_variable_get(:@layers)[15]
+    assert_kind_of LSTMDense, lstm.instance_variable_get(:@layers)[15]
   end
 
   def test_to_hash
@@ -526,7 +526,7 @@ class TestLSTM < MiniTest::Unit::TestCase
 end
 
 
-class TestGRU_Dense < MiniTest::Unit::TestCase
+class TestGRUDense < MiniTest::Unit::TestCase
   def test_forward
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
@@ -537,7 +537,7 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 3).fill(0)
 
-    dense = GRU_Dense.new(w, w2, b)
+    dense = GRUDense.new(w, w2, b)
     assert_equal [1, 16], dense.forward(x, h).shape
   end
 
@@ -554,7 +554,7 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
-    dense = GRU_Dense.new(w, w2, b)
+    dense = GRUDense.new(w, w2, b)
     dense.forward(x, h)
     dx, dh = dense.backward(dh2)
     assert_equal [1, 64], dx.shape
@@ -575,7 +575,7 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
 
-    dense = GRU_Dense.new(w, w2, nil)
+    dense = GRUDense.new(w, w2, nil)
     dense.forward(x, h)
     dense.backward(dh2)
     assert_nil dense.instance_variable_get(:@bias)
@@ -594,7 +594,7 @@ class TestGRU_Dense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Numo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
-    dense = GRU_Dense.new(w, w2, b)
+    dense = GRUDense.new(w, w2, b)
     dense.trainable = false
     dense.forward(x, h)
     dense.backward(dh2)
@@ -661,6 +661,6 @@ class TestGRU < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat.new(32, 192).fill(2), gru.weight.data
     assert_equal Numo::SFloat.new(64, 192).fill(2), gru.recurrent_weight.data
     assert_equal Numo::SFloat.new(192).fill(2), gru.bias.data
-    assert_kind_of GRU_Dense, gru.instance_variable_get(:@layers)[15]
+    assert_kind_of GRUDense, gru.instance_variable_get(:@layers)[15]
   end
 end

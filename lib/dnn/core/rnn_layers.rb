@@ -15,7 +15,7 @@ module DNN
       # @param [Boolean] stateful Maintain state between batches.
       # @param [Boolean] return_sequences Set the false, only the last of each cell of RNN is left.
       # @param [DNN::Initializers::Initializer] recurrent_weight_initializer Recurrent weight initializer.
-      # @param [DNN::Regularizers::Regularizer | NilClass] recurrent_weight_regularizer Recurrent weight regularization.
+      # @param [DNN::Regularizers::Regularizer | NilClass] recurrent_weight_regularizer Recurrent weight regularizer.
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
@@ -117,7 +117,7 @@ module DNN
     end
 
 
-    class SimpleRNN_Dense
+    class SimpleRNNDense
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias, activation)
@@ -201,7 +201,7 @@ module DNN
         @bias.data = Xumo::SFloat.new(@num_nodes) if @bias
         init_weight_and_bias
         @time_length.times do
-          @layers << SimpleRNN_Dense.new(@weight, @recurrent_weight, @bias, @activation)
+          @layers << SimpleRNNDense.new(@weight, @recurrent_weight, @bias, @activation)
         end
       end
 
@@ -211,7 +211,7 @@ module DNN
     end
 
 
-    class LSTM_Dense
+    class LSTMDense
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias)
@@ -308,7 +308,7 @@ module DNN
         @bias.data = Xumo::SFloat.new(@num_nodes * 4) if @bias
         init_weight_and_bias
         @time_length.times do
-          @layers << LSTM_Dense.new(@weight, @recurrent_weight, @bias)
+          @layers << LSTMDense.new(@weight, @recurrent_weight, @bias)
         end
       end
 
@@ -362,7 +362,7 @@ module DNN
     end
 
 
-    class GRU_Dense
+    class GRUDense
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias)
@@ -467,7 +467,7 @@ module DNN
         @bias.data = Xumo::SFloat.new(@num_nodes * 3) if @bias
         init_weight_and_bias
         @time_length.times do
-          @layers << GRU_Dense.new(@weight, @recurrent_weight, @bias)
+          @layers << GRUDense.new(@weight, @recurrent_weight, @bias)
         end
       end
     end
