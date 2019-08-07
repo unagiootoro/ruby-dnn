@@ -14,7 +14,9 @@ module DNN
       end
 
       # @param [Integer | Array] input_dim_or_shape Set input data dimension or shape.
-      # @param [Integer] input_length input Set the time series length of input data.
+      # @param [Integer] input_length Set the time series length of input data.
+      # @param [DNN::Initializers::Initializer] weight_initializer Weight initializer.
+      # @param [DNN::Regularizers::Regularizer | NilClass] weight_regularizer Weight regularizer.
       def initialize(input_dim_or_shape, input_length,
                      weight_initializer: Initializers::RandomUniform.new,
                      weight_regularizer: nil)
