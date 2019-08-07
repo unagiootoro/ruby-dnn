@@ -15,7 +15,7 @@ module DNN
         target_params = layers.select { |layer| layer.is_a?(HasParamLayer) && layer.trainable }
                               .map { |layer| layer.get_params.values }.flatten.compact
                               .select { |param| param.grad }
-        clipping(target_params) if @clip_norm
+        clip_grads(target_params) if @clip_norm
         update_params(target_params)
         target_params.each do |param|
           param.grad = Xumo::SFloat.zeros(*param.data.shape)
@@ -33,7 +33,7 @@ module DNN
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update_param'")
       end
 
-      private def clipping(params)
+      private def clip_grads(params)
         norm = Math.sqrt(params.reduce(0) { |sum, param| sum + (param.grad == 0 ? 0 : (param.grad ** 2).sum) })
         return if norm <= @clip_norm
         rate = @clip_norm / (norm + 1e-7)
