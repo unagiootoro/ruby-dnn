@@ -151,11 +151,7 @@ module DNN
         @weight_regularizer = weight_regularizer
         @bias_regularizer = bias_regularizer
         @weight = Param.new(nil, 0)
-        if use_bias
-          @bias = Param.new(nil, 0)
-        else
-          @bias = nil
-        end
+        @bias = use_bias ? Param.new(nil, 0) : nil
       end
 
       def regularizers
