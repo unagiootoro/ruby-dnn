@@ -127,7 +127,7 @@ module DNN
       attr_accessor :eps
 
       def self.from_hash(hash)
-        SoftmaxCrossEntropy.new(eps: hash[:eps])
+        self.new(eps: hash[:eps])
       end
 
       def self.softmax(y)
@@ -161,7 +161,7 @@ module DNN
       attr_accessor :eps
 
       def self.from_hash(hash)
-        SigmoidCrossEntropy.new(eps: hash[:eps])
+        self.new(eps: hash[:eps])
       end
 
       # @param [Float] eps Value to avoid nan.
@@ -176,7 +176,7 @@ module DNN
       private
 
       def forward_loss(y, t)
-        @y = Sigmoid.new.forward(y)
+        @y = Activations::Sigmoid.new.forward(y)
         -(t * Xumo::NMath.log(@y) + (1 - t) * Xumo::NMath.log(1 - @y))
       end
 
