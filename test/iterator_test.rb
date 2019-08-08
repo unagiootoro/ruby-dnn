@@ -16,7 +16,7 @@ class TestIterator < MiniTest::Unit::TestCase
 
   def test_next_batch2
     x_datas = Numo::Int32.new(10, 1).seq
-    iter = DNN::Iterator.new(x_datas, x_datas, false)
+    iter = DNN::Iterator.new(x_datas, x_datas, random: false)
 
     iter.next_batch(7)
     x, * = iter.next_batch(7)

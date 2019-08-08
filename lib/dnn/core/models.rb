@@ -165,7 +165,7 @@ module DNN
       def accurate(x, y, batch_size: 100, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
         check_xy_type(x, y)
         batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
-        iter = Iterator.new(x, y, false)
+        iter = Iterator.new(x, y, random: false)
         total_correct = 0
         sum_loss = 0
         max_steps = (x.shape[0].to_f / batch_size)
