@@ -154,18 +154,17 @@ module DNN
       attr_reader :activation
 
       def self.from_hash(hash)
-        simple_rnn = self.new(hash[:num_nodes],
-                              stateful: hash[:stateful],
-                              return_sequences: hash[:return_sequences],
-                              activation: Utils.from_hash(hash[:activation]),
-                              weight_initializer: Utils.from_hash(hash[:weight_initializer]),
-                              recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
-                              bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                              weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
-                              recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
-                              bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
-                              use_bias: hash[:use_bias])
-        simple_rnn
+        self.new(hash[:num_nodes],
+                 stateful: hash[:stateful],
+                 return_sequences: hash[:return_sequences],
+                 activation: Utils.from_hash(hash[:activation]),
+                 weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                 recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
+                 bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                 weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                 recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
+                 bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                 use_bias: hash[:use_bias])
       end
 
       # @param [DNN::Layers::Layer] activation Activation function to use in a recurrent network.
@@ -273,17 +272,16 @@ module DNN
       attr_reader :cell
 
       def self.from_hash(hash)
-        lstm = self.new(hash[:num_nodes],
-                        stateful: hash[:stateful],
-                        return_sequences: hash[:return_sequences],
-                        weight_initializer: Utils.from_hash(hash[:weight_initializer]),
-                        recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
-                        bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                        weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
-                        recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
-                        bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
-                        use_bias: hash[:use_bias])
-        lstm
+        self.new(hash[:num_nodes],
+                 stateful: hash[:stateful],
+                 return_sequences: hash[:return_sequences],
+                 weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                 recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
+                 bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                 weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                 recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
+                 bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                 use_bias: hash[:use_bias])
       end
 
       def initialize(num_nodes,
@@ -433,17 +431,16 @@ module DNN
 
     class GRU < RNN
       def self.from_hash(hash)
-        gru = self.new(hash[:num_nodes],
-                       stateful: hash[:stateful],
-                       return_sequences: hash[:return_sequences],
-                       weight_initializer: Utils.from_hash(hash[:weight_initializer]),
-                       recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
-                       bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                       weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
-                       recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
-                       bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
-                       use_bias: hash[:use_bias])
-        gru
+        self.new(hash[:num_nodes],
+                 stateful: hash[:stateful],
+                 return_sequences: hash[:return_sequences],
+                 weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                 recurrent_weight_initializer: Utils.from_hash(hash[:recurrent_weight_initializer]),
+                 bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                 weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                 recurrent_weight_regularizer: Utils.from_hash(hash[:recurrent_weight_regularizer]),
+                 bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                 use_bias: hash[:use_bias])
       end
 
       def initialize(num_nodes,

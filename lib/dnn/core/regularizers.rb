@@ -23,7 +23,7 @@ module DNN
       attr_accessor :l1_lambda
 
       def self.from_hash(hash)
-        L1.new(hash[:l1_lambda])
+        self.new(hash[:l1_lambda])
       end
 
       # @param [Float] l1_lambda L1 regularizer coefficient.
@@ -51,7 +51,7 @@ module DNN
       attr_accessor :l2_lambda
 
       def self.from_hash(hash)
-        L2.new(hash[:l2_lambda])
+        self.new(hash[:l2_lambda])
       end
 
       # @param [Float] l2_lambda L2 regularizer coefficient.
@@ -77,7 +77,7 @@ module DNN
       attr_accessor :l2_lambda
 
       def self.from_hash(hash)
-        L1L2.new(hash[:l1_lambda], hash[:l2_lambda])
+        self.new(hash[:l1_lambda], hash[:l2_lambda])
       end
 
       # @param [Float] l1_lambda L1 regularizer coefficient.

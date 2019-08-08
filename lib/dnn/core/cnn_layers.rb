@@ -93,14 +93,14 @@ module DNN
       attr_reader :padding
 
       def self.from_hash(hash)
-        Conv2D.new(hash[:num_filters], hash[:filter_size],
-                   weight_initializer: Utils.from_hash(hash[:weight_initializer]),
-                   bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                   weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
-                   bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
-                   use_bias: hash[:use_bias],
-                   strides: hash[:strides],
-                   padding: hash[:padding])
+        self.new(hash[:num_filters], hash[:filter_size],
+                 weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                 bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                 weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                 bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                 use_bias: hash[:use_bias],
+                 strides: hash[:strides],
+                 padding: hash[:padding])
       end
 
       # @param [Integer] num_filters Number of filters.
@@ -196,14 +196,14 @@ module DNN
       attr_reader :padding
 
       def self.from_hash(hash)
-        Conv2DTranspose.new(hash[:num_filters], hash[:filter_size],
-                            weight_initializer: Utils.from_hash(hash[:weight_initializer]),
-                            bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                            weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
-                            bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
-                            use_bias: hash[:use_bias],
-                            strides: hash[:strides],
-                            padding: hash[:padding])
+        self.new(hash[:num_filters], hash[:filter_size],
+                 weight_initializer: Utils.from_hash(hash[:weight_initializer]),
+                 bias_initializer: Utils.from_hash(hash[:bias_initializer]),
+                 weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
+                 bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                 use_bias: hash[:use_bias],
+                 strides: hash[:strides],
+                 padding: hash[:padding])
       end
 
       # @param [Integer] num_filters Number of filters.
@@ -405,7 +405,7 @@ module DNN
       end
 
       def self.from_hash(hash)
-        UnPool2D.new(hash[:unpool_size])
+        self.new(hash[:unpool_size])
       end
 
       def build(input_shape)
