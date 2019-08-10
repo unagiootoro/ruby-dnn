@@ -28,8 +28,7 @@ module DNN
         hash = JSON.parse(json_str, symbolize_names: true)
         has_param_layers_params = hash[:params]
         has_param_layers_index = 0
-        has_param_layers = layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
-        has_param_layers.each do |layer|
+        has_param_layers.uniq.each do |layer|
           hash_params = has_param_layers_params[has_param_layers_index]
           hash_params.each do |key, (shape, base64_param)|
             bin = Base64.decode64(base64_param)
@@ -43,8 +42,7 @@ module DNN
       # Convert model parameters to JSON string.
       # @return [String] JSON string.
       def params_to_json
-        has_param_layers = layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }.uniq
-        has_param_layers_params = has_param_layers.map do |layer|
+        has_param_layers_params = has_param_layers.uniq.map do |layer|
           layer.get_params.map { |key, param|
             base64_data = Base64.encode64(param.data.to_binary)
             [key, [param.data.shape, base64_data]]
@@ -238,7 +236,7 @@ module DNN
         end
       end
 
-      # @return [DNN::Model] Copy this model.
+      # @return [DNN::Models::Model] Return the copy this model.
       def copy
         Marshal.load(Marshal.dump(self))
       end
@@ -269,6 +267,13 @@ module DNN
       end
 
       # Get the layer that the model has.
+      # @overload get_layer(index)
+      # @param [Integer] The index of the layer to get.
+      # @return [DNN::Layers::Layer] Return the layer.
+      # @overload get_layer(layer_class, index)
+      # @param [Integer] The index of the layer to get.
+      # @param [Class] The class of the layer to get.
+      # @return [DNN::Layers::Layer] Return the layer.
       def get_layer(*args)
         if args.length == 1
           index = args[0]
