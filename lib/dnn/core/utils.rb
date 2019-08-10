@@ -26,12 +26,12 @@ module DNN
 
     # Return the result of the sigmoid function.
     def self.sigmoid(x)
-      Sigmoid.new.forward(x)
+      Activations::Sigmoid.new.forward(x)
     end
 
     # Return the result of the softmax function.
     def self.softmax(x)
-      SoftmaxCrossEntropy.softmax(x)
+      Losses::SoftmaxCrossEntropy.softmax(x)
     end
   end
 end
