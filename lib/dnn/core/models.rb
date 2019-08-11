@@ -22,6 +22,21 @@ module DNN
         @built = false
       end
 
+      # Load hash model parameters.
+      # @param [Hash] hash Hash to load model parameters.
+      def load_hash_params(hash)
+        has_param_layers_params = hash[:params]
+        has_param_layers_index = 0
+        has_param_layers.uniq.each do |layer|
+          hash_params = has_param_layers_params[has_param_layers_index]
+          hash_params.each do |key, (shape, bin)|
+            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
+            layer.get_params[key].data = data
+          end
+          has_param_layers_index += 1
+        end
+      end
+
       # Load json model parameters.
       # @param [String] json_str JSON string to load model parameters.
       def load_json_params(json_str)
@@ -39,8 +54,19 @@ module DNN
         end
       end
 
+      # Convert model parameters to hash.
+      # @return [Hash] Return the hash of model parameters.
+      def params_to_hash
+        has_param_layers_params = has_param_layers.uniq.map do |layer|
+          layer.get_params.map { |key, param|
+            [key, [param.data.shape, param.data.to_binary]]
+          }.to_h
+        end
+        { version: VERSION, params: has_param_layers_params }
+      end
+
       # Convert model parameters to JSON string.
-      # @return [String] JSON string.
+      # @return [String] Return the JSON string.
       def params_to_json
         has_param_layers_params = has_param_layers.uniq.map do |layer|
           layer.get_params.map { |key, param|

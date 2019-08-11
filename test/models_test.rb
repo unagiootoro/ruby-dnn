@@ -10,6 +10,19 @@ include DNN::Models
 
 
 class TestSequential < MiniTest::Unit::TestCase
+  def test_load_hash_params
+    model = Sequential.new
+    model << InputLayer.new([10])
+    dense = Dense.new(10)
+    model << dense
+    model.setup(SGD.new, MeanSquaredError.new)
+    model.predict1(Numo::SFloat.zeros(10))
+    hash = model.params_to_hash
+    model.load_hash_params(hash)
+    model.predict1(Numo::SFloat.zeros(10))
+    assert_equal dense.get_params[:weight].data, model.layers[1].get_params[:weight].data
+  end
+
   def test_load_json_params
     model = Sequential.new
     model << InputLayer.new([10])
@@ -33,6 +46,21 @@ class TestSequential < MiniTest::Unit::TestCase
     json = model.params_to_json
     param = JSON.parse(json)["params"][0]["weight"]
     bin = Base64.decode64(param[1])
+    data = Xumo::SFloat.from_binary(bin).reshape(*param[0])
+
+    assert_equal dense.get_params[:weight].data, data
+  end
+
+  def test_params_to_hash
+    model = Sequential.new
+    model << InputLayer.new([10])
+    dense = Dense.new(10)
+    model << dense
+    model.setup(SGD.new, MeanSquaredError.new)
+    model.predict1(Numo::SFloat.zeros(10))
+    hash = model.params_to_hash
+    param = hash[:params][0][:weight]
+    bin = param[1]
     data = Xumo::SFloat.from_binary(bin).reshape(*param[0])
 
     assert_equal dense.get_params[:weight].data, data
