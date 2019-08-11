@@ -15,13 +15,13 @@ class TestUtils < MiniTest::Unit::TestCase
     assert_kind_of Numo::SFloat, y2
   end
 
-  def test_from_hash
-    relu = Utils.from_hash({class: "DNN::Activations::ReLU"})
+  def test_hash_to_obj
+    relu = Utils.hash_to_obj({class: "DNN::Activations::ReLU"})
     assert_kind_of ReLU, relu
   end
 
-  def test_load_hash2
-    lrelu = Utils.from_hash({class: "DNN::Activations::LeakyReLU", alpha: 0.2})
+  def test_hash_to_obj2
+    lrelu = Utils.hash_to_obj({class: "DNN::Activations::LeakyReLU", alpha: 0.2})
     assert_equal 0.2, lrelu.alpha
   end
 

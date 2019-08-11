@@ -15,7 +15,7 @@ module DNN
     end
 
     # Convert hash to an object.
-    def self.from_hash(hash)
+    def self.hash_to_obj(hash)
       return nil if hash == nil
       dnn_class = DNN.const_get(hash[:class])
       if dnn_class.respond_to?(:from_hash)

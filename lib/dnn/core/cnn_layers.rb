@@ -94,10 +94,10 @@ module DNN
 
       def self.from_hash(hash)
         self.new(hash[:num_filters], hash[:filter_size],
-                 weight_initializer: Utils.from_hash(hash[:weight_initializer]),
-                 bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                 weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
-                 bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
+                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
+                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
+                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
                  use_bias: hash[:use_bias],
                  strides: hash[:strides],
                  padding: hash[:padding])
@@ -197,10 +197,10 @@ module DNN
 
       def self.from_hash(hash)
         self.new(hash[:num_filters], hash[:filter_size],
-                 weight_initializer: Utils.from_hash(hash[:weight_initializer]),
-                 bias_initializer: Utils.from_hash(hash[:bias_initializer]),
-                 weight_regularizer: Utils.from_hash(hash[:weight_regularizer]),
-                 bias_regularizer: Utils.from_hash(hash[:bias_regularizer]),
+                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
+                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
+                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
+                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
                  use_bias: hash[:use_bias],
                  strides: hash[:strides],
                  padding: hash[:padding])

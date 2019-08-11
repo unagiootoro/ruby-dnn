@@ -9,8 +9,8 @@ module DNN
 
       def self.from_hash(hash)
         self.new(hash[:input_shape], hash[:input_length],
-                 weight_initializer: DNN::Utils.from_hash(hash[:weight_initializer]),
-                 weight_regularizer: DNN::Utils.from_hash(hash[:weight_regularizer]))
+                 weight_initializer: DNN::Utils.hash_to_obj(hash[:weight_initializer]),
+                 weight_regularizer: DNN::Utils.hash_to_obj(hash[:weight_regularizer]))
       end
 
       # @param [Integer | Array] input_dim_or_shape Set input data dimension or shape.
