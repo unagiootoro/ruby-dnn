@@ -294,12 +294,12 @@ module DNN
 
       # Get the layer that the model has.
       # @overload get_layer(index)
-      # @param [Integer] The index of the layer to get.
-      # @return [DNN::Layers::Layer] Return the layer.
+      #   @param [Integer] The index of the layer to get.
+      #   @return [DNN::Layers::Layer] Return the layer.
       # @overload get_layer(layer_class, index)
-      # @param [Integer] The index of the layer to get.
-      # @param [Class] The class of the layer to get.
-      # @return [DNN::Layers::Layer] Return the layer.
+      #   @param [Integer] The index of the layer to get.
+      #   @param [Class] The class of the layer to get.
+      #   @return [DNN::Layers::Layer] Return the layer.
       def get_layer(*args)
         if args.length == 1
           index = args[0]
