@@ -11,8 +11,8 @@ module DNN
         dir_path = "#{__dir__}/downloads"
       end
       Downloader.new(url).download(dir_path)
-    rescue => ex
-      raise DNN_DownloadError.new(ex.message)
+    rescue => e
+      raise DNN_DownloadError.new(e.message)
     end
 
     def initialize(url)
@@ -42,7 +42,7 @@ module DNN
         end
         puts ""
       end
-      file_name = @path.match(%r`.+/(.+)`)[1]
+      file_name = @path.match(%r`.*/(.+)`)[1]
       File.binwrite("#{dir_path}/#{file_name}", buf)
     end
   end
