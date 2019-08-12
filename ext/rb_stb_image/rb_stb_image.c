@@ -3,9 +3,11 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
 
 #include "../../third_party/stb_image.h"
 #include "../../third_party/stb_image_write.h"
+#include "../../third_party/stb_image_resize.h"
 
 // STBIDEF stbi_uc *stbi_load(char const *filename, int *x, int *y, int *comp, int req_comp);
 static VALUE rb_stbi_load(VALUE self, VALUE rb_filename, VALUE rb_req_comp) {
@@ -94,6 +96,33 @@ static VALUE rb_stbi_write_jpg(VALUE self, VALUE rb_filename, VALUE rb_w, VALUE 
   return INT2FIX(result);
 }
 
+// STBIRDEF int stbir_resize_uint8(     const unsigned char *input_pixels , int input_w , int input_h , int input_stride_in_bytes,
+//                                            unsigned char *output_pixels, int output_w, int output_h, int output_stride_in_bytes,
+//                                      int num_channels);
+static VALUE rb_stbir_resize_uint8(VALUE self, VALUE rb_input_pixels, VALUE rb_input_w, VALUE rb_input_h, VALUE rb_input_stride_in_bytes,
+                                   VALUE rb_output_w, VALUE rb_output_h, VALUE rb_output_stride_in_bytes, VALUE rb_num_channels) {
+  uint8_t* input_pixels = (uint8_t*)StringValuePtr(rb_input_pixels);
+  int32_t input_w = FIX2INT(rb_input_w);
+  int32_t input_h = FIX2INT(rb_input_h);
+  int32_t input_stride_in_bytes = FIX2INT(rb_input_stride_in_bytes);
+  int32_t output_w = FIX2INT(rb_output_w);
+  int32_t output_h = FIX2INT(rb_output_h);
+  int32_t output_stride_in_bytes = FIX2INT(rb_output_stride_in_bytes);
+  int32_t num_channels = FIX2INT(rb_num_channels);
+  uint8_t* output_pixels;
+  VALUE rb_output_pixels;
+  int32_t result;
+  const int32_t output_size = output_h * output_w * num_channels;
+
+  output_pixels = (uint8_t*)malloc(output_size);
+  result = stbir_resize_uint8(input_pixels, input_w, input_h, input_stride_in_bytes,
+                              output_pixels, output_w, output_h, output_stride_in_bytes, num_channels);
+  rb_output_pixels = rb_str_new((char*)output_pixels, output_size);
+  free(output_pixels);
+  return rb_ary_new3(2, rb_output_pixels, INT2FIX(result));
+}
+
+
 void Init_rb_stb_image() {
   VALUE rb_dnn = rb_define_module("DNN");
   VALUE rb_stb = rb_define_module_under(rb_dnn, "Stb");
@@ -104,4 +133,5 @@ void Init_rb_stb_image() {
   rb_define_module_function(rb_stb, "stbi_write_tga", rb_stbi_write_tga, 5);
   rb_define_module_function(rb_stb, "stbi_write_hdr", rb_stbi_write_hdr, 5);
   rb_define_module_function(rb_stb, "stbi_write_jpg", rb_stbi_write_jpg, 6);
+  rb_define_module_function(rb_stb, "stbir_resize_uint8", rb_stbir_resize_uint8, 8);
 }
