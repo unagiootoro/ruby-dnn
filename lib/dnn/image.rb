@@ -3,8 +3,14 @@ require_relative "../../ext/rb_stb_image/rb_stb_image"
 
 module DNN
   module Image
+    class ImageError < StandardError; end
+
+    class ImageReadError < ImageError; end
+
+    class ImageWriteError < ImageError; end
+
     def self.read(file_name)
-      raise Image::ReadError.new("#{file_name} is not found.") unless File.exist?(file_name)
+      raise ImageReadError.new("#{file_name} is not found.") unless File.exist?(file_name)
       bin, w, h, n = Stb.stbi_load(file_name, 3)
       img = Numo::UInt8.from_binary(bin)
       img.reshape(h, w, 3)
@@ -27,20 +33,15 @@ module DNN
       case file_name
       when /\.png$/i
         stride_in_bytes = w * ch
-        Stb.stbi_write_png(file_name, w, h, ch, bin, stride_in_bytes)
+        res = Stb.stbi_write_png(file_name, w, h, ch, bin, stride_in_bytes)
       when /\.bmp$/i
-        Stb.stbi_write_bmp(file_name, w, h, ch, bin)
+        res = Stb.stbi_write_bmp(file_name, w, h, ch, bin)
       when /\.jpg$/i, /\.jpeg/i
-        Stb.stbi_write_jpg(file_name, w, h, ch, bin, quality)
+        res = Stb.stbi_write_jpg(file_name, w, h, ch, bin, quality)
       end
-    rescue => ex
-      raise Image::WriteError.new(ex.message)
+      raise ImageWriteError.new("Image write failed.") if res == 0
+    rescue => e
+      raise ImageWriteError.new(e.message)
     end
   end
-
-  class Image::Error < StandardError; end
-
-  class Image::ReadError < Image::Error; end
-
-  class Image::WriteError < Image::Error; end
 end

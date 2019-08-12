@@ -6,10 +6,12 @@ module DNN
   module MNIST
     class DNN_MNIST_LoadError < DNN_Error; end
 
-    URL_TRAIN_IMAGES = "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz"
-    URL_TRAIN_LABELS = "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz"
-    URL_TEST_IMAGES = "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz"
-    URL_TEST_LABELS = "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"
+    URL_BASE = "http://yann.lecun.com/exdb/mnist/"
+
+    URL_TRAIN_IMAGES = URL_BASE + "train-images-idx3-ubyte.gz"
+    URL_TRAIN_LABELS = URL_BASE + "train-labels-idx1-ubyte.gz"
+    URL_TEST_IMAGES = URL_BASE + "t10k-images-idx3-ubyte.gz"
+    URL_TEST_LABELS = URL_BASE + "t10k-labels-idx1-ubyte.gz"
 
     def self.downloads
       return if Dir.exist?(mnist_dir)
@@ -51,9 +53,7 @@ module DNN
       [images, labels]
     end
 
-    private_class_method
-
-    def self.load_images(file_name)
+    private_class_method def self.load_images(file_name)
       images = nil
       Zlib::GzipReader.open(file_name) do |f|
         magic, num_images = f.read(8).unpack("N2")
@@ -64,7 +64,7 @@ module DNN
       images
     end
 
-    def self.load_labels(file_name)
+    private_class_method def self.load_labels(file_name)
       labels = nil
       Zlib::GzipReader.open(file_name) do |f|
         magic, num_labels = f.read(8).unpack("N2")
@@ -73,11 +73,11 @@ module DNN
       labels
     end
 
-    def self.mnist_dir
+    private_class_method def self.mnist_dir
       "#{__dir__}/downloads/mnist"
     end
 
-    def self.url_to_file_name(url)
+    private_class_method def self.url_to_file_name(url)
       mnist_dir + "/" + url.match(%r`.+/(.+)$`)[1]
     end
   end

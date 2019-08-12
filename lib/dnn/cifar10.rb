@@ -16,7 +16,7 @@ module DNN
       cifar10_binary_file_name = __dir__ + "/downloads/" + URL_CIFAR10.match(%r`.+/(.+)`)[1]
       begin
         Zlib::GzipReader.open(cifar10_binary_file_name) do |gz|
-          Archive::Tar::Minitar::unpack(gz, __dir__ + "/downloads")
+          Archive::Tar::Minitar.unpack(gz, __dir__ + "/downloads")
         end
       ensure
         File.unlink(cifar10_binary_file_name)
