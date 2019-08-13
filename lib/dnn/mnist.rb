@@ -8,48 +8,52 @@ module DNN
 
     URL_BASE = "http://yann.lecun.com/exdb/mnist/"
 
-    URL_TRAIN_IMAGES = URL_BASE + "train-images-idx3-ubyte.gz"
-    URL_TRAIN_LABELS = URL_BASE + "train-labels-idx1-ubyte.gz"
-    URL_TEST_IMAGES = URL_BASE + "t10k-images-idx3-ubyte.gz"
-    URL_TEST_LABELS = URL_BASE + "t10k-labels-idx1-ubyte.gz"
+    TRAIN_IMAGES_FILE_NAME = "train-images-idx3-ubyte.gz"
+    TRAIN_LABELS_FILE_NAME = "train-labels-idx1-ubyte.gz"
+    TEST_IMAGES_FILE_NAME = "t10k-images-idx3-ubyte.gz"
+    TEST_LABELS_FILE_NAME = "t10k-labels-idx1-ubyte.gz"
+
+    URL_TRAIN_IMAGES = URL_BASE + TRAIN_IMAGES_FILE_NAME
+    URL_TRAIN_LABELS = URL_BASE + TRAIN_LABELS_FILE_NAME
+    URL_TEST_IMAGES = URL_BASE + TEST_IMAGES_FILE_NAME
+    URL_TEST_LABELS = URL_BASE + TEST_LABELS_FILE_NAME
 
     def self.downloads
-      return if Dir.exist?(mnist_dir)
       Dir.mkdir("#{__dir__}/downloads") unless Dir.exist?("#{__dir__}/downloads")
-      Dir.mkdir(mnist_dir)
-      Downloader.download(URL_TRAIN_IMAGES, mnist_dir)
-      Downloader.download(URL_TRAIN_LABELS, mnist_dir)
-      Downloader.download(URL_TEST_IMAGES, mnist_dir)
-      Downloader.download(URL_TEST_LABELS, mnist_dir)
+      Dir.mkdir(mnist_dir) unless Dir.exist?(mnist_dir)
+      Downloader.download(URL_TRAIN_IMAGES, mnist_dir) unless File.exist?(get_file_path(TRAIN_IMAGES_FILE_NAME))
+      Downloader.download(URL_TRAIN_LABELS, mnist_dir) unless File.exist?(get_file_path(TRAIN_LABELS_FILE_NAME))
+      Downloader.download(URL_TEST_IMAGES, mnist_dir) unless File.exist?(get_file_path(TEST_IMAGES_FILE_NAME))
+      Downloader.download(URL_TEST_LABELS, mnist_dir) unless File.exist?(get_file_path(TEST_LABELS_FILE_NAME))
     end
 
     def self.load_train
       downloads
-      train_images_file_name = url_to_file_name(URL_TRAIN_IMAGES)
-      train_labels_file_name = url_to_file_name(URL_TRAIN_LABELS)
-      unless File.exist?(train_images_file_name)
-        raise DNN_MNIST_LoadError.new(%`file "#{train_images_file_name}" is not found.`)
+      train_images_file_path = get_file_path(TRAIN_IMAGES_FILE_NAME)
+      train_labels_file_path = get_file_path(TRAIN_LABELS_FILE_NAME)
+      unless File.exist?(train_images_file_path)
+        raise DNN_MNIST_LoadError.new(%`file "#{train_images_file_path}" is not found.`)
       end
-      unless File.exist?(train_labels_file_name)
-        raise DNN_MNIST_LoadError.new(%`file "#{train_labels_file_name}" is not found.`)
+      unless File.exist?(train_labels_file_path)
+        raise DNN_MNIST_LoadError.new(%`file "#{train_labels_file_path}" is not found.`)
       end
-      images = load_images(train_images_file_name)
-      labels = load_labels(train_labels_file_name)
+      images = load_images(train_images_file_path)
+      labels = load_labels(train_labels_file_path)
       [images, labels]
     end
 
     def self.load_test
       downloads
-      test_images_file_name = url_to_file_name(URL_TEST_IMAGES)
-      test_labels_file_name = url_to_file_name(URL_TEST_LABELS)
-      unless File.exist?(test_images_file_name)
-        raise DNN_MNIST_LoadError.new(%`file "#{train_images_file_name}" is not found.`)
+      test_images_file_path = get_file_path(TEST_IMAGES_FILE_NAME)
+      test_labels_file_path = get_file_path(TEST_LABELS_FILE_NAME)
+      unless File.exist?(test_images_file_path)
+        raise DNN_MNIST_LoadError.new(%`file "#{test_images_file_path}" is not found.`)
       end
-      unless File.exist?(test_labels_file_name)
-        raise DNN_MNIST_LoadError.new(%`file "#{train_labels_file_name}" is not found.`)
+      unless File.exist?(test_labels_file_path)
+        raise DNN_MNIST_LoadError.new(%`file "#{test_labels_file_path}" is not found.`)
       end
-      images = load_images(test_images_file_name)
-      labels = load_labels(test_labels_file_name)
+      images = load_images(test_images_file_path)
+      labels = load_labels(test_labels_file_path)
       [images, labels]
     end
 
@@ -77,8 +81,8 @@ module DNN
       "#{__dir__}/downloads/mnist"
     end
 
-    private_class_method def self.url_to_file_name(url)
-      mnist_dir + "/" + url.match(%r`.+/(.+)$`)[1]
+    private_class_method def self.get_file_path(file_name)
+      mnist_dir + "/" + file_name
     end
   end
 end
