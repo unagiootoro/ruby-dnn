@@ -122,10 +122,81 @@ static VALUE rb_stbir_resize_uint8(VALUE self, VALUE rb_input_pixels, VALUE rb_i
   return rb_ary_new3(2, rb_output_pixels, INT2FIX(result));
 }
 
+// STBIRDEF int stbir_resize_uint8_srgb(const unsigned char *input_pixels , int input_w , int input_h , int input_stride_in_bytes,
+//                                            unsigned char *output_pixels, int output_w, int output_h, int output_stride_in_bytes,
+//                                      int num_channels, int alpha_channel, int flags);
+static VALUE rb_stbir_resize_uint8_srgb(VALUE self, VALUE rb_input_pixels, VALUE rb_input_w, VALUE rb_input_h, VALUE rb_input_stride_in_bytes,
+                                   VALUE rb_output_w, VALUE rb_output_h, VALUE rb_output_stride_in_bytes, VALUE rb_num_channels,
+                                   VALUE rb_alpha_channel, VALUE rb_flags) {
+  uint8_t* input_pixels = (uint8_t*)StringValuePtr(rb_input_pixels);
+  int32_t input_w = FIX2INT(rb_input_w);
+  int32_t input_h = FIX2INT(rb_input_h);
+  int32_t input_stride_in_bytes = FIX2INT(rb_input_stride_in_bytes);
+  int32_t output_w = FIX2INT(rb_output_w);
+  int32_t output_h = FIX2INT(rb_output_h);
+  int32_t output_stride_in_bytes = FIX2INT(rb_output_stride_in_bytes);
+  int32_t num_channels = FIX2INT(rb_num_channels);
+  int32_t alpha_channel = FIX2INT(rb_alpha_channel);
+  int32_t flags = FIX2INT(rb_flags);
+  uint8_t* output_pixels;
+  VALUE rb_output_pixels;
+  int32_t result;
+  const int32_t output_size = output_h * output_w * num_channels;
+
+  output_pixels = (uint8_t*)malloc(output_size);
+  result = stbir_resize_uint8_srgb(input_pixels, input_w, input_h, input_stride_in_bytes,
+                                   output_pixels, output_w, output_h, output_stride_in_bytes,
+                                   num_channels, alpha_channel, flags);
+  rb_output_pixels = rb_str_new((char*)output_pixels, output_size);
+  free(output_pixels);
+  return rb_ary_new3(2, rb_output_pixels, INT2FIX(result));
+}
+
+// STBIRDEF int stbir_resize_uint8_srgb_edgemode(const unsigned char *input_pixels , int input_w , int input_h , int input_stride_in_bytes,
+//                                                    unsigned char *output_pixels, int output_w, int output_h, int output_stride_in_bytes,
+//                                              int num_channels, int alpha_channel, int flags,
+//                                              stbir_edge edge_wrap_mode);
+static VALUE rb_stbir_resize_uint8_srgb_edgemode(VALUE self, VALUE rb_input_pixels, VALUE rb_input_w, VALUE rb_input_h, VALUE rb_input_stride_in_bytes,
+                                   VALUE rb_output_w, VALUE rb_output_h, VALUE rb_output_stride_in_bytes, VALUE rb_num_channels,
+                                   VALUE rb_alpha_channel, VALUE rb_flags, VALUE rb_edge_wrap_mode) {
+  uint8_t* input_pixels = (uint8_t*)StringValuePtr(rb_input_pixels);
+  int32_t input_w = FIX2INT(rb_input_w);
+  int32_t input_h = FIX2INT(rb_input_h);
+  int32_t input_stride_in_bytes = FIX2INT(rb_input_stride_in_bytes);
+  int32_t output_w = FIX2INT(rb_output_w);
+  int32_t output_h = FIX2INT(rb_output_h);
+  int32_t output_stride_in_bytes = FIX2INT(rb_output_stride_in_bytes);
+  int32_t num_channels = FIX2INT(rb_num_channels);
+  int32_t alpha_channel = FIX2INT(rb_alpha_channel);
+  int32_t flags = FIX2INT(rb_flags);
+  stbir_edge edge_wrap_mode = (stbir_edge)FIX2INT(rb_edge_wrap_mode);
+  uint8_t* output_pixels;
+  VALUE rb_output_pixels;
+  int32_t result;
+  const int32_t output_size = output_h * output_w * num_channels;
+
+  output_pixels = (uint8_t*)malloc(output_size);
+  result = stbir_resize_uint8_srgb_edgemode(input_pixels, input_w, input_h, input_stride_in_bytes,
+                                            output_pixels, output_w, output_h, output_stride_in_bytes,
+                                            num_channels, alpha_channel, flags, edge_wrap_mode);
+  rb_output_pixels = rb_str_new((char*)output_pixels, output_size);
+  free(output_pixels);
+  return rb_ary_new3(2, rb_output_pixels, INT2FIX(result));
+}
 
 void Init_rb_stb_image() {
   VALUE rb_dnn = rb_define_module("DNN");
   VALUE rb_stb = rb_define_module_under(rb_dnn, "Stb");
+
+  rb_define_const(rb_stb, "STBIR_ALPHA_CHANNEL_NONE", INT2FIX(STBIR_ALPHA_CHANNEL_NONE));
+
+  rb_define_const(rb_stb, "STBIR_FLAG_ALPHA_PREMULTIPLIED", INT2FIX(STBIR_FLAG_ALPHA_PREMULTIPLIED));
+  rb_define_const(rb_stb, "STBIR_FLAG_ALPHA_USES_COLORSPACE", INT2FIX(STBIR_FLAG_ALPHA_USES_COLORSPACE));
+
+  rb_define_const(rb_stb, "STBIR_EDGE_CLAMP", INT2FIX(STBIR_EDGE_CLAMP));
+  rb_define_const(rb_stb, "STBIR_EDGE_REFLECT", INT2FIX(STBIR_EDGE_REFLECT));
+  rb_define_const(rb_stb, "STBIR_EDGE_WRAP", INT2FIX(STBIR_EDGE_WRAP));
+  rb_define_const(rb_stb, "STBIR_EDGE_ZERO", INT2FIX(STBIR_EDGE_ZERO));
 
   rb_define_module_function(rb_stb, "stbi_load", rb_stbi_load, 2);
   rb_define_module_function(rb_stb, "stbi_write_png", rb_stbi_write_png, 6);
@@ -134,4 +205,6 @@ void Init_rb_stb_image() {
   rb_define_module_function(rb_stb, "stbi_write_hdr", rb_stbi_write_hdr, 5);
   rb_define_module_function(rb_stb, "stbi_write_jpg", rb_stbi_write_jpg, 6);
   rb_define_module_function(rb_stb, "stbir_resize_uint8", rb_stbir_resize_uint8, 8);
+  rb_define_module_function(rb_stb, "stbir_resize_uint8_srgb", rb_stbir_resize_uint8_srgb, 10);
+  rb_define_module_function(rb_stb, "stbir_resize_uint8_srgb_edgemode", rb_stbir_resize_uint8_srgb_edgemode, 11);
 }
