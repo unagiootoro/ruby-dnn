@@ -54,5 +54,11 @@ module DNN
     def self.trim(img, y, x, height, width)
       img[y...(y + height), x...(x + width), true].clone
     end
+
+    def self.gray_scale(img)
+      x = Numo::SFloat.cast(img)
+      x = x.mean(axis: 2, keepdims: true)
+      Numo::UInt8.cast(x)
+    end
   end
 end
