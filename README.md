@@ -26,7 +26,7 @@ Or install it yourself as:
 ### MNIST MLP example
 
 ```ruby
-model = Model.new
+model = Sequential.new
 
 model << InputLayer.new(784)
 
