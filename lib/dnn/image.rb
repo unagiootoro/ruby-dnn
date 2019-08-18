@@ -14,6 +14,7 @@ module DNN
     def self.read(file_name)
       raise ImageReadError.new("#{file_name} is not found.") unless File.exist?(file_name)
       bin, w, h, n = Stb.stbi_load(file_name, 3)
+      raise ImageReadError.new("#{file_name} load failed.") if bin == ""
       img = Numo::UInt8.from_binary(bin)
       img.reshape(h, w, 3)
     end
