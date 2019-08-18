@@ -9,6 +9,8 @@ module DNN
 
     class ImageWriteError < ImageError; end
 
+    class ImageShapeError < ImageError; end
+
     def self.read(file_name)
       raise ImageReadError.new("#{file_name} is not found.") unless File.exist?(file_name)
       bin, w, h, n = Stb.stbi_load(file_name, 3)
@@ -17,14 +19,13 @@ module DNN
     end
 
     def self.write(file_name, img, quality: 100)
+      img_check(img)
       match_data = file_name.match(%r`(.*)/.+$`)
       if match_data
         dir_name = match_data[1]
         Dir.mkdir(dir_name) unless Dir.exist?(dir_name)
       end
-      if img.shape.length == 2
-        img = Numo::UInt8[img, img, img].transpose(1, 2, 0).clone
-      elsif img.shape[2] == 1
+      if img.shape[2] == 1
         img = img.reshape(img.shape[0], img.shape[1])
         img = Numo::UInt8[img, img, img].transpose(1, 2, 0).clone
       end
@@ -52,13 +53,24 @@ module DNN
     end
 
     def self.trim(img, y, x, height, width)
+      img_check(img)
       img[y...(y + height), x...(x + width), true].clone
     end
 
     def self.gray_scale(img)
+      img_check(img)
       x = Numo::SFloat.cast(img)
       x = x.mean(axis: 2, keepdims: true)
       Numo::UInt8.cast(x)
+    end
+
+    private_class_method def self.img_check(img)
+      raise TypeError.new("img is not an instance of the Numo::UInt8 class.") unless img.is_a?(Numo::UInt8)
+      if img.shape.length != 3
+        raise ImageShapeError.new("img shape is #{img.shape}. But img shape must be 3 dimensional.")
+      elsif img.shape[2] != 1 && img.shape[2] != 3
+        raise ImageShapeError.new("img channel is #{img.shape[2]}. But img channel must be 1 or 3.")
+      end
     end
   end
 end
