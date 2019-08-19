@@ -27,8 +27,7 @@ module DNN
         Dir.mkdir(dir_name) unless Dir.exist?(dir_name)
       end
       if img.shape[2] == 1
-        img = img.reshape(img.shape[0], img.shape[1])
-        img = Numo::UInt8[img, img, img].transpose(1, 2, 0).clone
+        img = img.concatenate(img, axis: 2).concatenate(img, axis: 2)
       end
       h, w, ch = img.shape
       bin = img.to_binary
@@ -42,8 +41,6 @@ module DNN
         res = Stb.stbi_write_jpg(file_name, w, h, ch, bin, quality)
       end
       raise ImageWriteError.new("Image write failed.") if res == 0
-    rescue => e
-      raise ImageWriteError.new(e.message)
     end
 
     def self.resize(img, out_height, out_width)
