@@ -47,6 +47,7 @@ module DNN
     end
 
     def self.resize(img, out_height, out_width)
+      img_check(img)
       in_height, in_width, ch = *img.shape
       out_bin, res = Stb.stbir_resize_uint8(img.to_binary, in_width, in_height, 0, out_width, out_height, 0, ch)
       img2 = Numo::UInt8.from_binary(out_bin).reshape(out_height, out_width, ch)
