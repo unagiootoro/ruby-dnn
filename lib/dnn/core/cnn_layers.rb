@@ -398,14 +398,14 @@ module DNN
 
       attr_reader :unpool_size
 
+      def self.from_hash(hash)
+        self.new(hash[:unpool_size])
+      end
+
       # @param [Array | Integer] unpool_size Unpooling size. unpooling size is of the form [height, width].
       def initialize(unpool_size)
         super()
         @unpool_size = unpool_size.is_a?(Integer) ? [unpool_size, unpool_size] : unpool_size
-      end
-
-      def self.from_hash(hash)
-        self.new(hash[:unpool_size])
       end
 
       def build(input_shape)

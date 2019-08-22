@@ -16,18 +16,17 @@ module DNN
       # Forward propagation and create a link.
       # @param [Array] input Array of the form [x_input_data, prev_link].
       def call(input)
-        x, prev_link, model = *input
+        x, prev_link, learning_phase = *input
         build(x.shape[1..-1]) unless built?
         y = forward(x)
         link = Link.new(prev_link, self)
-        [y, link, model]
+        [y, link, learning_phase]
       end
 
       # Build the layer.
       # @param [Array] input_shape Setting the shape of the input data.
       def build(input_shape)
         @input_shape = input_shape
-        @learning_phase = true
         @built = true
       end
 
@@ -99,9 +98,9 @@ module DNN
 
       def call(input)
         build
-        x, prev_link, model = *input
+        x, prev_link, learning_phase = *input
         link = prev_link ? Link.new(prev_link, self) : Link.new(nil, self)
-        [forward(x), link, model]
+        [forward(x), link, learning_phase]
       end
 
       def build
@@ -302,7 +301,7 @@ module DNN
 
       # @param [Float] dropout_ratio Nodes dropout ratio.
       # @param [Integer] seed Seed of random number used for masking.
-      # @param [Boolean] use_scale Use 'weight scaling inference rule'.
+      # @param [Boolean] use_scale Set to true to scale the output according to the dropout ratio.
       def initialize(dropout_ratio = 0.5, seed: rand(1 << 31), use_scale: true)
         super()
         @dropout_ratio = dropout_ratio
@@ -313,11 +312,11 @@ module DNN
       end
 
       def call(input)
-        x, prev_link, model = *input
+        x, prev_link, learning_phase = *input
         build(x.shape[1..-1]) unless built?
-        y = forward(x, model.learning_phase)
+        y = forward(x, learning_phase)
         link = Link.new(prev_link, self)
-        [y, link, model]
+        [y, link, learning_phase]
       end
 
       def forward(x, learning_phase)

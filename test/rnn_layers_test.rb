@@ -606,34 +606,6 @@ end
 
 
 class TestGRU < MiniTest::Unit::TestCase
-  
-  def test_from_hash
-    hash = {
-      class: "DNN::Layers::GRU",
-      num_nodes: 64,
-      weight_initializer: RandomUniform.new.to_hash,
-      recurrent_weight_initializer: RandomUniform.new.to_hash,
-      bias_initializer: RandomUniform.new.to_hash,
-      weight_regularizer: L1.new.to_hash,
-      recurrent_weight_regularizer: L2.new.to_hash,
-      bias_regularizer: L1L2.new.to_hash,
-      use_bias: false,
-      stateful: true,
-      return_sequences: false,
-    }
-    gru = GRU.from_hash(hash)
-    assert_equal 64, gru.num_nodes
-    assert_kind_of RandomUniform, gru.weight_initializer
-    assert_kind_of RandomUniform, gru.recurrent_weight_initializer
-    assert_kind_of RandomUniform, gru.bias_initializer
-    assert_kind_of L1, gru.weight_regularizer
-    assert_kind_of L2, gru.recurrent_weight_regularizer
-    assert_kind_of L1L2, gru.bias_regularizer
-    assert_equal false, gru.use_bias
-    assert_equal true, gru.stateful
-    assert_equal false, gru.return_sequences
-  end
-
   def test_to_hash
     gru = GRU.new(64, stateful: true, return_sequences: false, use_bias: false,
                   weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)

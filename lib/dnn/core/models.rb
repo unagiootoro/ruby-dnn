@@ -7,8 +7,6 @@ module DNN
 
     # This class deals with the model of the network.
     class Model
-      attr_reader :learning_phase
-
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
       def self.load(file_name)
@@ -335,9 +333,8 @@ module DNN
       private
 
       def forward(x, learning_phase)
-        @learning_phase = learning_phase
         @built = true
-        y, @last_link = call([x, nil, self])
+        y, @last_link = call([x, nil, learning_phase])
         y
       end
 
@@ -377,9 +374,9 @@ module DNN
 
       # Add layer to the model.
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
-      # @return [DNN::Model] Return self.
+      # @return [DNN::Models::Model] Return self.
       def <<(layer)
-        unless layer.is_a?(Layers::Layer) || layer.is_a?(Models::Model)
+        unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
           raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
         end
         @stack << layer

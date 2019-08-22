@@ -11,6 +11,19 @@ module DNN
       attr_reader :recurrent_weight_initializer
       attr_reader :recurrent_weight_regularizer
 
+      def self.from_hash(hash)
+        self.new(hash[:num_nodes],
+                 stateful: hash[:stateful],
+                 return_sequences: hash[:return_sequences],
+                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
+                 recurrent_weight_initializer: Utils.hash_to_obj(hash[:recurrent_weight_initializer]),
+                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
+                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
+                 recurrent_weight_regularizer: Utils.hash_to_obj(hash[:recurrent_weight_regularizer]),
+                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
+                 use_bias: hash[:use_bias])
+      end
+
       # @param [Integer] num_nodes Number of nodes.
       # @param [Boolean] stateful Maintain state between batches.
       # @param [Boolean] return_sequences Set the false, only the last of each cell of RNN is left.
@@ -271,19 +284,6 @@ module DNN
     class LSTM < RNN
       attr_reader :cell
 
-      def self.from_hash(hash)
-        self.new(hash[:num_nodes],
-                 stateful: hash[:stateful],
-                 return_sequences: hash[:return_sequences],
-                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
-                 recurrent_weight_initializer: Utils.hash_to_obj(hash[:recurrent_weight_initializer]),
-                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
-                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
-                 recurrent_weight_regularizer: Utils.hash_to_obj(hash[:recurrent_weight_regularizer]),
-                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
-                 use_bias: hash[:use_bias])
-      end
-
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
@@ -430,19 +430,6 @@ module DNN
 
 
     class GRU < RNN
-      def self.from_hash(hash)
-        self.new(hash[:num_nodes],
-                 stateful: hash[:stateful],
-                 return_sequences: hash[:return_sequences],
-                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
-                 recurrent_weight_initializer: Utils.hash_to_obj(hash[:recurrent_weight_initializer]),
-                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
-                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
-                 recurrent_weight_regularizer: Utils.hash_to_obj(hash[:recurrent_weight_regularizer]),
-                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
-                 use_bias: hash[:use_bias])
-      end
-
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,

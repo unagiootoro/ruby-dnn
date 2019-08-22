@@ -3,7 +3,7 @@ module DNN
 
     class Initializer
       # @param [Boolean | Integer] seed Seed of random number used for masking.
-      #                            Set true to determine seed as random.
+      #                                 Set true to determine seed as random.
       def initialize(seed: false)
         @seed = seed == true ? rand(1 << 31) : seed
       end

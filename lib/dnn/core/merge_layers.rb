@@ -2,17 +2,17 @@ module DNN
   module MergeLayers
 
     class MergeLayer < Layers::Layer
-      def self.call(x1, x2)
-        self.new.call(x1, x2)
+      def self.call(x1, x2, *args)
+        self.new(*args).call(x1, x2)
       end
 
       def call(input1, input2)
-        x1, prev_link1 = *input1
-        x2, prev_link2 = *input2
+        x1, prev_link1, learning_phase = *input1
+        x2, prev_link2, * = *input2
         build(x1.shape[1..-1]) unless built?
         y = forward(x1, x2)
         link = TwoInputLink.new(prev_link1, prev_link2, self)
-        [y, link]
+        [y, link, learning_phase]
       end
     end
 

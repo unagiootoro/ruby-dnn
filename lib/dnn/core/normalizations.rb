@@ -25,11 +25,11 @@ module DNN
       end
 
       def call(input)
-        x, prev_link, model = *input
+        x, prev_link, learning_phase = *input
         build(x.shape[1..-1]) unless built?
-        y = forward(x, model.learning_phase)
+        y = forward(x, learning_phase)
         link = Link.new(prev_link, self)
-        [y, link, model]
+        [y, link, learning_phase]
       end
 
       def build(input_shape)
