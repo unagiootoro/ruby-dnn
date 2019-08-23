@@ -11,12 +11,15 @@ module DNN
 
     class ImageShapeError < ImageError; end
 
-    def self.read(file_name)
+    RGB = 3
+    RGBA = 4
+
+    def self.read(file_name, channel_type = RGB)
       raise ImageReadError.new("#{file_name} is not found.") unless File.exist?(file_name)
-      bin, w, h, n = Stb.stbi_load(file_name, 3)
+      bin, w, h, n = Stb.stbi_load(file_name, channel_type)
       raise ImageReadError.new("#{file_name} load failed.") if bin == ""
       img = Numo::UInt8.from_binary(bin)
-      img.reshape(h, w, 3)
+      img.reshape(h, w, channel_type)
     end
 
     def self.write(file_name, img, quality: 100)
@@ -25,9 +28,6 @@ module DNN
       if match_data
         dir_name = match_data[1]
         Dir.mkdir(dir_name) unless Dir.exist?(dir_name)
-      end
-      if img.shape[2] == 1
-        img = img.concatenate(img, axis: 2).concatenate(img, axis: 2)
       end
       h, w, ch = img.shape
       bin = img.to_binary
@@ -58,17 +58,22 @@ module DNN
 
     def self.gray_scale(img)
       img_check(img)
-      x = Numo::SFloat.cast(img)
-      x = x.mean(axis: 2, keepdims: true)
+      if img.shape[2] == RGB
+        x = Numo::SFloat.cast(img)
+        x = x.mean(axis: 2, keepdims: true)
+      elsif img.shape[2] == RGBA
+        x = Numo::SFloat.cast(img[true, true, 0..2])
+        x = x.mean(axis: 2, keepdims: true).concatenate(img[true, true, 3..3], axis: 2)
+      end
       Numo::UInt8.cast(x)
     end
 
     private_class_method def self.img_check(img)
-      raise TypeError.new("img is not an instance of the Numo::UInt8 class.") unless img.is_a?(Numo::UInt8)
+      raise TypeError.new("img: #{img.class} is not an instance of the Numo::UInt8 class.") unless img.is_a?(Numo::UInt8)
       if img.shape.length != 3
         raise ImageShapeError.new("img shape is #{img.shape}. But img shape must be 3 dimensional.")
-      elsif img.shape[2] != 1 && img.shape[2] != 3
-        raise ImageShapeError.new("img channel is #{img.shape[2]}. But img channel must be 1 or 3.")
+      elsif !img.shape[2].between?(1, 4)
+        raise ImageShapeError.new("img channel is #{img.shape[2]}. But img channel must be 1 or 2 or 3 or 4.")
       end
     end
   end
