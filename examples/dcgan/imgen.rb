@@ -10,6 +10,7 @@ batch_size = 100
 dcgan = Model.load("trained/dcgan_model_epoch20.marshal")
 gen = dcgan.gen
 
+Numo::SFloat.srand(rand(1 << 31))
 noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
 images = gen.predict(noise)
 

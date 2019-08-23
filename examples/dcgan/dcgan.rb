@@ -68,16 +68,9 @@ class Discriminator < Model
   end
 
   def call(x, trainable = true)
-    if trainable
-      has_param_layers.each do |layer|
-        layer.trainable = true
-      end
-    else
-      has_param_layers.each do |layer|
-        layer.trainable = false
-      end
+    has_param_layers.each do |layer|
+      layer.trainable = trainable
     end
-
     x = InputLayer.new([28, 28, 1]).(x)
     x = @l1.(x)
     x = LeakyReLU.(x, 0.2)
