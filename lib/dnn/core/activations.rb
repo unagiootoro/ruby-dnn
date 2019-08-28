@@ -82,6 +82,7 @@ module DNN
 
       # @param [Float] alpha The slope when the output value is negative.
       def initialize(alpha = 0.3)
+        super()
         @alpha = alpha
       end
 
@@ -113,6 +114,7 @@ module DNN
 
       # @param [Float] alpha The slope when the output value is negative.
       def initialize(alpha = 1.0)
+        super()
         @alpha = alpha
       end
 

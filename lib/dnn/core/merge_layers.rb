@@ -48,6 +48,7 @@ module DNN
       end
 
       def initialize(axis: 1)
+        super()
         @axis = axis
       end
 
