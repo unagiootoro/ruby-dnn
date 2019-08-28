@@ -1,8 +1,10 @@
-if defined? Cumo
-  Xumo = Cumo
-else
-  require "numo/narray"
-  Xumo = Numo
+module DNN
+  if defined? ::Cumo
+    Xumo = ::Cumo
+  else
+    require "numo/narray"
+    Xumo = ::Numo
+  end
 end
 
 require_relative "dnn/version"
