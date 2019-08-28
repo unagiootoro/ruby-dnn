@@ -90,16 +90,12 @@ module DNN
 
 
     class HuberLoss < Loss
-      def forward(y, t, layers)
-        @loss_value = super(y, t, layers)
-      end
-
       private
 
       def forward_loss(y, t)
         @y = y
-        loss_value = loss_l1(t)
-        loss_value > 1 ? loss_value : loss_l2(t)
+        loss_l1_value = loss_l1(t)
+        @loss_value = loss_l1_value > 1 ? loss_l1_value : loss_l2(t)
       end
 
       def backward_loss(t)
