@@ -364,12 +364,12 @@ module DNN
 
 
     class Sequential < Model
-      # @return [Array] All layers possessed by the model.
-      attr_accessor :stack
+      attr_reader :stack
 
-      def initialize
-        super
-        @stack = []
+      # @param [Array] stack All layers possessed by the model.
+      def initialize(stack = [])
+        super()
+        @stack = stack.clone
       end
 
       # Add layer to the model.
@@ -377,7 +377,7 @@ module DNN
       # @return [DNN::Models::Model] Return self.
       def <<(layer)
         unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
-          raise TypeError.new("layer is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
+          raise TypeError.new("layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
         end
         @stack << layer
         self

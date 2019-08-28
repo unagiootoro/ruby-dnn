@@ -10,6 +10,11 @@ include DNN::Models
 
 
 class TestSequential < MiniTest::Unit::TestCase
+  def test_initialize
+    model = Sequential.new([InputLayer.new([10]), Dense.new(10)])
+    assert_kind_of Dense, model.instance_variable_get(:@stack)[1]
+  end
+
   def test_load_hash_params
     model = Sequential.new
     model << InputLayer.new([10])
