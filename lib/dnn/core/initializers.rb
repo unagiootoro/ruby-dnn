@@ -12,7 +12,7 @@ module DNN
       # @param [DNN::Layers::Layer] layer Layer that owns learning parameters.
       # @param [DNN::Param] param Learning parameter to be initialized.
       def init_param(layer, param)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_params'")
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_param'")
       end
 
       def to_hash(merge_hash = nil)

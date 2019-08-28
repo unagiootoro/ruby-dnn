@@ -30,7 +30,7 @@ module DNN
 
       # Update params.
       private def update_params(params)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update_param'")
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update_params'")
       end
 
       private def clip_grads(params)
