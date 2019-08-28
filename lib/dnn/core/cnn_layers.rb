@@ -128,8 +128,8 @@ module DNN
           raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
         end
         super
-        prev_h, prev_w, num_prev_filter = *input_shape
-        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
+        prev_h, prev_w, num_prev_filters = *input_shape
+        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filters, @num_filters)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         @pad_size = if @padding == true
@@ -168,14 +168,14 @@ module DNN
 
       # @return [Numo::SFloat] Convert weight to filter and return.
       def filters
-        num_prev_filter = @input_shape[2]
-        @weight.data.reshape(*@filter_size, num_prev_filter, @num_filters)
+        num_prev_filters = @input_shape[2]
+        @weight.data.reshape(*@filter_size, num_prev_filters, @num_filters)
       end
 
       # @param [Numo::SFloat] filters Convert weight to filters and set.
       def filters=(filters)
-        num_prev_filter = @input_shape[2]
-        @weight.data = filters.reshape(@filter_size.reduce(:*) * num_prev_filter, @num_filters)
+        num_prev_filters = @input_shape[2]
+        @weight.data = filters.reshape(@filter_size.reduce(:*) * num_prev_filters, @num_filters)
       end
 
       def to_hash
@@ -231,8 +231,8 @@ module DNN
           raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
         end
         super
-        prev_h, prev_w, num_prev_filter = *input_shape
-        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
+        prev_h, prev_w, num_prev_filters = *input_shape
+        @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filters)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         @pad_size = if @padding == true
@@ -273,14 +273,14 @@ module DNN
 
       # @return [Numo::SFloat] Convert weight to filter and return.
       def filters
-        num_prev_filter = @input_shape[2]
-        @weight.data.reshape(*@filter_size, @num_filters, num_prev_filter)
+        num_prev_filters = @input_shape[2]
+        @weight.data.reshape(*@filter_size, @num_filters, num_prev_filters)
       end
 
       # @param [Numo::SFloat] filters Convert weight to filters and set.
       def filters=(filters)
-        num_prev_filter = @input_shape[2]
-        @weight.data = filters.reshape(@filter_size.reduce(:*) * @num_filters, num_prev_filter)
+        num_prev_filters = @input_shape[2]
+        @weight.data = filters.reshape(@filter_size.reduce(:*) * @num_filters, num_prev_filters)
       end
 
       def to_hash
@@ -435,7 +435,7 @@ module DNN
 
       def backward(dy)
         in_size = input_shape[0..1]
-        col = im2col(dy, *input_shape[0..1], *@unpool_size, @unpool_size)
+        col = im2col(dy, *in_size, *@unpool_size, @unpool_size)
         col = col.reshape(dy.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dy.shape[3]).transpose(0, 2, 1)
                  .reshape(dy.shape[0] * in_size.reduce(:*) * dy.shape[3], @unpool_size.reduce(:*))
         col.sum(1).reshape(dy.shape[0], *in_size, dy.shape[3])
