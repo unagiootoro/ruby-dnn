@@ -14,7 +14,7 @@ module DNN
       end
 
       # Forward propagation and create a link.
-      # @param [Array] input Array of the form [x_input_data, prev_link].
+      # @param [Array] input Array of the form [x_input_data, prev_link, learning_phase].
       def call(input)
         x, prev_link, learning_phase = *input
         build(x.shape[1..-1]) unless built?
@@ -97,7 +97,7 @@ module DNN
       end
 
       def call(input)
-        build
+        build unless built?
         x, prev_link, learning_phase = *input
         link = prev_link ? Link.new(prev_link, self) : Link.new(nil, self)
         [forward(x), link, learning_phase]
@@ -105,7 +105,6 @@ module DNN
 
       def build
         @built = true
-        @input_shape
       end
 
       def forward(x)

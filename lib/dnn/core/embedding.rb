@@ -38,7 +38,6 @@ module DNN
         @weight = Param.new(Xumo::SFloat.new(@input_length), 0)
         @weight_initializer.init_param(self, @weight)
         @weight_regularizer.param = @weight if @weight_regularizer
-        @input_shape
       end
 
       def forward(x)
