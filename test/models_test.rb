@@ -51,7 +51,7 @@ class TestSequential < MiniTest::Unit::TestCase
     json = model.params_to_json
     param = JSON.parse(json)["params"][0]["weight"]
     bin = Base64.decode64(param[1])
-    data = Xumo::SFloat.from_binary(bin).reshape(*param[0])
+    data = Numo::SFloat.from_binary(bin).reshape(*param[0])
 
     assert_equal dense.get_params[:weight].data, data
   end
@@ -66,7 +66,7 @@ class TestSequential < MiniTest::Unit::TestCase
     hash = model.params_to_hash
     param = hash[:params][0][:weight]
     bin = param[1]
-    data = Xumo::SFloat.from_binary(bin).reshape(*param[0])
+    data = Numo::SFloat.from_binary(bin).reshape(*param[0])
 
     assert_equal dense.get_params[:weight].data, data
   end
