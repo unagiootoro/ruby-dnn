@@ -5,6 +5,15 @@ include DNN::Layers
 include DNN::Initializers
 include DNN::Optimizers
 
+# If there is no tag, return object_id of param.
+class DNN::Param
+  def tag
+    return @tag if @tag
+    self.object_id
+  end
+end
+
+
 class TestOptimizer < MiniTest::Unit::TestCase
   def test_to_hash
     optimizer = Optimizer.new
