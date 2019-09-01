@@ -7,6 +7,7 @@ module DNN
     def initialize(data = nil, grad = nil)
       @data = data
       @grad = grad
+      @tag = nil
     end
   end
 end
