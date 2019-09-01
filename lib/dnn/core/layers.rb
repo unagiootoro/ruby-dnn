@@ -3,6 +3,7 @@ module DNN
 
     # Super class of all layer classes.
     class Layer
+      attr_accessor :tag
       attr_reader :input_shape
 
       def self.call(x, *args)

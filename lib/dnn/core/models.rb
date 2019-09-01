@@ -333,8 +333,11 @@ module DNN
       private
 
       def forward(x, learning_phase)
-        @built = true
         y, @last_link = call([x, nil, learning_phase])
+        unless @built
+          @built = true
+          tagging
+        end
         y
       end
 
@@ -350,6 +353,20 @@ module DNN
           end
         end
         bwd.(@last_link, dy)
+      end
+
+      def tagging
+        target_layers = layers.uniq
+        target_layers.each do |layer|
+          id = target_layers.select { |l| l.is_a?(layer.class) }.index(layer)
+          class_name = layer.class.name.split("::").last
+          layer.tag = "#{class_name}_#{id}".to_sym
+          if layer.is_a?(Layers::HasParamLayer)
+            layer.get_params.each do |param_key, param|
+              param.tag = "#{layer.tag}__#{param_key}".to_sym
+            end
+          end
+        end
       end
 
       def check_xy_type(x, y = nil)

@@ -331,6 +331,18 @@ class TestSequential < MiniTest::Unit::TestCase
     end
   end
 
+  def test_tagging
+    dense1 = Dense.new(1)
+    model = Sequential.new
+    model << InputLayer.new(10)
+    model << Dense.new(5)
+    model << dense1
+    model.predict1(Numo::SFloat.zeros(10))
+    
+    assert_equal :Dense_1, dense1.tag
+    assert_equal :Dense_1__bias, dense1.bias.tag
+  end
+
   def test_lshift
     model = Sequential.new
     input_layer = InputLayer.new(10)

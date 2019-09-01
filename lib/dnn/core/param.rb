@@ -1,5 +1,6 @@
 module DNN
   class Param
+    attr_accessor :tag
     attr_accessor :data
     attr_accessor :grad
 
