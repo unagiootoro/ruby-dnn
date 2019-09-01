@@ -1,7 +1,3 @@
-require "zlib"
-require "json"
-require "base64"
-
 module DNN
   module Models
 
@@ -10,7 +6,8 @@ module DNN
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
       def self.load(file_name)
-        Marshal.load(Zlib::Inflate.inflate(File.binread(file_name)))
+        loader = Loader::MarshalLoader.new(self)
+        loader.load(file_name)
       end
 
       def initialize
@@ -18,62 +15,6 @@ module DNN
         @last_link = nil
         @setup_completed = false
         @built = false
-      end
-
-      # Load hash model parameters.
-      # @param [Hash] hash Hash to load model parameters.
-      def load_hash_params(hash)
-        has_param_layers_params = hash[:params]
-        has_param_layers_index = 0
-        has_param_layers.uniq.each do |layer|
-          hash_params = has_param_layers_params[has_param_layers_index]
-          hash_params.each do |key, (shape, bin)|
-            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
-            layer.get_params[key].data = data
-          end
-          has_param_layers_index += 1
-        end
-      end
-
-      # Load json model parameters.
-      # @param [String] json_str JSON string to load model parameters.
-      def load_json_params(json_str)
-        hash = JSON.parse(json_str, symbolize_names: true)
-        has_param_layers_params = hash[:params]
-        has_param_layers_index = 0
-        has_param_layers.uniq.each do |layer|
-          hash_params = has_param_layers_params[has_param_layers_index]
-          hash_params.each do |key, (shape, base64_param)|
-            bin = Base64.decode64(base64_param)
-            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
-            layer.get_params[key].data = data
-          end
-          has_param_layers_index += 1
-        end
-      end
-
-      # Convert model parameters to hash.
-      # @return [Hash] Return the hash of model parameters.
-      def params_to_hash
-        has_param_layers_params = has_param_layers.uniq.map do |layer|
-          layer.get_params.map { |key, param|
-            [key, [param.data.shape, param.data.to_binary]]
-          }.to_h
-        end
-        { version: VERSION, params: has_param_layers_params }
-      end
-
-      # Convert model parameters to JSON string.
-      # @return [String] Return the JSON string.
-      def params_to_json
-        has_param_layers_params = has_param_layers.uniq.map do |layer|
-          layer.get_params.map { |key, param|
-            base64_data = Base64.encode64(param.data.to_binary)
-            [key, [param.data.shape, base64_data]]
-          }.to_h
-        end
-        hash = { version: VERSION, params: has_param_layers_params }
-        JSON.dump(hash)
       end
 
       # Set optimizer and loss_func to model.
@@ -250,14 +191,8 @@ module DNN
       # Save the model in marshal format.
       # @param [String] file_name Name to save model.
       def save(file_name)
-        bin = Zlib::Deflate.deflate(Marshal.dump(self))
-        begin
-          File.binwrite(file_name, bin)
-        rescue Errno::ENOENT
-          dir_name = file_name.match(%r`(.*)/.+$`)[1]
-          Dir.mkdir(dir_name)
-          File.binwrite(file_name, bin)
-        end
+        saver = Savers::MarshalSaver.new(self)
+        saver.save(file_name)
       end
 
       # @return [DNN::Models::Model] Return the copy this model.
