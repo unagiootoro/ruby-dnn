@@ -40,9 +40,11 @@ module DNN
     end
 
     def foreach(batch_size, &block)
+      step = 0
       while has_next?
         x_batch, y_batch = next_batch(batch_size)
-        block.call(x_batch, y_batch)
+        block.call(x_batch, y_batch, step)
+        step += 1
       end
       reset
     end

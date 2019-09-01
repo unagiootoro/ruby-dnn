@@ -64,8 +64,7 @@ module DNN
         (1..epochs).each do |epoch|
           before_epoch_cbk&.call(epoch)
           puts "【 epoch #{epoch}/#{epochs} 】" if verbose
-          (num_train_datas.to_f / batch_size).ceil.times do |index|
-            x_batch, y_batch = iter.next_batch(batch_size)
+          iter.foreach(batch_size) do |x_batch, y_batch, index|
             loss_value = train_on_batch(x_batch, y_batch, before_train_on_batch_cbk: before_train_on_batch_cbk,
                                         after_train_on_batch_cbk: after_train_on_batch_cbk)
             if loss_value.is_a?(Xumo::SFloat)
