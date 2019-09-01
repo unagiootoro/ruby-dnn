@@ -50,8 +50,6 @@ class TestMarshalSaver < MiniTest::Unit::TestCase
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
     model.predict1(Numo::SFloat.zeros(10))
     model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(1)])
-    model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict1(Numo::SFloat.zeros(10))
 
     saver = DNN::Savers::MarshalSaver.new(model, include_optimizer: false)
     bin = saver.send(:dump_bin)
@@ -70,8 +68,6 @@ class TestMarshalSaver < MiniTest::Unit::TestCase
     model.setup(DNN::Optimizers::SGD.new(momentum: 0.9), DNN::Losses::MeanSquaredError.new)
     model.train_on_batch(x, y)
     model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(1)])
-    model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict(x)
 
     saver = DNN::Savers::MarshalSaver.new(model, include_optimizer: true)
     bin = saver.send(:dump_bin)

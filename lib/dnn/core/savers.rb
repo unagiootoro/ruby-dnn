@@ -37,9 +37,10 @@ module DNN
 
     class MarshalLoader < Loader
       private def load_bin(bin)
-        hash, opt, loss_hash = *Marshal.load(Zlib::Inflate.inflate(bin))
-        hash_to_params(hash)
-        @model.setup(opt, Utils.hash_to_obj(loss_hash))
+        data = Marshal.load(Zlib::Inflate.inflate(bin))
+        @model.setup(data[:optimizer], Utils.hash_to_obj(data[:loss_func]))
+        @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
+        hash_to_params(data[:params])
       end
     end
 
@@ -112,7 +113,11 @@ module DNN
 
       private def dump_bin
         opt = @include_optimizer ? @model.optimizer : @model.optimizer.class.new
-        Zlib::Deflate.deflate(Marshal.dump([params_to_hash, opt, @model.loss_func.to_hash]))
+        data = {
+          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: params_to_hash,
+          optimizer: opt, loss_func: @model.loss_func.to_hash
+        }
+        Zlib::Deflate.deflate(Marshal.dump(data))
       end
     end
 
