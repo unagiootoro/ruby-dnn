@@ -3,7 +3,18 @@ module DNN
 
     # Super class of all optimizer classes.
     class Optimizer
+      attr_reader :status
       attr_accessor :clip_norm
+
+      def self.load(dumped)
+        opt = Utils.hash_to_obj(dumped[:hash])
+        dumped[:status].each do |key, state|
+          state = state.clone
+          opt.status[key] = state
+          opt.instance_variable_set("@#{key}", state)
+        end
+        opt
+      end
 
       # @param [Float | NilClass] clip_norm Gradient clip norm.
       def initialize(clip_norm: nil)
@@ -20,6 +31,10 @@ module DNN
         target_params.each do |param|
           param.grad = Xumo::SFloat.zeros(*param.data.shape)
         end
+      end
+
+      def dump
+        { hash: to_hash, status: @status }
       end
 
       def to_hash(merge_hash = nil)
@@ -59,6 +74,7 @@ module DNN
         @lr = lr
         @momentum = momentum
         @v = {}
+        @status = { v: @v }
       end
 
       def to_hash
@@ -94,6 +110,7 @@ module DNN
         @lr = lr
         @momentum = momentum
         @v = {}
+        @status = [:v]
       end
 
       def to_hash
@@ -126,6 +143,7 @@ module DNN
         @lr = lr
         @eps = eps
         @g = {}
+        @status = { g: @g }
       end
 
       private def update_params(params)
@@ -160,6 +178,7 @@ module DNN
         @alpha = alpha
         @eps = eps
         @g = {}
+        @status = { g: @g }
       end
 
       def to_hash
@@ -192,6 +211,7 @@ module DNN
         @eps = eps
         @h = {}
         @s = {}
+        @status = { h: @h, s: @s }
       end
 
       def to_hash
@@ -230,6 +250,7 @@ module DNN
         @eps = eps
         @m = {}
         @v = {}
+        @status = { m: @m, v: @v }
       end
 
       def to_hash
@@ -275,7 +296,8 @@ module DNN
         @t = 0
         @m = {}
         @v = {}
-        @s = {} if amsgrad
+        @s = amsgrad ? {} : nil
+        @status = { t: @t, m: @m, v: @v, s: @s }
       end
 
       def to_hash
