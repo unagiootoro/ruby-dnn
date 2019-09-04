@@ -15,6 +15,14 @@ module DNN
         @last_link = nil
         @setup_completed = false
         @built = false
+        @callbacks = {
+          before_epoch: [],
+          after_epoch: [],
+          before_train_on_batch: [],
+          after_train_on_batch: [],
+          before_test_on_batch: [],
+          after_test_on_batch: [],
+        }
       end
 
       # Set optimizer and loss_func to model.
@@ -41,32 +49,19 @@ module DNN
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-      # @param [Lambda] before_epoch_cbk Process performed before one training.
-      # @param [Lambda] after_epoch_cbk Process performed after one training.
-      # @param [Lambda] before_train_on_batch_cbk Set the proc to be performed before train on batch processing.
-      # @param [Lambda] after_train_on_batch_cbk Set the proc to be performed after train on batch processing.
-      # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
-      # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
       def train(x, y, epochs,
                 batch_size: 1,
                 test: nil,
-                verbose: true,
-                before_epoch_cbk: nil,
-                after_epoch_cbk: nil,
-                before_train_on_batch_cbk: nil,
-                after_train_on_batch_cbk: nil,
-                before_test_on_batch_cbk: nil,
-                after_test_on_batch_cbk: nil)
+                verbose: true)
         raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         check_xy_type(x, y)
         iter = Iterator.new(x, y)
         num_train_datas = x.shape[0]
         (1..epochs).each do |epoch|
-          before_epoch_cbk&.call(epoch)
+          call_callbacks(:before_epoch, epoch)
           puts "【 epoch #{epoch}/#{epochs} 】" if verbose
           iter.foreach(batch_size) do |x_batch, y_batch, index|
-            loss_value = train_on_batch(x_batch, y_batch, before_train_on_batch_cbk: before_train_on_batch_cbk,
-                                        after_train_on_batch_cbk: after_train_on_batch_cbk)
+            loss_value = train_on_batch(x_batch, y_batch)
             if loss_value.is_a?(Xumo::SFloat)
               loss_value = loss_value.mean
             elsif loss_value.nan?
@@ -89,12 +84,11 @@ module DNN
             print log if verbose
           end
           if test
-            acc, test_loss = accurate(test[0], test[1], batch_size: batch_size, before_test_on_batch_cbk: before_test_on_batch_cbk,
-                                      after_test_on_batch_cbk: after_test_on_batch_cbk)
+            acc, test_loss = accurate(test[0], test[1], batch_size: batch_size)
             print "  accurate: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
           end
           puts "" if verbose
-          after_epoch_cbk&.call(epoch)
+          call_callbacks(:after_epoch, epoch)
         end
       end
 
@@ -104,29 +98,25 @@ module DNN
       # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
-      # @param [Lambda] before_train_on_batch_cbk Set the proc to be performed before train on batch processing.
-      # @param [Lambda] after_train_on_batch_cbk Set the proc to be performed after train on batch processing.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
-      def train_on_batch(x, y, before_train_on_batch_cbk: nil, after_train_on_batch_cbk: nil)
+      def train_on_batch(x, y)
         raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         check_xy_type(x, y)
-        before_train_on_batch_cbk&.call
+        call_callbacks(:before_train_on_batch)
         x = forward(x, true)
         loss_value = @loss_func.forward(x, y, layers)
         dy = @loss_func.backward(y, layers)
         backward(dy)
         @optimizer.update(layers.uniq)
-        after_train_on_batch_cbk&.call(loss_value)
+        call_callbacks(:after_train_on_batch, loss_value)
         loss_value
       end
 
       # Evaluate model and get accurate of test data.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
-      # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
-      # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
       # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
-      def accurate(x, y, batch_size: 100, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
+      def accurate(x, y, batch_size: 100)
         check_xy_type(x, y)
         batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
         iter = Iterator.new(x, y, random: false)
@@ -134,8 +124,7 @@ module DNN
         sum_loss = 0
         max_steps = (x.shape[0].to_f / batch_size).ceil
         iter.foreach(batch_size) do |x_batch, y_batch|
-          correct, loss_value = test_on_batch(x_batch, y_batch, before_test_on_batch_cbk: before_test_on_batch_cbk,
-                                              after_test_on_batch_cbk: after_test_on_batch_cbk)
+          correct, loss_value = test_on_batch(x_batch, y_batch)
           total_correct += correct
           sum_loss += loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value
         end
@@ -146,15 +135,13 @@ module DNN
       # Evaluate once.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
-      # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
-      # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
       # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
-      def test_on_batch(x, y, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
-        before_test_on_batch_cbk&.call
+      def test_on_batch(x, y)
+        call_callbacks(:before_test_on_batch)
         x = forward(x, false)
         correct = evaluate(x, y)
         loss_value = @loss_func.forward(x, y, layers)
-        after_test_on_batch_cbk&.call(loss_value)
+        call_callbacks(:after_test_on_batch, loss_value)
         [correct, loss_value]
       end
 
@@ -186,6 +173,16 @@ module DNN
       def predict1(x)
         check_xy_type(x)
         predict(x.reshape(1, *x.shape))[0, false]
+      end
+
+      def add_callback(event, callback)
+        raise DNN_UnknownEventError.new("Unknown event #{event}.") unless @callbacks.has_key?(event)
+        @callbacks[event] << callback
+      end
+
+      def clear_callbacks(event)
+        raise DNN_UnknownEventError.new("Unknown event #{event}.") unless @callbacks.has_key?(event)
+        @callbacks[event] = []
       end
 
       # Save the model in marshal format.
@@ -289,6 +286,12 @@ module DNN
           end
         end
         bwd.(@last_link, dy)
+      end
+
+      def call_callbacks(event, *args)
+        @callbacks[event].each do |callback|
+          callback.call(*args)
+        end
       end
 
       def tagging

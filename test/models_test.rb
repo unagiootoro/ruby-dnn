@@ -85,10 +85,13 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(3)
     model << Dense.new(2)
     model.setup(SGD.new, MeanSquaredError.new)
-    model.train(x, y, 1, batch_size: 2, verbose: false, test: [x, y],
-                before_epoch_cbk: before_epoch_cbk, after_epoch_cbk: after_epoch_cbk,
-                before_train_on_batch_cbk: before_train_on_batch_cbk, after_train_on_batch_cbk: after_train_on_batch_cbk,
-                before_test_on_batch_cbk: before_test_on_batch_cbk, after_test_on_batch_cbk: after_test_on_batch_cbk)
+    model.add_callback(:before_epoch, before_epoch_cbk)
+    model.add_callback(:after_epoch, after_epoch_cbk)
+    model.add_callback(:before_train_on_batch, before_train_on_batch_cbk)
+    model.add_callback(:after_train_on_batch, after_train_on_batch_cbk)
+    model.add_callback(:before_test_on_batch, before_test_on_batch_cbk)
+    model.add_callback(:after_test_on_batch, after_test_on_batch_cbk)
+    model.train(x, y, 1, batch_size: 2, verbose: false, test: [x, y])
 
     assert_equal [1, 6, 2, 3, 4, 5], call_flg
   end
@@ -128,17 +131,6 @@ class TestSequential < MiniTest::Unit::TestCase
   end
 
   def test_test_on_batch
-    call_cnt = 0
-    call_flg = [0, 0]
-    before = -> do
-      call_cnt += 1
-      call_flg[0] = call_cnt
-    end
-    after = -> loss do
-      call_cnt += 1
-      call_flg[1] = call_cnt
-    end
-
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     y = Numo::SFloat[[65, 130], [155, 310]]
     dense = Dense.new(2)
@@ -149,11 +141,10 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(3)
     model << dense
     model.setup(SGD.new, MeanSquaredError.new)
-    correct, loss = model.test_on_batch(x, y, before_test_on_batch_cbk: before, after_test_on_batch_cbk: after)
+    correct, loss = model.test_on_batch(x, y)
 
     assert_equal 2, correct
     assert_equal 0, loss
-    assert_equal [1, 2], call_flg
   end
 
   def test_predict
