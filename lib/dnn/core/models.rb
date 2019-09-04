@@ -268,7 +268,8 @@ module DNN
       private
 
       def forward(x, learning_phase)
-        y, @last_link = call([x, nil, learning_phase])
+        DNN.learning_phase = learning_phase
+        y, @last_link = call([x, nil])
         unless @built
           @built = true
           tagging

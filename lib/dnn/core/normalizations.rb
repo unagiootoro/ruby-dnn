@@ -24,14 +24,6 @@ module DNN
         @eps = eps
       end
 
-      def call(input)
-        x, prev_link, learning_phase = *input
-        build(x.shape[1..-1]) unless built?
-        y = forward(x, learning_phase)
-        link = Link.new(prev_link, self)
-        [y, link, learning_phase]
-      end
-
       def build(input_shape)
         super
         @gamma = Param.new(Xumo::SFloat.ones(*output_shape), 0)
@@ -40,8 +32,8 @@ module DNN
         @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
       end
 
-      def forward(x, learning_phase)
-        if learning_phase
+      def forward(x)
+        if DNN.learning_phase
           mean = x.mean(axis: @axis, keepdims: true)
           @xc = x - mean
           var = (@xc ** 2).mean(axis: @axis, keepdims: true)
