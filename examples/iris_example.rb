@@ -1,5 +1,5 @@
 require "dnn"
-require "dnn/iris"
+require "dnn/datasets/iris"
 # If you use numo/linalg then please uncomment out.
 # require "numo/linalg/autoloader"
 

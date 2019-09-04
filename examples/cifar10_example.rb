@@ -1,5 +1,5 @@
 require "dnn"
-require "dnn/cifar10"
+require "dnn/datasets/cifar10"
 # If you use numo/linalg then please uncomment out.
 # require "numo/linalg/autoloader"
 

@@ -1,6 +1,6 @@
 require "zlib"
 require "archive/tar/minitar"
-require_relative "../../ext/cifar_loader/cifar_loader"
+require_relative "../../../ext/cifar_loader/cifar_loader"
 require_relative "downloader"
 
 URL_CIFAR100 = "https://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz"
