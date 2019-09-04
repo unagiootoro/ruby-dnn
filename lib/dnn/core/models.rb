@@ -98,6 +98,8 @@ module DNN
         end
       end
 
+      alias fit train
+
       # Training once.
       # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
@@ -325,13 +327,15 @@ module DNN
       # Add layer to the model.
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
       # @return [DNN::Models::Model] Return self.
-      def <<(layer)
+      def add(layer)
         unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
           raise TypeError.new("layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
         end
         @stack << layer
         self
       end
+
+      alias << add
 
       def call(x)
         @stack.each do |layer|
