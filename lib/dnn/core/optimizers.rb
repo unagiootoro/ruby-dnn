@@ -95,26 +95,9 @@ module DNN
     end
 
 
-    class Nesterov < Optimizer
-      attr_accessor :lr
-      attr_accessor :momentum
-
-      def self.from_hash(hash)
-        self.new(hash[:lr], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
-      end
-
-      # @param [Float] lr Learning rate.
-      # @param [Float] momentum Momentum coefficient.
+    class Nesterov < SGD
       def initialize(lr = 0.01, momentum: 0.9, clip_norm: nil)
-        super(clip_norm: clip_norm)
-        @lr = lr
-        @momentum = momentum
-        @v = {}
-        @status = [:v]
-      end
-
-      def to_hash
-        super(lr: @lr, momentum: @momentum)
+        super(lr, momentum: momentum, clip_norm: clip_norm)
       end
 
       private def update_params(params)
