@@ -131,8 +131,7 @@ module DNN
         total_correct = 0
         sum_loss = 0
         max_steps = (x.shape[0].to_f / batch_size).ceil
-        max_steps.times do
-          x_batch, y_batch = iter.next_batch(batch_size)
+        iter.foreach(batch_size) do |x_batch, y_batch|
           correct, loss_value = test_on_batch(x_batch, y_batch, before_test_on_batch_cbk: before_test_on_batch_cbk,
                                               after_test_on_batch_cbk: after_test_on_batch_cbk)
           total_correct += correct
