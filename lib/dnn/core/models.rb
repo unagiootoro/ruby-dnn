@@ -84,8 +84,8 @@ module DNN
             print log if verbose
           end
           if test
-            acc, test_loss = accurate(test[0], test[1], batch_size: batch_size)
-            print "  accurate: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
+            acc, test_loss = accuracy(test[0], test[1], batch_size: batch_size)
+            print "  accuracy: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
           end
           puts "" if verbose
           call_callbacks(:after_epoch, epoch)
@@ -112,11 +112,11 @@ module DNN
         loss_value
       end
 
-      # Evaluate model and get accurate of test data.
+      # Evaluate model and get accuracy of test data.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
-      # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
-      def accurate(x, y, batch_size: 100)
+      # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
+      def accuracy(x, y, batch_size: 100)
         check_xy_type(x, y)
         batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
         iter = Iterator.new(x, y, random: false)
@@ -135,7 +135,7 @@ module DNN
       # Evaluate once.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
-      # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
+      # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def test_on_batch(x, y)
         call_callbacks(:before_test_on_batch)
         x = forward(x, false)
