@@ -147,17 +147,17 @@ module DNN
       end
 
       private def evaluate(y, t)
-        correct = 0
-        y.shape[0].times do |i|
-          if y.shape[1..-1] == [1]
+        if y.shape[1..-1] == [1]
+          correct = 0
+          y.shape[0].times do |i|
             if @loss_func.is_a?(Losses::SigmoidCrossEntropy)
               correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0.5) || (y[i, 0] >= 0 && t[i, 0] >= 0.5)
             else
               correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0) || (y[i, 0] >= 0 && t[i, 0] >= 0)
             end
-          else
-            correct += 1 if y[i, true].max_index == t[i, true].max_index
           end
+        else
+          correct = y.max_index(axis: 1).eq(t.max_index(axis: 1)).count
         end
         correct
       end
