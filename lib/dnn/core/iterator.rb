@@ -9,18 +9,16 @@ module DNN
       @y_datas = y_datas
       @random = random
       @num_datas = x_datas.shape[0]
-      reset_indexs
+      reset
     end
 
     # Return the next batch.
-    # If the number of remaining data < batch size, and random = true then shuffle the data again and return a batch.
-    # If random = false, all remaining data will be returned regardless of the batch size.
     # @param [Integer] batch_size Required batch size.
     def next_batch(batch_size)
-      if @indexes.length < batch_size
-        batch_indexes = @indexes unless @random
-        reset_indexs
-        batch_indexes = @indexes.shift(batch_size) if @random
+      raise DNN_Error.new("This iterator has not next batch. Please call reset.") unless has_next?
+      if @indexes.length <= batch_size
+        batch_indexes = @indexes
+        @has_next = false
       else
         batch_indexes = @indexes.shift(batch_size)
       end
@@ -29,9 +27,26 @@ module DNN
       [x_batch, y_batch]
     end
 
-    private def reset_indexs
+    # Reset input datas and output datas.
+    def reset
+      @has_next = true
       @indexes = @num_datas.times.to_a
       @indexes.shuffle! if @random
+    end
+
+    # Return the true if has next batch.
+    def has_next?
+      @has_next
+    end
+
+    def foreach(batch_size, &block)
+      step = 0
+      while has_next?
+        x_batch, y_batch = next_batch(batch_size)
+        block.call(x_batch, y_batch, step)
+        step += 1
+      end
+      reset
     end
   end
 end
