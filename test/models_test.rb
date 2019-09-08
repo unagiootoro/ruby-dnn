@@ -15,62 +15,6 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_kind_of Dense, model.instance_variable_get(:@stack)[1]
   end
 
-  def test_load_hash_params
-    model = Sequential.new
-    model << InputLayer.new([10])
-    dense = Dense.new(10)
-    model << dense
-    model.setup(SGD.new, MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
-    hash = model.params_to_hash
-    model.load_hash_params(hash)
-    model.predict1(Numo::SFloat.zeros(10))
-    assert_equal dense.get_params[:weight].data, model.layers[1].get_params[:weight].data
-  end
-
-  def test_load_json_params
-    model = Sequential.new
-    model << InputLayer.new([10])
-    dense = Dense.new(10)
-    model << dense
-    model.setup(SGD.new, MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
-    json = model.params_to_json
-    model.load_json_params(json)
-    model.predict1(Numo::SFloat.zeros(10))
-    assert_equal dense.get_params[:weight].data, model.layers[1].get_params[:weight].data
-  end
-
-  def test_params_to_json
-    model = Sequential.new
-    model << InputLayer.new([10])
-    dense = Dense.new(10)
-    model << dense
-    model.setup(SGD.new, MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
-    json = model.params_to_json
-    param = JSON.parse(json)["params"][0]["weight"]
-    bin = Base64.decode64(param[1])
-    data = Numo::SFloat.from_binary(bin).reshape(*param[0])
-
-    assert_equal dense.get_params[:weight].data, data
-  end
-
-  def test_params_to_hash
-    model = Sequential.new
-    model << InputLayer.new([10])
-    dense = Dense.new(10)
-    model << dense
-    model.setup(SGD.new, MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
-    hash = model.params_to_hash
-    param = hash[:params][0][:weight]
-    bin = param[1]
-    data = Numo::SFloat.from_binary(bin).reshape(*param[0])
-
-    assert_equal dense.get_params[:weight].data, data
-  end
-
   def test_setup
     model = Sequential.new
     model << InputLayer.new(2)
@@ -141,10 +85,13 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(3)
     model << Dense.new(2)
     model.setup(SGD.new, MeanSquaredError.new)
-    model.train(x, y, 1, batch_size: 2, verbose: false, test: [x, y],
-                before_epoch_cbk: before_epoch_cbk, after_epoch_cbk: after_epoch_cbk,
-                before_train_on_batch_cbk: before_train_on_batch_cbk, after_train_on_batch_cbk: after_train_on_batch_cbk,
-                before_test_on_batch_cbk: before_test_on_batch_cbk, after_test_on_batch_cbk: after_test_on_batch_cbk)
+    model.add_callback(:before_epoch, before_epoch_cbk)
+    model.add_callback(:after_epoch, after_epoch_cbk)
+    model.add_callback(:before_train_on_batch, before_train_on_batch_cbk)
+    model.add_callback(:after_train_on_batch, after_train_on_batch_cbk)
+    model.add_callback(:before_test_on_batch, before_test_on_batch_cbk)
+    model.add_callback(:after_test_on_batch, after_test_on_batch_cbk)
+    model.train(x, y, 1, batch_size: 2, verbose: false, test: [x, y])
 
     assert_equal [1, 6, 2, 3, 4, 5], call_flg
   end
@@ -184,17 +131,6 @@ class TestSequential < MiniTest::Unit::TestCase
   end
 
   def test_test_on_batch
-    call_cnt = 0
-    call_flg = [0, 0]
-    before = -> do
-      call_cnt += 1
-      call_flg[0] = call_cnt
-    end
-    after = -> loss do
-      call_cnt += 1
-      call_flg[1] = call_cnt
-    end
-
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     y = Numo::SFloat[[65, 130], [155, 310]]
     dense = Dense.new(2)
@@ -205,11 +141,10 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(3)
     model << dense
     model.setup(SGD.new, MeanSquaredError.new)
-    correct, loss = model.test_on_batch(x, y, before_test_on_batch_cbk: before, after_test_on_batch_cbk: after)
+    correct, loss = model.test_on_batch(x, y)
 
     assert_equal 2, correct
     assert_equal 0, loss
-    assert_equal [1, 2], call_flg
   end
 
   def test_predict
@@ -329,6 +264,18 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_raises DNN::DNN_Error do
       model.loss_func
     end
+  end
+
+  def test_tagging
+    dense1 = Dense.new(1)
+    model = Sequential.new
+    model << InputLayer.new(10)
+    model << Dense.new(5)
+    model << dense1
+    model.predict1(Numo::SFloat.zeros(10))
+    
+    assert_equal :Dense_1, dense1.tag
+    assert_equal :Dense_1__bias, dense1.bias.tag
   end
 
   def test_lshift

@@ -1,5 +1,3 @@
-$:.unshift "#{__dir__}/lib"
-
 require "dnn"
 
 include DNN::Layers

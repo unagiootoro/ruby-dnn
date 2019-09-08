@@ -3,6 +3,7 @@ module DNN
 
     # Super class of all layer classes.
     class Layer
+      attr_accessor :tag
       attr_reader :input_shape
 
       def self.call(x, *args)
@@ -14,13 +15,13 @@ module DNN
       end
 
       # Forward propagation and create a link.
-      # @param [Array] input Array of the form [x_input_data, prev_link, learning_phase].
+      # @param [Array] input Array of the form [x_input_data, prev_link].
       def call(input)
-        x, prev_link, learning_phase = *input
+        x, prev_link = *input
         build(x.shape[1..-1]) unless built?
         y = forward(x)
         link = Link.new(prev_link, self)
-        [y, link, learning_phase]
+        [y, link]
       end
 
       # Build the layer.
@@ -98,9 +99,9 @@ module DNN
 
       def call(input)
         build unless built?
-        x, prev_link, learning_phase = *input
+        x, prev_link = *input
         link = prev_link ? Link.new(prev_link, self) : Link.new(nil, self)
-        [forward(x), link, learning_phase]
+        [forward(x), link]
       end
 
       def build
@@ -310,16 +311,8 @@ module DNN
         @rnd = Random.new(@seed)
       end
 
-      def call(input)
-        x, prev_link, learning_phase = *input
-        build(x.shape[1..-1]) unless built?
-        y = forward(x, learning_phase)
-        link = Link.new(prev_link, self)
-        [y, link, learning_phase]
-      end
-
-      def forward(x, learning_phase)
-        if learning_phase
+      def forward(x)
+        if DNN.learning_phase
           Xumo::SFloat.srand(@rnd.rand(1 << 31))
           @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
           x[@mask] = 0

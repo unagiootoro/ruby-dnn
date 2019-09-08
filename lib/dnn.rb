@@ -9,6 +9,7 @@ end
 
 require_relative "dnn/version"
 require_relative "dnn/core/error"
+require_relative "dnn/core/global"
 require_relative "dnn/core/models"
 require_relative "dnn/core/param"
 require_relative "dnn/core/link"
@@ -24,4 +25,5 @@ require_relative "dnn/core/cnn_layers"
 require_relative "dnn/core/embedding"
 require_relative "dnn/core/rnn_layers"
 require_relative "dnn/core/optimizers"
+require_relative "dnn/core/savers"
 require_relative "dnn/core/utils"

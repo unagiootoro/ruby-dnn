@@ -5,6 +5,15 @@ include DNN::Layers
 include DNN::Initializers
 include DNN::Optimizers
 
+# If there is no tag, return object_id of param.
+class DNN::Param
+  def tag
+    return @tag if @tag
+    self.object_id
+  end
+end
+
+
 class TestOptimizer < MiniTest::Unit::TestCase
   def test_to_hash
     optimizer = Optimizer.new
@@ -62,6 +71,23 @@ class TestSGD < MiniTest::Unit::TestCase
     sgd.update([dense])
     assert_equal(-0.1, dense.weight.data.mean.round(2))
     assert_equal(-0.1, dense.weight.data.mean.round(2))
+  end
+
+  def test_dump
+    opt = SGD.new(0.1, momentum: 0.9)
+    x = Numo::SFloat.new(1, 10).rand
+    y = Numo::SFloat.new(1, 1).rand
+    model = Sequential.new([InputLayer.new(10), Dense.new(1)])
+    model.setup(opt, MeanSquaredError.new)
+    model.train_on_batch(x, y)
+    model2 = model.copy
+    opt2 = SGD.load(opt.dump)
+    model.instance_variable_set(:@optimizer, opt)
+    model2.instance_variable_set(:@optimizer, opt2)
+
+    model.train_on_batch(x, y)
+    model2.train_on_batch(x, y)
+    assert_equal model.predict(x), model2.predict(x)
   end
 
   def test_to_hash

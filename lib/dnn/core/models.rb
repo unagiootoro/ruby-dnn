@@ -1,7 +1,3 @@
-require "zlib"
-require "json"
-require "base64"
-
 module DNN
   module Models
 
@@ -10,7 +6,8 @@ module DNN
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
       def self.load(file_name)
-        Marshal.load(Zlib::Inflate.inflate(File.binread(file_name)))
+        loader = Loaders::MarshalLoader.new(self.new)
+        loader.load(file_name)
       end
 
       def initialize
@@ -18,62 +15,14 @@ module DNN
         @last_link = nil
         @setup_completed = false
         @built = false
-      end
-
-      # Load hash model parameters.
-      # @param [Hash] hash Hash to load model parameters.
-      def load_hash_params(hash)
-        has_param_layers_params = hash[:params]
-        has_param_layers_index = 0
-        has_param_layers.uniq.each do |layer|
-          hash_params = has_param_layers_params[has_param_layers_index]
-          hash_params.each do |key, (shape, bin)|
-            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
-            layer.get_params[key].data = data
-          end
-          has_param_layers_index += 1
-        end
-      end
-
-      # Load json model parameters.
-      # @param [String] json_str JSON string to load model parameters.
-      def load_json_params(json_str)
-        hash = JSON.parse(json_str, symbolize_names: true)
-        has_param_layers_params = hash[:params]
-        has_param_layers_index = 0
-        has_param_layers.uniq.each do |layer|
-          hash_params = has_param_layers_params[has_param_layers_index]
-          hash_params.each do |key, (shape, base64_param)|
-            bin = Base64.decode64(base64_param)
-            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
-            layer.get_params[key].data = data
-          end
-          has_param_layers_index += 1
-        end
-      end
-
-      # Convert model parameters to hash.
-      # @return [Hash] Return the hash of model parameters.
-      def params_to_hash
-        has_param_layers_params = has_param_layers.uniq.map do |layer|
-          layer.get_params.map { |key, param|
-            [key, [param.data.shape, param.data.to_binary]]
-          }.to_h
-        end
-        { version: VERSION, params: has_param_layers_params }
-      end
-
-      # Convert model parameters to JSON string.
-      # @return [String] Return the JSON string.
-      def params_to_json
-        has_param_layers_params = has_param_layers.uniq.map do |layer|
-          layer.get_params.map { |key, param|
-            base64_data = Base64.encode64(param.data.to_binary)
-            [key, [param.data.shape, base64_data]]
-          }.to_h
-        end
-        hash = { version: VERSION, params: has_param_layers_params }
-        JSON.dump(hash)
+        @callbacks = {
+          before_epoch: [],
+          after_epoch: [],
+          before_train_on_batch: [],
+          after_train_on_batch: [],
+          before_test_on_batch: [],
+          after_test_on_batch: [],
+        }
       end
 
       # Set optimizer and loss_func to model.
@@ -100,33 +49,19 @@ module DNN
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-      # @param [Lambda] before_epoch_cbk Process performed before one training.
-      # @param [Lambda] after_epoch_cbk Process performed after one training.
-      # @param [Lambda] before_train_on_batch_cbk Set the proc to be performed before train on batch processing.
-      # @param [Lambda] after_train_on_batch_cbk Set the proc to be performed after train on batch processing.
-      # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
-      # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
       def train(x, y, epochs,
                 batch_size: 1,
                 test: nil,
-                verbose: true,
-                before_epoch_cbk: nil,
-                after_epoch_cbk: nil,
-                before_train_on_batch_cbk: nil,
-                after_train_on_batch_cbk: nil,
-                before_test_on_batch_cbk: nil,
-                after_test_on_batch_cbk: nil)
+                verbose: true)
         raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         check_xy_type(x, y)
         iter = Iterator.new(x, y)
         num_train_datas = x.shape[0]
         (1..epochs).each do |epoch|
-          before_epoch_cbk&.call(epoch)
+          call_callbacks(:before_epoch, epoch)
           puts "【 epoch #{epoch}/#{epochs} 】" if verbose
-          (num_train_datas.to_f / batch_size).ceil.times do |index|
-            x_batch, y_batch = iter.next_batch(batch_size)
-            loss_value = train_on_batch(x_batch, y_batch, before_train_on_batch_cbk: before_train_on_batch_cbk,
-                                        after_train_on_batch_cbk: after_train_on_batch_cbk)
+          iter.foreach(batch_size) do |x_batch, y_batch, index|
+            loss_value = train_on_batch(x_batch, y_batch)
             if loss_value.is_a?(Xumo::SFloat)
               loss_value = loss_value.mean
             elsif loss_value.nan?
@@ -149,52 +84,47 @@ module DNN
             print log if verbose
           end
           if test
-            acc, test_loss = accuracy(test[0], test[1], batch_size: batch_size, before_test_on_batch_cbk: before_test_on_batch_cbk,
-                                      after_test_on_batch_cbk: after_test_on_batch_cbk)
+            acc, test_loss = accuracy(test[0], test[1], batch_size: batch_size)
             print "  accuracy: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
           end
           puts "" if verbose
-          after_epoch_cbk&.call(epoch)
+          call_callbacks(:after_epoch, epoch)
         end
       end
+
+      alias fit train
 
       # Training once.
       # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
-      # @param [Lambda] before_train_on_batch_cbk Set the proc to be performed before train on batch processing.
-      # @param [Lambda] after_train_on_batch_cbk Set the proc to be performed after train on batch processing.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
-      def train_on_batch(x, y, before_train_on_batch_cbk: nil, after_train_on_batch_cbk: nil)
+      def train_on_batch(x, y)
         raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
         check_xy_type(x, y)
-        before_train_on_batch_cbk&.call
+        call_callbacks(:before_train_on_batch)
         x = forward(x, true)
         loss_value = @loss_func.forward(x, y, layers)
         dy = @loss_func.backward(y, layers)
         backward(dy)
         @optimizer.update(layers.uniq)
-        after_train_on_batch_cbk&.call(loss_value)
+        call_callbacks(:after_train_on_batch, loss_value)
         loss_value
       end
 
       # Evaluate model and get accuracy of test data.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
-      # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
-      # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-      def accuracy(x, y, batch_size: 100, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
+      def accuracy(x, y, batch_size: 100)
         check_xy_type(x, y)
         batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
         iter = Iterator.new(x, y, random: false)
         total_correct = 0
         sum_loss = 0
         max_steps = (x.shape[0].to_f / batch_size).ceil
-        max_steps.times do
-          x_batch, y_batch = iter.next_batch(batch_size)
-          correct, loss_value = test_on_batch(x_batch, y_batch, before_test_on_batch_cbk: before_test_on_batch_cbk,
-                                              after_test_on_batch_cbk: after_test_on_batch_cbk)
+        iter.foreach(batch_size) do |x_batch, y_batch|
+          correct, loss_value = test_on_batch(x_batch, y_batch)
           total_correct += correct
           sum_loss += loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value
         end
@@ -205,15 +135,13 @@ module DNN
       # Evaluate once.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
-      # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
-      # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-      def test_on_batch(x, y, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
-        before_test_on_batch_cbk&.call
+      def test_on_batch(x, y)
+        call_callbacks(:before_test_on_batch)
         x = forward(x, false)
         correct = evaluate(x, y)
         loss_value = @loss_func.forward(x, y, layers)
-        after_test_on_batch_cbk&.call(loss_value)
+        call_callbacks(:after_test_on_batch, loss_value)
         [correct, loss_value]
       end
 
@@ -247,17 +175,21 @@ module DNN
         predict(x.reshape(1, *x.shape))[0, false]
       end
 
+      def add_callback(event, callback)
+        raise DNN_UnknownEventError.new("Unknown event #{event}.") unless @callbacks.has_key?(event)
+        @callbacks[event] << callback
+      end
+
+      def clear_callbacks(event)
+        raise DNN_UnknownEventError.new("Unknown event #{event}.") unless @callbacks.has_key?(event)
+        @callbacks[event] = []
+      end
+
       # Save the model in marshal format.
       # @param [String] file_name Name to save model.
       def save(file_name)
-        bin = Zlib::Deflate.deflate(Marshal.dump(self))
-        begin
-          File.binwrite(file_name, bin)
-        rescue Errno::ENOENT
-          dir_name = file_name.match(%r`(.*)/.+$`)[1]
-          Dir.mkdir(dir_name)
-          File.binwrite(file_name, bin)
-        end
+        saver = Savers::MarshalSaver.new(self)
+        saver.save(file_name)
       end
 
       # @return [DNN::Models::Model] Return the copy this model.
@@ -333,8 +265,12 @@ module DNN
       private
 
       def forward(x, learning_phase)
-        @built = true
-        y, @last_link = call([x, nil, learning_phase])
+        DNN.learning_phase = learning_phase
+        y, @last_link = call([x, nil])
+        unless @built
+          @built = true
+          tagging
+        end
         y
       end
 
@@ -350,6 +286,26 @@ module DNN
           end
         end
         bwd.(@last_link, dy)
+      end
+
+      def call_callbacks(event, *args)
+        @callbacks[event].each do |callback|
+          callback.call(*args)
+        end
+      end
+
+      def tagging
+        target_layers = layers.uniq
+        target_layers.each do |layer|
+          id = target_layers.select { |l| l.is_a?(layer.class) }.index(layer)
+          class_name = layer.class.name.split("::").last
+          layer.tag = "#{class_name}_#{id}".to_sym
+          if layer.is_a?(Layers::HasParamLayer)
+            layer.get_params.each do |param_key, param|
+              param.tag = "#{layer.tag}__#{param_key}".to_sym
+            end
+          end
+        end
       end
 
       def check_xy_type(x, y = nil)
@@ -375,13 +331,15 @@ module DNN
       # Add layer to the model.
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
       # @return [DNN::Models::Model] Return self.
-      def <<(layer)
+      def add(layer)
         unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
           raise TypeError.new("layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
         end
         @stack << layer
         self
       end
+
+      alias << add
 
       def call(x)
         @stack.each do |layer|

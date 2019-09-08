@@ -1,5 +1,5 @@
 require "zlib"
-require_relative "core/error"
+require_relative "../core/error"
 require_relative "downloader"
 require_relative "mnist"
 
