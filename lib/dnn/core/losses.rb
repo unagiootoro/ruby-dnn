@@ -7,7 +7,7 @@ module DNN
           raise DNN_ShapeError.new("The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}.")
         end
         loss_value = forward_loss(y, t)
-        regularizers = layers.select { |layer| layer.is_a?(Connection) }
+        regularizers = layers.select { |layer| layer.is_a?(Layers::Connection) }
                              .map(&:regularizers).flatten
 
         regularizers.each do |regularizer|
