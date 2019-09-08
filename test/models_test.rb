@@ -112,6 +112,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 0, loss
   end
 
+  # It is accuracy is 1.
   def test_accuracy
     model = Sequential.new
     model << InputLayer.new(3)
@@ -121,6 +122,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 1, model.accuracy(x, y, batch_size: 1).first
   end
 
+  # It is accuracy is 0.5.
   def test_accuracy2
     model = Sequential.new
     model << InputLayer.new(3)
@@ -147,6 +149,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 0, loss
   end
 
+  # It is matching dense forward result.
   def test_predict
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense = Dense.new(2)
@@ -161,6 +164,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[65, 130], [155, 310]], model.predict(x)
   end
 
+  # It is matching dense forward result.
   def test_predict1
     x = Numo::SFloat[1, 2, 3]
     dense = Dense.new(2)
@@ -173,6 +177,42 @@ class TestSequential < MiniTest::Unit::TestCase
     model.setup(SGD.new, MeanSquaredError.new)
 
     assert_equal Numo::SFloat[65, 130], model.predict1(x)
+  end
+
+  # It is including callback function in @callback.
+  def test_add_callback
+    model = Sequential.new
+    prc = proc {}
+    model.add_callback(:before_epoch, prc)
+    assert_equal [prc], model.instance_variable_get(:@callbacks)[:before_epoch]
+  end
+
+  # It is not including callback function in @callback.
+  def test_clear_callbacks
+    model = Sequential.new
+    prc = proc {}
+    model.add_callback(:before_epoch, prc)
+    model.clear_callbacks(:before_epoch)
+    assert_equal [], model.instance_variable_get(:@callbacks)[:before_epoch]
+  end
+
+  # It is running all callback function.
+  def test_call_callbacks
+    call_cnt = 0
+    call_flg = [0, 0]
+    prc1 = proc do
+      call_cnt += 1
+      call_flg[0] = call_cnt
+    end
+    prc2 = proc do
+      call_cnt += 1
+      call_flg[1] = call_cnt
+    end
+    model = Sequential.new
+    model.add_callback(:before_epoch, prc1)
+    model.add_callback(:before_epoch, prc2)
+    model.send(:call_callbacks, :before_epoch)
+    assert_equal [1, 2], call_flg
   end
   
   def test_copy
