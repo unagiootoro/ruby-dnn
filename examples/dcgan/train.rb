@@ -21,15 +21,12 @@ x_train, y_train = MNIST.load_train
 x_train = Numo::SFloat.cast(x_train)
 x_train = x_train / 127.5 - 1
 
-num_batchs = (x_train.shape[0] / batch_size)
 iter = DNN::Iterator.new(x_train, y_train)
 (1..epochs).each do |epoch|
   puts "epoch: #{epoch}"
-  num_batchs.times do |index|
+  iter.foreach(batch_size) do |x_batch, y_batch, index|
     noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
     images = gen.predict(noise)
-
-    x_batch, y_batch = iter.next_batch(batch_size)
     x = x_batch.concatenate(images)
     y = Numo::SFloat.cast([1] * batch_size + [0] * batch_size).reshape(batch_size * 2, 1)
     dis_loss = dis.train_on_batch(x, y)
