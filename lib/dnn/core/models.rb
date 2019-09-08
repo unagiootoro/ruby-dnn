@@ -342,6 +342,16 @@ module DNN
 
       alias << add
 
+      # Remove layer to the model.
+      # @param [DNN::Layers::Layer] layer Layer to remove to the model.
+      # @return [Boolean] Return true if success for remove layer.
+      def remove(layer)
+        unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
+          raise TypeError.new("layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
+        end
+        @stack.delete(layer) ? true : false
+      end
+
       def call(x)
         @stack.each do |layer|
           x = layer.(x)

@@ -296,4 +296,17 @@ class TestSequential < MiniTest::Unit::TestCase
       model << SGD.new
     end
   end
+
+  # It is matching [].
+  def test_remove
+    model = Sequential.new
+    input_layer = InputLayer.new(10)
+    model << input_layer
+    model2 = Sequential.new
+    model2 << Dense.new(10)
+    model << model2
+    model.remove(input_layer)
+    model.remove(model2)
+    assert_equal [], model.stack
+  end
 end
