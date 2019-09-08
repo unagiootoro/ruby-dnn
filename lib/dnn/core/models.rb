@@ -149,9 +149,9 @@ module DNN
             print log if verbose
           end
           if test
-            acc, test_loss = accurate(test[0], test[1], batch_size: batch_size, before_test_on_batch_cbk: before_test_on_batch_cbk,
+            acc, test_loss = accuracy(test[0], test[1], batch_size: batch_size, before_test_on_batch_cbk: before_test_on_batch_cbk,
                                       after_test_on_batch_cbk: after_test_on_batch_cbk)
-            print "  accurate: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
+            print "  accuracy: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
           end
           puts "" if verbose
           after_epoch_cbk&.call(epoch)
@@ -178,13 +178,13 @@ module DNN
         loss_value
       end
 
-      # Evaluate model and get accurate of test data.
+      # Evaluate model and get accuracy of test data.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
       # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
       # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
-      # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
-      def accurate(x, y, batch_size: 100, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
+      # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
+      def accuracy(x, y, batch_size: 100, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
         check_xy_type(x, y)
         batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
         iter = Iterator.new(x, y, random: false)
@@ -207,7 +207,7 @@ module DNN
       # @param [Numo::SFloat] y Output test data.
       # @param [Lambda] before_test_on_batch_cbk Set the proc to be performed before test on batch processing.
       # @param [Lambda] after_test_on_batch_cbk Set the proc to be performed after test on batch processing.
-      # @return [Array] Returns the test data accurate and mean loss in the form [accurate, mean_loss].
+      # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def test_on_batch(x, y, before_test_on_batch_cbk: nil, after_test_on_batch_cbk: nil)
         before_test_on_batch_cbk&.call
         x = forward(x, false)
