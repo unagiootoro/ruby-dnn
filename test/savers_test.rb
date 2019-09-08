@@ -2,7 +2,7 @@ require "test_helper"
 
 class TestLoader < MiniTest::Unit::TestCase
   # It is result of load marshal is as expected.
-  def test_hash_to_params
+  def test_set_all_params
     dense = DNN::Layers::Dense.new(1)
     model = DNN::Models::Sequential.new([InputLayer.new(10), dense])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
@@ -12,9 +12,8 @@ class TestLoader < MiniTest::Unit::TestCase
     model2.predict1(Numo::SFloat.zeros(10))
 
     loader = DNN::Loaders::Loader.new(model2)
-    dense_params = { weight: [[10, 1], dense.weight.data.to_binary], bias: [[1], dense.bias.data.to_binary] }
-    hash = { params: [dense_params] }
-    loader.send(:hash_to_params, hash)
+    dense_params = { weight: dense.weight.data, bias: dense.bias.data }
+    loader.send(:set_all_params, [dense_params])
 
     x = Numo::SFloat.new(10).rand
     assert_equal model.predict1(x), model2.predict1(x)
@@ -24,7 +23,7 @@ end
 
 class TestSaver < MiniTest::Unit::TestCase
   # It is result of load marshal is as expected.
-  def test_hash_to_params
+  def test_get_all_params
     model = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(1)])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
     model.predict1(Numo::SFloat.zeros(10))
@@ -33,9 +32,9 @@ class TestSaver < MiniTest::Unit::TestCase
     model2.predict1(Numo::SFloat.zeros(10))
 
     saver = DNN::Savers::Saver.new(model)
-    hash = saver.send(:params_to_hash)
+    params = saver.send(:get_all_params)
     loader = DNN::Loaders::Loader.new(model2)
-    loader.send(:hash_to_params, hash)
+    loader.send(:set_all_params, params)
 
     x = Numo::SFloat.new(10).rand
     assert_equal model.predict1(x), model2.predict1(x)

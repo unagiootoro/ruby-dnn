@@ -20,14 +20,9 @@ module DNN
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'load_bin'")
       end
 
-      # Load hash model parameters.
-      # @param [Hash] hash Hash to load model parameters.
-      def hash_to_params(hash)
-        has_param_layers_params = hash[:params]
+      def set_all_params(layer_params)
         @model.has_param_layers.uniq.each.with_index do |layer, index|
-          hash_params = has_param_layers_params[index]
-          hash_params.each do |key, (shape, bin)|
-            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
+          layer_params[index].each do |key, data|
             layer.get_params[key].data = data
           end
         end
@@ -42,7 +37,7 @@ module DNN
         loss_func = Utils.hash_to_obj(data[:loss_func])
         @model.setup(opt, loss_func)
         @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
-        hash_to_params(data[:params])
+        set_all_params(data[:params])
       end
     end
 
@@ -50,20 +45,22 @@ module DNN
       private
 
       def load_bin(bin)
-        json_to_params(bin)
+        data = JSON.parse(bin, symbolize_names: true)
+        opt = Utils.hash_to_obj(data[:optimizer])
+        loss_func = Utils.hash_to_obj(data[:loss_func])
+        @model.setup(opt, loss_func)
+        @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
+        base64_to_params(data[:params])
       end
 
-      # Load json model parameters.
-      # @param [String] json_str JSON string to load model parameters.
-      def json_to_params(json_str)
-        hash = JSON.parse(json_str, symbolize_names: true)
-        hash[:params] = hash[:params].map do |layer_hash|
-          layer_hash.map { |key, (shape, base64_data)|
+      def base64_to_params(base64_params)
+        layer_params = base64_params.map do |params|
+          params.map { |key, (shape, base64_data)|
             bin = Base64.decode64(base64_data)
-            [key, [shape, bin]]
+            [key, Xumo::SFloat.from_binary(bin).reshape(*shape)]
           }.to_h
         end
-        hash_to_params(hash)
+        set_all_params(layer_params)
       end
     end
 
@@ -94,15 +91,10 @@ module DNN
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'dump_bin'")
       end
 
-      # Convert model parameters to hash.
-      # @return [Hash] Return the hash of model parameters.
-      def params_to_hash
-        has_param_layers_params = @model.has_param_layers.uniq.map do |layer|
-          layer.get_params.map { |key, param|
-            [key, [param.data.shape, param.data.to_binary]]
-          }.to_h
+      def get_all_params
+        @model.has_param_layers.uniq.map do |layer|
+          layer.get_params.map { |key, param| [key, param.data] }.to_h
         end
-        { version: VERSION, params: has_param_layers_params }
       end
     end
 
@@ -116,7 +108,7 @@ module DNN
       private def dump_bin
         opt = @include_optimizer ? @model.optimizer.dump : @model.optimizer.class.new.dump
         data = {
-          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: params_to_hash,
+          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: get_all_params,
           optimizer: opt, loss_func: @model.loss_func.to_hash
         }
         Zlib::Deflate.deflate(Marshal.dump(data))
@@ -127,20 +119,20 @@ module DNN
       private
 
       def dump_bin
-        params_to_json
+        data = {
+          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: params_to_base64,
+          optimizer: @model.optimizer.to_hash, loss_func: @model.loss_func.to_hash
+        }
+        JSON.dump(data)
       end
 
-      # Convert model parameters to JSON string.
-      # @return [String] Return the JSON string.
-      def params_to_json
-        hash = params_to_hash
-        hash[:params] = hash[:params].map do |layer_hash|
-          layer_hash.map { |key, (shape, bin)|
-            base64_data = Base64.encode64(bin)
-            [key, [shape, base64_data]]
+      def params_to_base64
+        get_all_params.map do |params|
+          params.map { |key, data|
+            base64_data = Base64.encode64(data.to_binary)
+            [key, [data.shape, base64_data]]
           }.to_h
         end
-        JSON.dump(hash)
       end
     end
 
