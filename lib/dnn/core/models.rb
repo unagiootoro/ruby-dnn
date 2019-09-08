@@ -12,6 +12,7 @@ module DNN
 
       def initialize
         @optimizer = nil
+        @loss_func = nil
         @last_link = nil
         @setup_completed = false
         @built = false
@@ -105,7 +106,7 @@ module DNN
         call_callbacks(:before_train_on_batch)
         x = forward(x, true)
         loss_value = @loss_func.forward(x, y, layers)
-        dy = @loss_func.backward(x, y, layers)
+        dy = @loss_func.backward(y, layers)
         backward(dy)
         @optimizer.update(layers.uniq)
         call_callbacks(:after_train_on_batch, loss_value)
