@@ -276,17 +276,7 @@ module DNN
       end
 
       def backward(dy)
-        bwd = -> link, dy do
-          return dy unless link
-          if link.is_a?(TwoInputLink)
-            dy1, dy2 = link.layer.backward(dy)
-            [bwd.(link.prev1, dy1), bwd.(link.prev2, dy2)]
-          else
-            dy = link.layer.backward(dy)
-            bwd.(link.prev, dy)
-          end
-        end
-        bwd.(@last_link, dy)
+        @last_link.backward(dy)
       end
 
       def call_callbacks(event, *args)
