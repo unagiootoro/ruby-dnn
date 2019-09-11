@@ -227,10 +227,10 @@ module DNN
       end
 
       # Get the layer that the model has.
-      # @param [Symbol] The tag of the layer to get.
+      # @param [Symbol] The name of the layer to get.
       # @return [DNN::Layers::Layer] Return the layer.
-      def get_layer(tag)
-        layers.find { |layer| layer.tag == tag }
+      def get_layer(name)
+        layers.find { |layer| layer.name == name }
       end
 
       # @return [Boolean] If model have already been built then return true.
@@ -245,7 +245,7 @@ module DNN
         y, @last_link = call([x, nil])
         unless @built
           @built = true
-          tagging
+          naming
         end
         y
       end
@@ -260,15 +260,15 @@ module DNN
         end
       end
 
-      def tagging
+      def naming
         target_layers = layers.uniq
         target_layers.each do |layer|
           id = target_layers.select { |l| l.is_a?(layer.class) }.index(layer)
           class_name = layer.class.name.split("::").last
-          layer.tag = "#{class_name}_#{id}".to_sym
+          layer.name = "#{class_name}_#{id}".to_sym
           if layer.is_a?(Layers::HasParamLayer)
             layer.get_params.each do |param_key, param|
-              param.tag = "#{layer.tag}__#{param_key}".to_sym
+              param.name = "#{layer.name}__#{param_key}".to_sym
             end
           end
         end

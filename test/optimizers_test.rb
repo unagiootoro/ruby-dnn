@@ -5,10 +5,10 @@ include DNN::Layers
 include DNN::Initializers
 include DNN::Optimizers
 
-# If there is no tag, return object_id of param.
+# If there is no name, return object_id of param.
 class DNN::Param
-  def tag
-    return @tag if @tag
+  def name
+    return @name if @name
     self.object_id
   end
 end
