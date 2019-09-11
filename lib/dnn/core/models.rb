@@ -3,6 +3,9 @@ module DNN
 
     # This class deals with the model of the network.
     class Model
+      attr_accessor :optimizer
+      attr_accessor :loss_func
+
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
       def self.load(file_name)
@@ -14,7 +17,6 @@ module DNN
         @optimizer = nil
         @loss_func = nil
         @last_link = nil
-        @setup_completed = false
         @built = false
         @callbacks = {
           before_epoch: [],
@@ -36,7 +38,6 @@ module DNN
         unless loss_func.is_a?(Losses::Loss)
           raise TypeError.new("loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss class.")
         end
-        @setup_completed = true
         @optimizer = optimizer
         @loss_func = loss_func
       end
@@ -54,7 +55,8 @@ module DNN
                 batch_size: 1,
                 test: nil,
                 verbose: true)
-        raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
+        raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
+        raise DNN_Error.new("The model is not loss_func setup complete.") unless @loss_func
         check_xy_type(x, y)
         iter = Iterator.new(x, y)
         num_train_datas = x.shape[0]
@@ -101,7 +103,8 @@ module DNN
       # @param [Numo::SFloat] y Output training data.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
       def train_on_batch(x, y)
-        raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
+        raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
+        raise DNN_Error.new("The model is not loss_func setup complete.") unless @loss_func
         check_xy_type(x, y)
         call_callbacks(:before_train_on_batch)
         x = forward(x, true)
@@ -239,23 +242,6 @@ module DNN
           layer_class, index = args
           layers.select { |layer| layer.is_a?(layer_class) }[index]
         end
-      end
-
-      # @return [DNN::Optimizers::Optimizer] optimizer Return the optimizer to use for learning.
-      def optimizer
-        raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
-        @optimizer
-      end
-
-      # @return [DNN::Losses::Loss] loss_func Return the loss function to use for learning.
-      def loss_func
-        raise DNN_Error.new("The model is not setup complete.") unless setup_completed?
-        @loss_func
-      end
-
-      # @return [Boolean] If model have already been setup completed then return true.
-      def setup_completed?
-        @setup_completed
       end
 
       # @return [Boolean] If model have already been built then return true.

@@ -36,21 +36,6 @@ class TestSequential < MiniTest::Unit::TestCase
     end
   end
 
-  def test_setup_completed?
-    model = Sequential.new
-    model << InputLayer.new(10)
-    model << Dense.new(10)
-    model.setup(SGD.new, MeanSquaredError.new)
-    assert_equal true, model.setup_completed?
-  end
-
-  def setup_completed2?
-    model = Sequential.new
-    model << InputLayer.new(10)
-    model << Dense.new(10)
-    assert_equal false, model.setup_completed?
-  end
-
   def test_train
     call_cnt = 0
     call_flg = [0, 0, 0, 0, 0, 0]
@@ -274,36 +259,6 @@ class TestSequential < MiniTest::Unit::TestCase
     model.setup(SGD.new, MeanSquaredError.new)
     model.predict1(Numo::SFloat.zeros(2))
     assert_equal 1, model.get_layer(Dense, 1).num_nodes
-  end
-
-  def test_optimizer
-    model = Sequential.new
-    model << InputLayer.new(10)
-    model.setup(SGD.new, MeanSquaredError.new)
-    assert_kind_of SGD, model.optimizer
-  end
-
-  def test_optimizer_ng
-    model = Sequential.new
-    model << InputLayer.new(10)
-    assert_raises DNN::DNN_Error do
-      model.optimizer
-    end
-  end
-
-  def test_loss_func
-    model = Sequential.new
-    model << InputLayer.new(10)
-    model.setup(SGD.new, MeanSquaredError.new)
-    assert_kind_of MeanSquaredError, model.loss_func
-  end
-
-  def test_loss_func_ng
-    model = Sequential.new
-    model << InputLayer.new(10)
-    assert_raises DNN::DNN_Error do
-      model.loss_func
-    end
   end
 
   def test_tagging
