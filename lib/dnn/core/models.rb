@@ -227,21 +227,10 @@ module DNN
       end
 
       # Get the layer that the model has.
-      # @overload get_layer(index)
-      #   @param [Integer] The index of the layer to get.
-      #   @return [DNN::Layers::Layer] Return the layer.
-      # @overload get_layer(layer_class, index)
-      #   @param [Integer] The index of the layer to get.
-      #   @param [Class] The class of the layer to get.
-      #   @return [DNN::Layers::Layer] Return the layer.
-      def get_layer(*args)
-        if args.length == 1
-          index = args[0]
-          layers[index]
-        else
-          layer_class, index = args
-          layers.select { |layer| layer.is_a?(layer_class) }[index]
-        end
+      # @param [Symbol] The tag of the layer to get.
+      # @return [DNN::Layers::Layer] Return the layer.
+      def get_layer(tag)
+        layers.find { |layer| layer.tag == tag }
       end
 
       # @return [Boolean] If model have already been built then return true.

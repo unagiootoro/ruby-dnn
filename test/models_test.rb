@@ -248,17 +248,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << Dense.new(1)
     model.setup(SGD.new, MeanSquaredError.new)
     model.predict1(Numo::SFloat.zeros(2))
-    assert_kind_of Dense, model.get_layer(1)
-  end
-
-  def test_get_layer2
-    model = Sequential.new
-    model << InputLayer.new(2)
-    model << Dense.new(8)
-    model << Dense.new(1)
-    model.setup(SGD.new, MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(2))
-    assert_equal 1, model.get_layer(Dense, 1).num_nodes
+    assert_kind_of Dense, model.get_layer(:Dense_0)
   end
 
   def test_tagging
