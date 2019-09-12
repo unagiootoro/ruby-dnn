@@ -27,7 +27,7 @@ module DNN
       else
         @x_datas[batch_indexes, false]
       end
-      y_batch = if @x_datas.is_a?(Array)
+      y_batch = if @y_datas.is_a?(Array)
         @y_datas.map { |datas| datas[batch_indexes, false] }
       else
         @y_datas[batch_indexes, false]
