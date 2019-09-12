@@ -59,7 +59,7 @@ module DNN
         raise DNN_Error.new("The model is not loss_func setup complete.") unless @loss_func
         check_xy_type(x, y)
         iter = Iterator.new(x, y)
-        num_train_datas = x.shape[0]
+        num_train_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
         (1..epochs).each do |epoch|
           call_callbacks(:before_epoch, epoch)
           puts "【 epoch #{epoch}/#{epochs} 】" if verbose
@@ -122,18 +122,19 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def accuracy(x, y, batch_size: 100)
         check_xy_type(x, y)
-        batch_size = batch_size >= x.shape[0] ? x.shape[0] : batch_size
+        num_test_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
+        batch_size = batch_size >= num_test_datas[0] ? num_test_datas : batch_size
         iter = Iterator.new(x, y, random: false)
         total_correct = 0
         sum_loss = 0
-        max_steps = (x.shape[0].to_f / batch_size).ceil
+        max_steps = (num_test_datas.to_f / batch_size).ceil
         iter.foreach(batch_size) do |x_batch, y_batch|
           correct, loss_value = test_on_batch(x_batch, y_batch)
           total_correct += correct
           sum_loss += loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value
         end
         mean_loss = sum_loss / max_steps
-        [total_correct.to_f / x.shape[0], mean_loss]
+        [total_correct.to_f / num_test_datas, mean_loss]
       end
 
       # Evaluate once.
@@ -242,7 +243,7 @@ module DNN
 
       def forward(x, learning_phase)
         DNN.learning_phase = learning_phase
-        y, @last_link = call([x, nil])
+        y, @last_link = call(x)
         unless @built
           @built = true
           naming
@@ -275,11 +276,11 @@ module DNN
       end
 
       def check_xy_type(x, y = nil)
-        unless x.is_a?(Xumo::SFloat)
-          raise TypeError.new("x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class.")
+        if !x.is_a?(Xumo::SFloat) && !x.is_a?(Array)
+          raise TypeError.new("x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class.")
         end
-        if y && !y.is_a?(Xumo::SFloat)
-          raise TypeError.new("y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class.")
+        if y && !y.is_a?(Xumo::SFloat) && !x.is_a?(Array)
+          raise TypeError.new("y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class.")
         end
       end
     end

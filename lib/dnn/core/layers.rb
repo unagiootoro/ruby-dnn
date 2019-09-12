@@ -99,7 +99,12 @@ module DNN
 
       def call(input)
         build unless built?
-        x, prev_link = *input
+        if input.is_a?(Array)
+          x, prev_link = *input
+        else
+          x = input
+          prev_link = nil
+        end
         link = prev_link ? Link.new(prev_link, self) : Link.new(nil, self)
         [forward(x), link]
       end
