@@ -27,9 +27,9 @@ module DNN
     end
 
     def backward(dy)
-      dy = @layer.backward(dy)
-      @prev1&.backward(dy)
-      @prev2&.backward(dy)
+      dy1, dy2 =* @layer.backward(dy)
+      @prev1&.backward(dy1)
+      @prev2&.backward(dy2)
     end
   end
 end
