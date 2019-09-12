@@ -26,6 +26,7 @@ module DNN
           before_test_on_batch: [],
           after_test_on_batch: [],
         }
+        @layers_cache = nil
       end
 
       # Set optimizer and loss_func to model.
@@ -206,6 +207,7 @@ module DNN
       # @return [Array] All layers array.
       def layers
         raise DNN_Error.new("This model is not built. You need build this model using predict or train.") unless built?
+        return @layers_cache if @layers_cache
         layers = []
         get_layers = -> link do
           return unless link
@@ -218,7 +220,7 @@ module DNN
           end
         end
         get_layers.(@last_link)
-        layers
+        @layers_cache = layers
       end
 
       # Get the all has param layers.
@@ -243,6 +245,7 @@ module DNN
 
       def forward(x, learning_phase)
         DNN.learning_phase = learning_phase
+        @layers_cache = nil
         y, @last_link = call(x)
         unless @built
           @built = true
