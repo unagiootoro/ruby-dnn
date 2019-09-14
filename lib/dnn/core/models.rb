@@ -143,10 +143,11 @@ module DNN
         check_xy_type(x, y)
         call_callbacks(:before_train_on_batch)
         x = forward(x, true)
-        loss_value = @loss_func.forward(x, y, layers)
-        dy = @loss_func.backward(x, y, layers)
+        loss_value = @loss_func.loss(x, y, layers)
+        dy = @loss_func.backward(x, y)
         backward(dy)
         @optimizer.update(layers.uniq)
+        @loss_func.regularizers_backward(layers)
         call_callbacks(:after_train_on_batch, loss_value)
         loss_value
       end
@@ -180,7 +181,7 @@ module DNN
         call_callbacks(:before_test_on_batch)
         x = forward(x, false)
         correct = evaluate(x, y)
-        loss_value = @loss_func.forward(x, y, layers)
+        loss_value = @loss_func.loss(x, y, layers)
         call_callbacks(:after_test_on_batch, loss_value)
         [correct, loss_value]
       end
