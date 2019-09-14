@@ -265,14 +265,13 @@ module DNN
       end
 
       def naming
-        target_layers = layers.uniq
-        target_layers.each do |layer|
-          id = target_layers.select { |l| l.is_a?(layer.class) }.index(layer)
+        layers.uniq.each do |layer|
+          id = layers.uniq.select { |l| l.is_a?(layer.class) }.index(layer)
           class_name = layer.class.name.split("::").last
-          layer.name = "#{class_name}_#{id}".to_sym
+          layer.name = "#{class_name}_#{id}".to_sym unless layer.name
           if layer.is_a?(Layers::HasParamLayer)
             layer.get_params.each do |param_key, param|
-              param.name = "#{layer.name}__#{param_key}".to_sym
+              param.name = "#{layer.name}__#{param_key}".to_sym unless param.name
             end
           end
         end
