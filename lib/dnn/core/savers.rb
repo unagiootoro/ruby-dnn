@@ -20,11 +20,12 @@ module DNN
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'load_bin'")
       end
 
-      def set_all_params(layer_params)
-        @model.has_param_layers.uniq.each.with_index do |layer, index|
-          layer_params[index].each do |key, data|
-            layer.get_params[key].data = data
-          end
+      def set_all_params_data(params_data)
+        all_params = @model.has_param_layers.uniq.map { |layer|
+          layer.get_params.values
+        }.flatten
+        all_params.each do |param|
+          param.data = params_data[param.name]
         end
       end
     end
@@ -37,7 +38,7 @@ module DNN
         loss_func = Utils.hash_to_obj(data[:loss_func])
         @model.setup(opt, loss_func)
         @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
-        set_all_params(data[:params])
+        set_all_params_data(data[:params])
       end
     end
 
@@ -50,17 +51,15 @@ module DNN
         loss_func = Utils.hash_to_obj(data[:loss_func])
         @model.setup(opt, loss_func)
         @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
-        base64_to_params(data[:params])
+        base64_to_params_data(data[:params])
       end
 
-      def base64_to_params(base64_params)
-        layer_params = base64_params.map do |params|
-          params.map { |key, (shape, base64_data)|
-            bin = Base64.decode64(base64_data)
-            [key, Xumo::SFloat.from_binary(bin).reshape(*shape)]
-          }.to_h
-        end
-        set_all_params(layer_params)
+      def base64_to_params_data(base64_params_data)
+        params_data = base64_params_data.map { |key, (shape, base64_data)|
+          bin = Base64.decode64(base64_data)
+          [key, Xumo::SFloat.from_binary(bin).reshape(*shape)]
+        }.to_h
+        set_all_params_data(params_data)
       end
     end
 
@@ -91,10 +90,11 @@ module DNN
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'dump_bin'")
       end
 
-      def get_all_params
-        @model.has_param_layers.uniq.map do |layer|
-          layer.get_params.map { |key, param| [key, param.data] }.to_h
-        end
+      def get_all_params_data
+        all_params = @model.has_param_layers.uniq.map { |layer|
+          layer.get_params.values
+        }.flatten
+        all_params.map { |param| [param.name, param.data] }.to_h
       end
     end
 
@@ -108,7 +108,7 @@ module DNN
       private def dump_bin
         opt = @include_optimizer ? @model.optimizer.dump : @model.optimizer.class.new.dump
         data = {
-          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: get_all_params,
+          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: get_all_params_data,
           optimizer: opt, loss_func: @model.loss_func.to_hash
         }
         Zlib::Deflate.deflate(Marshal.dump(data))
@@ -120,19 +120,17 @@ module DNN
 
       def dump_bin
         data = {
-          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: params_to_base64,
+          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: params_data_to_base64,
           optimizer: @model.optimizer.to_hash, loss_func: @model.loss_func.to_hash
         }
         JSON.dump(data)
       end
 
-      def params_to_base64
-        get_all_params.map do |params|
-          params.map { |key, data|
-            base64_data = Base64.encode64(data.to_binary)
-            [key, [data.shape, base64_data]]
-          }.to_h
-        end
+      def params_data_to_base64
+        get_all_params_data.map { |key, data|
+          base64_data = Base64.encode64(data.to_binary)
+          [key, [data.shape, base64_data]]
+        }.to_h
       end
     end
 
