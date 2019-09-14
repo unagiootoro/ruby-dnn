@@ -29,6 +29,40 @@ module DNN
         @layers_cache = nil
       end
 
+      # This method is provided for compatibility with v0.12.4.
+      # Load hash model parameters.
+      # @param [Hash] hash Hash to load model parameters.
+      def load_hash_params(hash)
+        has_param_layers_params = hash[:params]
+        has_param_layers_index = 0
+        has_param_layers.uniq.each do |layer|
+          hash_params = has_param_layers_params[has_param_layers_index]
+          hash_params.each do |key, (shape, bin)|
+            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
+            layer.get_params[key].data = data
+          end
+          has_param_layers_index += 1
+        end
+      end
+
+      # This method is provided for compatibility with v0.12.4.
+      # Load json model parameters.
+      # @param [String] json_str JSON string to load model parameters.
+      def load_json_params(json_str)
+        hash = JSON.parse(json_str, symbolize_names: true)
+        has_param_layers_params = hash[:params]
+        has_param_layers_index = 0
+        has_param_layers.uniq.each do |layer|
+          hash_params = has_param_layers_params[has_param_layers_index]
+          hash_params.each do |key, (shape, base64_param)|
+            bin = Base64.decode64(base64_param)
+            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
+            layer.get_params[key].data = data
+          end
+          has_param_layers_index += 1
+        end
+      end
+
       # Set optimizer and loss_func to model.
       # @param [DNN::Optimizers::Optimizer] optimizer Optimizer to use for learning.
       # @param [DNN::Losses::Loss] loss_func Loss function to use for learning.
