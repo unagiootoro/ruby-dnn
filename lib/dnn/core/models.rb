@@ -216,11 +216,27 @@ module DNN
         predict(x.reshape(1, *x.shape))[0, false]
       end
 
+      # Add callback function.
+      # @param [Symbol] event Callback event. The following can be used for event.
+      #                       before_epoch: Process: performed before one training.
+      #                       after_epoch: Process:  performed after one training.
+      #                       before_train_on_batch: Set the proc to be performed before train on batch processing.
+      #                       after_train_on_batch:  Set the proc to be performed after train on batch processing.
+      #                       before_test_on_batch:  Set the proc to be performed before test on batch processing.
+      #                       after_test_on_batch:   Set the proc to be performed after test on batch processing.
       def add_callback(event, callback)
         raise DNN_UnknownEventError.new("Unknown event #{event}.") unless @callbacks.has_key?(event)
         @callbacks[event] << callback
       end
 
+      # Clear the callback function registered for each event.
+      # @param [Symbol] event Callback event. The following can be used for event.
+      #                       before_epoch: Process: performed before one training.
+      #                       after_epoch: Process:  performed after one training.
+      #                       before_train_on_batch: Set the proc to be performed before train on batch processing.
+      #                       after_train_on_batch:  Set the proc to be performed after train on batch processing.
+      #                       before_test_on_batch:  Set the proc to be performed before test on batch processing.
+      #                       after_test_on_batch:   Set the proc to be performed after test on batch processing.
       def clear_callbacks(event)
         raise DNN_UnknownEventError.new("Unknown event #{event}.") unless @callbacks.has_key?(event)
         @callbacks[event] = []
