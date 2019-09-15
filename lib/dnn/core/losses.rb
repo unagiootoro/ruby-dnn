@@ -2,25 +2,37 @@ module DNN
   module Losses
 
     class Loss
-      def forward(y, t, layers)
+      def loss(y, t, layers = nil)
         unless y.shape == t.shape
           raise DNN_ShapeError.new("The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}.")
         end
-        loss_value = forward_loss(y, t)
-        regularizers = layers.select { |layer| layer.is_a?(Layers::Connection) }
-                             .map(&:regularizers).flatten
+        loss_value = forward(y, t)
+        loss_value += regularizers_forward(layers) if layers
+        loss_value
+      end
 
+      def forward(y, t)
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
+      end
+
+      def backward(y, t)
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward'")
+      end
+
+      def regularizers_forward(layers)
+        loss_value = 0
+        regularizers = layers.select { |layer| layer.respond_to?(:regularizers) }
+                             .map(&:regularizers).flatten
         regularizers.each do |regularizer|
           loss_value = regularizer.forward(loss_value)
         end
         loss_value
       end
 
-      def backward(t, layers)
+      def regularizers_backward(layers)
         layers.select { |layer| layer.respond_to?(:regularizers) }.each do |layer|
           layer.regularizers.each(&:backward)
         end
-        backward_loss(t)
       end
 
       def to_hash(merge_hash = nil)
@@ -28,44 +40,28 @@ module DNN
         hash.merge!(merge_hash) if merge_hash
         hash
       end
-
-      private
-
-      def forward_loss(y, t)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward_loss'")
-      end
-
-      def backward_loss(t)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward_loss'")
-      end
     end
 
     class MeanSquaredError < Loss
-      private
-
-      def forward_loss(y, t)
-        @y = y
+      def forward(y, t)
         batch_size = t.shape[0]
         0.5 * ((y - t) ** 2).sum / batch_size
       end
 
-      def backward_loss(t)
-        @y - t
+      def backward(y, t)
+        y - t
       end
     end
 
 
     class MeanAbsoluteError < Loss
-      private
-
-      def forward_loss(y, t)
-        @y = y
+      def forward(y, t)
         batch_size = t.shape[0]
         (y - t).abs.sum / batch_size
       end
 
-      def backward_loss(t)
-        dy = @y - t
+      def backward(y, t)
+        dy = y - t
         dy[dy >= 0] = 1
         dy[dy < 0] = -1
         dy
@@ -74,14 +70,12 @@ module DNN
 
 
     class Hinge < Loss
-      private
-
-      def forward_loss(y, t)
+      def forward(y, t)
         @a = 1 - y * t
         Xumo::SFloat.maximum(0, @a)
       end
 
-      def backward_loss(t)
+      def backward(y, t)
         a = Xumo::SFloat.ones(*@a.shape)
         a[@a <= 0] = 0
         a * -t
@@ -90,16 +84,13 @@ module DNN
 
 
     class HuberLoss < Loss
-      private
-
-      def forward_loss(y, t)
-        @y = y
-        loss_l1_value = loss_l1(t)
-        @loss_value = loss_l1_value > 1 ? loss_l1_value : loss_l2(t)
+      def forward(y, t)
+        loss_l1_value = loss_l1(y, t)
+        @loss_value = loss_l1_value > 1 ? loss_l1_value : loss_l2(y, t)
       end
 
-      def backward_loss(t)
-        dy = @y - t
+      def backward(y, t)
+        dy = y - t
         if @loss_value > 1
           dy[dy >= 0] = 1
           dy[dy < 0] = -1
@@ -107,14 +98,16 @@ module DNN
         dy
       end
 
-      def loss_l1(t)
+      private
+
+      def loss_l1(y, t)
         batch_size = t.shape[0]
-        (@y - t).abs.sum / batch_size
+        (y - t).abs.sum / batch_size
       end
 
-      def loss_l2(t)
+      def loss_l2(y, t)
         batch_size = t.shape[0]
-        0.5 * ((@y - t) ** 2).sum / batch_size
+        0.5 * ((y - t) ** 2).sum / batch_size
       end
     end
 
@@ -135,20 +128,18 @@ module DNN
         @eps = eps
       end
 
+      def forward(y, t)
+        @x = SoftmaxCrossEntropy.softmax(y)
+        batch_size = t.shape[0]
+        -(t * Xumo::NMath.log(@x + @eps)).sum / batch_size
+      end
+
+      def backward(y, t)
+        @x - t
+      end
+
       def to_hash
         super(eps: @eps)
-      end
-
-      private
-
-      def forward_loss(y, t)
-        @y = SoftmaxCrossEntropy.softmax(y)
-        batch_size = t.shape[0]
-        -(t * Xumo::NMath.log(@y + @eps)).sum / batch_size
-      end
-
-      def backward_loss(t)
-        @y - t
       end
     end
 
@@ -165,19 +156,17 @@ module DNN
         @eps = eps
       end
 
+      def forward(y, t)
+        @x = Activations::Sigmoid.new.forward(y)
+        -(t * Xumo::NMath.log(@x) + (1 - t) * Xumo::NMath.log(1 - @x))
+      end
+
+      def backward(y, t)
+        @x - t
+      end
+
       def to_hash
         super(eps: @eps)
-      end
-
-      private
-
-      def forward_loss(y, t)
-        @y = Activations::Sigmoid.new.forward(y)
-        -(t * Xumo::NMath.log(@y) + (1 - t) * Xumo::NMath.log(1 - @y))
-      end
-
-      def backward_loss(t)
-        @y - t
       end
     end
 

@@ -24,7 +24,8 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.beta.data = Numo::SFloat.new(10).fill(10)
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
-    assert_equal expected, batch_norm.forward(x, true).round(4)
+    DNN.learning_phase = true
+    assert_equal expected, batch_norm.forward(x).round(4)
   end
 
   def test_forward2
@@ -36,14 +37,16 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.running_var.data = Numo::SFloat.new(10).fill(25)
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
-    assert_equal expected, batch_norm.forward(x, false).round(4)
+    DNN.learning_phase = false
+    assert_equal expected, batch_norm.forward(x).round(4)
   end
 
   def test_backward
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
-    batch_norm.forward(x, true)
+    DNN.learning_phase = true
+    batch_norm.forward(x)
     grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], batch_norm.gamma.grad
@@ -55,7 +58,8 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.build([10])
     batch_norm.trainable = false
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
-    batch_norm.forward(x, true)
+    DNN.learning_phase = true
+    batch_norm.forward(x)
     grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
     assert_equal 0, batch_norm.gamma.grad

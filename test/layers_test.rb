@@ -291,28 +291,32 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_forward
     dropout = Dropout.new(0.5, seed: 0)
     dropout.build([100])
-    num = dropout.forward(Numo::SFloat.ones(100), true).sum.round
+    DNN.learning_phase = true
+    num = dropout.forward(Numo::SFloat.ones(100)).sum.round
     assert num.between?(30, 70)
   end
 
   def test_forward2
     dropout = Dropout.new(0.3, use_scale: true)
     dropout.build([1])
-    num = dropout.forward(Numo::SFloat.ones(10), false).sum.round(1)
+    DNN.learning_phase = false
+    num = dropout.forward(Numo::SFloat.ones(10)).sum.round(1)
     assert_equal 7.0, num
   end
 
   def test_forward3
     dropout = Dropout.new(0.3, use_scale: false)
     dropout.build([1])
-    num = dropout.forward(Numo::SFloat.ones(10), false).sum.round(1)
+    DNN.learning_phase = false
+    num = dropout.forward(Numo::SFloat.ones(10)).sum.round(1)
     assert_equal 10.0, num
   end
 
   def test_backward
     dropout = Dropout.new
     dropout.build([1])
-    y = dropout.forward(Numo::SFloat.ones(10), true)
+    DNN.learning_phase = true
+    y = dropout.forward(Numo::SFloat.ones(10))
     dy = dropout.backward(Numo::SFloat.ones(10))
     assert_equal y.round, dy.round
   end

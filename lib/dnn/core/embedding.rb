@@ -28,9 +28,8 @@ module DNN
       end
 
       def call(input)
-        x, *, learning_phase = *input
         build unless built?
-        [forward(x), Link.new(nil, self), learning_phase]
+        [forward(input), Link.new(nil, self)]
       end
 
       def build

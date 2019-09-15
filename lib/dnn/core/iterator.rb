@@ -8,7 +8,7 @@ module DNN
       @x_datas = x_datas
       @y_datas = y_datas
       @random = random
-      @num_datas = x_datas.shape[0]
+      @num_datas = x_datas.is_a?(Array) ? x_datas[0].shape[0] : x_datas.shape[0]
       reset
     end
 
@@ -22,8 +22,16 @@ module DNN
       else
         batch_indexes = @indexes.shift(batch_size)
       end
-      x_batch = @x_datas[batch_indexes, false]
-      y_batch = @y_datas[batch_indexes, false]
+      x_batch = if @x_datas.is_a?(Array)
+        @x_datas.map { |datas| datas[batch_indexes, false] }
+      else
+        @x_datas[batch_indexes, false]
+      end
+      y_batch = if @y_datas.is_a?(Array)
+        @y_datas.map { |datas| datas[batch_indexes, false] }
+      else
+        @y_datas[batch_indexes, false]
+      end
       [x_batch, y_batch]
     end
 

@@ -1,13 +1,8 @@
 require "test_helper"
 
-include DNN::Activations
-include DNN::Layers
-include DNN::Initializers
-include DNN::Optimizers
-
 class TestOptimizer < MiniTest::Unit::TestCase
   def test_to_hash
-    optimizer = Optimizer.new
+    optimizer = DNN::Optimizers::Optimizer.new
     hash = optimizer.to_hash({momentum: 0.9})
     expected_hash = {
       class: "DNN::Optimizers::Optimizer",
@@ -20,6 +15,10 @@ end
 
 
 class TestSGD < MiniTest::Unit::TestCase
+  Dense = DNN::Layers::Dense
+  Zeros = DNN::Initializers::Zeros
+  SGD = DNN::Optimizers::SGD
+
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::SGD",
@@ -33,18 +32,22 @@ class TestSGD < MiniTest::Unit::TestCase
     assert_equal 1.0, sgd.clip_norm
   end
 
+  # It SGD is works as expected.
   def test_update
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     sgd = SGD.new(0.1)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     sgd.update([dense])
     assert_equal(-0.1, dense.weight.data.mean.round(2))
   end
 
+  # It Momentum SGD is works as expected.
   def test_update2
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     sgd = SGD.new(0.1, momentum: 1)
     sgd.update([dense])
@@ -53,15 +56,35 @@ class TestSGD < MiniTest::Unit::TestCase
     assert_equal(-0.3, dense.weight.data.mean.round(2))
   end
 
+  # It clip norm is works as expected.
   def test_update3
     dense = Dense.new(2, weight_initializer: Zeros.new)
     dense.build([1])
     sgd = SGD.new(0.1, clip_norm: Math.sqrt(16) / 2)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.new(*dense.weight.data.shape).fill(2)
+    dense.bias.name = :bias
     dense.bias.grad = Numo::SFloat.new(*dense.bias.data.shape).fill(2)
     sgd.update([dense])
     assert_equal(-0.1, dense.weight.data.mean.round(2))
     assert_equal(-0.1, dense.weight.data.mean.round(2))
+  end
+
+  def test_dump
+    opt = SGD.new(0.1, momentum: 0.9)
+    x = Numo::SFloat.new(1, 10).rand
+    y = Numo::SFloat.new(1, 1).rand
+    model = DNN::Models::Sequential.new([DNN::Layers::InputLayer.new(10), DNN::Layers::Dense.new(1)])
+    model.setup(opt, DNN::Losses::MeanSquaredError.new)
+    model.train_on_batch(x, y)
+    model2 = model.copy
+    opt2 = SGD.load(opt.dump)
+    model.instance_variable_set(:@optimizer, opt)
+    model2.instance_variable_set(:@optimizer, opt2)
+
+    model.train_on_batch(x, y)
+    model2.train_on_batch(x, y)
+    assert_equal model.predict(x), model2.predict(x)
   end
 
   def test_to_hash
@@ -78,6 +101,10 @@ end
 
 
 class TestNesterov < MiniTest::Unit::TestCase
+  Dense = DNN::Layers::Dense
+  Zeros = DNN::Initializers::Zeros
+  Nesterov = DNN::Optimizers::Nesterov
+
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::Nesterov",
@@ -95,6 +122,7 @@ class TestNesterov < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     nesterov = Nesterov.new(0.1, momentum: 0.9)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     nesterov.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -116,6 +144,10 @@ end
 
 
 class TestAdaGrad < MiniTest::Unit::TestCase
+  Dense = DNN::Layers::Dense
+  Zeros = DNN::Initializers::Zeros
+  AdaGrad = DNN::Optimizers::AdaGrad
+
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::AdaGrad",
@@ -133,6 +165,7 @@ class TestAdaGrad < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adagrad = AdaGrad.new
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     adagrad.update([dense])
     assert_equal(-0.01, dense.weight.data.mean.round(3))
@@ -152,6 +185,10 @@ end
 
 
 class TestRMSProp < MiniTest::Unit::TestCase
+  Dense = DNN::Layers::Dense
+  Zeros = DNN::Initializers::Zeros
+  RMSProp = DNN::Optimizers::RMSProp
+
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::RMSProp",
@@ -171,6 +208,7 @@ class TestRMSProp < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     rmsprop = RMSProp.new(0.01, alpha: 0.5)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     rmsprop.update([dense])
     assert_equal(-0.0141, dense.weight.data.mean.round(4))
@@ -191,6 +229,10 @@ end
 
 
 class TestAdaDelta < MiniTest::Unit::TestCase
+  Dense = DNN::Layers::Dense
+  Zeros = DNN::Initializers::Zeros
+  AdaDelta = DNN::Optimizers::AdaDelta
+
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::AdaDelta",
@@ -208,6 +250,7 @@ class TestAdaDelta < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adadelta = AdaDelta.new(rho: 0.5)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     adadelta.update([dense])
     assert_equal(-0.0014, dense.weight.data.mean.round(4))
@@ -227,6 +270,10 @@ end
 
 
 class TestRMSPropGraves < MiniTest::Unit::TestCase
+  Dense = DNN::Layers::Dense
+  Zeros = DNN::Initializers::Zeros
+  RMSPropGraves = DNN::Optimizers::RMSPropGraves
+
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::RMSPropGraves",
@@ -246,6 +293,7 @@ class TestRMSPropGraves < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     rmsprop = RMSPropGraves.new(0.01, alpha: 0.5)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     rmsprop.update([dense])
     assert_equal(-0.02, dense.weight.data.mean.round(4))
@@ -266,6 +314,10 @@ end
 
 
 class TestAdam < MiniTest::Unit::TestCase
+  Dense = DNN::Layers::Dense
+  Zeros = DNN::Initializers::Zeros
+  Adam = DNN::Optimizers::Adam
+
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::Adam",
@@ -285,10 +337,12 @@ class TestAdam < MiniTest::Unit::TestCase
     assert_equal 1.0, adam.clip_norm
   end
 
+  # It Adam is works as expected.
   def test_update
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adam = Adam.new(alpha: 0.01, beta1: 0.8, beta2: 0.9)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     adam.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -296,10 +350,12 @@ class TestAdam < MiniTest::Unit::TestCase
     assert_equal(-0.02, dense.weight.data.mean.round(3))
   end
 
+  # It AMSGrad is works as expected.
   def test_update2
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adam = Adam.new(alpha: 0.01, beta1: 0.8, beta2: 0.9, amsgrad: true)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape) * 10
     adam.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -326,6 +382,10 @@ end
 
 
 class TestAdaBound < MiniTest::Unit::TestCase
+  Dense = DNN::Layers::Dense
+  Zeros = DNN::Initializers::Zeros
+  AdaBound = DNN::Optimizers::AdaBound
+
   def test_from_hash
     hash = {
       class: "DNN::Optimizers::AdaBound",
@@ -349,10 +409,12 @@ class TestAdaBound < MiniTest::Unit::TestCase
     assert_equal 1.0, adabound.clip_norm
   end
 
+  # It AdaBound is works as expected.
   def test_update
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adabound = AdaBound.new(alpha: 0.01, beta1: 0.8, beta2: 0.9)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     adabound.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -360,10 +422,12 @@ class TestAdaBound < MiniTest::Unit::TestCase
     assert_equal(-0.02, dense.weight.data.mean.round(3))
   end
 
+# It AMSBound is works as expected.
   def test_update2
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adabound = AdaBound.new(alpha: 0.01, beta1: 0.8, beta2: 0.9, amsgrad: true)
+    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape) * 10
     adabound.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)

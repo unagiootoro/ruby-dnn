@@ -7,7 +7,7 @@ Image = DNN::Image
 
 batch_size = 100
 
-dcgan = Model.load("trained/dcgan_model_epoch20.marshal")
+dcgan = DCGAN.load("trained/dcgan_model_epoch20.marshal")
 gen = dcgan.gen
 
 Numo::SFloat.srand(rand(1 << 31))
