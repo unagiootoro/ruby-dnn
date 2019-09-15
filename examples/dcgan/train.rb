@@ -1,5 +1,5 @@
 require "dnn"
-require "dnn/datasets/mnist"
+require "dnn/mnist"
 require "numo/linalg/autoloader"
 require_relative "dcgan"
 
@@ -21,11 +21,12 @@ x_train, y_train = MNIST.load_train
 x_train = Numo::SFloat.cast(x_train)
 x_train = x_train / 127.5 - 1
 
-num_batchs = (x_train.shape[0] / batch_size)
 iter = DNN::Iterator.new(x_train, y_train)
+num_batchs = x_train.shape[0] / batch_size
 (1..epochs).each do |epoch|
   puts "epoch: #{epoch}"
-  iter.foreach do |x_batch, y_batch, index|
+  num_batchs.times do |index|
+    x_batch, y_batch = iter.next_batch(batch_size)
     noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
     images = gen.predict(noise)
     x = x_batch.concatenate(images)
@@ -38,5 +39,6 @@ iter = DNN::Iterator.new(x_train, y_train)
 
     puts "index: #{index}, dis_loss: #{dis_loss.mean}, dcgan_loss: #{dcgan_loss.mean}"
   end
+  iter.reset
   dcgan.save("trained/dcgan_model_epoch#{epoch}.marshal")
 end
