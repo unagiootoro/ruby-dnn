@@ -1,5 +1,5 @@
 require "dnn"
-require "dnn/mnist"
+require "dnn/datasets/mnist"
 require "numo/linalg/autoloader"
 require_relative "dcgan"
 
