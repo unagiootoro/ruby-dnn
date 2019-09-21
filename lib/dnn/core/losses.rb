@@ -120,7 +120,7 @@ module DNN
       end
 
       def self.softmax(y)
-        Xumo::NMath.exp(y) / Xumo::NMath.exp(y).sum(1).reshape(y.shape[0], 1)
+        Xumo::NMath.exp(y) / Xumo::NMath.exp(y).sum(1, keepdims: true)
       end
 
       # @param [Float] eps Value to avoid nan.
