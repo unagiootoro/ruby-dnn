@@ -353,15 +353,14 @@ module DNN
         x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
-        col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3]).transpose(0, 2, 1)
-                 .reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
+        col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3])
         @max_index = col.max_index(1)
         col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
       def backward(dy)
         dmax = Xumo::SFloat.zeros(dy.size * @pool_size.reduce(:*))
-        dmax[@max_index] = dy.flatten
+        dmax[@max_index.flatten] = dy.flatten
         dcol = dmax.reshape(dy.shape[0..2].reduce(:*), @pool_size.reduce(:*) * dy.shape[3])
         dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
         @padding ? zero_padding_bwd(dx, @pad_size) : dx
@@ -374,8 +373,7 @@ module DNN
         x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
-        col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3]).transpose(0, 2, 1)
-                 .reshape(x.shape[0] * @out_size.reduce(:*) * x.shape[3], @pool_size.reduce(:*))
+        col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3])
         col.mean(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
@@ -436,8 +434,7 @@ module DNN
       def backward(dy)
         in_size = input_shape[0..1]
         col = im2col(dy, *in_size, *@unpool_size, @unpool_size)
-        col = col.reshape(dy.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dy.shape[3]).transpose(0, 2, 1)
-                 .reshape(dy.shape[0] * in_size.reduce(:*) * dy.shape[3], @unpool_size.reduce(:*))
+        col = col.reshape(dy.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dy.shape[3])
         col.sum(1).reshape(dy.shape[0], *in_size, dy.shape[3])
       end
 
