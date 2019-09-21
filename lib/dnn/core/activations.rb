@@ -66,9 +66,7 @@ module DNN
       end
 
       def backward(dy)
-        dx = Xumo::SFloat.ones(@x.shape)
-        dx[@x <= 0] = 0
-        dy * dx
+        dy * Xumo::SFloat.cast(@x > 0)
       end
     end
 
