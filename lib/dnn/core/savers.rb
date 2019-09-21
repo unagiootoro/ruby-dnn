@@ -55,10 +55,10 @@ module DNN
       end
 
       def base64_to_params_data(base64_params_data)
-        params_data = base64_params_data.map { |key, (shape, base64_data)|
+        params_data = base64_params_data.to_h do |key, (shape, base64_data)|
           bin = Base64.decode64(base64_data)
           [key, Xumo::SFloat.from_binary(bin).reshape(*shape)]
-        }.to_h
+        end
         set_all_params_data(params_data)
       end
     end
@@ -94,7 +94,7 @@ module DNN
         all_params = @model.has_param_layers.uniq.map { |layer|
           layer.get_params.values
         }.flatten
-        all_params.map { |param| [param.name, param.data] }.to_h
+        all_params.to_h { |param| [param.name, param.data] }
       end
     end
 
@@ -127,10 +127,10 @@ module DNN
       end
 
       def params_data_to_base64
-        get_all_params_data.map { |key, data|
+        get_all_params_data.to_h do |key, data|
           base64_data = Base64.encode64(data.to_binary)
           [key, [data.shape, base64_data]]
-        }.to_h
+        end
       end
     end
 
