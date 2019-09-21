@@ -81,7 +81,7 @@ module DNN
         end
         dxs = Xumo::SFloat.zeros(@xs_shape)
         dh = 0
-        (0...dh2s.shape[1]).to_a.reverse.each do |t|
+        (dh2s.shape[1] - 1).downto(0) do |t|
           dh2 = dh2s[true, t, false]
           dx, dh = @layers[t].backward(dh2 + dh)
           dxs[true, t, false] = dx
@@ -341,7 +341,7 @@ module DNN
         dxs = Xumo::SFloat.zeros(@xs_shape)
         dh = 0
         dc = 0
-        (0...dh2s.shape[1]).to_a.reverse.each do |t|
+        (dh2s.shape[1] - 1).downto(0) do |t|
           dh2 = dh2s[true, t, false]
           dx, dh, dc = @layers[t].backward(dh2 + dh, dc)
           dxs[true, t, false] = dx
