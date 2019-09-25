@@ -10,6 +10,15 @@ module DNN
         self.new(*args).(x)
       end
 
+      def self.from_hash(hash)
+        return nil unless hash
+        layer_class = DNN.const_get(hash[:class])
+        layer = layer_class.allocate
+        raise DNN_Error.new("#{layer.class} is not an instance of #{self} class.") unless layer.is_a?(self)
+        layer.load_hash(hash)
+        layer
+      end
+
       def initialize
         @built = false
       end
@@ -61,6 +70,10 @@ module DNN
         hash.merge!(merge_hash) if merge_hash
         hash
       end
+
+      def load_hash(hash)
+        initialize
+      end
     end
 
 
@@ -85,10 +98,6 @@ module DNN
       def self.call(input)
         shape = input.is_a?(Array) ? input[0].shape : input.shape
         self.new(shape[1..-1]).(input)
-      end
-
-      def self.from_hash(hash)
-        self.new(hash[:input_shape])
       end
 
       # @param [Array] input_dim_or_shape Setting the shape or dimension of the input data.
@@ -126,6 +135,10 @@ module DNN
 
       def to_hash
         super(input_shape: @input_shape)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:input_shape])
       end
     end
 
@@ -196,15 +209,6 @@ module DNN
     class Dense < Connection
       attr_reader :num_nodes
 
-      def self.from_hash(hash)
-        self.new(hash[:num_nodes],
-                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
-                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
-                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
-                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
-                 use_bias: hash[:use_bias])
-      end
-
       # @param [Integer] num_nodes Number of nodes.
       def initialize(num_nodes,
                      weight_initializer: Initializers::RandomNormal.new,
@@ -250,6 +254,15 @@ module DNN
       def to_hash
         super(num_nodes: @num_nodes)
       end
+
+      def load_hash(hash)
+        initialize(hash[:num_nodes],
+                   weight_initializer: Initializers::Initializer.from_hash(hash[:weight_initializer]),
+                   bias_initializer: Initializers::Initializer.from_hash(hash[:bias_initializer]),
+                   weight_regularizer: Regularizers::Regularizer.from_hash(hash[:weight_regularizer]),
+                   bias_regularizer: Regularizers::Regularizer.from_hash(hash[:bias_regularizer]),
+                   use_bias: hash[:use_bias])
+      end
     end
 
 
@@ -269,10 +282,6 @@ module DNN
 
 
     class Reshape < Layer
-      def self.from_hash(hash)
-        self.new(hash[:output_shape])
-      end
-
       def initialize(output_shape)
         super()
         @output_shape = output_shape
@@ -293,16 +302,16 @@ module DNN
       def to_hash
         super(output_shape: @output_shape)
       end
+
+      def load_hash(hash)
+        initialize(hash[:output_shape])
+      end
     end
 
 
     class Dropout < Layer
       attr_accessor :dropout_ratio
       attr_reader :use_scale
-
-      def self.from_hash(hash)
-        self.new(hash[:dropout_ratio], seed: hash[:seed], use_scale: hash[:use_scale])
-      end
 
       # @param [Float] dropout_ratio Nodes dropout ratio.
       # @param [Integer] seed Seed of random number used for masking.
@@ -334,6 +343,10 @@ module DNN
 
       def to_hash
         super(dropout_ratio: @dropout_ratio, seed: @seed, use_scale: @use_scale)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:dropout_ratio], seed: hash[:seed], use_scale: hash[:use_scale])
       end
     end
 

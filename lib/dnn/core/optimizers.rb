@@ -6,8 +6,17 @@ module DNN
       attr_reader :status
       attr_accessor :clip_norm
 
+      def self.from_hash(hash)
+        return nil unless hash
+        optimizer_class = DNN.const_get(hash[:class])
+        optimizer = optimizer_class.allocate
+        raise DNN_Error.new("#{optimizer.class} is not an instance of #{self} class.") unless optimizer.is_a?(self)
+        optimizer.load_hash(hash)
+        optimizer
+      end
+
       def self.load(dumped)
-        opt = Utils.hash_to_obj(dumped[:hash])
+        opt = from_hash(dumped[:hash])
         dumped[:status].each do |key, state|
           state = state.clone
           opt.status[key] = state
@@ -56,16 +65,16 @@ module DNN
           param.grad *= rate
         end
       end
+
+      def load_hash(hash)
+        initialize(clip_norm: hash[:clip_norm])
+      end
     end
 
 
     class SGD < Optimizer
       attr_accessor :lr
       attr_accessor :momentum
-
-      def self.from_hash(hash)
-        self.new(hash[:lr], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
-      end
 
       # @param [Float] lr Learning rate.
       # @param [Float] momentum Momentum coefficient.
@@ -92,6 +101,10 @@ module DNN
           param.data -= amount
         end
       end
+
+      def load_hash(hash)
+        initialize(hash[:lr], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
+      end
     end
 
 
@@ -115,10 +128,6 @@ module DNN
       attr_accessor :lr
       attr_accessor :eps
 
-      def self.from_hash(hash)
-        self.new(hash[:lr], eps: hash[:eps], clip_norm: hash[:clip_norm])
-      end
-
       # @param [Float] lr Learning rate.
       # @param [Float] eps Value to avoid division by zero.
       def initialize(lr = 0.01, eps: 1e-7, clip_norm: nil)
@@ -140,6 +149,10 @@ module DNN
       def to_hash
         super(lr: @lr, eps: @eps)
       end
+
+      def load_hash(hash)
+        initialize(hash[:lr], eps: hash[:eps], clip_norm: hash[:clip_norm])
+      end
     end
 
 
@@ -147,10 +160,6 @@ module DNN
       attr_accessor :lr
       attr_accessor :alpha
       attr_accessor :eps
-
-      def self.from_hash(hash)
-        self.new(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
-      end
 
       # @param [Float] lr Learning rate.
       # @param [Float] alpha Moving average index of past slopes.
@@ -175,16 +184,16 @@ module DNN
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param.name] + @eps)) * param.grad
         end
       end
+
+      def load_hash(hash)
+        initialize(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
+      end
     end
 
 
     class AdaDelta < Optimizer
       attr_accessor :rho
       attr_accessor :eps
-
-      def self.from_hash(hash)
-        self.new(rho: hash[:rho], eps: hash[:eps], clip_norm: hash[:clip_norm])
-      end
 
       # @param [Float] rho Moving average index of past slopes.
       # @param [Float] eps Value to avoid division by zero.
@@ -211,6 +220,10 @@ module DNN
           param.data -= v
         end
       end
+
+      def load_hash(hash)
+        initialize(rho: hash[:rho], eps: hash[:eps], clip_norm: hash[:clip_norm])
+      end
     end
 
 
@@ -218,10 +231,6 @@ module DNN
       attr_accessor :lr
       attr_accessor :alpha
       attr_accessor :eps
-
-      def self.from_hash(hash)
-        self.new(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
-      end
 
       # @param [Float] lr Learning rate.
       # @param [Float] alpha Moving average index of past slopes.
@@ -249,6 +258,10 @@ module DNN
           param.data -= (@lr / Xumo::NMath.sqrt(@v[param.name] - @m[param.name] ** 2 + @eps)) * param.grad
         end
       end
+
+      def load_hash(hash)
+        initialize(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
+      end
     end
 
 
@@ -258,11 +271,6 @@ module DNN
       attr_accessor :beta2
       attr_accessor :eps
       attr_reader :amsgrad
-
-      def self.from_hash(hash)
-        self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2],
-                 eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
-      end
 
       # @param [Float] alpha Value used to calculate learning rate.
       # @param [Float] beta1 Moving average index of beta1.
@@ -307,17 +315,17 @@ module DNN
           end
         end
       end
+
+      def load_hash(hash)
+        initialize(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2],
+                   eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
+      end
     end
 
 
     class AdaBound < Adam
       attr_accessor :final_lr
       attr_accessor :gamma
-
-      def self.from_hash(hash)
-        self.new(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2],
-                 final_lr: hash[:final_lr], gamma: hash[:gamma], eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
-      end
 
       # @param [Float] final_lr Final learning rate.
       # @param [Float] gamma Lower and upper range value.
@@ -359,6 +367,11 @@ module DNN
         lr[lr < lower_bound] = lower_bound
         lr[lr > upper_bound] = upper_bound
         lr
+      end
+
+      def load_hash(hash)
+        initialize(alpha: hash[:alpha], beta1: hash[:beta1], beta2: hash[:beta2],
+                   final_lr: hash[:final_lr], gamma: hash[:gamma], eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
       end
     end
 

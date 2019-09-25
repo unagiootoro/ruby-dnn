@@ -74,10 +74,6 @@ module DNN
     class LeakyReLU < Layers::Layer
       attr_reader :alpha
 
-      def self.from_hash(hash)
-        self.new(hash[:alpha])
-      end
-
       # @param [Float] alpha The slope when the output value is negative.
       def initialize(alpha = 0.3)
         super()
@@ -100,15 +96,15 @@ module DNN
       def to_hash
         super(alpha: @alpha)
       end
+
+      def load_hash(hash)
+        initialize(hash[:alpha])
+      end
     end
 
 
     class ELU < Layers::Layer
       attr_reader :alpha
-
-      def self.from_hash(hash)
-        self.new(hash[:alpha])
-      end
 
       # @param [Float] alpha The slope when the output value is negative.
       def initialize(alpha = 1.0)
@@ -138,6 +134,10 @@ module DNN
 
       def to_hash
         super(alpha: @alpha)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:alpha])
       end
     end
 

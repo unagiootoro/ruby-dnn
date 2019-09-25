@@ -2,6 +2,15 @@ module DNN
   module Initializers
 
     class Initializer
+      def self.from_hash(hash)
+        return nil unless hash
+        initializer_class = DNN.const_get(hash[:class])
+        initializer = initializer_class.allocate
+        raise DNN_Error.new("#{initializer.class} is not an instance of #{self} class.") unless initializer.is_a?(self)
+        initializer.load_hash(hash)
+        initializer
+      end
+
       # @param [Boolean | Integer] seed Seed of random number used for initialize parameter.
       #                                 Set true to determine seed as random.
       def initialize(seed: false)
@@ -20,6 +29,10 @@ module DNN
         hash.merge!(merge_hash) if merge_hash
         hash
       end
+
+      def load_hash(hash)
+        initialize
+      end
     end
 
 
@@ -32,10 +45,6 @@ module DNN
 
     class Const < Initializer
       attr_reader :const
-
-      def self.from_hash(hash)
-        self.new(hash[:const])
-      end
 
       # @param [Float] const Constant value of initialization.
       def initialize(const)
@@ -50,16 +59,16 @@ module DNN
       def to_hash
         super(const: @const)
       end
+
+      def load_hash(hash)
+        initialize(hash[:const])
+      end
     end
 
 
     class RandomNormal < Initializer
       attr_reader :mean
       attr_reader :std
-
-      def self.from_hash(hash)
-        self.new(hash[:mean], hash[:std], seed: hash[:seed])
-      end
 
       # @param [Float] mean Average of initialization value.
       # @param [Float] std Variance of initialization value.
@@ -77,16 +86,16 @@ module DNN
       def to_hash
         super(mean: @mean, std: @std)
       end
+
+      def load_hash(hash)
+        initialize(hash[:mean], hash[:std], seed: hash[:seed])
+      end
     end
 
 
     class RandomUniform < Initializer
       attr_reader :min
       attr_reader :max
-
-      def self.from_hash(hash)
-        self.new(hash[:min], hash[:max], seed: hash[:seed])
-      end
 
       # @param [Float] min Min of initialization value.
       # @param [Float] max Max of initialization value.
@@ -103,6 +112,10 @@ module DNN
 
       def to_hash
         super(min: @min, max: @max)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:min], hash[:max], seed: hash[:seed])
       end
     end
 

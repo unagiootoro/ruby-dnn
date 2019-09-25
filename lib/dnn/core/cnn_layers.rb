@@ -92,17 +92,6 @@ module DNN
       attr_reader :strides
       attr_reader :padding
 
-      def self.from_hash(hash)
-        self.new(hash[:num_filters], hash[:filter_size],
-                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
-                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
-                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
-                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
-                 use_bias: hash[:use_bias],
-                 strides: hash[:strides],
-                 padding: hash[:padding])
-      end
-
       # @param [Integer] num_filters Number of filters.
       # @param [Array | Integer] filter_size Filter size. Filter size is of the form [height, width].
       # @param [Array | Integer] strides Stride length. Stride length is of the form [height, width].
@@ -184,6 +173,17 @@ module DNN
               strides: @strides,
               padding: @padding)
       end
+
+      def load_hash(hash)
+        initialize(hash[:num_filters], hash[:filter_size],
+                   weight_initializer: Initializers::Initializer.from_hash(hash[:weight_initializer]),
+                   bias_initializer: Initializers::Initializer.from_hash(hash[:bias_initializer]),
+                   weight_regularizer: Regularizers::Regularizer.from_hash(hash[:weight_regularizer]),
+                   bias_regularizer: Regularizers::Regularizer.from_hash(hash[:bias_regularizer]),
+                   use_bias: hash[:use_bias],
+                   strides: hash[:strides],
+                   padding: hash[:padding])
+      end
     end
 
 
@@ -194,17 +194,6 @@ module DNN
       attr_reader :filter_size
       attr_reader :strides
       attr_reader :padding
-
-      def self.from_hash(hash)
-        self.new(hash[:num_filters], hash[:filter_size],
-                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
-                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
-                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
-                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
-                 use_bias: hash[:use_bias],
-                 strides: hash[:strides],
-                 padding: hash[:padding])
-      end
 
       # @param [Integer] num_filters Number of filters.
       # @param [Array | Integer] filter_size Filter size. Filter size is of the form [height, width].
@@ -289,6 +278,17 @@ module DNN
               strides: @strides,
               padding: @padding)
       end
+
+      def load_hash(hash)
+        initialize(hash[:num_filters], hash[:filter_size],
+                   weight_initializer: Initializers::Initializer.from_hash(hash[:weight_initializer]),
+                   bias_initializer: Initializers::Initializer.from_hash(hash[:bias_initializer]),
+                   weight_regularizer: Regularizers::Regularizer.from_hash(hash[:weight_regularizer]),
+                   bias_regularizer: Regularizers::Regularizer.from_hash(hash[:bias_regularizer]),
+                   use_bias: hash[:use_bias],
+                   strides: hash[:strides],
+                   padding: hash[:padding])
+      end
     end
 
 
@@ -299,10 +299,6 @@ module DNN
       attr_reader :pool_size
       attr_reader :strides
       attr_reader :padding
-
-      def self.from_hash(hash)
-        self.new(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
-      end
 
       # @param [Array | Integer] pool_size Pooling size. Pooling size is of the form [height, width].
       # @param [Array | Integer | NilClass] strides Stride length. Stride length is of the form [height, width].
@@ -345,6 +341,11 @@ module DNN
               strides: @strides,
               padding: @padding)
       end
+
+      def load_hash(hash)
+        initialize(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
+      end
+
     end
 
 
@@ -396,10 +397,6 @@ module DNN
 
       attr_reader :unpool_size
 
-      def self.from_hash(hash)
-        self.new(hash[:unpool_size])
-      end
-
       # @param [Array | Integer] unpool_size Unpooling size. unpooling size is of the form [height, width].
       def initialize(unpool_size)
         super()
@@ -444,6 +441,10 @@ module DNN
 
       def to_hash
         super(unpool_size: @unpool_size)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:unpool_size])
       end
     end
 

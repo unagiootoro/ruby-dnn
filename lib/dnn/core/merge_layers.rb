@@ -43,10 +43,6 @@ module DNN
     class Concatenate < MergeLayer
       attr_reader :axis
 
-      def self.from_hash(hash)
-        self.new(axis: hash[:axis])
-      end
-
       def initialize(axis: 1)
         super()
         @axis = axis
@@ -64,6 +60,10 @@ module DNN
 
       def to_hash
         super(axis: @axis)
+      end
+
+      def load_hash(hash)
+        initialize(axis: hash[:axis])
       end
     end
 

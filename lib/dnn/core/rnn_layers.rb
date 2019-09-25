@@ -11,19 +11,6 @@ module DNN
       attr_reader :recurrent_weight_initializer
       attr_reader :recurrent_weight_regularizer
 
-      def self.from_hash(hash)
-        self.new(hash[:num_nodes],
-                 stateful: hash[:stateful],
-                 return_sequences: hash[:return_sequences],
-                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
-                 recurrent_weight_initializer: Utils.hash_to_obj(hash[:recurrent_weight_initializer]),
-                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
-                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
-                 recurrent_weight_regularizer: Utils.hash_to_obj(hash[:recurrent_weight_regularizer]),
-                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
-                 use_bias: hash[:use_bias])
-      end
-
       # @param [Integer] num_nodes Number of nodes.
       # @param [Boolean] stateful Maintain state between batches.
       # @param [Boolean] return_sequences Set the false, only the last of each cell of RNN is left.
@@ -105,6 +92,19 @@ module DNN
         super(hash)
       end
 
+      def load_hash(hash)
+        initialize(hash[:num_nodes],
+                   stateful: hash[:stateful],
+                   return_sequences: hash[:return_sequences],
+                   weight_initializer: Initializers::Initializer.from_hash(hash[:weight_initializer]),
+                   recurrent_weight_initializer: Initializers::Initializer.from_hash(hash[:recurrent_weight_initializer]),
+                   bias_initializer: Initializers::Initializer.from_hash(hash[:bias_initializer]),
+                   weight_regularizer: Regularizers::Regularizer.from_hash(hash[:weight_regularizer]),
+                   recurrent_weight_regularizer: Regularizers::Regularizer.from_hash(hash[:recurrent_weight_regularizer]),
+                   bias_regularizer: Regularizers::Regularizer.from_hash(hash[:bias_regularizer]),
+                   use_bias: hash[:use_bias])
+      end
+
       def get_params
         { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden }
       end
@@ -166,20 +166,6 @@ module DNN
     class SimpleRNN < RNN
       attr_reader :activation
 
-      def self.from_hash(hash)
-        self.new(hash[:num_nodes],
-                 stateful: hash[:stateful],
-                 return_sequences: hash[:return_sequences],
-                 activation: Utils.hash_to_obj(hash[:activation]),
-                 weight_initializer: Utils.hash_to_obj(hash[:weight_initializer]),
-                 recurrent_weight_initializer: Utils.hash_to_obj(hash[:recurrent_weight_initializer]),
-                 bias_initializer: Utils.hash_to_obj(hash[:bias_initializer]),
-                 weight_regularizer: Utils.hash_to_obj(hash[:weight_regularizer]),
-                 recurrent_weight_regularizer: Utils.hash_to_obj(hash[:recurrent_weight_regularizer]),
-                 bias_regularizer: Utils.hash_to_obj(hash[:bias_regularizer]),
-                 use_bias: hash[:use_bias])
-      end
-
       # @param [DNN::Layers::Layer] activation Activation function to use in a recurrent network.
       def initialize(num_nodes,
                      stateful: false,
@@ -219,6 +205,20 @@ module DNN
 
       def to_hash
         super(activation: @activation.to_hash)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:num_nodes],
+                   stateful: hash[:stateful],
+                   return_sequences: hash[:return_sequences],
+                   activation: Layers::Layer.from_hash(hash[:activation]),
+                   weight_initializer: Initializers::Initializer.from_hash(hash[:weight_initializer]),
+                   recurrent_weight_initializer: Initializers::Initializer.from_hash(hash[:recurrent_weight_initializer]),
+                   bias_initializer: Initializers::Initializer.from_hash(hash[:bias_initializer]),
+                   weight_regularizer: Regularizers::Regularizer.from_hash(hash[:weight_regularizer]),
+                   recurrent_weight_regularizer: Regularizers::Regularizer.from_hash(hash[:recurrent_weight_regularizer]),
+                   bias_regularizer: Regularizers::Regularizer.from_hash(hash[:bias_regularizer]),
+                   use_bias: hash[:use_bias])
       end
     end
 

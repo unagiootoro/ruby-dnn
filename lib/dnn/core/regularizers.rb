@@ -4,6 +4,15 @@ module DNN
     class Regularizer
       attr_accessor :param
 
+      def self.from_hash(hash)
+        return nil unless hash
+        regularizer_class = DNN.const_get(hash[:class])
+        regularizer = regularizer_class.allocate
+        raise DNN_Error.new("#{regularizer.class} is not an instance of #{self} class.") unless regularizer.is_a?(self)
+        regularizer.load_hash(hash)
+        regularizer
+      end
+
       def forward(x)
         raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
       end
@@ -17,14 +26,14 @@ module DNN
         hash.merge!(merge_hash)
         hash
       end
+
+      def load_hash(hash)
+        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'load_hash'")
+      end
     end
 
     class L1 < Regularizer
       attr_accessor :l1_lambda
-
-      def self.from_hash(hash)
-        self.new(hash[:l1_lambda])
-      end
 
       # @param [Float] l1_lambda L1 regularizer coefficient.
       def initialize(l1_lambda = 0.01)
@@ -44,15 +53,15 @@ module DNN
       def to_hash
         super(l1_lambda: @l1_lambda)
       end
+
+      def load_hash(hash)
+        initialize(hash[:l1_lambda])
+      end
     end
 
 
     class L2 < Regularizer
       attr_accessor :l2_lambda
-
-      def self.from_hash(hash)
-        self.new(hash[:l2_lambda])
-      end
 
       # @param [Float] l2_lambda L2 regularizer coefficient.
       def initialize(l2_lambda = 0.01)
@@ -70,15 +79,15 @@ module DNN
       def to_hash
         super(l2_lambda: @l2_lambda)
       end
+
+      def load_hash(hash)
+        initialize(hash[:l2_lambda])
+      end
     end
 
     class L1L2 < Regularizer
       attr_accessor :l1_lambda
       attr_accessor :l2_lambda
-
-      def self.from_hash(hash)
-        self.new(hash[:l1_lambda], hash[:l2_lambda])
-      end
 
       # @param [Float] l1_lambda L1 regularizer coefficient.
       # @param [Float] l2_lambda L2 regularizer coefficient.
@@ -102,6 +111,10 @@ module DNN
 
       def to_hash
         super(l1_lambda: l1_lambda, l2_lambda: l2_lambda)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:l1_lambda], hash[:l2_lambda])
       end
     end
 

@@ -10,10 +10,6 @@ module DNN
       attr_accessor :momentum
       attr_accessor :eps
 
-      def self.from_hash(hash)
-        self.new(axis: hash[:axis], momentum: hash[:momentum])
-      end
-
       # @param [Integer] axis The axis to normalization.
       # @param [Float] momentum Exponential moving average of mean and variance.
       # @param [Float] eps Value to avoid division by zero.
@@ -66,6 +62,10 @@ module DNN
 
       def to_hash
         super(axis: @axis, momentum: @momentum, eps: @eps)
+      end
+
+      def load_hash(hash)
+        initialize(axis: hash[:axis], momentum: hash[:momentum])
       end
 
       def get_params

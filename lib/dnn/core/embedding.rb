@@ -7,12 +7,6 @@ module DNN
       attr_reader :weight_initializer
       attr_reader :weight_regularizer
 
-      def self.from_hash(hash)
-        self.new(hash[:input_shape], hash[:input_length],
-                 weight_initializer: DNN::Utils.hash_to_obj(hash[:weight_initializer]),
-                 weight_regularizer: DNN::Utils.hash_to_obj(hash[:weight_regularizer]))
-      end
-
       # @param [Integer | Array] input_dim_or_shape Set input data dimension or shape.
       # @param [Integer] input_length Set the time series length of input data.
       # @param [DNN::Initializers::Initializer] weight_initializer Weight initializer.
@@ -65,6 +59,12 @@ module DNN
       def to_hash
         super(input_shape: @input_shape, input_length: @input_length,
               weight_initializer: @weight_initializer.to_hash, weight_regularizer: @weight_regularizer&.to_hash)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:input_shape], hash[:input_length],
+                   weight_initializer: Initializers::Initializer.from_hash(hash[:weight_initializer]),
+                   weight_regularizer: Regularizers::Regularizer.from_hash(hash[:weight_regularizer]))
       end
 
       def get_params

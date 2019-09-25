@@ -18,10 +18,7 @@ module DNN
     def self.hash_to_obj(hash)
       return nil if hash == nil
       dnn_class = DNN.const_get(hash[:class])
-      if dnn_class.respond_to?(:from_hash)
-        return dnn_class.from_hash(hash)
-      end
-      dnn_class.new
+      dnn_class.from_hash(hash)
     end
 
     # Return the result of the sigmoid function.

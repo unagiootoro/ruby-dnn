@@ -2,6 +2,15 @@ module DNN
   module Losses
 
     class Loss
+      def self.from_hash(hash)
+        return nil unless hash
+        loss_class = DNN.const_get(hash[:class])
+        loss = loss_class.allocate
+        raise DNN_Error.new("#{loss.class} is not an instance of #{self} class.") unless loss.is_a?(self)
+        loss.load_hash(hash)
+        loss
+      end
+
       def loss(y, t, layers = nil)
         unless y.shape == t.shape
           raise DNN_ShapeError.new("The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}.")
@@ -39,6 +48,10 @@ module DNN
         hash = { class: self.class.name }
         hash.merge!(merge_hash) if merge_hash
         hash
+      end
+
+      def load_hash(hash)
+        initialize
       end
     end
 
@@ -115,10 +128,6 @@ module DNN
     class SoftmaxCrossEntropy < Loss
       attr_accessor :eps
 
-      def self.from_hash(hash)
-        self.new(eps: hash[:eps])
-      end
-
       def self.softmax(y)
         Xumo::NMath.exp(y) / Xumo::NMath.exp(y).sum(1, keepdims: true)
       end
@@ -141,15 +150,15 @@ module DNN
       def to_hash
         super(eps: @eps)
       end
+
+      def load_hash(hash)
+        initialize(eps: hash[:eps])
+      end
     end
 
 
     class SigmoidCrossEntropy < Loss
       attr_accessor :eps
-
-      def self.from_hash(hash)
-        self.new(eps: hash[:eps])
-      end
 
       # @param [Float] eps Value to avoid nan.
       def initialize(eps: 1e-7)
@@ -167,6 +176,10 @@ module DNN
 
       def to_hash
         super(eps: @eps)
+      end
+
+      def load_hash(hash)
+        initialize(eps: hash[:eps])
       end
     end
 
