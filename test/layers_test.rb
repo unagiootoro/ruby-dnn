@@ -32,7 +32,7 @@ class TestLayer < MiniTest::Unit::TestCase
 
   def test_to_hash
     layer = Layer.new
-    expected_hash = {class: "DNN::Layers::Layer", output_shape: [10]}
+    expected_hash = {class: "DNN::Layers::Layer", name: nil, output_shape: [10]}
     hash = layer.to_hash({output_shape: [10]})
     assert_equal expected_hash, hash
   end
@@ -70,7 +70,7 @@ class TestInputLayer < MiniTest::Unit::TestCase
 
   def test_to_hash
     layer = InputLayer.new(10)
-    hash = {class: "DNN::Layers::InputLayer", input_shape: [10]}
+    hash = { class: "DNN::Layers::InputLayer", name: nil, input_shape: [10] }
     assert_equal hash, layer.to_hash
   end
 end
@@ -195,6 +195,7 @@ class TestDense < MiniTest::Unit::TestCase
     dense = Dense.new(100, weight_regularizer: L1.new, bias_regularizer: L2.new)
     expected_hash = {
       class: "DNN::Layers::Dense",
+      name: nil,
       num_nodes: 100,
       weight_initializer: dense.weight_initializer.to_hash,
       bias_initializer: dense.bias_initializer.to_hash,
@@ -266,6 +267,7 @@ class TestReshape < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Layers::Reshape",
+      name: nil,
       output_shape: [32, 32, 3],
     }
     reshape = Reshape.new([32, 32, 3])
@@ -324,6 +326,7 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Layers::Dropout",
+      name: nil,
       dropout_ratio: 0.3,
       seed: 0,
       use_scale: false,

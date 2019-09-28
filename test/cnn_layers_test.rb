@@ -296,6 +296,7 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d = Conv2D.new(16, 5, strides: 2, padding: true, weight_regularizer: L1.new, bias_regularizer: L2.new, use_bias: false)
     expected_hash = {
       class: "DNN::Layers::Conv2D",
+      name: nil,
       num_filters: 16,
       filter_size: [5, 5],
       weight_initializer: conv2d.weight_initializer.to_hash,
@@ -409,6 +410,7 @@ class TestConv2DTranspose < MiniTest::Unit::TestCase
     conv2d_t = Conv2DTranspose.new(16, 5, strides: 2, padding: true, weight_regularizer: L1.new, bias_regularizer: L2.new, use_bias: false)
     expected_hash = {
       class: "DNN::Layers::Conv2DTranspose",
+      name: nil,
       num_filters: 16,
       filter_size: [5, 5],
       weight_initializer: conv2d_t.weight_initializer.to_hash,
@@ -558,6 +560,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Layers::UnPool2D",
+      name: nil,
       unpool_size: [2, 2],
     }
     unpool2d = UnPool2D.new(2)

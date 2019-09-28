@@ -69,6 +69,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Layers::BatchNormalization",
+      name: nil,
       axis: 1,
       momentum: 0.8,
       eps: 1e-4,

@@ -60,6 +60,7 @@ class TestEmbedding < MiniTest::Unit::TestCase
     embed.build
     expected_hash = {
       class: "DNN::Layers::Embedding",
+      name: nil,
       input_shape: [10],
       input_length: 5,
       weight_initializer: embed.weight_initializer.to_hash,

@@ -128,7 +128,7 @@ class TestLeakyReLU < MiniTest::Unit::TestCase
 
   def test_to_hash
     lrelu = DNN::Activations::LeakyReLU.new
-    expected_hash = { class: "DNN::Activations::LeakyReLU", alpha: 0.3 }
+    expected_hash = { class: "DNN::Activations::LeakyReLU", name: nil, alpha: 0.3 }
     assert_equal expected_hash, lrelu.to_hash
   end
 end
@@ -161,7 +161,7 @@ class TestELU < MiniTest::Unit::TestCase
 
   def test_to_hash
     elu = DNN::Activations::ELU.new
-    expected_hash = { class: "DNN::Activations::ELU", alpha: 1.0 }
+    expected_hash = { class: "DNN::Activations::ELU", name: nil, alpha: 1.0 }
     assert_equal expected_hash, elu.to_hash
   end
 end
