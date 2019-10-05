@@ -5,6 +5,9 @@ module DNN
     class Model
       attr_accessor :optimizer
       attr_accessor :loss_func
+      attr_reader :epoch
+      attr_reader :last_loss
+      attr_reader :last_accuracy
 
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
@@ -95,38 +98,39 @@ module DNN
         check_xy_type(x, y)
         iter = Iterator.new(x, y)
         num_train_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
-        (1..epochs).each do |epoch|
-          call_callbacks(:before_epoch, epoch)
-          puts "【 epoch #{epoch}/#{epochs} 】" if verbose
-          iter.foreach(batch_size) do |x_batch, y_batch, index|
-            loss_value = train_on_batch(x_batch, y_batch)
-            if loss_value.is_a?(Xumo::SFloat)
-              loss_value = loss_value.mean
-            elsif loss_value.nan?
-              puts "\nloss is nan" if verbose
-              return
-            end
-            num_trained_datas = (index + 1) * batch_size
-            num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
-            log = "\r"
-            40.times do |i|
-              if i < num_trained_datas * 40 / num_train_datas
-                log << "="
-              elsif i == num_trained_datas * 40 / num_train_datas
-                log << ">"
-              else
-                log << "_"
+        stopped = catch(:stop) do
+          (1..epochs).each do |epoch|
+            @epoch = epoch
+            call_callbacks(:before_epoch)
+            puts "【 epoch #{epoch}/#{epochs} 】" if verbose
+            iter.foreach(batch_size) do |x_batch, y_batch, index|
+              loss_value = train_on_batch(x_batch, y_batch)
+              num_trained_datas = (index + 1) * batch_size
+              num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
+              log = "\r"
+              40.times do |i|
+                if i < num_trained_datas * 40 / num_train_datas
+                  log << "="
+                elsif i == num_trained_datas * 40 / num_train_datas
+                  log << ">"
+                else
+                  log << "_"
+                end
               end
+              str_loss_value = sprintf('%.8f', loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value)
+              log << "  #{num_trained_datas}/#{num_train_datas} loss: #{str_loss_value}"
+              print log if verbose
             end
-            log << "  #{num_trained_datas}/#{num_train_datas} loss: #{sprintf('%.8f', loss_value)}"
-            print log if verbose
+            if test
+              acc, test_loss = accuracy(test[0], test[1], batch_size: batch_size)
+              print "  accuracy: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
+            end
+            puts "" if verbose
+            call_callbacks(:after_epoch)
           end
-          if test
-            acc, test_loss = accuracy(test[0], test[1], batch_size: batch_size)
-            print "  accuracy: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
-          end
-          puts "" if verbose
-          call_callbacks(:after_epoch, epoch)
+        end
+        if stopped
+          puts "\n#{stopped}" if verbose
         end
       end
 
@@ -148,7 +152,8 @@ module DNN
         backward(dy)
         @optimizer.update(layers.uniq)
         @loss_func.regularizers_backward(layers)
-        call_callbacks(:after_train_on_batch, loss_value)
+        @last_loss = loss_value
+        call_callbacks(:after_train_on_batch)
         loss_value
       end
 
@@ -182,7 +187,8 @@ module DNN
         x = forward(x, false)
         correct = evaluate(x, y)
         loss_value = @loss_func.loss(x, y, layers)
-        call_callbacks(:after_test_on_batch, loss_value)
+        @last_loss = loss_value
+        call_callbacks(:after_test_on_batch)
         [correct, loss_value]
       end
 
@@ -224,9 +230,9 @@ module DNN
       #                       after_train_on_batch:  Set the proc to be performed after train on batch processing.
       #                       before_test_on_batch:  Set the proc to be performed before test on batch processing.
       #                       after_test_on_batch:   Set the proc to be performed after test on batch processing.
-      def add_callback(event, callback)
-        raise DNN_UnknownEventError.new("Unknown event #{event}.") unless @callbacks.has_key?(event)
-        @callbacks[event] << callback
+      def add_callback(callback)
+        callback.model = self
+        @callbacks[callback.event] << callback
       end
 
       # Clear the callback function registered for each event.
@@ -309,9 +315,9 @@ module DNN
         @last_link.backward(dy)
       end
 
-      def call_callbacks(event, *args)
+      def call_callbacks(event)
         @callbacks[event].each do |callback|
-          callback.call(*args)
+          callback.call
         end
       end
 
