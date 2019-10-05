@@ -52,7 +52,7 @@ module DNN
     end
 
     private_class_method def self.url_to_file_name(url)
-      __dir__ + "/downloads/" + url.match(%r`.+/(.+)$`)[1]
+      DOWNLOADS_PATH + "/downloads/" + url.match(%r`.+/(.+)$`)[1]
     end
   end
 end

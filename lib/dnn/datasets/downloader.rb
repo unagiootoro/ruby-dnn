@@ -1,14 +1,19 @@
 require "net/http"
 
 module DNN
+  if ENV["RUBY_DNN_DOWNLOADS_PATH"]
+    DOWNLOADS_PATH = ENV["RUBY_DNN_DOWNLOADS_PATH"]
+  else
+    DOWNLOADS_PATH = __dir__
+  end
 
   class DNN_DownloadError < DNN_Error; end
 
   class Downloader
     def self.download(url, dir_path = nil)
       unless dir_path
-        Dir.mkdir("#{__dir__}/downloads") unless Dir.exist?("#{__dir__}/downloads")
-        dir_path = "#{__dir__}/downloads"
+        Dir.mkdir("#{DOWNLOADS_PATH}/downloads") unless Dir.exist?("#{DOWNLOADS_PATH}/downloads")
+        dir_path = "#{DOWNLOADS_PATH}/downloads"
       end
       Downloader.new(url).download(dir_path)
     rescue => e
