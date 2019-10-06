@@ -52,11 +52,13 @@ module DNN
       # @param [Numo::SFloat] y Output training data.
       # @param [Integer] epochs Number of training.
       # @param [Integer] batch_size Batch size used for one training.
+      # @param [Integer] start_epoch Epoch to start.
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       def train(x, y, epochs,
                 batch_size: 1,
+                start_epoch: 1,
                 test: nil,
                 verbose: true)
         raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
@@ -64,11 +66,13 @@ module DNN
         check_xy_type(x, y)
         iter = Iterator.new(x, y)
         num_train_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
+
         stopped = catch(:stop) do
-          (1..epochs).each do |epoch|
+          (start_epoch..epochs).each do |epoch|
             @epoch = epoch
             call_callbacks(:before_epoch)
             puts "【 epoch #{epoch}/#{epochs} 】" if verbose
+
             iter.foreach(batch_size) do |x_batch, y_batch, index|
               loss_value = train_on_batch(x_batch, y_batch)
               num_trained_datas = (index + 1) * batch_size
@@ -87,6 +91,7 @@ module DNN
               log << "  #{num_trained_datas}/#{num_train_datas} loss: #{str_loss_value}"
               print log if verbose
             end
+
             if test
               acc, test_loss = accuracy(test[0], test[1], batch_size: batch_size)
               print "  accuracy: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
@@ -95,6 +100,7 @@ module DNN
             call_callbacks(:after_epoch)
           end
         end
+
         if stopped
           puts "\n#{stopped}" if verbose
         end
