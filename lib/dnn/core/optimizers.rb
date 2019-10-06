@@ -38,7 +38,7 @@ module DNN
         clip_grads(target_params) if @clip_norm
         update_params(target_params)
         target_params.each do |param|
-          param.grad = Xumo::SFloat.zeros(*param.data.shape)
+          param.grad = Xumo::SFloat[0]
         end
       end
 

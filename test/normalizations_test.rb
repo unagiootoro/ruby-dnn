@@ -62,8 +62,8 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.forward(x)
     grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
-    assert_equal 0, batch_norm.gamma.grad
-    assert_equal 0, batch_norm.beta.grad
+    assert_equal Numo::SFloat[0], batch_norm.gamma.grad
+    assert_equal Numo::SFloat[0], batch_norm.beta.grad
   end
 
   def test_to_hash
