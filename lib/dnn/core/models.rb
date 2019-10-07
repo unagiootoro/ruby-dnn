@@ -74,7 +74,7 @@ module DNN
             puts "【 epoch #{epoch}/#{epochs} 】" if verbose
 
             iter.foreach(batch_size) do |x_batch, y_batch, index|
-              loss_value = train_on_batch(x_batch, y_batch)
+              train_step_res = train_step(x_batch, y_batch)
               num_trained_datas = (index + 1) * batch_size
               num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
               log = "\r"
@@ -87,14 +87,15 @@ module DNN
                   log << "_"
                 end
               end
-              str_loss_value = sprintf('%.8f', loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value)
-              log << "  #{num_trained_datas}/#{num_train_datas} loss: #{str_loss_value}"
+
+              log << "  #{num_trained_datas}/#{num_train_datas} "
+              log << train_step_res.map { |key, val| "#{key}: #{val}" }.join(", ")
               print log if verbose
             end
 
             if test
-              acc, test_loss = accuracy(test[0], test[1], batch_size: batch_size)
-              print "  accuracy: #{acc}, test loss: #{sprintf('%.8f', test_loss)}" if verbose
+              test_res = test(test[0], test[1], batch_size: batch_size)
+              print "  #{test_res.map { |key, val| "#{key}: #{val}" }.join(", ")}" if verbose
             end
             puts "" if verbose
             call_callbacks(:after_epoch)
@@ -108,10 +109,32 @@ module DNN
 
       alias fit train
 
+      # Implement the training process to be performed in one step.
+      # @param [Numo::SFloat] x Input training data.
+      # @param [Numo::SFloat] y Output training data.
+      # @return [Hash] Hash of contents to be output to log.
+      private def train_step(x, y)
+        loss_value = train_on_batch(x, y)
+        str_loss_value = sprintf('%.8f', loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value)
+        { loss: str_loss_value }
+      end
+
+      # Implement the test process to be performed.
+      # @param [Numo::SFloat] x Input training data.
+      # @param [Numo::SFloat] y Output training data.
+      # @param [Integer] batch_size Batch size used for one test.
+      # @return [Hash] Hash of contents to be output to log.
+      private def test(x, y, batch_size: 100)
+        acc, test_loss = accuracy(x, y, batch_size: batch_size)
+        str_test_loss = sprintf('%.8f', test_loss.is_a?(Xumo::SFloat) ? test_loss.mean : test_loss)
+        { accuracy: acc, test_loss: str_test_loss }
+      end
+
       # Training once.
       # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
+      # @param [Integer] batch_size Batch size used for one test.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
       def train_on_batch(x, y)
         raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
@@ -132,6 +155,7 @@ module DNN
       # Evaluate model and get accuracy of test data.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
+      # @param [Integer] batch_size Batch size used for one test.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def accuracy(x, y, batch_size: 100)
         check_xy_type(x, y)
@@ -164,18 +188,21 @@ module DNN
         [correct, loss_value]
       end
 
-      private def evaluate(y, t)
-        if y.shape[1..-1] == [1]
+      # Implement the process to evaluate this model.
+      # @param [Numo::SFloat] x Input test data.
+      # @param [Numo::SFloat] y Output test data.
+      private def evaluate(x, y)
+        if x.shape[1..-1] == [1]
           correct = 0
-          y.shape[0].times do |i|
+          x.shape[0].times do |i|
             if @loss_func.is_a?(Losses::SigmoidCrossEntropy)
-              correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0.5) || (y[i, 0] >= 0 && t[i, 0] >= 0.5)
+              correct += 1 if (x[i, 0] < 0 && y[i, 0] < 0.5) || (x[i, 0] >= 0 && y[i, 0] >= 0.5)
             else
-              correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0) || (y[i, 0] >= 0 && t[i, 0] >= 0)
+              correct += 1 if (x[i, 0] < 0 && y[i, 0] < 0) || (x[i, 0] >= 0 && y[i, 0] >= 0)
             end
           end
         else
-          correct = y.max_index(axis: 1).eq(t.max_index(axis: 1)).count
+          correct = x.max_index(axis: 1).eq(y.max_index(axis: 1)).count
         end
         correct
       end
