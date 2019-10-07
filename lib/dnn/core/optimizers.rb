@@ -58,7 +58,7 @@ module DNN
       end
 
       private def clip_grads(params)
-        norm = Math.sqrt(params.reduce(0) { |sum, param| sum + (param.grad == 0 ? 0 : (param.grad ** 2).sum) })
+        norm = Math.sqrt(params.reduce(0) { |total, param| total + (param.grad ** 2).sum })
         return if norm <= @clip_norm
         rate = @clip_norm / (norm + 1e-7)
         params.each do |param|
