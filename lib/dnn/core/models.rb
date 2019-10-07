@@ -117,7 +117,7 @@ module DNN
       # @return [Hash] Hash of contents to be output to log.
       private def train_step(x, y)
         loss_value = train_on_batch(x, y)
-        str_loss_value = sprintf('%.8f', loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value)
+        str_loss_value = sprintf('%.8f', loss_value.mean)
         { loss: str_loss_value }
       end
 
@@ -129,7 +129,7 @@ module DNN
       # @return [Hash] Hash of contents to be output to log.
       private def test(x, y, batch_size: 100, last_round_down: false)
         acc, test_loss = accuracy(x, y, batch_size: batch_size, last_round_down: last_round_down)
-        str_test_loss = sprintf('%.8f', test_loss.is_a?(Xumo::SFloat) ? test_loss.mean : test_loss)
+        str_test_loss = sprintf('%.8f', test_loss.mean)
         { accuracy: acc, test_loss: str_test_loss }
       end
 
@@ -167,12 +167,12 @@ module DNN
         batch_size = batch_size >= num_test_datas[0] ? num_test_datas : batch_size
         iter = Iterator.new(x, y, random: false, last_round_down: last_round_down)
         total_correct = 0
-        sum_loss = 0
+        sum_loss = Xumo::SFloat[0]
         max_steps = (num_test_datas.to_f / batch_size).ceil
         iter.foreach(batch_size) do |x_batch, y_batch|
           correct, loss_value = test_on_batch(x_batch, y_batch)
           total_correct += correct
-          sum_loss += loss_value.is_a?(Xumo::SFloat) ? loss_value.mean : loss_value
+          sum_loss += loss_value.mean
         end
         mean_loss = sum_loss / max_steps
         [total_correct.to_f / num_test_datas, mean_loss]
