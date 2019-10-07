@@ -53,18 +53,20 @@ module DNN
       # @param [Integer] epochs Number of training.
       # @param [Integer] batch_size Batch size used for one training.
       # @param [Integer] start_epoch Epoch to start.
+      # @param [Boolean] last_round_down Set true to round down for last batch data.
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       def train(x, y, epochs,
                 batch_size: 1,
                 start_epoch: 1,
+                last_round_down: false,
                 test: nil,
                 verbose: true)
         raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
         raise DNN_Error.new("The model is not loss_func setup complete.") unless @loss_func
         check_xy_type(x, y)
-        iter = Iterator.new(x, y)
+        iter = Iterator.new(x, y, last_round_down: last_round_down)
         num_train_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
 
         stopped = catch(:stop) do
@@ -94,7 +96,7 @@ module DNN
             end
 
             if test
-              test_res = test(test[0], test[1], batch_size: batch_size)
+              test_res = test(test[0], test[1], batch_size: batch_size, last_round_down: last_round_down)
               print "  #{test_res.map { |key, val| "#{key}: #{val}" }.join(", ")}" if verbose
             end
             puts "" if verbose
@@ -123,9 +125,10 @@ module DNN
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
       # @param [Integer] batch_size Batch size used for one test.
+      # @param [Boolean] last_round_down Set true to round down for last batch data.
       # @return [Hash] Hash of contents to be output to log.
-      private def test(x, y, batch_size: 100)
-        acc, test_loss = accuracy(x, y, batch_size: batch_size)
+      private def test(x, y, batch_size: 100, last_round_down: false)
+        acc, test_loss = accuracy(x, y, batch_size: batch_size, last_round_down: last_round_down)
         str_test_loss = sprintf('%.8f', test_loss.is_a?(Xumo::SFloat) ? test_loss.mean : test_loss)
         { accuracy: acc, test_loss: str_test_loss }
       end
@@ -156,12 +159,13 @@ module DNN
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
       # @param [Integer] batch_size Batch size used for one test.
+      # @param [Boolean] last_round_down Set true to round down for last batch data.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-      def accuracy(x, y, batch_size: 100)
+      def accuracy(x, y, batch_size: 100, last_round_down: false)
         check_xy_type(x, y)
         num_test_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
         batch_size = batch_size >= num_test_datas[0] ? num_test_datas : batch_size
-        iter = Iterator.new(x, y, random: false)
+        iter = Iterator.new(x, y, random: false, last_round_down: last_round_down)
         total_correct = 0
         sum_loss = 0
         max_steps = (num_test_datas.to_f / batch_size).ceil

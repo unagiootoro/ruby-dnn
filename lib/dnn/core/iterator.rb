@@ -4,10 +4,12 @@ module DNN
     # @param [Numo::SFloat] x_datas input datas.
     # @param [Numo::SFloat] y_datas output datas.
     # @param [Boolean] random Set true to return batches randomly. Setting false returns batches in order of index.
-    def initialize(x_datas, y_datas, random: true)
+    # @param [Boolean] last_round_down Set true to round down for last batch data when call foreach.
+    def initialize(x_datas, y_datas, random: true, last_round_down: false)
       @x_datas = x_datas
       @y_datas = y_datas
       @random = random
+      @last_round_down = last_round_down
       @num_datas = x_datas.is_a?(Array) ? x_datas[0].shape[0] : x_datas.shape[0]
       reset
     end
@@ -48,11 +50,10 @@ module DNN
     end
 
     def foreach(batch_size, &block)
-      step = 0
-      while has_next?
+      steps = @last_round_down ? @num_datas / batch_size : (@num_datas.to_f / batch_size).ceil
+      steps.times do |step|
         x_batch, y_batch = next_batch(batch_size)
         block.call(x_batch, y_batch, step)
-        step += 1
       end
       reset
     end
