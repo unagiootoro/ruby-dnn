@@ -148,7 +148,7 @@ module DNN
         loss_value = @loss_func.loss(x, y, layers)
         dy = @loss_func.backward(x, y)
         backward(dy)
-        @optimizer.update(layers.uniq)
+        @optimizer.update(layers)
         @loss_func.regularizers_backward(layers)
         @last_loss = loss_value
         call_callbacks(:after_train_on_batch)
@@ -280,7 +280,7 @@ module DNN
           end
         end
         get_layers.(@last_link)
-        @layers_cache = layers
+        @layers_cache = layers.uniq
       end
 
       # Get the all has param layers.
@@ -325,8 +325,8 @@ module DNN
       end
 
       def naming
-        layers.uniq.each do |layer|
-          id = layers.uniq.select { |l| l.is_a?(layer.class) }.index(layer)
+        layers.each do |layer|
+          id = layers.select { |l| l.is_a?(layer.class) }.index(layer)
           class_name = layer.class.name.split("::").last
           layer.name = "#{class_name}_#{id}".to_sym unless layer.name
           if layer.is_a?(Layers::HasParamLayer)
