@@ -22,8 +22,8 @@ module DNN
 
       def build(input_shape)
         super
-        @gamma = Param.new(Xumo::SFloat.ones(*output_shape), 0)
-        @beta = Param.new(Xumo::SFloat.zeros(*output_shape), 0)
+        @gamma = Param.new(Xumo::SFloat.ones(*output_shape), Xumo::SFloat[0])
+        @beta = Param.new(Xumo::SFloat.zeros(*output_shape), Xumo::SFloat[0])
         @running_mean = Param.new(Xumo::SFloat.zeros(*output_shape))
         @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
       end

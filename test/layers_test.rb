@@ -169,8 +169,8 @@ class TestDense < MiniTest::Unit::TestCase
     dense.forward(x)
     grad = dense.backward(Numo::SFloat[1])
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
-    assert_equal 0, dense.weight.grad.round(4)
-    assert_equal 0, dense.bias.grad
+    assert_equal Numo::SFloat[0], dense.weight.grad.round(4)
+    assert_equal Numo::SFloat[0], dense.bias.grad
   end
 
   def test_output_shape

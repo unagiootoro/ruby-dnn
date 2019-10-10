@@ -168,8 +168,8 @@ module DNN
         @bias_initializer = bias_initializer
         @weight_regularizer = weight_regularizer
         @bias_regularizer = bias_regularizer
-        @weight = Param.new(nil, 0)
-        @bias = use_bias ? Param.new(nil, 0) : nil
+        @weight = Param.new(nil, Xumo::SFloat[0])
+        @bias = use_bias ? Param.new(nil, Xumo::SFloat[0]) : nil
       end
 
       def regularizers

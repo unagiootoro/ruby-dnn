@@ -136,6 +136,7 @@ module DNN
       # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
+      # @param [Integer] batch_size Batch size used for one test.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
       def train_on_batch(x, y)
         raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
@@ -146,7 +147,7 @@ module DNN
         loss_value = @loss_func.loss(x, y, layers)
         dy = @loss_func.backward(x, y)
         backward(dy)
-        @optimizer.update(layers.uniq)
+        @optimizer.update(layers)
         @loss_func.regularizers_backward(layers)
         call_callbacks(:after_train_on_batch, loss_value)
         loss_value
@@ -155,6 +156,7 @@ module DNN
       # Evaluate model and get accuracy of test data.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
+      # @param [Integer] batch_size Batch size used for one test.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def accuracy(x, y, batch_size: 100)
         check_xy_type(x, y)
@@ -186,18 +188,21 @@ module DNN
         [correct, loss_value]
       end
 
-      private def evaluate(y, t)
-        if y.shape[1..-1] == [1]
+      # Implement the process to evaluate this model.
+      # @param [Numo::SFloat] x Input test data.
+      # @param [Numo::SFloat] y Output test data.
+      private def evaluate(x, y)
+        if x.shape[1..-1] == [1]
           correct = 0
-          y.shape[0].times do |i|
+          x.shape[0].times do |i|
             if @loss_func.is_a?(Losses::SigmoidCrossEntropy)
-              correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0.5) || (y[i, 0] >= 0 && t[i, 0] >= 0.5)
+              correct += 1 if (x[i, 0] < 0 && y[i, 0] < 0.5) || (x[i, 0] >= 0 && y[i, 0] >= 0.5)
             else
-              correct += 1 if (y[i, 0] < 0 && t[i, 0] < 0) || (y[i, 0] >= 0 && t[i, 0] >= 0)
+              correct += 1 if (x[i, 0] < 0 && y[i, 0] < 0) || (x[i, 0] >= 0 && y[i, 0] >= 0)
             end
           end
         else
-          correct = y.max_index(axis: 1).eq(t.max_index(axis: 1)).count
+          correct = x.max_index(axis: 1).eq(y.max_index(axis: 1)).count
         end
         correct
       end
@@ -271,7 +276,7 @@ module DNN
           end
         end
         get_layers.(@last_link)
-        @layers_cache = layers
+        @layers_cache = layers.uniq
       end
 
       # Get the all has param layers.
@@ -316,8 +321,8 @@ module DNN
       end
 
       def naming
-        layers.uniq.each do |layer|
-          id = layers.uniq.select { |l| l.is_a?(layer.class) }.index(layer)
+        layers.each do |layer|
+          id = layers.select { |l| l.is_a?(layer.class) }.index(layer)
           class_name = layer.class.name.split("::").last
           layer.name = "#{class_name}_#{id}".to_sym unless layer.name
           if layer.is_a?(Layers::HasParamLayer)

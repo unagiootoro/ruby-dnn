@@ -21,7 +21,7 @@ module DNN
       end
 
       def set_all_params_data(params_data)
-        all_params = @model.has_param_layers.uniq.map { |layer|
+        all_params = @model.has_param_layers.map { |layer|
           layer.get_params.values
         }.flatten
         all_params.each do |param|
@@ -91,7 +91,7 @@ module DNN
       end
 
       def get_all_params_data
-        all_params = @model.has_param_layers.uniq.map { |layer|
+        all_params = @model.has_param_layers.map { |layer|
           layer.get_params.values
         }.flatten
         all_params.to_h { |param| [param.name, param.data] }

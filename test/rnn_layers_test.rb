@@ -248,9 +248,9 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     rnn.build([16, 64])
     rnn.forward(x)
     rnn.backward(y)
-    assert_equal 0, rnn.weight.grad
-    assert_equal 0, rnn.recurrent_weight.grad
-    assert_equal 0, rnn.bias.grad
+    assert_equal Numo::SFloat[0], rnn.weight.grad
+    assert_equal Numo::SFloat[0], rnn.recurrent_weight.grad
+    assert_equal Numo::SFloat[0], rnn.bias.grad
   end
 
   def test_backward4
@@ -457,9 +457,9 @@ class TestLSTM < MiniTest::Unit::TestCase
     lstm.build([16, 64])
     lstm.forward(x)
     lstm.backward(y)
-    assert_equal 0, lstm.weight.grad
-    assert_equal 0, lstm.recurrent_weight.grad
-    assert_equal 0, lstm.bias.grad
+    assert_equal Numo::SFloat[0], lstm.weight.grad
+    assert_equal Numo::SFloat[0], lstm.recurrent_weight.grad
+    assert_equal Numo::SFloat[0], lstm.bias.grad
   end
 
   def test_backward4

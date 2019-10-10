@@ -17,7 +17,7 @@ module DNN
         end
         loss_value = forward(y, t)
         loss_value += regularizers_forward(layers) if layers
-        loss_value
+        loss_value.is_a?(Float) ? Xumo::SFloat[loss_value] : loss_value
       end
 
       def forward(y, t)

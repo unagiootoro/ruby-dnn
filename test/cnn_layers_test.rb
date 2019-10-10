@@ -261,8 +261,8 @@ class TestConv2D < MiniTest::Unit::TestCase
     conv2d.build([32, 32, 3])
     conv2d.forward(x)
     conv2d.backward(dy)
-    assert_equal 0, conv2d.weight.grad
-    assert_equal 0, conv2d.bias.grad
+    assert_equal Numo::SFloat[0], conv2d.weight.grad
+    assert_equal Numo::SFloat[0], conv2d.bias.grad
   end
 
   def test_output_shape

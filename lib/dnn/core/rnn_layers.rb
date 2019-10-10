@@ -33,7 +33,7 @@ module DNN
         @return_sequences = return_sequences
         @layers = []
         @hidden = Param.new
-        @recurrent_weight = Param.new(nil, 0)
+        @recurrent_weight = Param.new(nil, Xumo::SFloat[0])
         @recurrent_weight_initializer = recurrent_weight_initializer
         @recurrent_weight_regularizer = recurrent_weight_regularizer
       end

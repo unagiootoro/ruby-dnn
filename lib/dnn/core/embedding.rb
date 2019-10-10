@@ -28,7 +28,7 @@ module DNN
 
       def build
         @built = true
-        @weight = Param.new(Xumo::SFloat.new(@input_length), 0)
+        @weight = Param.new(Xumo::SFloat.new(@input_length), Xumo::SFloat[0])
         @weight_initializer.init_param(self, @weight)
         @weight_regularizer.param = @weight if @weight_regularizer
       end
