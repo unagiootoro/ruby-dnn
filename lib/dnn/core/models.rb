@@ -44,14 +44,14 @@ module DNN
       # @param [Numo::SFloat] y Output training data.
       # @param [Integer] epochs Number of training.
       # @param [Integer] batch_size Batch size used for one training.
-      # @param [Integer] start_epoch Epoch to start.
+      # @param [Integer] initial_epoch Initial epoch.
       # @param [Boolean] last_round_down Set true to round down for last batch data.
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       def train(x, y, epochs,
                 batch_size: 1,
-                start_epoch: 1,
+                initial_epoch: 1,
                 last_round_down: false,
                 test: nil,
                 verbose: true)
@@ -62,7 +62,7 @@ module DNN
         num_train_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
 
         stopped = catch(:stop) do
-          (start_epoch..epochs).each do |epoch|
+          (initial_epoch..epochs).each do |epoch|
             @last_log[:epoch] = epoch
             call_callbacks(:before_epoch)
             puts "【 epoch #{epoch}/#{epochs} 】" if verbose
