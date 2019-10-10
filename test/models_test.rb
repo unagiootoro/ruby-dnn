@@ -177,7 +177,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     cbk = DNN::Callbacks::Callback.new(:before_epoch, proc {})
     model.add_callback(cbk)
-    assert_equal [cbk], model.instance_variable_get(:@callbacks)[:before_epoch]
+    assert_equal [cbk], model.instance_variable_get(:@callbacks)
   end
 
   # It is not including callback function in @callback.
@@ -185,8 +185,8 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     cbk = DNN::Callbacks::Callback.new(:before_epoch, proc {})
     model.add_callback(cbk)
-    model.clear_callbacks(:before_epoch)
-    assert_equal [], model.instance_variable_get(:@callbacks)[:before_epoch]
+    model.clear_callbacks
+    assert_equal [], model.instance_variable_get(:@callbacks)
   end
 
   # It is running all callback function.
@@ -209,7 +209,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model.send(:call_callbacks, :before_epoch)
     assert_equal [1, 2], call_flg
   end
-  
+
   def test_copy
     x = Numo::SFloat[[0, 0]]
     model = Sequential.new

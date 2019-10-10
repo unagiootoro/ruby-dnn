@@ -4,15 +4,12 @@ class TestCallback < MiniTest::Unit::TestCase
   def test_initialize
     func = -> { return true }
     cbk = DNN::Callbacks::Callback.new(:before_epoch, func)
-    assert_equal true, cbk.call
+    assert_equal true, cbk.before_epoch
   end
 end
 
 
-class StubModel < DNN::Models::Model
-  attr_accessor :epoch
-  attr_accessor :last_loss
-  attr_accessor :last_accuracy
+class StubCallbacksTestModel < DNN::Models::Model
   attr_accessor :file_name
 
   def save(file_name)
@@ -22,48 +19,48 @@ end
 
 
 class TestCheckPoint < MiniTest::Unit::TestCase
-  def test_call
+  def test_after_epoch
     cbk = DNN::Callbacks::CheckPoint.new("save")
-    stub_model = StubModel.new
+    stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.epoch = 1
-    cbk.call
+    stub_model.last_log[:epoch] = 1
+    cbk.after_epoch
     assert_equal "save_epoch1", stub_model.file_name
   end
 end
 
 
 class TestEarlyStopping < MiniTest::Unit::TestCase
-  def test_call
-    cbk = DNN::Callbacks::EarlyStopping.new(loss: 0.1)
-    stub_model = StubModel.new
+  def test_after_train_on_batch
+    cbk = DNN::Callbacks::EarlyStopping.new(:train_loss, 0.1)
+    stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_loss = 0.09
+    stub_model.last_log[:train_loss] = 0.09
     assert_throws :stop do
-      cbk.call
+      cbk.after_train_on_batch
     end
   end
 
-  def test_call2
-    cbk = DNN::Callbacks::EarlyStopping.new(event: :after_test_on_batch, accuracy: 0.1)
-    stub_model = StubModel.new
+  def test_after_test_on_batch
+    cbk = DNN::Callbacks::EarlyStopping.new(:test_accuracy, 0.1)
+    stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_accuracy = 0.11
+    stub_model.last_log[:test_accuracy] = 0.11
     assert_throws :stop do
-      cbk.call
+      cbk.after_test_on_batch
     end
   end
 end
 
 
 class TestNaNStopping < MiniTest::Unit::TestCase
-  def test_call
+  def test_after_train_on_batch
     cbk = DNN::Callbacks::NaNStopping.new
-    stub_model = StubModel.new
+    stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_loss = Float::NAN
+    stub_model.last_log[:train_loss] = Float::NAN
     assert_throws :stop do
-      cbk.call
+      cbk.after_train_on_batch
     end
   end
 end

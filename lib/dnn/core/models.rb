@@ -5,9 +5,7 @@ module DNN
     class Model
       attr_accessor :optimizer
       attr_accessor :loss_func
-      attr_reader :epoch
-      attr_reader :last_loss
-      attr_reader :last_accuracy
+      attr_reader :last_log
 
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
@@ -21,15 +19,9 @@ module DNN
         @loss_func = nil
         @last_link = nil
         @built = false
-        @callbacks = {
-          before_epoch: [],
-          after_epoch: [],
-          before_train_on_batch: [],
-          after_train_on_batch: [],
-          before_test_on_batch: [],
-          after_test_on_batch: [],
-        }
+        @callbacks = []
         @layers_cache = nil
+        @last_log = {}
       end
 
       # Set optimizer and loss_func to model.
@@ -71,7 +63,7 @@ module DNN
 
         stopped = catch(:stop) do
           (start_epoch..epochs).each do |epoch|
-            @epoch = epoch
+            @last_log[:epoch] = epoch
             call_callbacks(:before_epoch)
             puts "【 epoch #{epoch}/#{epochs} 】" if verbose
 
@@ -150,7 +142,7 @@ module DNN
         backward(dy)
         @optimizer.update(layers)
         @loss_func.regularizers_backward(layers)
-        @last_loss = loss_value
+        @last_log[:train_loss] = loss_value
         call_callbacks(:after_train_on_batch)
         loss_value
       end
@@ -175,7 +167,10 @@ module DNN
           sum_loss += loss_value.mean
         end
         mean_loss = sum_loss / max_steps
-        [total_correct.to_f / num_test_datas, mean_loss]
+        acc = total_correct.to_f / num_test_datas
+        @last_log[:test_loss] = mean_loss
+        @last_log[:test_accuracy] = mean_loss
+        [acc, mean_loss]
       end
 
       # Evaluate once.
@@ -187,7 +182,6 @@ module DNN
         x = forward(x, false)
         correct = evaluate(x, y)
         loss_value = @loss_func.loss(x, y, layers)
-        @last_loss = loss_value
         call_callbacks(:after_test_on_batch)
         [correct, loss_value]
       end
@@ -235,7 +229,7 @@ module DNN
       #                       after_test_on_batch:   Set the proc to be performed after test on batch processing.
       def add_callback(callback)
         callback.model = self
-        @callbacks[callback.event] << callback
+        @callbacks << callback
       end
 
       # Clear the callback function registered for each event.
@@ -246,9 +240,8 @@ module DNN
       #                       after_train_on_batch:  Set the proc to be performed after train on batch processing.
       #                       before_test_on_batch:  Set the proc to be performed before test on batch processing.
       #                       after_test_on_batch:   Set the proc to be performed after test on batch processing.
-      def clear_callbacks(event)
-        raise DNN_UnknownEventError.new("Unknown event #{event}.") unless @callbacks.has_key?(event)
-        @callbacks[event] = []
+      def clear_callbacks
+        @callbacks = []
       end
 
       # Save the model in marshal format.
@@ -319,8 +312,8 @@ module DNN
       end
 
       def call_callbacks(event)
-        @callbacks[event].each do |callback|
-          callback.call
+        @callbacks.each do |callback|
+          callback.send(event) if callback.respond_to?(event)
         end
       end
 
