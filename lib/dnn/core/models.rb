@@ -82,12 +82,14 @@ module DNN
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
       # @param [Integer] epochs Number of training.
+      # @param [Integer] initial_epoch Initial epoch.
       # @param [Integer] batch_size Batch size used for one training.
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       def train(x, y, epochs,
                 batch_size: 1,
+                initial_epoch: 1,
                 test: nil,
                 verbose: true)
         raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
@@ -95,7 +97,7 @@ module DNN
         check_xy_type(x, y)
         iter = Iterator.new(x, y)
         num_train_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
-        (1..epochs).each do |epoch|
+        (initial_epoch..epochs).each do |epoch|
           call_callbacks(:before_epoch, epoch)
           puts "【 epoch #{epoch}/#{epochs} 】" if verbose
           iter.foreach(batch_size) do |x_batch, y_batch, index|
