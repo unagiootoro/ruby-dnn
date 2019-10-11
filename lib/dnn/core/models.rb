@@ -169,7 +169,7 @@ module DNN
         mean_loss = sum_loss / max_steps
         acc = total_correct.to_f / num_test_datas
         @last_log[:test_loss] = mean_loss
-        @last_log[:test_accuracy] = mean_loss
+        @last_log[:test_accuracy] = acc
         [acc, mean_loss]
       end
 
