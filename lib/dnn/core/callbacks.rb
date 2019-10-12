@@ -3,12 +3,13 @@ module DNN
 
     class Callback
       attr_accessor :model
+    end
 
-      def initialize(event = nil, proc = nil)
-        if event && proc
-          instance_eval do
-            define_singleton_method(event) { proc.call }
-          end
+
+    class LambdaCallback < Callback
+      def initialize(event, lambda)
+        instance_eval do
+          define_singleton_method(event) { lambda.call }
         end
       end
     end

@@ -1,9 +1,9 @@
 require "test_helper"
 
-class TestCallback < MiniTest::Unit::TestCase
+class TestLambdaCallback < MiniTest::Unit::TestCase
   def test_initialize
     func = -> { return true }
-    cbk = DNN::Callbacks::Callback.new(:before_epoch, func)
+    cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch, func)
     assert_equal true, cbk.before_epoch
   end
 end

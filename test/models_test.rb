@@ -65,12 +65,12 @@ class TestSequential < MiniTest::Unit::TestCase
       call_flg[5] = call_cnt
     end
 
-    before_epoch_cbk = DNN::Callbacks::Callback.new(:before_epoch, before_epoch_f)
-    after_epoch_cbk = DNN::Callbacks::Callback.new(:after_epoch, after_epoch_f)
-    before_train_on_batch_cbk = DNN::Callbacks::Callback.new(:before_train_on_batch, before_train_on_batch_f)
-    after_train_on_batch_cbk = DNN::Callbacks::Callback.new(:after_train_on_batch, after_train_on_batch_f)
-    before_test_on_batch_cbk = DNN::Callbacks::Callback.new(:before_test_on_batch, before_test_on_batch_f)
-    after_test_on_batch_cbk = DNN::Callbacks::Callback.new(:after_test_on_batch, after_test_on_batch_f)
+    before_epoch_cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch, before_epoch_f)
+    after_epoch_cbk = DNN::Callbacks::LambdaCallback.new(:after_epoch, after_epoch_f)
+    before_train_on_batch_cbk = DNN::Callbacks::LambdaCallback.new(:before_train_on_batch, before_train_on_batch_f)
+    after_train_on_batch_cbk = DNN::Callbacks::LambdaCallback.new(:after_train_on_batch, after_train_on_batch_f)
+    before_test_on_batch_cbk = DNN::Callbacks::LambdaCallback.new(:before_test_on_batch, before_test_on_batch_f)
+    after_test_on_batch_cbk = DNN::Callbacks::LambdaCallback.new(:after_test_on_batch, after_test_on_batch_f)
 
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     y = Numo::SFloat[[65, 130], [155, 310]]
@@ -175,7 +175,7 @@ class TestSequential < MiniTest::Unit::TestCase
   # It is including callback function in @callback.
   def test_add_callback
     model = Sequential.new
-    cbk = DNN::Callbacks::Callback.new(:before_epoch, proc {})
+    cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch, proc {})
     model.add_callback(cbk)
     assert_equal [cbk], model.instance_variable_get(:@callbacks)
   end
@@ -183,7 +183,7 @@ class TestSequential < MiniTest::Unit::TestCase
   # It is not including callback function in @callback.
   def test_clear_callbacks
     model = Sequential.new
-    cbk = DNN::Callbacks::Callback.new(:before_epoch, proc {})
+    cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch, proc {})
     model.add_callback(cbk)
     model.clear_callbacks
     assert_equal [], model.instance_variable_get(:@callbacks)
@@ -201,8 +201,8 @@ class TestSequential < MiniTest::Unit::TestCase
       call_cnt += 1
       call_flg[1] = call_cnt
     end
-    cbk1 = DNN::Callbacks::Callback.new(:before_epoch, prc1)
-    cbk2 = DNN::Callbacks::Callback.new(:before_epoch, prc2)
+    cbk1 = DNN::Callbacks::LambdaCallback.new(:before_epoch, prc1)
+    cbk2 = DNN::Callbacks::LambdaCallback.new(:before_epoch, prc2)
     model = Sequential.new
     model.add_callback(cbk1)
     model.add_callback(cbk2)
