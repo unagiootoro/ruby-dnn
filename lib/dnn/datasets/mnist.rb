@@ -19,7 +19,7 @@ module DNN
     URL_TEST_LABELS = URL_BASE + TEST_LABELS_FILE_NAME
 
     def self.downloads
-      Dir.mkdir("#{__dir__}/downloads") unless Dir.exist?("#{__dir__}/downloads")
+      Dir.mkdir("#{DOWNLOADS_PATH}/downloads") unless Dir.exist?("#{DOWNLOADS_PATH}/downloads")
       Dir.mkdir(mnist_dir) unless Dir.exist?(mnist_dir)
       Downloader.download(URL_TRAIN_IMAGES, mnist_dir) unless File.exist?(get_file_path(TRAIN_IMAGES_FILE_NAME))
       Downloader.download(URL_TRAIN_LABELS, mnist_dir) unless File.exist?(get_file_path(TRAIN_LABELS_FILE_NAME))
@@ -78,7 +78,7 @@ module DNN
     end
 
     private_class_method def self.mnist_dir
-      "#{__dir__}/downloads/mnist"
+      "#{DOWNLOADS_PATH}/downloads/mnist"
     end
 
     private_class_method def self.get_file_path(file_name)

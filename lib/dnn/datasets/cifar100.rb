@@ -11,12 +11,12 @@ module DNN
     class DNN_CIFAR100_LoadError < DNN_Error; end
 
     def self.downloads
-      return if Dir.exist?(__dir__ + "/downloads/" + DIR_CIFAR100)
+      return if Dir.exist?(DOWNLOADS_PATH + "/downloads/" + DIR_CIFAR100)
       Downloader.download(URL_CIFAR100)
-      cifar100_binary_file_name = __dir__ + "/downloads/" + URL_CIFAR100.match(%r`.+/(.+)`)[1]
+      cifar100_binary_file_name = DOWNLOADS_PATH + "/downloads/" + URL_CIFAR100.match(%r`.+/(.+)`)[1]
       begin
         Zlib::GzipReader.open(cifar100_binary_file_name) do |gz|
-          Archive::Tar::Minitar.unpack(gz, __dir__ + "/downloads")
+          Archive::Tar::Minitar.unpack(gz, DOWNLOADS_PATH + "/downloads")
         end
       ensure
         File.unlink(cifar100_binary_file_name)
@@ -26,7 +26,7 @@ module DNN
     def self.load_train
       downloads
       bin = ""
-      fname = __dir__ + "/downloads/#{DIR_CIFAR100}/train.bin"
+      fname = DOWNLOADS_PATH + "/downloads/#{DIR_CIFAR100}/train.bin"
       raise DNN_CIFAR100_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
       bin << File.binread(fname)
       x_bin, y_bin = CIFAR100.load_binary(bin, 50000)
@@ -37,7 +37,7 @@ module DNN
 
     def self.load_test
       downloads
-      fname = __dir__ + "/downloads/#{DIR_CIFAR100}/test.bin"
+      fname = DOWNLOADS_PATH + "/downloads/#{DIR_CIFAR100}/test.bin"
       raise DNN_CIFAR100_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
       bin = File.binread(fname)
       x_bin, y_bin = CIFAR100.load_binary(bin, 10000)
