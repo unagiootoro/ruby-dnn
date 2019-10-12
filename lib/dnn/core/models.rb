@@ -8,9 +8,12 @@ module DNN
 
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
+      # @return [DNN::Models::Model] Return the loaded model.
       def self.load(file_name)
-        loader = Loaders::MarshalLoader.new(self.new)
+        model = self.new
+        loader = Loaders::MarshalLoader.new(model)
         loader.load(file_name)
+        model
       end
 
       def initialize
