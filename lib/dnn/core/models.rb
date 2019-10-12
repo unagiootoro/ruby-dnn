@@ -299,12 +299,13 @@ module DNN
       def forward(x, learning_phase)
         DNN.learning_phase = learning_phase
         @layers_cache = nil
-        y, @last_link = call(x)
+        output_tensor = call(x)
+        @last_link = output_tensor.link
         unless @built
           @built = true
           naming
         end
-        y
+        output_tensor.value
       end
 
       def backward(dy)

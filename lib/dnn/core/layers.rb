@@ -26,12 +26,13 @@ module DNN
 
       # Forward propagation and create a link.
       # @param [Array] input Array of the form [x_input_data, prev_link].
-      def call(input)
-        x, prev_link = *input
+      def call(input_tensor)
+        x = input_tensor.value
+        prev_link = input_tensor.link
         build(x.shape[1..-1]) unless built?
         y = forward(x)
         link = Link.new(prev_link, self)
-        [y, link]
+        Tensor.new(y, link)
       end
 
       # Build the layer.
@@ -97,7 +98,7 @@ module DNN
 
     class InputLayer < Layer
       def self.call(input)
-        shape = input.is_a?(Array) ? input[0].shape : input.shape
+        shape = input.is_a?(Tensor) ? input.value.shape : input.shape
         self.new(shape[1..-1]).(input)
       end
 
@@ -109,14 +110,15 @@ module DNN
 
       def call(input)
         build unless built?
-        if input.is_a?(Array)
-          x, prev_link = *input
+        if input.is_a?(Tensor)
+          x = input.value
+          prev_link = input.link
         else
           x = input
           prev_link = nil
         end
         link = prev_link ? Link.new(prev_link, self) : Link.new(nil, self)
-        [forward(x), link]
+        Tensor.new(forward(x), link)
       end
 
       def build

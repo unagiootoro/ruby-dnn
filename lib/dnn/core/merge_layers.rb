@@ -6,13 +6,15 @@ module DNN
         self.new(*args).call(x1, x2)
       end
 
-      def call(input1, input2)
-        x1, prev_link1 = *input1
-        x2, prev_link2 = *input2
+      def call(input_tensor1, input_tensor2)
+        x1 = input_tensor1.value
+        x2 = input_tensor2.value
+        prev_link1 = input_tensor1.link
+        prev_link2 = input_tensor2.link
         build(x1.shape[1..-1]) unless built?
         y = forward(x1, x2)
         link = TwoInputLink.new(prev_link1, prev_link2, self)
-        [y, link]
+        Tensor.new(y, link)
       end
     end
 

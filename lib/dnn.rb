@@ -10,6 +10,7 @@ end
 require_relative "dnn/version"
 require_relative "dnn/core/error"
 require_relative "dnn/core/global"
+require_relative "dnn/core/tensor"
 require_relative "dnn/core/models"
 require_relative "dnn/core/param"
 require_relative "dnn/core/link"

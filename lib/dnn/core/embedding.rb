@@ -21,9 +21,9 @@ module DNN
         @weight_regularizer = weight_regularizer
       end
 
-      def call(input)
+      def call(input_narray)
         build unless built?
-        [forward(input), Link.new(nil, self)]
+        Tensor.new(forward(input_narray), Link.new(nil, self))
       end
 
       def build

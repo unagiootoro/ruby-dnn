@@ -12,6 +12,17 @@ class TestLayer < MiniTest::Unit::TestCase
     assert_equal layer.instance_variable_get(:@built), false
   end
 
+  def test_call
+    layer = Layer.new
+    layer.send(:define_singleton_method, :forward) { |x| Numo::SFloat[1] }
+    prev_link = DNN::Link.new
+    input_tensor = DNN::Tensor.new(Numo::SFloat[0], prev_link)
+    output_tensor = layer.call(input_tensor)
+    
+    assert_equal Numo::SFloat[1], output_tensor.value
+    assert_equal prev_link, output_tensor.link.prev
+  end
+
   def test_build
     layer = Layer.new
     layer.build([10])
