@@ -19,7 +19,7 @@ class TestLayer < MiniTest::Unit::TestCase
     input_tensor = DNN::Tensor.new(Numo::SFloat[0], prev_link)
     output_tensor = layer.call(input_tensor)
     
-    assert_equal Numo::SFloat[1], output_tensor.value
+    assert_equal Numo::SFloat[1], output_tensor.data
     assert_equal prev_link, output_tensor.link.prev
   end
 

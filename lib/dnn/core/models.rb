@@ -314,7 +314,7 @@ module DNN
           @built = true
           naming
         end
-        output_tensor.value
+        output_tensor.data
       end
 
       def backward(dy)

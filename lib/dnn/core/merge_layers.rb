@@ -7,8 +7,8 @@ module DNN
       end
 
       def call(input_tensor1, input_tensor2)
-        x1 = input_tensor1.value
-        x2 = input_tensor2.value
+        x1 = input_tensor1.data
+        x2 = input_tensor2.data
         prev_link1 = input_tensor1.link
         prev_link2 = input_tensor2.link
         build(x1.shape[1..-1]) unless built?

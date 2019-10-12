@@ -1,10 +1,10 @@
 module DNN
   class Tensor
-    attr_reader :value
+    attr_reader :data
     attr_accessor :link
 
-    def initialize(value, link = nil)
-      @value = value
+    def initialize(data, link = nil)
+      @data = data
       @link = link
     end
   end
