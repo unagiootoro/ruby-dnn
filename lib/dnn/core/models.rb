@@ -9,9 +9,12 @@ module DNN
 
       # Load marshal model.
       # @param [String] file_name File name of marshal model to load.
+      # @return [DNN::Models::Model] Return the loaded model.
       def self.load(file_name)
-        loader = Loaders::MarshalLoader.new(self.new)
+        model = self.new
+        loader = Loaders::MarshalLoader.new(model)
         loader.load(file_name)
+        model
       end
 
       def initialize
@@ -43,6 +46,7 @@ module DNN
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
       # @param [Integer] epochs Number of training.
+      # @param [Integer] initial_epoch Initial epoch.
       # @param [Integer] batch_size Batch size used for one training.
       # @param [Integer] initial_epoch Initial epoch.
       # @param [Boolean] last_round_down Set true to round down for last batch data.
