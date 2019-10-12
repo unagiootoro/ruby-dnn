@@ -128,8 +128,12 @@ module DNN
     class SoftmaxCrossEntropy < Loss
       attr_accessor :eps
 
-      def self.softmax(y)
-        Xumo::NMath.exp(y) / Xumo::NMath.exp(y).sum(1, keepdims: true)
+      class << self
+        def softmax(y)
+          Xumo::NMath.exp(y) / Xumo::NMath.exp(y).sum(1, keepdims: true)
+        end
+
+        alias activation softmax
       end
 
       # @param [Float] eps Value to avoid nan.
@@ -160,13 +164,21 @@ module DNN
     class SigmoidCrossEntropy < Loss
       attr_accessor :eps
 
+      class << self
+        def sigmoid(y)
+          Activations::Sigmoid.new.forward(y)
+        end
+
+        alias activation sigmoid
+      end
+
       # @param [Float] eps Value to avoid nan.
       def initialize(eps: 1e-7)
         @eps = eps
       end
 
       def forward(y, t)
-        @x = Activations::Sigmoid.new.forward(y)
+        @x = SigmoidCrossEntropy.sigmoid(y)
         -(t * Xumo::NMath.log(@x) + (1 - t) * Xumo::NMath.log(1 - @x))
       end
 

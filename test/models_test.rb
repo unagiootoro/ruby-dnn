@@ -142,7 +142,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0], loss
   end
 
-  # It is matching dense forward result.
+  # It is matching dense forward result and unuse loss activation.
   def test_predict
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense = Dense.new(2)
@@ -152,9 +152,24 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     model << InputLayer.new(3)
     model << dense
-    model.setup(SGD.new, MeanSquaredError.new)
+    model.setup(SGD.new, SigmoidCrossEntropy.new)
 
-    assert_equal Numo::SFloat[[65, 130], [155, 310]], model.predict(x)
+    assert_equal Numo::SFloat[[65, 130], [155, 310]], model.predict(x, use_loss_activation: false)
+  end
+
+  # It is matching dense forward result and use loss activation.
+  def test_predict2
+    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    dense = Dense.new(2)
+    dense.build([3])
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Numo::SFloat[5, 10]
+    model = Sequential.new
+    model << InputLayer.new(3)
+    model << dense
+    model.setup(SGD.new, SigmoidCrossEntropy.new)
+
+    assert_equal Numo::SFloat[[1, 1], [1, 1]], model.predict(x, use_loss_activation: true)
   end
 
   # It is matching dense forward result.

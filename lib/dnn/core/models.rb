@@ -207,16 +207,21 @@ module DNN
 
       # Predict data.
       # @param [Numo::SFloat] x Input data.
-      def predict(x)
+      # @param [Boolean] use_loss_activation Use loss activation when loss has an activation.
+      def predict(x, use_loss_activation: true)
         check_xy_type(x)
-        forward(x, false)
+        y = forward(x, false)
+        if use_loss_activation && @loss_func.class.respond_to?(:activation)
+          y = @loss_func.class.activation(y)
+        end
+        y
       end
 
       # Predict one data.
       # @param [Numo::SFloat] x Input data. However, x is single data.
-      def predict1(x)
+      def predict1(x, use_loss_activation: true)
         check_xy_type(x)
-        predict(x.reshape(1, *x.shape))[0, false]
+        predict(x.reshape(1, *x.shape), use_loss_activation: use_loss_activation)[0, false]
       end
 
       # Add callback function.
