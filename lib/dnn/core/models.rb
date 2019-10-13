@@ -47,7 +47,6 @@ module DNN
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
       # @param [Integer] epochs Number of training.
-      # @param [Integer] initial_epoch Initial epoch.
       # @param [Integer] batch_size Batch size used for one training.
       # @param [Integer] initial_epoch Initial epoch.
       # @param [Boolean] last_round_down Set true to round down for last batch data.
@@ -136,7 +135,6 @@ module DNN
       # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
-      # @param [Integer] batch_size Batch size used for one test.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
       def train_on_batch(x, y)
         raise DNN_Error, "The model is not optimizer setup complete." unless @optimizer
@@ -233,26 +231,13 @@ module DNN
       end
 
       # Add callback function.
-      # @param [Symbol] event Callback event. The following can be used for event.
-      #                       before_epoch: Process: performed before one training.
-      #                       after_epoch: Process:  performed after one training.
-      #                       before_train_on_batch: Set the proc to be performed before train on batch processing.
-      #                       after_train_on_batch:  Set the proc to be performed after train on batch processing.
-      #                       before_test_on_batch:  Set the proc to be performed before test on batch processing.
-      #                       after_test_on_batch:   Set the proc to be performed after test on batch processing.
+      # @param [Callback] callback Callback object.
       def add_callback(callback)
         callback.model = self
         @callbacks << callback
       end
 
       # Clear the callback function registered for each event.
-      # @param [Symbol] event Callback event. The following can be used for event.
-      #                       before_epoch: Process: performed before one training.
-      #                       after_epoch: Process:  performed after one training.
-      #                       before_train_on_batch: Set the proc to be performed before train on batch processing.
-      #                       after_train_on_batch:  Set the proc to be performed after train on batch processing.
-      #                       before_test_on_batch:  Set the proc to be performed before test on batch processing.
-      #                       after_test_on_batch:   Set the proc to be performed after test on batch processing.
       def clear_callbacks
         @callbacks = []
       end
@@ -296,7 +281,7 @@ module DNN
       end
 
       # Get the layer that the model has.
-      # @param [Symbol] The name of the layer to get.
+      # @param [Symbol] name The name of the layer to get.
       # @return [DNN::Layers::Layer] Return the layer.
       def get_layer(name)
         layers.find { |layer| layer.name == name }
