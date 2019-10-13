@@ -14,6 +14,9 @@ module DNN
     RGB = 3
     RGBA = 4
 
+    # Read image from file.
+    # @param [String] file_name File name to read.
+    # @param [Integer] channel_type Specify channel type of image.
     def self.read(file_name, channel_type = RGB)
       raise ImageReadError.new("#{file_name} is not found.") unless File.exist?(file_name)
       bin, w, h, n = Stb.stbi_load(file_name, channel_type)
@@ -22,6 +25,10 @@ module DNN
       img.reshape(h, w, channel_type)
     end
 
+    # Write image to file.
+    # @param [String] file_name File name to write.
+    # @param [Numo::UInt8] img Image to write.
+    # @param [Integer] quality Image quality when jpeg write.
     def self.write(file_name, img, quality: 100)
       img_check(img)
       match_data = file_name.match(%r`(.*)/.+$`)
@@ -43,6 +50,10 @@ module DNN
       raise ImageWriteError.new("Image write failed.") if res == 0
     end
 
+    # Resize the image.
+    # @param [Numo::UInt8] img Image to resize.
+    # @param [Integer] out_height Image height to resize.
+    # @param [Integer] out_width Image width to resize.
     def self.resize(img, out_height, out_width)
       img_check(img)
       in_height, in_width, ch = *img.shape
@@ -51,11 +62,19 @@ module DNN
       img2
     end
 
+    # Trimming the image.
+    # @param [Numo::UInt8] img Image to resize.
+    # @param [Integer] y The begin y coordinate of the image to trimming.
+    # @param [Integer] x The begin x coordinate of the image to trimming.
+    # @param [Integer] height Image height to trimming.
+    # @param [Integer] width Image height to trimming.
     def self.trim(img, y, x, height, width)
       img_check(img)
       img[y...(y + height), x...(x + width), true].clone
     end
 
+    # Image convert to gray scale.
+    # @param [Numo::UInt8] img Image to gray scale.
     def self.gray_scale(img)
       img_check(img)
       if img.shape[2] == RGB
