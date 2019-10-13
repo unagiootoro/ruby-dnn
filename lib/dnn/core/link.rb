@@ -14,7 +14,6 @@ module DNN
     end
   end
 
-
   class TwoInputLink
     attr_accessor :prev1
     attr_accessor :prev2
@@ -27,7 +26,7 @@ module DNN
     end
 
     def backward(dy)
-      dy1, dy2 =* @layer.backward(dy)
+      dy1, dy2 = *@layer.backward(dy)
       @prev1&.backward(dy1)
       @prev2&.backward(dy2)
     end

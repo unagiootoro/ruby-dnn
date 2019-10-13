@@ -6,26 +6,28 @@ module DNN
         return nil unless hash
         loss_class = DNN.const_get(hash[:class])
         loss = loss_class.allocate
-        raise DNN_Error.new("#{loss.class} is not an instance of #{self} class.") unless loss.is_a?(self)
+        raise DNN_Error, "#{loss.class} is not an instance of #{self} class." unless loss.is_a?(self)
+
         loss.load_hash(hash)
         loss
       end
 
       def loss(y, t, layers = nil)
         unless y.shape == t.shape
-          raise DNN_ShapeError.new("The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}.")
+          raise DNN_ShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
         end
+
         loss_value = forward(y, t)
         loss_value += regularizers_forward(layers) if layers
         loss_value.is_a?(Float) ? Xumo::SFloat[loss_value] : loss_value
       end
 
       def forward(y, t)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
       def backward(y, t)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward'"
       end
 
       def regularizers_forward(layers)
@@ -58,14 +60,13 @@ module DNN
     class MeanSquaredError < Loss
       def forward(y, t)
         batch_size = t.shape[0]
-        0.5 * ((y - t) ** 2).sum / batch_size
+        0.5 * ((y - t)**2).sum / batch_size
       end
 
       def backward(y, t)
         y - t
       end
     end
-
 
     class MeanAbsoluteError < Loss
       def forward(y, t)
@@ -81,7 +82,6 @@ module DNN
       end
     end
 
-
     class Hinge < Loss
       def forward(y, t)
         @a = 1 - y * t
@@ -94,7 +94,6 @@ module DNN
         a * -t
       end
     end
-
 
     class HuberLoss < Loss
       def forward(y, t)
@@ -120,10 +119,9 @@ module DNN
 
       def loss_l2(y, t)
         batch_size = t.shape[0]
-        0.5 * ((y - t) ** 2).sum / batch_size
+        0.5 * ((y - t)**2).sum / batch_size
       end
     end
-
 
     class SoftmaxCrossEntropy < Loss
       attr_accessor :eps
@@ -159,7 +157,6 @@ module DNN
         initialize(eps: hash[:eps])
       end
     end
-
 
     class SigmoidCrossEntropy < Loss
       attr_accessor :eps

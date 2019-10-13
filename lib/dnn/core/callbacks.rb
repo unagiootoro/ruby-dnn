@@ -5,7 +5,6 @@ module DNN
       attr_accessor :model
     end
 
-
     class LambdaCallback < Callback
       def initialize(event, lambda)
         instance_eval do
@@ -13,7 +12,6 @@ module DNN
         end
       end
     end
-
 
     # A callback that save the model at the after of the epoch.
     class CheckPoint < Callback
@@ -25,7 +23,6 @@ module DNN
         model.save(@base_file_name + "_epoch#{model.last_log[:epoch]}")
       end
     end
-
 
     # A callback to stop training the model early after test on batch.
     class EarlyStopping < Callback
@@ -63,14 +60,12 @@ module DNN
       end
     end
 
-
     # A callback to stop training the model if loss is NaN by after train on batch.
     class NaNStopping < Callback
       def after_train_on_batch
         throw :stop, "loss is NaN." if model.last_log[:train_loss].nan?
       end
     end
-
 
     class Logger < Callback
       def initialize

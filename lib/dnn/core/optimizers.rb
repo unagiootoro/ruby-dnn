@@ -10,7 +10,7 @@ module DNN
         return nil unless hash
         optimizer_class = DNN.const_get(hash[:class])
         optimizer = optimizer_class.allocate
-        raise DNN_Error.new("#{optimizer.class} is not an instance of #{self} class.") unless optimizer.is_a?(self)
+        raise DNN_Error, "#{optimizer.class} is not an instance of #{self} class." unless optimizer.is_a?(self)
         optimizer.load_hash(hash)
         optimizer
       end
@@ -34,7 +34,7 @@ module DNN
       def update(layers)
         target_params = layers.select { |layer| layer.is_a?(Layers::HasParamLayer) && layer.trainable }
                               .map { |layer| layer.get_params.values }.flatten.compact
-                              .select { |param| param.grad }
+                              .select(&:grad)
         clip_grads(target_params) if @clip_norm
         update_params(target_params)
         target_params.each do |param|
@@ -54,12 +54,13 @@ module DNN
 
       # Update params.
       private def update_params(params)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'update_params'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'update_params'"
       end
 
       private def clip_grads(params)
-        norm = Math.sqrt(params.reduce(0) { |total, param| total + (param.grad ** 2).sum })
+        norm = Math.sqrt(params.reduce(0) { |total, param| total + (param.grad**2).sum })
         return if norm <= @clip_norm
+
         rate = @clip_norm / (norm + 1e-7)
         params.each do |param|
           param.grad *= rate
@@ -70,7 +71,6 @@ module DNN
         initialize(clip_norm: hash[:clip_norm])
       end
     end
-
 
     class SGD < Optimizer
       attr_accessor :lr
@@ -107,7 +107,6 @@ module DNN
       end
     end
 
-
     class Nesterov < SGD
       def initialize(lr = 0.01, momentum: 0.9, clip_norm: nil)
         super(lr, momentum: momentum, clip_norm: clip_norm)
@@ -118,11 +117,10 @@ module DNN
           @v[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
           amount = param.grad * @lr
           @v[param.name] = @v[param.name] * @momentum - amount
-          param.data = (param.data + @momentum ** 2 * @v[param.name]) - (1 + @momentum) * amount
+          param.data = (param.data + @momentum**2 * @v[param.name]) - (1 + @momentum) * amount
         end
       end
     end
-
 
     class AdaGrad < Optimizer
       attr_accessor :lr
@@ -141,7 +139,7 @@ module DNN
       private def update_params(params)
         params.each do |param|
           @g[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
-          @g[param.name] += param.grad ** 2
+          @g[param.name] += param.grad**2
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param.name] + @eps)) * param.grad
         end
       end
@@ -154,7 +152,6 @@ module DNN
         initialize(hash[:lr], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
     end
-
 
     class RMSProp < Optimizer
       attr_accessor :lr
@@ -180,7 +177,7 @@ module DNN
       private def update_params(params)
         params.each do |param|
           @g[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
-          @g[param.name] = @alpha * @g[param.name] + (1 - @alpha) * param.grad ** 2
+          @g[param.name] = @alpha * @g[param.name] + (1 - @alpha) * param.grad**2
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param.name] + @eps)) * param.grad
         end
       end
@@ -189,7 +186,6 @@ module DNN
         initialize(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
     end
-
 
     class AdaDelta < Optimizer
       attr_accessor :rho
@@ -214,9 +210,9 @@ module DNN
         params.each do |param|
           @h[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
           @s[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
-          @h[param.name] = @rho * @h[param.name] + (1 - @rho) * param.grad ** 2
+          @h[param.name] = @rho * @h[param.name] + (1 - @rho) * param.grad**2
           v = (Xumo::NMath.sqrt(@s[param.name] + @eps) / Xumo::NMath.sqrt(@h[param.name] + @eps)) * param.grad
-          @s[param.name] = @rho * @s[param.name] + (1 - @rho) * v ** 2
+          @s[param.name] = @rho * @s[param.name] + (1 - @rho) * v**2
           param.data -= v
         end
       end
@@ -225,7 +221,6 @@ module DNN
         initialize(rho: hash[:rho], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
     end
-
 
     class RMSPropGraves < Optimizer
       attr_accessor :lr
@@ -254,8 +249,8 @@ module DNN
           @m[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param.name] = @alpha * @m[param.name] + (1 - @alpha) * param.grad
-          @v[param.name] = @alpha * @v[param.name] + (1 - @alpha) * param.grad ** 2
-          param.data -= (@lr / Xumo::NMath.sqrt(@v[param.name] - @m[param.name] ** 2 + @eps)) * param.grad
+          @v[param.name] = @alpha * @v[param.name] + (1 - @alpha) * param.grad**2
+          param.data -= (@lr / Xumo::NMath.sqrt(@v[param.name] - @m[param.name]**2 + @eps)) * param.grad
         end
       end
 
@@ -263,7 +258,6 @@ module DNN
         initialize(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
     end
-
 
     class Adam < Optimizer
       attr_accessor :alpha
@@ -300,12 +294,12 @@ module DNN
 
       private def update_params(params)
         @t += 1
-        lr = @alpha * Math.sqrt(1 - @beta2 ** @t) / (1 - @beta1 ** @t)
+        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t)
         params.each do |param|
           @m[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param.name] += (1 - @beta1) * (param.grad - @m[param.name])
-          @v[param.name] += (1 - @beta2) * (param.grad ** 2 - @v[param.name])
+          @v[param.name] += (1 - @beta2) * (param.grad**2 - @v[param.name])
           if @amsgrad
             @s[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
             @s[param.name] = Xumo::SFloat.maximum(@s[param.name], @v[param.name])
@@ -321,7 +315,6 @@ module DNN
                    eps: hash[:eps], amsgrad: hash[:amsgrad], clip_norm: hash[:clip_norm])
       end
     end
-
 
     class AdaBound < Adam
       attr_accessor :final_lr
@@ -344,7 +337,7 @@ module DNN
 
       private def update_params(params)
         @t += 1
-        lr = @alpha * Math.sqrt(1 - @beta2 ** @t) / (1 - @beta1 ** @t)
+        lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t)
         final_lr = @final_lr * lr / @alpha
         lower_bound = final_lr * (1 - 1 / (@gamma * @t + 1))
         upper_bound = final_lr * (1 + 1 / (@gamma * @t))
@@ -352,7 +345,7 @@ module DNN
           @m[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param.name] += (1 - @beta1) * (param.grad - @m[param.name])
-          @v[param.name] += (1 - @beta2) * (param.grad ** 2 - @v[param.name])
+          @v[param.name] += (1 - @beta2) * (param.grad**2 - @v[param.name])
           if @amsgrad
             @s[param.name] ||= Xumo::SFloat.zeros(*param.data.shape)
             @s[param.name] = Xumo::SFloat.maximum(@s[param.name], @v[param.name])

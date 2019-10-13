@@ -17,7 +17,8 @@ module DNN
     # Return the next batch.
     # @param [Integer] batch_size Required batch size.
     def next_batch(batch_size)
-      raise DNN_Error.new("This iterator has not next batch. Please call reset.") unless has_next?
+      raise DNN_Error, "This iterator has not next batch. Please call reset." unless has_next?
+
       if @indexes.length <= batch_size
         batch_indexes = @indexes
         @has_next = false
@@ -25,15 +26,15 @@ module DNN
         batch_indexes = @indexes.shift(batch_size)
       end
       x_batch = if @x_datas.is_a?(Array)
-        @x_datas.map { |datas| datas[batch_indexes, false] }
-      else
-        @x_datas[batch_indexes, false]
-      end
+                  @x_datas.map { |datas| datas[batch_indexes, false] }
+                else
+                  @x_datas[batch_indexes, false]
+                end
       y_batch = if @y_datas.is_a?(Array)
-        @y_datas.map { |datas| datas[batch_indexes, false] }
-      else
-        @y_datas[batch_indexes, false]
-      end
+                  @y_datas.map { |datas| datas[batch_indexes, false] }
+                else
+                  @y_datas[batch_indexes, false]
+                end
       [x_batch, y_batch]
     end
 

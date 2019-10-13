@@ -11,7 +11,7 @@ module DNN
       # @param [String] file_name File name of marshal model to load.
       # @return [DNN::Models::Model] Return the loaded model.
       def self.load(file_name)
-        model = self.new
+        model = new
         loader = Loaders::MarshalLoader.new(model)
         loader.load(file_name)
         model
@@ -32,11 +32,12 @@ module DNN
       # @param [DNN::Losses::Loss] loss_func Loss function to use for learning.
       def setup(optimizer, loss_func)
         unless optimizer.is_a?(Optimizers::Optimizer)
-          raise TypeError.new("optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class.")
+          raise TypeError, "optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class."
         end
         unless loss_func.is_a?(Losses::Loss)
-          raise TypeError.new("loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss class.")
+          raise TypeError, "loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss class."
         end
+
         @optimizer = optimizer
         @loss_func = loss_func
       end
@@ -59,8 +60,9 @@ module DNN
                 last_round_down: false,
                 test: nil,
                 verbose: true)
-        raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
-        raise DNN_Error.new("The model is not loss_func setup complete.") unless @loss_func
+        raise DNN_Error, "The model is not optimizer setup complete." unless @optimizer
+        raise DNN_Error, "The model is not loss_func setup complete." unless @loss_func
+
         check_xy_type(x, y)
         iter = Iterator.new(x, y, last_round_down: last_round_down)
         num_train_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
@@ -93,7 +95,8 @@ module DNN
 
             if test
               test_res = test(test[0], test[1], batch_size: batch_size, last_round_down: last_round_down)
-              print "  #{test_res.map { |key, val| "#{key}: #{val}" }.join(", ")}" if verbose
+              str = test_res.map { |key, val| "#{key}: #{val}" }.join(", ")
+              print "  #{str}" if verbose
             end
             puts "" if verbose
             call_callbacks(:after_epoch)
@@ -136,8 +139,9 @@ module DNN
       # @param [Integer] batch_size Batch size used for one test.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
       def train_on_batch(x, y)
-        raise DNN_Error.new("The model is not optimizer setup complete.") unless @optimizer
-        raise DNN_Error.new("The model is not loss_func setup complete.") unless @loss_func
+        raise DNN_Error, "The model is not optimizer setup complete." unless @optimizer
+        raise DNN_Error, "The model is not loss_func setup complete." unless @loss_func
+
         check_xy_type(x, y)
         call_callbacks(:before_train_on_batch)
         x = forward(x, true)
@@ -268,7 +272,7 @@ module DNN
       # Get the all layers.
       # @return [Array] All layers array.
       def layers
-        raise DNN_Error.new("This model is not built. You need build this model using predict or train.") unless built?
+        raise DNN_Error, "This model is not built. You need build this model using predict or train." unless built?
         return @layers_cache if @layers_cache
         layers = []
         get_layers = -> link do
@@ -342,14 +346,13 @@ module DNN
 
       def check_xy_type(x, y = nil)
         if !x.is_a?(Xumo::SFloat) && !x.is_a?(Array)
-          raise TypeError.new("x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class.")
+          raise TypeError, "x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class."
         end
         if y && !y.is_a?(Xumo::SFloat) && !x.is_a?(Array)
-          raise TypeError.new("y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class.")
+          raise TypeError, "y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class."
         end
       end
     end
-
 
     class Sequential < Model
       attr_reader :stack
@@ -365,7 +368,7 @@ module DNN
       # @return [DNN::Models::Model] Return self.
       def add(layer)
         unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
-          raise TypeError.new("layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
+          raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class."
         end
         @stack << layer
         self
@@ -378,7 +381,7 @@ module DNN
       # @return [Boolean] Return true if success for remove layer.
       def remove(layer)
         unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
-          raise TypeError.new("layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class.")
+          raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class."
         end
         @stack.delete(layer) ? true : false
       end

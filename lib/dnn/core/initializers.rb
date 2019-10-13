@@ -6,7 +6,7 @@ module DNN
         return nil unless hash
         initializer_class = DNN.const_get(hash[:class])
         initializer = initializer_class.allocate
-        raise DNN_Error.new("#{initializer.class} is not an instance of #{self} class.") unless initializer.is_a?(self)
+        raise DNN_Error, "#{initializer.class} is not an instance of #{self} class." unless initializer.is_a?(self)
         initializer.load_hash(hash)
         initializer
       end
@@ -21,7 +21,7 @@ module DNN
       # @param [DNN::Layers::Layer] layer Layer that owns learning parameters.
       # @param [DNN::Param] param Learning parameter to be initialized.
       def init_param(layer, param)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'init_param'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'init_param'"
       end
 
       def to_hash(merge_hash = nil)
@@ -35,13 +35,11 @@ module DNN
       end
     end
 
-
     class Zeros < Initializer
       def init_param(layer, param)
         param.data = param.data.fill(0)
       end
     end
-
 
     class Const < Initializer
       attr_reader :const
@@ -64,7 +62,6 @@ module DNN
         initialize(hash[:const])
       end
     end
-
 
     class RandomNormal < Initializer
       attr_reader :mean
@@ -92,7 +89,6 @@ module DNN
       end
     end
 
-
     class RandomUniform < Initializer
       attr_reader :min
       attr_reader :max
@@ -119,7 +115,6 @@ module DNN
       end
     end
 
-
     class Xavier < Initializer
       def initialize(seed: true)
         super
@@ -131,7 +126,6 @@ module DNN
         param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes)
       end
     end
-
 
     class He < Initializer
       def initialize(seed: true)

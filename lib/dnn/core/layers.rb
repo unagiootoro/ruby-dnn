@@ -7,14 +7,15 @@ module DNN
       attr_reader :input_shape
 
       def self.call(x, *args)
-        self.new(*args).(x)
+        new(*args).(x)
       end
 
       def self.from_hash(hash)
         return nil unless hash
         layer_class = DNN.const_get(hash[:class])
         layer = layer_class.allocate
-        raise DNN_Error.new("#{layer.class} is not an instance of #{self} class.") unless layer.is_a?(self)
+        raise DNN_Error, "#{layer.class} is not an instance of #{self} class." unless layer.is_a?(self)
+
         layer.load_hash(hash)
         layer
       end
@@ -50,13 +51,13 @@ module DNN
       # Forward propagation.
       # @param [Numo::SFloat] x Input data.
       def forward(x)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
       # Backward propagation.
       # @param [Numo::SFloat] dy Differential value of output data.
       def backward(dy)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward'"
       end
 
       # Please reimplement this method as needed.
@@ -78,7 +79,6 @@ module DNN
       end
     end
 
-
     # This class is a superclass of all classes with learning parameters.
     class HasParamLayer < Layer
       # @return [Boolean] Setting false prevents learning of parameters.
@@ -91,15 +91,14 @@ module DNN
 
       # @return [Array] The parameters of the layer.
       def get_params
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'get_params'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'get_params'"
       end
     end
-
 
     class InputLayer < Layer
       def self.call(input)
         shape = input.is_a?(Tensor) ? input.data.shape : input.shape
-        self.new(shape[1..-1]).(input)
+        new(shape[1..-1]).(input)
       end
 
       # @param [Array] input_dim_or_shape Setting the shape or dimension of the input data.
@@ -127,7 +126,7 @@ module DNN
 
       def forward(x)
         unless x.shape[1..-1] == @input_shape
-          raise DNN_ShapeError.new("The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}.")
+          raise DNN_ShapeError, "The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}."
         end
         x
       end
@@ -144,7 +143,6 @@ module DNN
         initialize(hash[:input_shape])
       end
     end
-
 
     # It is a superclass of all connection layers.
     class Connection < HasParamLayer
@@ -208,7 +206,6 @@ module DNN
       end
     end
 
-
     class Dense < Connection
       attr_reader :num_nodes
 
@@ -226,8 +223,9 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 1
-          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 1 dimensional.")
+          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 1 dimensional."
         end
+
         super
         num_prev_nodes = input_shape[0]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
@@ -268,7 +266,6 @@ module DNN
       end
     end
 
-
     class Flatten < Layer
       def forward(x)
         x.reshape(x.shape[0], *output_shape)
@@ -283,8 +280,9 @@ module DNN
       end
     end
 
-
     class Reshape < Layer
+      attr_reader :output_shape
+
       def initialize(output_shape)
         super()
         @output_shape = output_shape
@@ -298,10 +296,6 @@ module DNN
         dy.reshape(dy.shape[0], *@input_shape)
       end
 
-      def output_shape
-        @output_shape
-      end
-
       def to_hash
         super(output_shape: @output_shape)
       end
@@ -310,7 +304,6 @@ module DNN
         initialize(hash[:output_shape])
       end
     end
-
 
     class Dropout < Layer
       attr_accessor :dropout_ratio

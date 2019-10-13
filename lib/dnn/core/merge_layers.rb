@@ -3,7 +3,7 @@ module DNN
 
     class MergeLayer < Layers::Layer
       def self.call(x1, x2, *args)
-        self.new(*args).call(x1, x2)
+        new(*args).call(x1, x2)
       end
 
       def call(input_tensor1, input_tensor2)
@@ -18,7 +18,6 @@ module DNN
       end
     end
 
-
     class Add < MergeLayer
       def forward(x1, x2)
         x1 + x2
@@ -28,7 +27,6 @@ module DNN
         [dy, dy]
       end
     end
-
 
     class Mul < MergeLayer
       def forward(x1, x2)
@@ -40,7 +38,6 @@ module DNN
         [dy * @x2, dy * @x1]
       end
     end
-
 
     class Concatenate < MergeLayer
       attr_reader :axis

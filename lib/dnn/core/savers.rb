@@ -17,7 +17,7 @@ module DNN
       private
 
       def load_bin(bin)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'load_bin'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'load_bin'"
       end
 
       def set_all_params_data(params_data)
@@ -29,7 +29,6 @@ module DNN
         end
       end
     end
-
 
     class MarshalLoader < Loader
       private def load_bin(bin)
@@ -65,7 +64,6 @@ module DNN
 
   end
 
-
   module Savers
 
     class Saver
@@ -87,7 +85,7 @@ module DNN
       private
 
       def dump_bin
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'dump_bin'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'dump_bin'"
       end
 
       def get_all_params_data
@@ -97,7 +95,6 @@ module DNN
         all_params.to_h { |param| [param.name, param.data] }
       end
     end
-
 
     class MarshalSaver < Saver
       def initialize(model, include_optimizer: true)

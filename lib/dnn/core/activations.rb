@@ -11,17 +11,15 @@ module DNN
       end
     end
 
-
     class Tanh < Layers::Layer
       def forward(x)
         @y = Xumo::NMath.tanh(x)
       end
 
       def backward(dy)
-        dy * (1 - @y ** 2)
+        dy * (1 - @y**2)
       end
     end
-
 
     class Softsign < Layers::Layer
       def forward(x)
@@ -30,10 +28,9 @@ module DNN
       end
 
       def backward(dy)
-        dy * (1 / (1 + @x.abs) ** 2)
+        dy * (1 / (1 + @x.abs)**2)
       end
     end
-
 
     class Softplus < Layers::Layer
       def forward(x)
@@ -46,7 +43,6 @@ module DNN
       end
     end
 
-
     class Swish < Layers::Layer
       def forward(x)
         @x = x
@@ -58,7 +54,6 @@ module DNN
       end
     end
 
-
     class ReLU < Layers::Layer
       def forward(x)
         @x = x
@@ -69,7 +64,6 @@ module DNN
         dy * Xumo::SFloat.cast(@x > 0)
       end
     end
-
 
     class LeakyReLU < Layers::Layer
       attr_reader :alpha
@@ -101,7 +95,6 @@ module DNN
         initialize(hash[:alpha])
       end
     end
-
 
     class ELU < Layers::Layer
       attr_reader :alpha

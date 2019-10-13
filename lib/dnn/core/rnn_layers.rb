@@ -40,8 +40,9 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 2
-          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 2 dimensional.")
+          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 2 dimensional."
         end
+
         super
         @time_length = @input_shape[0]
       end
@@ -129,7 +130,6 @@ module DNN
       end
     end
 
-
     class SimpleRNNDense
       attr_accessor :trainable
 
@@ -161,7 +161,6 @@ module DNN
         [dx, dh]
       end
     end
-
 
     class SimpleRNN < RNN
       attr_reader :activation
@@ -222,7 +221,6 @@ module DNN
       end
     end
 
-
     class LSTMDense
       attr_accessor :trainable
 
@@ -279,7 +277,6 @@ module DNN
         [dx, dh, dc]
       end
     end
-
 
     class LSTM < RNN
       attr_reader :cell
@@ -359,7 +356,6 @@ module DNN
       end
     end
 
-
     class GRUDense
       attr_accessor :trainable
 
@@ -387,11 +383,11 @@ module DNN
         @weight_h = @weight.data[true, (num_nodes * 2)..-1]
         @weight2_h = @recurrent_weight.data[true, (num_nodes * 2)..-1]
         @tanh_h = if @bias
-          bias_h = @bias.data[(num_nodes * 2)..-1]
-          @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h) + bias_h)
-        else
-          @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h))
-        end
+                    bias_h = @bias.data[(num_nodes * 2)..-1]
+                    @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h) + bias_h)
+                  else
+                    @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h))
+                  end
         h2 = (1 - @update) * @tanh_h + @update * h
         h2
       end
@@ -427,7 +423,6 @@ module DNN
         [dx, dh]
       end
     end
-
 
     class GRU < RNN
       def initialize(num_nodes,

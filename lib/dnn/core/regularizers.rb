@@ -8,17 +8,17 @@ module DNN
         return nil unless hash
         regularizer_class = DNN.const_get(hash[:class])
         regularizer = regularizer_class.allocate
-        raise DNN_Error.new("#{regularizer.class} is not an instance of #{self} class.") unless regularizer.is_a?(self)
+        raise DNN_Error, "#{regularizer.class} is not an instance of #{self} class." unless regularizer.is_a?(self)
         regularizer.load_hash(hash)
         regularizer
       end
 
       def forward(x)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'forward'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
       def backward
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'backward'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward'"
       end
 
       def to_hash(merge_hash)
@@ -28,7 +28,7 @@ module DNN
       end
 
       def load_hash(hash)
-        raise NotImplementedError.new("Class '#{self.class.name}' has implement method 'load_hash'")
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'load_hash'"
       end
     end
 
@@ -59,7 +59,6 @@ module DNN
       end
     end
 
-
     class L2 < Regularizer
       attr_accessor :l2_lambda
 
@@ -69,7 +68,7 @@ module DNN
       end
 
       def forward(x)
-        x + 0.5 * @l2_lambda * (@param.data ** 2).sum
+        x + 0.5 * @l2_lambda * (@param.data**2).sum
       end
 
       def backward
@@ -98,7 +97,7 @@ module DNN
 
       def forward(x)
         l1 = @l1_lambda * @param.data.abs.sum
-        l2 = 0.5 * @l2_lambda * (@param.data ** 2).sum
+        l2 = 0.5 * @l2_lambda * (@param.data**2).sum
         x + l1 + l2
       end
 

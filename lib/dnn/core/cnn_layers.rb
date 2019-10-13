@@ -83,7 +83,6 @@ module DNN
       end
     end
 
-
     class Conv2D < Connection
       include Conv2DUtils
 
@@ -114,20 +113,21 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
+          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
+
         super
         prev_h, prev_w, num_prev_filters = *input_shape
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filters, @num_filters)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         @pad_size = if @padding == true
-          calc_conv2d_padding_size(prev_h, prev_w, *@filter_size, @strides)
-        elsif @padding.is_a?(Array)
-          @padding
-        else
-          [0, 0]
-        end
+                      calc_conv2d_padding_size(prev_h, prev_w, *@filter_size, @strides)
+                    elsif @padding.is_a?(Array)
+                      @padding
+                    else
+                      [0, 0]
+                    end
         @out_size = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
 
@@ -186,7 +186,6 @@ module DNN
       end
     end
 
-
     class Conv2DTranspose < Connection
       include Conv2DUtils
 
@@ -217,20 +216,21 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
+          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
+
         super
         prev_h, prev_w, num_prev_filters = *input_shape
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filters)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
         @pad_size = if @padding == true
-          calc_conv2d_transpose_padding_size(prev_h, prev_w, *@filter_size, @strides)
-        elsif @padding.is_a?(Array)
-          @padding
-        else
-          [0, 0]
-        end
+                      calc_conv2d_transpose_padding_size(prev_h, prev_w, *@filter_size, @strides)
+                    elsif @padding.is_a?(Array)
+                      @padding
+                    else
+                      [0, 0]
+                    end
         @out_size = calc_conv2d_transpose_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
 
@@ -291,7 +291,6 @@ module DNN
       end
     end
 
-
     # Super class of all pooling2D class.
     class Pool2D < Layer
       include Conv2DUtils
@@ -308,27 +307,28 @@ module DNN
         super()
         @pool_size = pool_size.is_a?(Integer) ? [pool_size, pool_size] : pool_size
         @strides = if strides
-          strides.is_a?(Integer) ? [strides, strides] : strides
-        else
-          @pool_size.clone
-        end
+                     strides.is_a?(Integer) ? [strides, strides] : strides
+                   else
+                     @pool_size.clone
+                   end
         @padding = padding.is_a?(Integer) ? [padding, padding] : padding
       end
 
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
+          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
+
         super
         prev_h, prev_w = input_shape[0..1]
         @num_channel = input_shape[2]
         @pad_size = if @padding == true
-          calc_conv2d_padding_size(prev_h, prev_w, *@pool_size, @strides)
-        elsif @padding.is_a?(Array)
-          @padding
-        else
-          [0, 0]
-        end
+                      calc_conv2d_padding_size(prev_h, prev_w, *@pool_size, @strides)
+                    elsif @padding.is_a?(Array)
+                      @padding
+                    else
+                      [0, 0]
+                    end
         @out_size = calc_conv2d_out_size(prev_h, prev_w, *@pool_size, *@pad_size, @strides)
       end
 
@@ -345,9 +345,7 @@ module DNN
       def load_hash(hash)
         initialize(hash[:pool_size], strides: hash[:strides], padding: hash[:padding])
       end
-
     end
-
 
     class MaxPool2D < Pool2D
       def forward(x)
@@ -367,7 +365,6 @@ module DNN
         @padding ? zero_padding_bwd(dx, @pad_size) : dx
       end
     end
-
 
     class AvgPool2D < Pool2D
       def forward(x)
@@ -391,7 +388,6 @@ module DNN
       end
     end
 
-
     class UnPool2D < Layer
       include Conv2DUtils
 
@@ -405,8 +401,9 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError.new("Input shape is #{input_shape}. But input shape must be 3 dimensional.")
+          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
+
         super
         prev_h, prev_w = input_shape[0..1]
         unpool_h, unpool_w = @unpool_size
