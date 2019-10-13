@@ -3,8 +3,23 @@ module DNN
 
     class Callback
       attr_accessor :model
+
+      # Please implement the method used for callback event.
+      # Process performed before one training.
+      # def before_epoch; end
+      # Process performed after one training.
+      # def after_epoch; end
+      # Set the proc to be performed before train on batch processing.
+      # def before_train_on_batch; end 
+      # Set the proc to be performed after train on batch processing.
+      # def after_train_on_batch; end
+      # Set the proc to be performed before test on batch processing.
+      # def before_test_on_batch; end
+      # Set the proc to be performed after test on batch processing.
+      # def after_test_on_batch; end
     end
 
+    # This callback wrap the lambda function.
     class LambdaCallback < Callback
       def initialize(event, lambda)
         instance_eval do
@@ -67,6 +82,12 @@ module DNN
       end
     end
 
+    # A callback that save the log.
+    # The following logs will be recorded.
+    # epoch:          Current epoch.
+    # train_loss:     Batch training loss.
+    # test_loss:      Mean test loss.
+    # test_accuracy:  Test accuracy.
     class Logger < Callback
       def initialize
         @log = {
@@ -87,6 +108,8 @@ module DNN
         @log[:train_loss] << model.last_log[:train_loss]
       end
 
+      # Get a log.
+      # @param [Symbol] tag Tag indicating the type of Log.
       def get_log(tag)
         @log[log]
       end
