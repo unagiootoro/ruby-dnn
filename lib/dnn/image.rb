@@ -75,7 +75,7 @@ module DNN
 
     # Image convert to gray scale.
     # @param [Numo::UInt8] img Image to gray scale.
-    def self.gray_scale(img)
+    def self.to_gray_scale(img)
       img_check(img)
       if img.shape[2] == RGB
         x = Numo::SFloat.cast(img)
