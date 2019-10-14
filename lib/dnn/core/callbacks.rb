@@ -41,7 +41,7 @@ module DNN
       end
 
       def after_epoch
-        model.save(@base_file_name + "_epoch#{model.last_log[:epoch]}")
+        model.save(@base_file_name + "_epoch#{model.last_log[:epoch]}.marshal")
       end
     end
 
