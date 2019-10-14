@@ -1,8 +1,51 @@
 module DNN
   module Models
 
+    class LayersList < Array
+      def self.from_hash_list(hash_list)
+        layers_list = new
+        hash_list.each do |hash|
+          layers_list << Layers::Layer.from_hash(hash)
+        end
+        layers_list
+      end
+    
+      def to_hash_list
+        map { |layer| layer.to_hash }
+      end
+    end
+
+    class Chain
+      def call(x)
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'call'"
+      end
+
+      def to_hash
+        layers_hash = {}
+        instance_variables.each do |ivar|
+          obj = instance_variable_get(ivar)
+          if obj.is_a?(Layers::Layer) || obj.is_a?(Chain)
+            layers_hash[ivar] = obj.to_hash
+          elsif obj.is_a?(LayersList)
+            layers_hash[ivar] = obj.to_hash_list
+          end
+        end
+        layers_hash
+      end
+
+      def load_hash(layers_hash)
+        layers_hash.each do |(ivar, obj)|
+          if obj.is_a?(Array)
+            instance_variable_set(ivar, LayersList.from_hash_list(obj))
+          else
+            instance_variable_set(ivar, Layers::Layer.from_hash(obj))
+          end
+        end
+      end
+    end
+
     # This class deals with the model of the network.
-    class Model
+    class Model < Chain
       attr_accessor :optimizer
       attr_accessor :loss_func
       attr_reader :last_log
@@ -293,30 +336,6 @@ module DNN
         @built
       end
 
-      def to_hash
-        layers_hash = {}
-        instance_variables.each do |ivar|
-          obj = instance_variable_get(ivar)
-          if obj.is_a?(Layers::Layer)
-            layers_hash[ivar] = obj.to_hash
-          elsif obj.is_a?(Array) && obj.select { |o| o.is_a?(Layers::Layer) }.length > 0
-            layers_hash[ivar] = obj.map { |layer| layer.to_hash }
-          end
-        end
-        layers_hash
-      end
-
-      def load_hash(layers_hash)
-        layers_hash.each do |(ivar, layer_hash)|
-          if layer_hash.is_a?(Array)
-            ary = layer_hash
-            instance_variable_set(ivar, ary.map { |layer_h| Layers::Layer.from_hash(layer_h) })
-          else
-            instance_variable_set(ivar, Layers::Layer.from_hash(layer_hash))
-          end
-        end
-      end
-
       private
 
       def forward(x, learning_phase)
@@ -370,7 +389,7 @@ module DNN
       # @param [Array] stack All layers possessed by the model.
       def initialize(stack = [])
         super()
-        @stack = stack.clone
+        @stack = LayersList[*stack]
       end
 
       # Add layer to the model.

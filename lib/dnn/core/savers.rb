@@ -33,6 +33,9 @@ module DNN
     class MarshalLoader < Loader
       private def load_bin(bin)
         data = Marshal.load(Zlib::Inflate.inflate(bin))
+        unless @model.class.name == data[:class]
+          raise DNN_Error, "Class name is not mismatch. Target model is #{@model.class.name}. But loading model is #{data[:class]}."
+        end
         opt = Optimizers::Optimizer.load(data[:optimizer])
         loss_func = Losses::Loss.from_hash(data[:loss_func])
         @model.setup(opt, loss_func)
