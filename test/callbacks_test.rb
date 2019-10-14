@@ -23,7 +23,7 @@ class TestCheckPoint < MiniTest::Unit::TestCase
     cbk.model = stub_model
     stub_model.last_log[:epoch] = 1
     cbk.after_epoch
-    assert_equal "save_epoch1", stub_model.file_name
+    assert_equal "save_epoch1.marshal", stub_model.file_name
   end
 end
 
