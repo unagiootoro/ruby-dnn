@@ -56,6 +56,10 @@ module DNN
         @weight_regularizer ? [@weight_regularizer] : []
       end
 
+      def to_proc
+        method(:call).to_proc
+      end
+
       def to_hash
         super(input_shape: @input_shape, input_length: @input_length,
               weight_initializer: @weight_initializer.to_hash, weight_regularizer: @weight_regularizer&.to_hash)
