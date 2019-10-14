@@ -37,6 +37,7 @@ module DNN
         loss_func = Losses::Loss.from_hash(data[:loss_func])
         @model.setup(opt, loss_func)
         @model.load_hash(data[:layers_hash]) if data[:layers_hash]
+        @model.instance_variable_set(:@built, false)
         @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
         set_all_params_data(data[:params])
       end
@@ -50,6 +51,8 @@ module DNN
         opt = Optimizers::Optimizer.from_hash(data[:optimizer])
         loss_func = Losses::Loss.from_hash(data[:loss_func])
         @model.setup(opt, loss_func)
+        @model.load_hash(data[:layers_hash]) if data[:layers_hash]
+        @model.instance_variable_set(:@built, false)
         @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
         base64_to_params_data(data[:params])
       end
@@ -119,7 +122,7 @@ module DNN
       def dump_bin
         data = {
           version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: params_data_to_base64,
-          optimizer: @model.optimizer.to_hash, loss_func: @model.loss_func.to_hash
+          layers_hash: @model.to_hash, optimizer: @model.optimizer.to_hash, loss_func: @model.loss_func.to_hash
         }
         JSON.dump(data)
       end

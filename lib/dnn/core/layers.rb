@@ -15,8 +15,8 @@ module DNN
         layer_class = DNN.const_get(hash[:class])
         layer = layer_class.allocate
         raise DNN_Error, "#{layer.class} is not an instance of #{self} class." unless layer.is_a?(self)
-
         layer.load_hash(hash)
+        layer.name = hash[:name]&.to_sym
         layer
       end
 
