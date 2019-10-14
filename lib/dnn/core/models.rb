@@ -293,6 +293,30 @@ module DNN
         @built
       end
 
+      def to_hash
+        layers_hash = {}
+        instance_variables.each do |ivar|
+          obj = instance_variable_get(ivar)
+          if obj.is_a?(Layers::Layer)
+            layers_hash[ivar] = obj.to_hash
+          elsif obj.is_a?(Array) && obj.select { |o| o.is_a?(Layers::Layer) }.length > 0
+            layers_hash[ivar] = obj.map { |layer| layer.to_hash }
+          end
+        end
+        layers_hash
+      end
+
+      def load_hash(layers_hash)
+        layers_hash.each do |(ivar, layer_hash)|
+          if layer_hash.is_a?(Array)
+            ary = layer_hash
+            instance_variable_set(ivar, ary.map { |layer_h| Layers::Layer.from_hash(layer_h) })
+          else
+            instance_variable_set(ivar, Layers::Layer.from_hash(layer_hash))
+          end
+        end
+      end
+
       private
 
       def forward(x, learning_phase)

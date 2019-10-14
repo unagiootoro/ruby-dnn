@@ -36,6 +36,7 @@ module DNN
         opt = Optimizers::Optimizer.load(data[:optimizer])
         loss_func = Losses::Loss.from_hash(data[:loss_func])
         @model.setup(opt, loss_func)
+        @model.load_hash(data[:layers_hash]) if data[:layers_hash]
         @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
         set_all_params_data(data[:params])
       end
@@ -106,7 +107,7 @@ module DNN
         opt = @include_optimizer ? @model.optimizer.dump : @model.optimizer.class.new.dump
         data = {
           version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: get_all_params_data,
-          optimizer: opt, loss_func: @model.loss_func.to_hash
+          layers_hash: @model.to_hash, optimizer: opt, loss_func: @model.loss_func.to_hash
         }
         Zlib::Deflate.deflate(Marshal.dump(data))
       end
