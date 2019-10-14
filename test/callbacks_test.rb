@@ -8,7 +8,6 @@ class TestLambdaCallback < MiniTest::Unit::TestCase
   end
 end
 
-
 class StubCallbacksTestModel < DNN::Models::Model
   attr_accessor :file_name
 
@@ -16,7 +15,6 @@ class StubCallbacksTestModel < DNN::Models::Model
     @file_name = file_name
   end
 end
-
 
 class TestCheckPoint < MiniTest::Unit::TestCase
   def test_after_epoch
@@ -28,7 +26,6 @@ class TestCheckPoint < MiniTest::Unit::TestCase
     assert_equal "save_epoch1", stub_model.file_name
   end
 end
-
 
 class TestEarlyStopping < MiniTest::Unit::TestCase
   def test_after_train_on_batch
@@ -52,7 +49,6 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
   end
 end
 
-
 class TestNaNStopping < MiniTest::Unit::TestCase
   def test_after_train_on_batch
     cbk = DNN::Callbacks::NaNStopping.new
@@ -62,5 +58,31 @@ class TestNaNStopping < MiniTest::Unit::TestCase
     assert_throws :stop do
       cbk.after_train_on_batch
     end
+  end
+end
+
+class TestLogger < MiniTest::Unit::TestCase
+  def test_after_epoch
+    cbk = DNN::Callbacks::Logger.new
+    stub_model = StubCallbacksTestModel.new
+    cbk.model = stub_model
+    stub_model.last_log[:epoch] = 1
+    stub_model.last_log[:test_loss] = 2
+    stub_model.last_log[:test_accuracy] = 3
+    cbk.after_epoch
+
+    assert_equal Numo::UInt32[1], cbk.get_log(:epoch)
+    assert_equal Numo::SFloat[2], cbk.get_log(:test_loss)
+    assert_equal Numo::SFloat[3], cbk.get_log(:test_accuracy)
+  end
+
+  def test_after_train_on_batch
+    cbk = DNN::Callbacks::Logger.new
+    stub_model = StubCallbacksTestModel.new
+    cbk.model = stub_model
+    stub_model.last_log[:train_loss] = 1
+    cbk.after_train_on_batch
+
+    assert_equal Numo::SFloat[1], cbk.get_log(:train_loss)
   end
 end

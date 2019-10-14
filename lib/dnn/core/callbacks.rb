@@ -110,8 +110,14 @@ module DNN
 
       # Get a log.
       # @param [Symbol] tag Tag indicating the type of Log.
+      # @return [Numo::NArray] Return the recorded log.
       def get_log(tag)
-        @log[log]
+        case tag
+        when :epoch
+          Numo::UInt32.cast(@log[tag])
+        else
+          Numo::SFloat.cast(@log[tag])
+        end
       end
     end
 
