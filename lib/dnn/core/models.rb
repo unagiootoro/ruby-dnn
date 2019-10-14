@@ -100,6 +100,7 @@ module DNN
             puts "" if verbose
             call_callbacks(:after_epoch)
           end
+          nil
         end
 
         if stopped

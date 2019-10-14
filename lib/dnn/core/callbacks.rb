@@ -65,7 +65,7 @@ module DNN
       def judge_early_stopping_train
         case @trigger
         when :train_loss
-          return true if model.last_log[@trigger] <= @tolerance
+          return true if model.last_log[@trigger].mean <= @tolerance
         end
         false
       end
@@ -73,7 +73,7 @@ module DNN
       def judge_early_stopping_test
         case @trigger
         when :test_loss
-          return true if model.last_log[@trigger] <= @tolerance
+          return true if model.last_log[@trigger].mean <= @tolerance
         when :test_accuracy
           return true if model.last_log[@trigger] >= @tolerance
         end

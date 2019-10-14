@@ -32,13 +32,23 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     cbk = DNN::Callbacks::EarlyStopping.new(:train_loss, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:train_loss] = 0.09
+    stub_model.last_log[:train_loss] = Numo::SFloat[0.09]
     assert_throws :stop do
       cbk.after_train_on_batch
     end
   end
 
   def test_after_epoch
+    cbk = DNN::Callbacks::EarlyStopping.new(:test_accuracy, 0.1)
+    stub_model = StubCallbacksTestModel.new
+    cbk.model = stub_model
+    stub_model.last_log[:test_accuracy] = Numo::SFloat[0.11]
+    assert_throws :stop do
+      cbk.after_epoch
+    end
+  end
+
+  def test_after_epoch2
     cbk = DNN::Callbacks::EarlyStopping.new(:test_accuracy, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
