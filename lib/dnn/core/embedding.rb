@@ -60,6 +60,20 @@ module DNN
         method(:call).to_proc
       end
 
+      def >>(layer)
+        if RUBY_VERSION < "2.6.0"
+          raise DNN_Error, "Function composition is not supported before ruby version 2.6.0."
+        end
+        to_proc >> layer
+      end
+
+      def <<(layer)
+        if RUBY_VERSION < "2.6.0"
+          raise DNN_Error, "Function composition is not supported before ruby version 2.6.0."
+        end
+        to_proc << layer
+      end
+
       def to_hash
         super(input_shape: @input_shape, input_length: @input_length,
               weight_initializer: @weight_initializer.to_hash, weight_regularizer: @weight_regularizer&.to_hash)
