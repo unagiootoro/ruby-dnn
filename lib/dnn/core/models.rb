@@ -108,6 +108,7 @@ module DNN
         check_xy_type(x, y)
         iter = Iterator.new(x, y, last_round_down: last_round_down)
         num_train_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
+        num_train_datas = num_train_datas / batch_size * batch_size if last_round_down
 
         stopped = catch(:stop) do
           (initial_epoch..epochs).each do |epoch|
