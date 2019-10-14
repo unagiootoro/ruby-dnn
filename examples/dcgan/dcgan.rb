@@ -1,8 +1,5 @@
-include DNN::Layers
-include DNN::Activations
-include DNN::Optimizers
-include DNN::Losses
 include DNN::Models
+include DNN::Layers
 
 class Generator < Model
   def initialize

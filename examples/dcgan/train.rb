@@ -3,6 +3,8 @@ require "dnn/datasets/mnist"
 require "numo/linalg/autoloader"
 require_relative "dcgan"
 
+include DNN::Optimizers
+include DNN::Losses
 MNIST = DNN::MNIST
 
 Numo::SFloat.srand(rand(1 << 31))

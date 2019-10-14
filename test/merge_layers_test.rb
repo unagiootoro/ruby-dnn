@@ -1,7 +1,7 @@
 require "test_helper"
 
 include DNN::MergeLayers
-include DNN::Activations
+include DNN::Layers
 include DNN::Optimizers
 include DNN::Initializers
 include DNN::Regularizers

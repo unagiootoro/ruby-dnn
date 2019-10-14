@@ -1,7 +1,7 @@
 module DNN
-  module Activations
+  module Layers
 
-    class Sigmoid < Layers::Layer
+    class Sigmoid < Layer
       def forward(x)
         @y = 1 / (1 + Xumo::NMath.exp(-x))
       end
@@ -11,7 +11,7 @@ module DNN
       end
     end
 
-    class Tanh < Layers::Layer
+    class Tanh < Layer
       def forward(x)
         @y = Xumo::NMath.tanh(x)
       end
@@ -21,7 +21,7 @@ module DNN
       end
     end
 
-    class Softsign < Layers::Layer
+    class Softsign < Layer
       def forward(x)
         @x = x
         x / (1 + x.abs)
@@ -32,7 +32,7 @@ module DNN
       end
     end
 
-    class Softplus < Layers::Layer
+    class Softplus < Layer
       def forward(x)
         @x = x
         Xumo::NMath.log(1 + Xumo::NMath.exp(x))
@@ -43,7 +43,7 @@ module DNN
       end
     end
 
-    class Swish < Layers::Layer
+    class Swish < Layer
       def forward(x)
         @x = x
         @y = x * (1 / (1 + Xumo::NMath.exp(-x)))
@@ -54,7 +54,7 @@ module DNN
       end
     end
 
-    class ReLU < Layers::Layer
+    class ReLU < Layer
       def forward(x)
         @x = x
         Xumo::SFloat.maximum(0, x)
@@ -65,7 +65,7 @@ module DNN
       end
     end
 
-    class LeakyReLU < Layers::Layer
+    class LeakyReLU < Layer
       attr_reader :alpha
 
       # @param [Float] alpha The slope when the output value is negative.
@@ -96,7 +96,7 @@ module DNN
       end
     end
 
-    class ELU < Layers::Layer
+    class ELU < Layer
       attr_reader :alpha
 
       # @param [Float] alpha The slope when the output value is negative.

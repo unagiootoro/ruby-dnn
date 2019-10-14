@@ -163,7 +163,7 @@ module DNN
 
       class << self
         def sigmoid(y)
-          Activations::Sigmoid.new.forward(y)
+          Layers::Sigmoid.new.forward(y)
         end
 
         alias activation sigmoid

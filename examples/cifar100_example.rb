@@ -3,11 +3,10 @@ require "dnn/datasets/cifar100"
 # If you use numo/linalg then please uncomment out.
 # require "numo/linalg/autoloader"
 
+include DNN::Models
 include DNN::Layers
-include DNN::Activations
 include DNN::Optimizers
 include DNN::Losses
-include DNN::Models
 CIFAR100 = DNN::CIFAR100
 
 x_train, y_train = CIFAR100.load_train

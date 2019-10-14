@@ -1,10 +1,9 @@
 require "dnn"
 
+include DNN::Models
 include DNN::Layers
-include DNN::Activations
 include DNN::Optimizers
 include DNN::Losses
-include DNN::Models
 
 x = Numo::SFloat[[0, 0], [1, 0], [0, 1], [1, 1]]
 y = Numo::SFloat[[0], [1], [1], [0]]

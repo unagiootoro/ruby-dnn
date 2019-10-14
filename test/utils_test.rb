@@ -16,12 +16,12 @@ class TestUtils < MiniTest::Unit::TestCase
   end
 
   def test_hash_to_obj
-    relu = Utils.hash_to_obj({class: "DNN::Activations::ReLU"})
+    relu = Utils.hash_to_obj({class: "DNN::Layers::ReLU"})
     assert_kind_of ReLU, relu
   end
 
   def test_hash_to_obj2
-    lrelu = Utils.hash_to_obj({class: "DNN::Activations::LeakyReLU", alpha: 0.2})
+    lrelu = Utils.hash_to_obj({class: "DNN::Layers::LeakyReLU", alpha: 0.2})
     assert_equal 0.2, lrelu.alpha
   end
 

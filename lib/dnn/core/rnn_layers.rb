@@ -169,7 +169,7 @@ module DNN
       def initialize(num_nodes,
                      stateful: false,
                      return_sequences: true,
-                     activation: Activations::Tanh.new,
+                     activation: Layers::Tanh.new,
                      weight_initializer: Initializers::RandomNormal.new,
                      recurrent_weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
@@ -228,11 +228,11 @@ module DNN
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
-        @tanh = Activations::Tanh.new
-        @g_tanh = Activations::Tanh.new
-        @forget_sigmoid = Activations::Sigmoid.new
-        @in_sigmoid = Activations::Sigmoid.new
-        @out_sigmoid = Activations::Sigmoid.new
+        @tanh = Layers::Tanh.new
+        @g_tanh = Layers::Tanh.new
+        @forget_sigmoid = Layers::Sigmoid.new
+        @in_sigmoid = Layers::Sigmoid.new
+        @out_sigmoid = Layers::Sigmoid.new
         @trainable = true
       end
 
@@ -363,9 +363,9 @@ module DNN
         @weight = weight
         @recurrent_weight = recurrent_weight
         @bias = bias
-        @update_sigmoid = Activations::Sigmoid.new
-        @reset_sigmoid = Activations::Sigmoid.new
-        @tanh = Activations::Tanh.new
+        @update_sigmoid = Layers::Sigmoid.new
+        @reset_sigmoid = Layers::Sigmoid.new
+        @tanh = Layers::Tanh.new
         @trainable = true
       end
 

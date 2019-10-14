@@ -1,7 +1,6 @@
 require "test_helper"
 
 include DNN::Layers
-include DNN::Activations
 include DNN::Optimizers
 
 class TestBatchNormalization < MiniTest::Unit::TestCase

@@ -23,7 +23,7 @@ module DNN
 
     # Return the result of the sigmoid function.
     def self.sigmoid(x)
-      Activations::Sigmoid.new.forward(x)
+      Layers::Sigmoid.new.forward(x)
     end
 
     # Return the result of the softmax function.

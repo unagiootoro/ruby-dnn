@@ -1,7 +1,6 @@
 require "test_helper"
 require "json"
 
-include DNN::Activations
 include DNN::Layers
 include DNN::Optimizers
 include DNN::Initializers

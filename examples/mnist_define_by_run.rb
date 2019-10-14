@@ -3,11 +3,10 @@ require "dnn/datasets/mnist"
 # If you use numo/linalg then please uncomment out.
 # require "numo/linalg/autoloader"
 
+include DNN::Models
 include DNN::Layers
-include DNN::Activations
 include DNN::Optimizers
 include DNN::Losses
-include DNN::Models
 MNIST = DNN::MNIST
 
 x_train, y_train = MNIST.load_train
