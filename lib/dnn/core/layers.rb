@@ -135,6 +135,10 @@ module DNN
         dy
       end
 
+      def to_proc
+        method(:call).to_proc
+      end
+
       def to_hash
         super(input_shape: @input_shape)
       end
