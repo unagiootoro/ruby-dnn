@@ -5,7 +5,15 @@ module DNN
       def self.from_hash_list(hash_list)
         layers_list = new
         hash_list.each do |hash|
-          layers_list << Layers::Layer.from_hash(hash)
+          obj_class = DNN.const_get(hash[:class])
+          obj = obj_class.allocate
+          if obj.is_a?(Chain)
+            obj = obj_class.new
+            obj.load_hash(hash)
+          else
+            obj = Layers::Layer.from_hash(hash)
+          end
+          layers_list << obj
         end
         layers_list
       end
@@ -21,7 +29,7 @@ module DNN
       end
 
       def to_hash
-        layers_hash = {}
+        layers_hash = { class: self.class.name }
         instance_variables.each do |ivar|
           obj = instance_variable_get(ivar)
           if obj.is_a?(Layers::Layer) || obj.is_a?(Chain)
@@ -34,11 +42,20 @@ module DNN
       end
 
       def load_hash(layers_hash)
-        layers_hash.each do |(ivar, obj)|
-          if obj.is_a?(Array)
-            instance_variable_set(ivar, LayersList.from_hash_list(obj))
-          else
-            instance_variable_set(ivar, Layers::Layer.from_hash(obj))
+        instance_variables.each do |ivar|
+          hash_or_array = layers_hash[ivar]
+          if hash_or_array.is_a?(Array)
+            instance_variable_set(ivar, LayersList.from_hash_list(hash_or_array))
+          elsif hash_or_array.is_a?(Hash)
+            obj_class = DNN.const_get(hash_or_array[:class])
+            obj = obj_class.allocate
+            if obj.is_a?(Chain)
+              obj = obj_class.new
+              obj.load_hash(hash_or_array)
+              instance_variable_set(ivar, obj)
+            else
+              instance_variable_set(ivar, Layers::Layer.from_hash(hash_or_array))
+            end
           end
         end
       end
