@@ -38,13 +38,13 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     end
   end
 
-  def test_after_test_on_batch
+  def test_after_epoch
     cbk = DNN::Callbacks::EarlyStopping.new(:test_accuracy, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
     stub_model.last_log[:test_accuracy] = 0.11
     assert_throws :stop do
-      cbk.after_test_on_batch
+      cbk.after_epoch
     end
   end
 end

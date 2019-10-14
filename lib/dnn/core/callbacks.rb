@@ -5,16 +5,22 @@ module DNN
       attr_accessor :model
 
       # Please implement the method used for callback event.
+
       # Process performed before one training.
       # def before_epoch; end
+
       # Process performed after one training.
       # def after_epoch; end
+
       # Set the proc to be performed before train on batch processing.
-      # def before_train_on_batch; end 
+      # def before_train_on_batch; end
+
       # Set the proc to be performed after train on batch processing.
       # def after_train_on_batch; end
+
       # Set the proc to be performed before test on batch processing.
       # def before_test_on_batch; end
+
       # Set the proc to be performed after test on batch processing.
       # def after_test_on_batch; end
     end
@@ -50,7 +56,7 @@ module DNN
         throw :stop, "Early stopped." if judge_early_stopping_train
       end
 
-      def after_test_on_batch
+      def after_epoch
         throw :stop, "Early stopped." if judge_early_stopping_test
       end
 
