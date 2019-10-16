@@ -96,9 +96,8 @@ module DNN
     end
 
     class InputLayer < Layer
-      def self.call(input)
-        shape = input.is_a?(Tensor) ? input.data.shape : input.shape
-        new(shape[1..-1]).(input)
+      def self.call(input_tensor)
+        new(input_tensor.data.shape[1..-1]).(input_tensor)
       end
 
       # @param [Array] input_dim_or_shape Setting the shape or dimension of the input data.
@@ -107,17 +106,9 @@ module DNN
         @input_shape = input_dim_or_shape.is_a?(Array) ? input_dim_or_shape : [input_dim_or_shape]
       end
 
-      def call(input)
+      def call(input_tensor)
         build unless built?
-        if input.is_a?(Tensor)
-          x = input.data
-          prev_link = input.link
-        else
-          x = input
-          prev_link = nil
-        end
-        link = prev_link ? Link.new(prev_link, self) : Link.new(nil, self)
-        Tensor.new(forward(x), link)
+        Tensor.new(forward(input_tensor.data), Link.new(input_tensor&.link, self))
       end
 
       def build
