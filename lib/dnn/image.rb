@@ -45,6 +45,8 @@ module DNN
       when /\.bmp$/i
         res = Stb.stbi_write_bmp(file_name, w, h, ch, bin)
       when /\.jpg$/i, /\.jpeg/i
+        raise TypeError, "quality:#{quality.class} is not an instance of Integer class." unless quality.is_a?(Integer)
+        raise ArgumentError, "quality should be between 1 and 100." unless quality.between?(1, 100)
         res = Stb.stbi_write_jpg(file_name, w, h, ch, bin, quality)
       end
       raise ImageWriteError.new("Image write failed.") if res == 0
