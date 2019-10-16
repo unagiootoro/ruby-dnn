@@ -52,7 +52,6 @@ class Generator < Model
   end
 end
 
-
 class Discriminator < Model
   def initialize
     super
@@ -94,12 +93,11 @@ class Discriminator < Model
   end
 end
 
-
 class DCGAN < Model
-  attr_reader :gen
-  attr_reader :dis
+  attr_accessor :gen
+  attr_accessor :dis
 
-  def initialize(gen, dis)
+  def initialize(gen = nil, dis = nil)
     super()
     @gen = gen
     @dis = dis
@@ -109,5 +107,20 @@ class DCGAN < Model
     x = @gen.(x)
     x = @dis.(x, false)
     x
+  end
+
+  def train_step(x_batch, y_batch)
+    batch_size = x_batch.shape[0]
+    noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
+    images = @gen.predict(noise)
+    x = x_batch.concatenate(images)
+    y = Numo::SFloat.cast([1] * batch_size + [0] * batch_size).reshape(batch_size * 2, 1)
+    dis_loss = @dis.train_on_batch(x, y)
+
+    noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
+    label = Numo::SFloat.cast([1] * batch_size).reshape(batch_size, 1)
+    dcgan_loss = train_on_batch(noise, label)
+
+    { dis_loss: dis_loss.mean, dcgan_loss: dcgan_loss.mean }
   end
 end
