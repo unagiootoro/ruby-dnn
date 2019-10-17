@@ -17,6 +17,7 @@ module DNN
 
       def self.load(dumped)
         opt = from_hash(dumped[:hash])
+        return opt unless dumped[:status]
         dumped[:status].each do |key, state|
           state = state.clone
           opt.status[key] = state
@@ -42,7 +43,8 @@ module DNN
         end
       end
 
-      def dump
+      def dump(require_status = true)
+        status = require_status ? @status : nil
         { hash: to_hash, status: @status }
       end
 
