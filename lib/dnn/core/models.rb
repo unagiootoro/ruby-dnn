@@ -17,7 +17,7 @@ module DNN
         end
         layers_list
       end
-    
+
       def to_hash_list
         map { |layer| layer.to_hash }
       end
@@ -134,7 +134,7 @@ module DNN
             puts "【 epoch #{epoch}/#{epochs} 】" if verbose
 
             iter.foreach(batch_size) do |x_batch, y_batch, index|
-              train_step_res = train_step(x_batch, y_batch)
+              train_step_met = train_step(x_batch, y_batch)
               num_trained_datas = (index + 1) * batch_size
               num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
               log = "\r"
@@ -149,14 +149,13 @@ module DNN
               end
 
               log << "  #{num_trained_datas}/#{num_train_datas} "
-              log << train_step_res.map { |key, val| "#{key}: #{val}" }.join(", ")
+              log << metrics_to_str(train_step_met)
               print log if verbose
             end
 
             if test
-              test_res = test(test[0], test[1], batch_size: batch_size, last_round_down: last_round_down)
-              str = test_res.map { |key, val| "#{key}: #{val}" }.join(", ")
-              print "  #{str}" if verbose
+              test_met = test(test[0], test[1], batch_size: batch_size, last_round_down: last_round_down)
+              print "  " + metrics_to_str(test_met) if verbose
             end
             puts "" if verbose
             call_callbacks(:after_epoch)
@@ -177,8 +176,7 @@ module DNN
       # @return [Hash] Hash of contents to be output to log.
       private def train_step(x, y)
         loss_value = train_on_batch(x, y)
-        str_loss_value = sprintf('%.8f', loss_value.mean)
-        { loss: str_loss_value }
+        { loss: loss_value.mean }
       end
 
       # Implement the test process to be performed.
@@ -189,8 +187,7 @@ module DNN
       # @return [Hash] Hash of contents to be output to log.
       private def test(x, y, batch_size: 100, last_round_down: false)
         acc, test_loss = accuracy(x, y, batch_size: batch_size, last_round_down: last_round_down)
-        str_test_loss = sprintf('%.8f', test_loss.mean)
-        { accuracy: acc, test_loss: str_test_loss }
+        { accuracy: acc, test_loss: test_loss.mean }
       end
 
       # Training once.
@@ -389,6 +386,10 @@ module DNN
             end
           end
         end
+      end
+
+      def metrics_to_str(mertics)
+        mertics.map { |key, num| "#{key}: #{sprintf('%.4f', num)}" }.join(", ")
       end
 
       def check_xy_type(x, y = nil)
