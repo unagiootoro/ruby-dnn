@@ -45,7 +45,7 @@ module DNN
 
       def dump(require_status = true)
         status = require_status ? @status : nil
-        { hash: to_hash, status: @status }
+        { hash: to_hash, status: status }
       end
 
       def to_hash(merge_hash = nil)
