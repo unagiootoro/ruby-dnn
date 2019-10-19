@@ -19,4 +19,4 @@ model.setup(SGD.new, SigmoidCrossEntropy.new)
 
 model.train(x, y, 20000, batch_size: 4, verbose: false)
 
-p DNN::Utils.sigmoid(model.predict(x))
+p model.predict(x)
