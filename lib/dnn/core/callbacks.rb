@@ -105,13 +105,11 @@ module DNN
       end
 
       def after_epoch
-        @log[:epoch] << model.last_log[:epoch]
-        @log[:test_loss] << model.last_log[:test_loss]
-        @log[:test_accuracy] << model.last_log[:test_accuracy]
+        logging(:epoch, :test_loss, :test_accuracy)
       end
 
       def after_train_on_batch
-        @log[:train_loss] << model.last_log[:train_loss]
+        logging(:train_loss)
       end
 
       # Get a log.
@@ -123,6 +121,13 @@ module DNN
           Numo::UInt32.cast(@log[tag])
         else
           Numo::SFloat.cast(@log[tag])
+        end
+      end
+
+      private def logging(*tags)
+        tags.each do |tag|
+          @log[tag] ||= []
+          @log[tag] << model.last_log[tag]
         end
       end
     end
