@@ -68,8 +68,7 @@ module DNN
 
       # Start training by iterator.
       # Setup the model before use this method.
-      # @param [Numo::SFloat] x Input training data.
-      # @param [Numo::SFloat] y Output training data.
+      # @param [Iterator] train_iterator Iterator used for training.
       # @param [Integer] epochs Number of training.
       # @param [Integer] batch_size Batch size used for one training.
       # @param [Integer] initial_epoch Initial epoch.

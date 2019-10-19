@@ -26,7 +26,8 @@ module DNN
       end
 
       # Forward propagation and create a link.
-      # @param [Array] input_tensor Input tensor.
+      # @param [Tensor] input_tensor Input tensor.
+      # @return [Tensor] Output tensor.
       def call(input_tensor)
         x = input_tensor.data
         prev_link = input_tensor.link
