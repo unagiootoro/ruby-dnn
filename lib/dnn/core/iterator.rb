@@ -1,6 +1,9 @@
 module DNN
   # This class manages input datas and output datas together.
   class Iterator
+    attr_reader :num_datas
+    attr_reader :last_round_down
+
     # @param [Numo::SFloat] x_datas input datas.
     # @param [Numo::SFloat] y_datas output datas.
     # @param [Boolean] random Set true to return batches randomly. Setting false returns batches in order of index.
