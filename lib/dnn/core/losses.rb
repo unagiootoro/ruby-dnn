@@ -7,7 +7,6 @@ module DNN
         loss_class = DNN.const_get(hash[:class])
         loss = loss_class.allocate
         raise DNN_Error, "#{loss.class} is not an instance of #{self} class." unless loss.is_a?(self)
-
         loss.load_hash(hash)
         loss
       end

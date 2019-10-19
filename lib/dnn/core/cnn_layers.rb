@@ -115,7 +115,6 @@ module DNN
         unless input_shape.length == 3
           raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
-
         super
         prev_h, prev_w, num_prev_filters = *input_shape
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filters, @num_filters)
