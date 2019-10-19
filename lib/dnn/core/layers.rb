@@ -234,7 +234,6 @@ module DNN
         unless input_shape.length == 1
           raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 1 dimensional."
         end
-
         super
         num_prev_nodes = input_shape[0]
         @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)

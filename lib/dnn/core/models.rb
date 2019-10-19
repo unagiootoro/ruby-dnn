@@ -36,7 +36,6 @@ module DNN
         unless loss_func.is_a?(Losses::Loss)
           raise TypeError, "loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss class."
         end
-
         @optimizer = optimizer
         @loss_func = loss_func
       end
@@ -158,7 +157,6 @@ module DNN
       def train_on_batch(x, y)
         raise DNN_Error, "The model is not optimizer setup complete." unless @optimizer
         raise DNN_Error, "The model is not loss_func setup complete." unless @loss_func
-
         check_xy_type(x, y)
         call_callbacks(:before_train_on_batch)
         x = forward(x, true)

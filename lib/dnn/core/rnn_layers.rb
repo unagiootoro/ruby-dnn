@@ -42,7 +42,6 @@ module DNN
         unless input_shape.length == 2
           raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 2 dimensional."
         end
-
         super
         @time_length = @input_shape[0]
       end

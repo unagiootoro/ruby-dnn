@@ -15,7 +15,6 @@ module DNN
         unless y.shape == t.shape
           raise DNN_ShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
         end
-
         loss_value = forward(y, t)
         loss_value += regularizers_forward(layers) if layers
         loss_value.is_a?(Float) ? Xumo::SFloat[loss_value] : loss_value
