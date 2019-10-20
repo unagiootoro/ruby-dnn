@@ -18,9 +18,9 @@ module DNN
     # @param [String] file_name File name to read.
     # @param [Integer] channel_type Specify channel type of image.
     def self.read(file_name, channel_type = RGB)
-      raise ImageReadError.new("#{file_name} is not found.") unless File.exist?(file_name)
+      raise ImageReadError, "#{file_name} is not found." unless File.exist?(file_name)
       bin, w, h, n = Stb.stbi_load(file_name, channel_type)
-      raise ImageReadError.new("#{file_name} load failed.") if bin == ""
+      raise ImageReadError, "#{file_name} load failed." if bin == ""
       img = Numo::UInt8.from_binary(bin)
       img.reshape(h, w, channel_type)
     end
@@ -38,18 +38,26 @@ module DNN
       end
       h, w, ch = img.shape
       bin = img.to_binary
-      case file_name
-      when /\.png$/i
+      match_data = file_name.match(/\.(\w+)$/i)
+      if match_data
+        ext = match_data[1]
+      else
+        raise ImageWriteError, "File name has not extension."
+      end
+      case ext
+      when "png"
         stride_in_bytes = w * ch
         res = Stb.stbi_write_png(file_name, w, h, ch, bin, stride_in_bytes)
-      when /\.bmp$/i
+      when "bmp"
         res = Stb.stbi_write_bmp(file_name, w, h, ch, bin)
-      when /\.jpg$/i, /\.jpeg/i
+      when "jpg", "jpeg"
         raise TypeError, "quality:#{quality.class} is not an instance of Integer class." unless quality.is_a?(Integer)
         raise ArgumentError, "quality should be between 1 and 100." unless quality.between?(1, 100)
         res = Stb.stbi_write_jpg(file_name, w, h, ch, bin, quality)
+      else
+        raise ImageWriteError, "Extension '#{ext}' is not support."
       end
-      raise ImageWriteError.new("Image write failed.") if res == 0
+      raise ImageWriteError, "Image write failed." if res == 0
     end
 
     # Resize the image.
@@ -90,11 +98,11 @@ module DNN
     end
 
     private_class_method def self.img_check(img)
-      raise TypeError.new("img: #{img.class} is not an instance of the Numo::UInt8 class.") unless img.is_a?(Numo::UInt8)
+      raise TypeError, "img: #{img.class} is not an instance of the Numo::UInt8 class." unless img.is_a?(Numo::UInt8)
       if img.shape.length != 3
-        raise ImageShapeError.new("img shape is #{img.shape}. But img shape must be 3 dimensional.")
+        raise ImageShapeError, "img shape is #{img.shape}. But img shape must be 3 dimensional."
       elsif !img.shape[2].between?(1, 4)
-        raise ImageShapeError.new("img channel is #{img.shape[2]}. But img channel must be 1 or 2 or 3 or 4.")
+        raise ImageShapeError, "img channel is #{img.shape[2]}. But img channel must be 1 or 2 or 3 or 4."
       end
     end
   end
