@@ -333,7 +333,7 @@ module DNN
       def forward(x)
         if DNN.learning_phase
           Xumo::SFloat.srand(@rnd.rand(1 << 31))
-          @mask = Xumo::SFloat.ones(*x.shape).rand < @dropout_ratio
+          @mask = Xumo::SFloat.new(*x.shape).rand < @dropout_ratio
           x[@mask] = 0
         elsif @use_scale
           x *= (1 - @dropout_ratio)
