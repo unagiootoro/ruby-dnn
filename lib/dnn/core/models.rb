@@ -312,7 +312,12 @@ module DNN
       def forward(x, learning_phase)
         DNN.learning_phase = learning_phase
         @layers_cache = nil
-        output_tensor = call(Tensor.new(x, nil))
+        inputs = if x.is_a?(Array)
+                   x.map { |a| Tensor.new(a, nil) }
+                 else
+                   Tensor.new(x, nil)
+                 end
+        output_tensor = call(inputs)
         @last_link = output_tensor.link
         unless @built
           @built = true
