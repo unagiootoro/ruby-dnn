@@ -64,7 +64,7 @@ class TestNaNStopping < MiniTest::Unit::TestCase
     cbk = DNN::Callbacks::NaNStopping.new
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:train_loss] = Float::NAN
+    stub_model.last_log[:train_loss] = Numo::SFloat[Float::NAN]
     assert_throws :stop do
       cbk.after_train_on_batch
     end

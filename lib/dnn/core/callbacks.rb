@@ -84,7 +84,7 @@ module DNN
     # A callback to stop training the model if loss is NaN by after train on batch.
     class NaNStopping < Callback
       def after_train_on_batch
-        throw :stop, "loss is NaN." if model.last_log[:train_loss].nan?
+        throw :stop, "loss is NaN." if model.last_log[:train_loss].mean.nan?
       end
     end
 
