@@ -32,7 +32,7 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     cbk = DNN::Callbacks::EarlyStopping.new(:train_loss, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:train_loss] = Numo::SFloat[0.09]
+    stub_model.last_log[:train_loss] = 0.09
     assert_throws :stop do
       cbk.after_train_on_batch
     end
@@ -42,7 +42,7 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     cbk = DNN::Callbacks::EarlyStopping.new(:test_accuracy, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:test_accuracy] = Numo::SFloat[0.11]
+    stub_model.last_log[:test_accuracy] = 0.11
     assert_throws :stop do
       cbk.after_epoch
     end
@@ -64,7 +64,7 @@ class TestNaNStopping < MiniTest::Unit::TestCase
     cbk = DNN::Callbacks::NaNStopping.new
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:train_loss] = Numo::SFloat[Float::NAN]
+    stub_model.last_log[:train_loss] = Float::NAN
     assert_throws :stop do
       cbk.after_train_on_batch
     end

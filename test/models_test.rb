@@ -101,7 +101,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model.setup(SGD.new, MeanSquaredError.new)
     loss = model.train_on_batch(x, y)
 
-    assert_equal Numo::SFloat[0], loss
+    assert_equal 0, loss
   end
 
   # It is accuracy is 1.
@@ -138,7 +138,7 @@ class TestSequential < MiniTest::Unit::TestCase
     correct, loss = model.test_on_batch(x, y)
 
     assert_equal 2, correct
-    assert_equal Numo::SFloat[0], loss
+    assert_equal 0, loss
   end
 
   # It is matching dense forward result and unuse loss activation.

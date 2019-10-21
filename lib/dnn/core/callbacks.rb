@@ -65,7 +65,7 @@ module DNN
       def judge_early_stopping_train
         case @trigger
         when :train_loss
-          return true if model.last_log[@trigger].mean <= @tolerance
+          return true if model.last_log[@trigger] <= @tolerance
         end
         false
       end
@@ -73,7 +73,7 @@ module DNN
       def judge_early_stopping_test
         case @trigger
         when :test_loss
-          return true if model.last_log[@trigger].mean <= @tolerance
+          return true if model.last_log[@trigger] <= @tolerance
         when :test_accuracy
           return true if model.last_log[@trigger] >= @tolerance
         end
@@ -84,7 +84,7 @@ module DNN
     # A callback to stop training the model if loss is NaN by after train on batch.
     class NaNStopping < Callback
       def after_train_on_batch
-        throw :stop, "loss is NaN." if model.last_log[:train_loss].mean.nan?
+        throw :stop, "loss is NaN." if model.last_log[:train_loss].nan?
       end
     end
 

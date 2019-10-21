@@ -5,7 +5,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     loss = DNN::Losses::MeanSquaredError.new
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[2, 4]]
-    assert_equal Numo::SFloat[6.5], loss.loss(y, t).round(4)
+    assert_equal 6.5, loss.loss(y, t).round(4)
   end
 
   def test_loss2
@@ -15,7 +15,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     dense.weight.data = Numo::SFloat.ones(*dense.weight.data.shape)
     out_y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[0, 1]]
-    assert_equal Numo::SFloat[15], loss.loss(out_y, t, [dense]).round(4)
+    assert_equal 15, loss.loss(out_y, t, [dense]).round(4)
   end
 
   # It is matches the expected value of forward.

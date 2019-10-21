@@ -135,7 +135,7 @@ module DNN
       # @return [Hash] Hash of contents to be output to log.
       private def train_step(x, y)
         loss_value = train_on_batch(x, y)
-        { loss: loss_value.mean }
+        { loss: loss_value }
       end
 
       # Implement the test process to be performed.
@@ -185,7 +185,7 @@ module DNN
         iter.foreach(batch_size) do |x_batch, y_batch|
           correct, loss_value = test_on_batch(x_batch, y_batch)
           total_correct += correct
-          sum_loss += loss_value.mean
+          sum_loss += loss_value
         end
         mean_loss = sum_loss / max_steps
         acc = total_correct.to_f / num_test_datas
