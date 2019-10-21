@@ -259,8 +259,9 @@ module DNN
 
       # Save the model in marshal format.
       # @param [String] file_name Name to save model.
-      def save(file_name)
-        saver = Savers::MarshalSaver.new(self)
+      # @param [Boolean] include_optimizer Set true to save data included optimizer status.
+      def save(file_name, include_optimizer: true)
+        saver = Savers::MarshalSaver.new(self, include_optimizer: include_optimizer)
         saver.save(file_name)
       end
 
