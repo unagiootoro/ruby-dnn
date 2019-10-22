@@ -180,7 +180,7 @@ module DNN
         batch_size = batch_size >= num_test_datas[0] ? num_test_datas : batch_size
         iter = Iterator.new(x, y, random: false)
         total_correct = 0
-        sum_loss = Xumo::SFloat[0]
+        sum_loss = 0
         max_steps = (num_test_datas.to_f / batch_size).ceil
         iter.foreach(batch_size) do |x_batch, y_batch|
           correct, loss_value = test_on_batch(x_batch, y_batch)
