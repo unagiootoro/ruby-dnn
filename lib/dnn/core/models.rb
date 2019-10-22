@@ -145,7 +145,7 @@ module DNN
       # @return [Hash] Hash of contents to be output to log.
       private def test(x, y, batch_size: 100)
         acc, test_loss = accuracy(x, y, batch_size: batch_size)
-        { accuracy: acc, test_loss: test_loss.mean }
+        { accuracy: acc, test_loss: test_loss }
       end
 
       # Training once.
