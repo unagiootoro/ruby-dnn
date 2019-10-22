@@ -37,7 +37,6 @@ module DNN
         Dir.mkdir(dir_name) unless Dir.exist?(dir_name)
       end
       h, w, ch = img.shape
-      bin = img.to_binary
       match_data = file_name.match(/\.(\w+)$/i)
       if match_data
         ext = match_data[1]
@@ -47,13 +46,18 @@ module DNN
       case ext
       when "png"
         stride_in_bytes = w * ch
-        res = Stb.stbi_write_png(file_name, w, h, ch, bin, stride_in_bytes)
+        res = Stb.stbi_write_png(file_name, w, h, ch, img.to_binary, stride_in_bytes)
       when "bmp"
-        res = Stb.stbi_write_bmp(file_name, w, h, ch, bin)
+        res = Stb.stbi_write_bmp(file_name, w, h, ch, img.to_binary)
       when "jpg", "jpeg"
         raise TypeError, "quality:#{quality.class} is not an instance of Integer class." unless quality.is_a?(Integer)
         raise ArgumentError, "quality should be between 1 and 100." unless quality.between?(1, 100)
-        res = Stb.stbi_write_jpg(file_name, w, h, ch, bin, quality)
+        res = Stb.stbi_write_jpg(file_name, w, h, ch, img.to_binary, quality)
+      when "hdr"
+        float_img = Numo::SFloat.cast(img) / 255
+        res = Stb.stbi_write_hdr(file_name, w, h, ch, float_img.to_binary)
+      when "tga"
+        res = Stb.stbi_write_tga(file_name, w, h, ch, img.to_binary)
       else
         raise ImageWriteError, "Extension '#{ext}' is not support."
       end
