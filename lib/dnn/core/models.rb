@@ -202,7 +202,7 @@ module DNN
         call_callbacks(:before_test_on_batch)
         x = forward(x, false)
         correct = evaluate(x, y)
-        loss_value = @loss_func.loss(x, y, layers)
+        loss_value = @loss_func.loss(x, y)
         call_callbacks(:after_test_on_batch)
         [correct, loss_value]
       end
