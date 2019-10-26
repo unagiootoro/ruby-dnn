@@ -76,7 +76,7 @@ model2 = MLP.new
 if SAVE_STYLE == USE_MARSHAL
   loader = MarshalLoader.new(model2)
   loader.load("trained_mnist.marshal")
-  # MLP.load("trained_mnist.marshal") # This code is equivalent to the code above.
+  # model2 = MLP.load("trained_mnist.marshal") # This code is equivalent to the code above.
 elsif SAVE_STYLE == USE_JSON
   loader = JSONLoader.new(model2)
   loader.load("trained_mnist.json")
