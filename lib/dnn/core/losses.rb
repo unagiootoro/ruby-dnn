@@ -174,7 +174,7 @@ module DNN
 
       def forward(y, t)
         @x = SigmoidCrossEntropy.sigmoid(y)
-        -(t * Xumo::NMath.log(@x) + (1 - t) * Xumo::NMath.log(1 - @x))
+        -(t * Xumo::NMath.log(@x + @eps) + (1 - t) * Xumo::NMath.log(1 - @x + @eps))
       end
 
       def backward(y, t)
