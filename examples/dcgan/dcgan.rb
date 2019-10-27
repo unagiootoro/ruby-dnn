@@ -121,6 +121,6 @@ class DCGAN < Model
     label = Numo::SFloat.cast([1] * batch_size).reshape(batch_size, 1)
     dcgan_loss = train_on_batch(noise, label)
 
-    { dis_loss: dis_loss.mean, dcgan_loss: dcgan_loss.mean }
+    { dis_loss: dis_loss, dcgan_loss: dcgan_loss }
   end
 end
