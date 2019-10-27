@@ -287,23 +287,33 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal :Dense_1__bias, dense1.bias.name
   end
 
-  def test_lshift
+  def test_add
     model = Sequential.new
     input_layer = InputLayer.new(10)
-    model << input_layer
+    model.add(input_layer)
     model2 = Sequential.new
-    model2 << Dense.new(10)
-    model << model2
+    model2.add(Dense.new(10))
+    model.add(model2)
     model.predict1(Numo::SFloat.zeros(10))
     assert_kind_of InputLayer, model.layers[0]
     assert_kind_of Dense, model.layers[1]
   end
 
-  def test_lshift_ng
+  def test_add_ng
     model = Sequential.new
     assert_raises TypeError do
-      model << SGD.new
+      model.add(SGD.new)
     end
+  end
+
+  def test_insert
+    model = Sequential.new
+    input_layer = InputLayer.new(10)
+    model.add(input_layer)
+    model.add(Dense.new(10))
+    model.insert(1, Dense.new(20))
+    model.predict1(Numo::SFloat.zeros(10))
+    assert_equal 20, model.layers[1].num_nodes
   end
 
   # It is matching [].
