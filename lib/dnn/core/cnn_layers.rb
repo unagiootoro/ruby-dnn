@@ -385,6 +385,29 @@ module DNN
       end
     end
 
+    class GlobalAvgPool2D < Layer
+      def build(input_shape)
+        unless input_shape.length == 3
+          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
+        end
+        super
+        @avg_pool2d = AvgPool2D.new(input_shape[0..1])
+        @avg_pool2d.build(input_shape)
+        @flatten = Flatten.new
+        @flatten.build([1, 1, input_shape[2]])
+      end
+
+      def forward(x)
+        y = @avg_pool2d.forward(x)
+        @flatten.forward(y)
+      end
+
+      def backward(dy)
+        dy = @flatten.backward(dy)
+        @avg_pool2d.backward(dy)
+      end
+    end
+
     class UnPool2D < Layer
       include Conv2DUtils
 
