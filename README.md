@@ -55,7 +55,7 @@ class MLP < Model
   end
 
   def call(x)
-    x = InputLayer.(x)
+    x = InputLayer.new(784).(x)
     x = @l1.(x)
     x = ReLU.(x)
     x = @l2.(x)

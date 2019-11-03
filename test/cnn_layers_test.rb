@@ -522,6 +522,25 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
 end
 
 
+class TestGlobalAvgPoo2D < MiniTest::Unit::TestCase
+  def test_forward
+    x = Numo::SFloat.new(1, 8, 8, 64).seq
+    pool2d = GlobalAvgPool2D.new
+    pool2d.build([8, 8, 64])
+    assert_equal [1, 64], pool2d.forward(x).shape
+  end
+
+  def test_backward
+    x = Numo::SFloat.new(1, 8, 8, 64).seq
+    dy = Numo::SFloat.new(1, 64).seq
+    pool2d = GlobalAvgPool2D.new
+    pool2d.build([8, 8, 64])
+    pool2d.forward(x)
+    assert_equal [1, 8, 8, 64], pool2d.backward(dy).shape
+  end
+end
+
+
 class TestUnPool2D < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
