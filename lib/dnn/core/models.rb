@@ -347,11 +347,24 @@ module DNN
         @callbacks = []
       end
 
+      # Load marshal params.
+      # @param [String] file_name File name of marshal model to load.
+      def load_params(file_name)
+        loader = Loaders::MarshalLoader.new(self)
+        loader.load(file_name)
+      end
+
       # Save the model in marshal format.
       # @param [String] file_name Name to save model.
-      # @param [Boolean] include_optimizer Set true to save data included optimizer status.
-      def save(file_name, include_optimizer: true)
-        saver = Savers::MarshalSaver.new(self, include_optimizer: include_optimizer)
+      def save(file_name)
+        saver = Savers::MarshalSaver.new(self, include_model: true)
+        saver.save(file_name)
+      end
+
+      # Save the params in marshal format.
+      # @param [String] file_name Name to save model.
+      def save_params(file_name)
+        saver = Savers::MarshalSaver.new(self, include_model: false)
         saver.save(file_name)
       end
 
@@ -376,6 +389,17 @@ module DNN
       # @return [Boolean] If model have already been built then return true.
       def built?
         @built
+      end
+
+      def dump
+        model = copy
+        model.layers.each do |layer|
+          layer.clean
+        end
+        model.loss_func.clean
+        model.instance_variable_set(:@last_link, nil)
+        model.instance_variable_set(:@layers_cache, nil)
+        model
       end
 
       private

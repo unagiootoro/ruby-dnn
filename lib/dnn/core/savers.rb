@@ -21,11 +21,10 @@ module DNN
       end
 
       def set_all_params_data(params_data)
-        all_params = @model.has_param_layers.map { |layer|
-          layer.get_params.values
-        }.flatten
-        all_params.each do |param|
-          param.data = params_data[param.name]
+        @model.has_param_layers.each.with_index do |layer, i|
+          params_data[i].each do |(key, data)|
+            layer.get_params[key].data = data
+          end
         end
       end
     end
@@ -36,12 +35,13 @@ module DNN
         unless @model.class.name == data[:class]
           raise DNN_Error, "Class name is not mismatch. Target model is #{@model.class.name}. But loading model is #{data[:class]}."
         end
-        opt = Optimizers::Optimizer.load(data[:optimizer])
-        loss_func = Losses::Loss.from_hash(data[:loss_func])
-        @model.setup(opt, loss_func)
-        @model.load_hash(data[:layers_hash]) if data[:layers_hash]
-        @model.instance_variable_set(:@built, false)
-        @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
+        if data[:model]
+          data[:model].instance_variables.each do |ivar|
+            obj = data[:model].instance_variable_get(ivar)
+            @model.instance_variable_set(ivar, obj)
+          end
+          @model.predict1(Xumo::SFloat.zeros(data[:input_shape]))
+        end
         set_all_params_data(data[:params])
       end
     end
@@ -57,15 +57,17 @@ module DNN
         @model.load_hash(data[:layers_hash]) if data[:layers_hash]
         @model.instance_variable_set(:@built, false)
         @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
-        base64_to_params_data(data[:params])
+        set_all_params_base64_data(data[:params])
       end
 
-      def base64_to_params_data(base64_params_data)
-        params_data = base64_params_data.to_h do |key, (shape, base64_data)|
-          bin = Base64.decode64(base64_data)
-          [key, Xumo::SFloat.from_binary(bin).reshape(*shape)]
+      def set_all_params_base64_data(params_data)
+        @model.has_param_layers.each.with_index do |layer, i|
+          params_data[i].each do |(key, (shape, base64_data))|
+            bin = Base64.decode64(base64_data)
+            data = Xumo::SFloat.from_binary(bin).reshape(*shape)
+            layer.get_params[key].data = data
+          end
         end
-        set_all_params_data(params_data)
       end
     end
 
@@ -96,25 +98,31 @@ module DNN
       end
 
       def get_all_params_data
-        all_params = @model.has_param_layers.map { |layer|
-          layer.get_params.values
-        }.flatten
-        all_params.to_h { |param| [param.name, param.data] }
+        @model.has_param_layers.map do |layer|
+          layer.get_params.to_h do |key, param|
+            [key, param.data]
+          end
+        end
       end
     end
 
     class MarshalSaver < Saver
-      def initialize(model, include_optimizer: true)
+      def initialize(model, include_model: true)
         super(model)
-        @include_optimizer = include_optimizer
+        @include_model = include_model
       end
 
       private def dump_bin
-        require_status = @include_optimizer ? true : false
-        data = {
-          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: get_all_params_data,
-          layers_hash: @model.to_hash, optimizer: @model.optimizer.dump(require_status), loss_func: @model.loss_func.to_hash
-        }
+        if @include_model
+          data = {
+            version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape,
+            params: get_all_params_data, model: @model.dump
+          }
+        else
+          data = {
+            version: VERSION, class: @model.class.name, params: get_all_params_data
+          }
+        end
         Zlib::Deflate.deflate(Marshal.dump(data))
       end
     end
@@ -124,16 +132,18 @@ module DNN
 
       def dump_bin
         data = {
-          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: params_data_to_base64,
+          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: get_all_params_base64_data,
           layers_hash: @model.to_hash, optimizer: @model.optimizer.to_hash, loss_func: @model.loss_func.to_hash
         }
         JSON.dump(data)
       end
 
-      def params_data_to_base64
-        get_all_params_data.to_h do |key, data|
-          base64_data = Base64.encode64(data.to_binary)
-          [key, [data.shape, base64_data]]
+      def get_all_params_base64_data
+        @model.has_param_layers.map do |layer|
+          layer.get_params.to_h do |key, param|
+            base64_data = Base64.encode64(param.data.to_binary)
+            [key, [param.data.shape, base64_data]]
+          end
         end
       end
     end
