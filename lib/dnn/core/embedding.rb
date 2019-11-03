@@ -1,7 +1,7 @@
 module DNN
   module Layers
 
-    class Embedding < HasParamLayer
+    class Embedding < TrainableLayer
       attr_reader :input_length
       attr_reader :weight
       attr_reader :weight_initializer

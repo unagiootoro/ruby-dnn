@@ -373,10 +373,10 @@ module DNN
         Marshal.load(Marshal.dump(self))
       end
 
-      # Get the all has param layers.
+      # Get the all trainable layers.
       # @return [Array] All has param layers array.
-      def has_param_layers
-        layers.select { |layer| layer.is_a?(Layers::HasParamLayer) }
+      def trainable_layers
+        layers.select { |layer| layer.is_a?(Layers::TrainableLayer) }
       end
 
       # Get the layer that the model has.
@@ -436,7 +436,7 @@ module DNN
           id = layers.select { |l| l.is_a?(layer.class) }.index(layer)
           class_name = layer.class.name.split("::").last
           layer.name = "#{class_name}_#{id}".to_sym unless layer.name
-          if layer.is_a?(Layers::HasParamLayer)
+          if layer.is_a?(Layers::TrainableLayer)
             layer.get_params.each do |param_key, param|
               param.name = "#{layer.name}__#{param_key}".to_sym unless param.name
             end

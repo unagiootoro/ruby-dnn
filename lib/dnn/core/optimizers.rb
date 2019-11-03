@@ -21,7 +21,7 @@ module DNN
 
       # Update layers has params.
       def update(layers)
-        target_params = layers.select { |layer| layer.is_a?(Layers::HasParamLayer) && layer.trainable }
+        target_params = layers.select { |layer| layer.is_a?(Layers::TrainableLayer) && layer.trainable }
                               .map { |layer| layer.get_params.values }.flatten.compact
                               .select(&:grad)
         clip_grads(target_params) if @clip_norm

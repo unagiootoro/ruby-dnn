@@ -89,7 +89,7 @@ module DNN
     end
 
     # This class is a superclass of all classes with learning parameters.
-    class HasParamLayer < Layer
+    class TrainableLayer < Layer
       # @return [Boolean] Setting false prevents learning of parameters.
       attr_accessor :trainable
 
@@ -185,7 +185,7 @@ module DNN
     end
 
     # It is a superclass of all connection layers.
-    class Connection < HasParamLayer
+    class Connection < TrainableLayer
       attr_reader :weight
       attr_reader :bias
       attr_reader :weight_initializer

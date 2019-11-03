@@ -21,7 +21,7 @@ module DNN
       end
 
       def set_all_params_data(params_data)
-        @model.has_param_layers.each.with_index do |layer, i|
+        @model.trainable_layers.each.with_index do |layer, i|
           params_data[i].each do |(key, data)|
             layer.get_params[key].data = data
           end
@@ -61,7 +61,7 @@ module DNN
       end
 
       def set_all_params_base64_data(params_data)
-        @model.has_param_layers.each.with_index do |layer, i|
+        @model.trainable_layers.each.with_index do |layer, i|
           params_data[i].each do |(key, (shape, base64_data))|
             bin = Base64.decode64(base64_data)
             data = Xumo::SFloat.from_binary(bin).reshape(*shape)
@@ -98,7 +98,7 @@ module DNN
       end
 
       def get_all_params_data
-        @model.has_param_layers.map do |layer|
+        @model.trainable_layers.map do |layer|
           layer.get_params.to_h do |key, param|
             [key, param.data]
           end
@@ -139,7 +139,7 @@ module DNN
       end
 
       def get_all_params_base64_data
-        @model.has_param_layers.map do |layer|
+        @model.trainable_layers.map do |layer|
           layer.get_params.to_h do |key, param|
             base64_data = Base64.encode64(param.data.to_binary)
             [key, [param.data.shape, base64_data]]

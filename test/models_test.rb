@@ -246,7 +246,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_kind_of Dense, model.layers.last
   end
 
-  def test_has_param_layers
+  def test_trainable_layers
     sequential = Sequential.new
     sequential << Dense.new(8)
     sequential << Dense.new(1)
@@ -254,7 +254,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(2)
     model << sequential
     model.predict1(Numo::SFloat.zeros(2))
-    assert_equal 1, model.has_param_layers[1].num_nodes
+    assert_equal 1, model.trainable_layers[1].num_nodes
   end
 
   def test_get_layer

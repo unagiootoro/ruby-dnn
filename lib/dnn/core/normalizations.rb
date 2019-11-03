@@ -1,7 +1,7 @@
 module DNN
   module Layers
 
-    class BatchNormalization < HasParamLayer
+    class BatchNormalization < TrainableLayer
       attr_reader :gamma
       attr_reader :beta
       attr_reader :running_mean
