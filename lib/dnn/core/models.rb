@@ -21,11 +21,40 @@ module DNN
       def to_hash_list
         map { |layer| layer.to_hash }
       end
+
+      # Get the all layers.
+      # @return [Array] All layers array.
+      def layers
+        layers_array = []
+        each do |layer|
+          if layer.is_a?(Layers::Layer)
+            layers_array << layer
+          elsif layer.is_a?(Chain) || layer.is_a?(LayersList)
+            layers_array.concat(layer.layers)
+          end
+        end
+        layers_array
+      end
     end
 
     class Chain
       def call(x)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'call'"
+      end
+
+      # Get the all layers.
+      # @return [Array] All layers array.
+      def layers
+        layers_array = []
+        instance_variables.each do |ivar|
+          obj = instance_variable_get(ivar)
+          if obj.is_a?(Layers::Layer)
+            layers_array << obj
+          elsif obj.is_a?(Chain) || obj.is_a?(LayersList)
+            layers_array.concat(obj.layers)
+          end
+        end
+        layers_array
       end
 
       def to_hash
@@ -329,26 +358,6 @@ module DNN
       # @return [DNN::Models::Model] Return the copy this model.
       def copy
         Marshal.load(Marshal.dump(self))
-      end
-
-      # Get the all layers.
-      # @return [Array] All layers array.
-      def layers
-        raise DNN_Error, "This model is not built. You need build this model using predict or train." unless built?
-        return @layers_cache if @layers_cache
-        layers = []
-        get_layers = -> link do
-          return unless link
-          layers.unshift(link.layer)
-          if link.is_a?(TwoInputLink)
-            get_layers.(link.prev1)
-            get_layers.(link.prev2)
-          else
-            get_layers.(link.prev)
-          end
-        end
-        get_layers.(@last_link)
-        @layers_cache = layers.uniq
       end
 
       # Get the all has param layers.

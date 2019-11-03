@@ -246,15 +246,6 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_kind_of Dense, model.layers.last
   end
 
-  def test_layers_ng
-    model = Sequential.new
-    model << InputLayer.new(2)
-    model << Dense.new(8)
-    assert_raises DNN::DNN_Error do
-      model.layers
-    end
-  end
-
   def test_has_param_layers
     sequential = Sequential.new
     sequential << Dense.new(8)
