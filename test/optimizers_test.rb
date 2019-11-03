@@ -37,7 +37,6 @@ class TestSGD < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     sgd = SGD.new(0.1)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     sgd.update([dense])
     assert_equal(-0.1, dense.weight.data.mean.round(2))
@@ -47,7 +46,6 @@ class TestSGD < MiniTest::Unit::TestCase
   def test_update2
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     sgd = SGD.new(0.1, momentum: 1)
     sgd.update([dense])
@@ -61,30 +59,11 @@ class TestSGD < MiniTest::Unit::TestCase
     dense = Dense.new(2, weight_initializer: Zeros.new)
     dense.build([1])
     sgd = SGD.new(0.1, clip_norm: Math.sqrt(16) / 2)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.new(*dense.weight.data.shape).fill(2)
-    dense.bias.name = :bias
     dense.bias.grad = Numo::SFloat.new(*dense.bias.data.shape).fill(2)
     sgd.update([dense])
     assert_equal(-0.1, dense.weight.data.mean.round(2))
     assert_equal(-0.1, dense.weight.data.mean.round(2))
-  end
-
-  def test_dump
-    opt = SGD.new(0.1, momentum: 0.9)
-    x = Numo::SFloat.new(1, 10).rand
-    y = Numo::SFloat.new(1, 1).rand
-    model = DNN::Models::Sequential.new([DNN::Layers::InputLayer.new(10), DNN::Layers::Dense.new(1)])
-    model.setup(opt, DNN::Losses::MeanSquaredError.new)
-    model.train_on_batch(x, y)
-    model2 = model.copy
-    opt2 = SGD.load(opt.dump)
-    model.instance_variable_set(:@optimizer, opt)
-    model2.instance_variable_set(:@optimizer, opt2)
-
-    model.train_on_batch(x, y)
-    model2.train_on_batch(x, y)
-    assert_equal model.predict(x), model2.predict(x)
   end
 
   def test_to_hash
@@ -122,7 +101,6 @@ class TestNesterov < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     nesterov = Nesterov.new(0.1, momentum: 0.9)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     nesterov.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -165,7 +143,6 @@ class TestAdaGrad < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adagrad = AdaGrad.new
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     adagrad.update([dense])
     assert_equal(-0.01, dense.weight.data.mean.round(3))
@@ -208,7 +185,6 @@ class TestRMSProp < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     rmsprop = RMSProp.new(0.01, alpha: 0.5)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     rmsprop.update([dense])
     assert_equal(-0.0141, dense.weight.data.mean.round(4))
@@ -250,7 +226,6 @@ class TestAdaDelta < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adadelta = AdaDelta.new(rho: 0.5)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     adadelta.update([dense])
     assert_equal(-0.0014, dense.weight.data.mean.round(4))
@@ -293,7 +268,6 @@ class TestRMSPropGraves < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     rmsprop = RMSPropGraves.new(0.01, alpha: 0.5)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     rmsprop.update([dense])
     assert_equal(-0.02, dense.weight.data.mean.round(4))
@@ -342,7 +316,6 @@ class TestAdam < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adam = Adam.new(alpha: 0.01, beta1: 0.8, beta2: 0.9)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     adam.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -355,7 +328,6 @@ class TestAdam < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adam = Adam.new(alpha: 0.01, beta1: 0.8, beta2: 0.9, amsgrad: true)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape) * 10
     adam.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -414,7 +386,6 @@ class TestAdaBound < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adabound = AdaBound.new(alpha: 0.01, beta1: 0.8, beta2: 0.9)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     adabound.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -427,7 +398,6 @@ class TestAdaBound < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     adabound = AdaBound.new(alpha: 0.01, beta1: 0.8, beta2: 0.9, amsgrad: true)
-    dense.weight.name = :weight
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape) * 10
     adabound.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
