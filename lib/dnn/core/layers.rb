@@ -102,6 +102,20 @@ module DNN
       def get_params
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'get_params'"
       end
+
+      def clean
+        hash = to_hash
+        params = get_params
+        instance_variables.each do |ivar|
+          instance_variable_set(ivar, nil)
+        end
+        load_hash(hash)
+        params.each do |(key, param)|
+          param.data = nil
+          param.grad = Xumo::SFloat[0] if param.grad
+          instance_variable_set("@#{key}", param)
+        end
+      end
     end
 
     class InputLayer < Layer
