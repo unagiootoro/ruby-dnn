@@ -53,6 +53,14 @@ module DNN
       def load_hash(hash)
         initialize
       end
+
+      def clean
+        hash = to_hash
+        instance_variables.each do |ivar|
+          instance_variable_set(ivar, nil)
+        end
+        load_hash(hash)
+      end
     end
 
     class MeanSquaredError < Loss
