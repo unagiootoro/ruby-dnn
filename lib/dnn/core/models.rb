@@ -370,13 +370,19 @@ module DNN
       # @param [Array] stack All layers possessed by the model.
       def initialize(stack = [])
         super()
-        @stack = stack.clone
+        @stack = []
+        stack.each do |layer|
+          add(layer)
+        end
       end
 
       # Add layer to the model.
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
       # @return [DNN::Models::Model] Return self.
       def add(layer)
+        if layer.is_a?(MergeLayers::MergeLayer)
+          raise TypeError, "layer: #{layer.class.name} should not be a DNN::MergeLayers::MergeLayer class."
+        end
         unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
           raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class."
         end
@@ -390,6 +396,9 @@ module DNN
       # @param [DNN::Layers::Layer] layer Layer to add to the model.
       # @return [DNN::Models::Model] Return self.
       def insert(index, layer)
+        if layer.is_a?(MergeLayers::MergeLayer)
+          raise TypeError, "layer: #{layer.class.name} should not be a DNN::MergeLayers::MergeLayer class."
+        end
         unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
           raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class."
         end
@@ -400,9 +409,6 @@ module DNN
       # @param [DNN::Layers::Layer] layer Layer to remove to the model.
       # @return [Boolean] Return true if success for remove layer.
       def remove(layer)
-        unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
-          raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class."
-        end
         @stack.delete(layer) ? true : false
       end
 
