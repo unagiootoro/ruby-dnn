@@ -1,5 +1,5 @@
 module DNN
-  module MergeLayers
+  module Layers
 
     class MergeLayer < Layers::Layer
       def self.call(x1, x2, *args)

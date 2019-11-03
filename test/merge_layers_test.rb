@@ -1,6 +1,5 @@
 require "test_helper"
 
-include DNN::MergeLayers
 include DNN::Layers
 include DNN::Optimizers
 include DNN::Initializers
@@ -61,7 +60,7 @@ class TestConcatenate < MiniTest::Unit::TestCase
   end
 
   def test_to_hash
-    expected_hash = { class: "DNN::MergeLayers::Concatenate", name: nil, axis: 1 }
+    expected_hash = { class: "DNN::Layers::Concatenate", name: nil, axis: 1 }
     con = Concatenate.new
     assert_equal expected_hash, con.to_hash
   end
