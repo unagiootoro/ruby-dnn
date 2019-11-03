@@ -383,7 +383,11 @@ module DNN
       # @param [Symbol] name The name of the layer to get.
       # @return [DNN::Layers::Layer] Return the layer.
       def get_layer(name)
-        layers.find { |layer| layer.name == name }
+        layer = instance_variable_get("@#{name}")
+        if layer.is_a?(Layers::Layer) || layer.is_a?(Chain) || layer.is_a?(LayersList)
+          return layer
+        end
+        nil
       end
 
       # @return [Boolean] If model have already been built then return true.
@@ -416,7 +420,6 @@ module DNN
         @last_link = output_tensor.link
         unless @built
           @built = true
-          naming
         end
         output_tensor.data
       end
@@ -428,19 +431,6 @@ module DNN
       def call_callbacks(event)
         @callbacks.each do |callback|
           callback.send(event) if callback.respond_to?(event)
-        end
-      end
-
-      def naming
-        layers.each do |layer|
-          id = layers.select { |l| l.is_a?(layer.class) }.index(layer)
-          class_name = layer.class.name.split("::").last
-          layer.name = "#{class_name}_#{id}".to_sym unless layer.name
-          if layer.is_a?(Layers::TrainableLayer)
-            layer.get_params.each do |param_key, param|
-              param.name = "#{layer.name}__#{param_key}".to_sym unless param.name
-            end
-          end
         end
       end
 

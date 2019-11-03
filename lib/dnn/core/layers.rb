@@ -3,7 +3,6 @@ module DNN
 
     # Super class of all layer classes.
     class Layer
-      attr_accessor :name
       attr_reader :input_shape
 
       def self.call(x, *args)
@@ -16,13 +15,11 @@ module DNN
         layer = layer_class.allocate
         raise DNN_Error, "#{layer.class} is not an instance of #{self} class." unless layer.is_a?(self)
         layer.load_hash(hash)
-        layer.name = hash[:name]&.to_sym
         layer
       end
 
       def initialize
         @built = false
-        @name = nil
       end
 
       # Forward propagation and create a link.
@@ -70,7 +67,7 @@ module DNN
 
       # Layer to a hash.
       def to_hash(merge_hash = nil)
-        hash = { class: self.class.name, name: @name }
+        hash = { class: self.class.name }
         hash.merge!(merge_hash) if merge_hash
         hash
       end

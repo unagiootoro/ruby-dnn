@@ -1,13 +1,11 @@
 module DNN
   class Param
-    attr_accessor :name
     attr_accessor :data
     attr_accessor :grad
 
     def initialize(data = nil, grad = nil)
       @data = data
       @grad = grad
-      @name = nil
     end
   end
 end

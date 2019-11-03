@@ -263,19 +263,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << Dense.new(1)
     model.setup(SGD.new, MeanSquaredError.new)
     model.predict1(Numo::SFloat.zeros(2))
-    assert_kind_of Dense, model.get_layer(:Dense_0)
-  end
-
-  def test_naming
-    dense1 = Dense.new(1)
-    model = Sequential.new
-    model << InputLayer.new(10)
-    model << Dense.new(5)
-    model << dense1
-    model.predict1(Numo::SFloat.zeros(10))
-    
-    assert_equal :Dense_1, dense1.name
-    assert_equal :Dense_1__bias, dense1.bias.name
+    assert_kind_of Dense, model.get_layer(:stack)[1]
   end
 
   def test_add

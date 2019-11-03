@@ -50,7 +50,6 @@ class TestRNN < MiniTest::Unit::TestCase
                   weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)
     expected_hash = {
       class: "DNN::Layers::RNN",
-      name: nil,
       num_nodes: 64,
       weight_initializer: rnn.weight_initializer.to_hash,
       recurrent_weight_initializer: rnn.recurrent_weight_initializer.to_hash,
@@ -268,7 +267,6 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
                         weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)
     expected_hash = {
       class: "DNN::Layers::SimpleRNN",
-      name: nil,
       num_nodes: 64,
       weight_initializer: rnn.weight_initializer.to_hash,
       recurrent_weight_initializer: rnn.recurrent_weight_initializer.to_hash,
@@ -498,7 +496,6 @@ class TestLSTM < MiniTest::Unit::TestCase
                     weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)
     expected_hash = {
       class: "DNN::Layers::LSTM",
-      name: nil,
       num_nodes: 64,
       weight_initializer: lstm.weight_initializer.to_hash,
       recurrent_weight_initializer: lstm.recurrent_weight_initializer.to_hash,
@@ -613,7 +610,6 @@ class TestGRU < MiniTest::Unit::TestCase
                   weight_regularizer: L1.new, recurrent_weight_regularizer: L2.new, bias_regularizer: L1L2.new)
     expected_hash = {
       class: "DNN::Layers::GRU",
-      name: nil,
       num_nodes: 64,
       weight_initializer: gru.weight_initializer.to_hash,
       recurrent_weight_initializer: gru.recurrent_weight_initializer.to_hash,
