@@ -46,6 +46,13 @@ class TestLayer < MiniTest::Unit::TestCase
     hash = layer.to_hash({output_shape: [10]})
     assert_equal expected_hash, hash
   end
+
+  def test_clean
+    dense = Dense.new(20)
+    dense.build([10])
+    dense.clean
+    assert_equal 20, dense.num_nodes
+  end
 end
 
 
