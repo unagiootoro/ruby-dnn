@@ -19,14 +19,6 @@ module DNN
       def load_bin(bin)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'load_bin'"
       end
-
-      def set_all_params_data(params_data)
-        @model.trainable_layers.each.with_index do |layer, i|
-          params_data[i].each do |(key, data)|
-            layer.get_params[key].data = data
-          end
-        end
-      end
     end
 
     class MarshalLoader < Loader
@@ -40,9 +32,8 @@ module DNN
             obj = data[:model].instance_variable_get(ivar)
             @model.instance_variable_set(ivar, obj)
           end
-          @model.predict1(Xumo::SFloat.zeros(data[:input_shape]))
         end
-        set_all_params_data(data[:params])
+        @model.set_all_params_data(data[:params])
       end
     end
 
@@ -96,14 +87,6 @@ module DNN
       def dump_bin
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'dump_bin'"
       end
-
-      def get_all_params_data
-        @model.trainable_layers.map do |layer|
-          layer.get_params.to_h do |key, param|
-            [key, param.data]
-          end
-        end
-      end
     end
 
     class MarshalSaver < Saver
@@ -116,11 +99,11 @@ module DNN
         if @include_model
           data = {
             version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape,
-            params: get_all_params_data, model: @model.dump
+            params: @model.get_all_params_data, model: @model.dump
           }
         else
           data = {
-            version: VERSION, class: @model.class.name, params: get_all_params_data
+            version: VERSION, class: @model.class.name, params: @model.get_all_params_data
           }
         end
         Zlib::Deflate.deflate(Marshal.dump(data))

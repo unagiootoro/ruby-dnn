@@ -396,14 +396,32 @@ module DNN
       end
 
       def dump
-        model = copy
-        model.layers.each do |layer|
+        params_data = get_all_params_data
+        layers.each do |layer|
           layer.clean
         end
-        model.loss_func.clean
-        model.instance_variable_set(:@last_link, nil)
-        model.instance_variable_set(:@layers_cache, nil)
+        @loss_func.clean
+        @last_link = nil
+        @layers_cache = nil
+        model = copy
+        set_all_params_data(params_data)
         model
+      end
+
+      def get_all_params_data
+        trainable_layers.map do |layer|
+          layer.get_params.to_h do |key, param|
+            [key, param.data]
+          end
+        end
+      end
+
+      def set_all_params_data(params_data)
+        trainable_layers.each.with_index do |layer, i|
+          params_data[i].each do |(key, data)|
+            layer.get_params[key].data = data
+          end
+        end
       end
 
       private

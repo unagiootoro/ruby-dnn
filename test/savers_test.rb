@@ -1,51 +1,5 @@
 require "test_helper"
 
-class TestLoader < MiniTest::Unit::TestCase
-  # It is result of load marshal is as expected.
-  def test_set_all_params_data
-    dense0 = DNN::Layers::Dense.new(5)
-    dense1 = DNN::Layers::Dense.new(1)
-    model = DNN::Models::Sequential.new([InputLayer.new(10), dense0, dense1])
-    model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
-    model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
-    model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict1(Numo::SFloat.zeros(10))
-
-    loader = DNN::Loaders::Loader.new(model2)
-    dense_params_data = [
-      { weight: dense0.weight.data, bias:  dense0.bias.data},
-      { weight: dense1.weight.data, bias:  dense1.bias.data},
-    ]
-    loader.send(:set_all_params_data, dense_params_data)
-
-    x = Numo::SFloat.new(10).rand
-    assert_equal model.predict1(x), model2.predict1(x)
-  end
-end
-
-
-class TestSaver < MiniTest::Unit::TestCase
-  # It is result of load marshal is as expected.
-  def test_get_all_params_data
-    model = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
-    model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
-    model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
-    model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict1(Numo::SFloat.zeros(10))
-
-    saver = DNN::Savers::Saver.new(model)
-    params_data = saver.send(:get_all_params_data)
-    loader = DNN::Loaders::Loader.new(model2)
-    loader.send(:set_all_params_data, params_data)
-
-    x = Numo::SFloat.new(10).rand
-    assert_equal model.predict1(x), model2.predict1(x)
-  end
-end
-
-
 class TestMarshalSaver < MiniTest::Unit::TestCase
   # It is result of load marshal is as expected.
   def test_dump_bin
