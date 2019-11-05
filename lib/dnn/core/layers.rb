@@ -77,11 +77,13 @@ module DNN
       end
 
       def clean
+        input_shape = @input_shape
         hash = to_hash
         instance_variables.each do |ivar|
           instance_variable_set(ivar, nil)
         end
         load_hash(hash)
+        build(input_shape)
       end
     end
 
@@ -101,12 +103,14 @@ module DNN
       end
 
       def clean
+        input_shape = @input_shape
         hash = to_hash
         params = get_params
         instance_variables.each do |ivar|
           instance_variable_set(ivar, nil)
         end
         load_hash(hash)
+        build(input_shape)
         params.each do |(key, param)|
           param.data = nil
           param.grad = Xumo::SFloat[0] if param.grad
@@ -128,7 +132,7 @@ module DNN
       end
 
       def call(input)
-        build unless built?
+        build(@input_shape) unless built?
         if input.is_a?(Tensor)
           x = input.data
           prev_link = input&.link
@@ -139,7 +143,7 @@ module DNN
         Tensor.new(forward(x), Link.new(prev_link, self))
       end
 
-      def build
+      def build(input_shape)
         @built = true
       end
 

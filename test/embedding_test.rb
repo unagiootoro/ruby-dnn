@@ -23,7 +23,7 @@ class TestEmbedding < MiniTest::Unit::TestCase
 
   def test_forward
     embed = Embedding.new(2, 3)
-    embed.build
+    embed.build([2])
     embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
     x = Numo::Int32.cast([[0, 1], [0, 2]])
     expected = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
@@ -32,7 +32,7 @@ class TestEmbedding < MiniTest::Unit::TestCase
 
   def test_backward
     embed = Embedding.new(2, 3)
-    embed.build
+    embed.build([2])
     embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
     x = Numo::Int32.cast([[0, 1], [2, 2]])
     dy = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
@@ -44,19 +44,19 @@ class TestEmbedding < MiniTest::Unit::TestCase
 
   def test_regularizers
     embed = Embedding.new(2, 3, weight_regularizer: L1.new)
-    embed.build
+    embed.build([2])
     assert_kind_of L1, embed.regularizers[0]
   end
 
   def test_regularizers2
     embed = Embedding.new(2, 3)
-    embed.build
+    embed.build([2])
     assert_equal [], embed.regularizers
   end
 
   def test_to_hash
     embed = Embedding.new(10, 5)
-    embed.build
+    embed.build([10])
     expected_hash = {
       class: "DNN::Layers::Embedding",
       input_shape: [10],
@@ -69,7 +69,7 @@ class TestEmbedding < MiniTest::Unit::TestCase
 
   def test_get_params
     embed = Embedding.new(10, 5)
-    embed.build
+    embed.build([10])
     expected_hash = {
       weight: embed.weight,
     }

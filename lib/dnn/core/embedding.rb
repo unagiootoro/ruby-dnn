@@ -22,11 +22,11 @@ module DNN
       end
 
       def call(input_tensor)
-        build unless built?
+        build(@input_shape) unless built?
         Tensor.new(forward(input_tensor.data), Link.new(nil, self))
       end
 
-      def build
+      def build(input_shape)
         @built = true
         @weight = Param.new(Xumo::SFloat.new(@input_length), Xumo::SFloat[0])
         @weight_initializer.init_param(self, @weight)
