@@ -19,6 +19,7 @@ module DNN
         @input_length = input_length
         @weight_initializer = weight_initializer
         @weight_regularizer = weight_regularizer
+        @weight = Param.new(nil, Xumo::SFloat[0])
       end
 
       def call(input_tensor)
@@ -28,7 +29,7 @@ module DNN
 
       def build(input_shape)
         @built = true
-        @weight = Param.new(Xumo::SFloat.new(@input_length), Xumo::SFloat[0])
+        @weight.data = Xumo::SFloat.new(@input_length)
         @weight_initializer.init_param(self, @weight)
         @weight_regularizer.param = @weight if @weight_regularizer
       end
