@@ -395,17 +395,13 @@ module DNN
         @built
       end
 
-      def dump
-        params_data = get_all_params_data
+      def clean_layers
         layers.each do |layer|
           layer.clean
         end
         @loss_func.clean
         @last_link = nil
         @layers_cache = nil
-        model = copy
-        set_all_params_data(params_data)
-        model
       end
 
       def get_all_params_data
