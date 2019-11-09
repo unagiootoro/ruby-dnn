@@ -18,14 +18,18 @@ module DNN
         @axis = axis
         @momentum = momentum
         @eps = eps
+        @gamma = Param.new(nil, Xumo::SFloat[0])
+        @beta = Param.new(nil, Xumo::SFloat[0])
+        @running_mean = Param.new
+        @running_var = Param.new
       end
 
       def build(input_shape)
         super
-        @gamma = Param.new(Xumo::SFloat.ones(*output_shape), Xumo::SFloat[0])
-        @beta = Param.new(Xumo::SFloat.zeros(*output_shape), Xumo::SFloat[0])
-        @running_mean = Param.new(Xumo::SFloat.zeros(*output_shape))
-        @running_var = Param.new(Xumo::SFloat.zeros(*output_shape))
+        @gamma.data = Xumo::SFloat.ones(*output_shape)
+        @beta.data = Xumo::SFloat.zeros(*output_shape)
+        @running_mean.data = Xumo::SFloat.zeros(*output_shape)
+        @running_var.data = Xumo::SFloat.zeros(*output_shape)
       end
 
       def forward(x)
