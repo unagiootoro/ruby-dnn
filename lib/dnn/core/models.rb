@@ -46,7 +46,7 @@ module DNN
       # @return [Array] All layers array.
       def layers
         layers_array = []
-        instance_variables.each do |ivar|
+        instance_variables.sort.each do |ivar|
           obj = instance_variable_get(ivar)
           if obj.is_a?(Layers::Layer)
             layers_array << obj
@@ -59,7 +59,7 @@ module DNN
 
       def to_hash
         layers_hash = { class: self.class.name }
-        instance_variables.each do |ivar|
+        instance_variables.sort.each do |ivar|
           obj = instance_variable_get(ivar)
           if obj.is_a?(Layers::Layer) || obj.is_a?(Chain)
             layers_hash[ivar] = obj.to_hash
@@ -71,7 +71,7 @@ module DNN
       end
 
       def load_hash(layers_hash)
-        instance_variables.each do |ivar|
+        instance_variables.sort.each do |ivar|
           hash_or_array = layers_hash[ivar]
           if hash_or_array.is_a?(Array)
             instance_variable_set(ivar, LayersList.from_hash_list(hash_or_array))
