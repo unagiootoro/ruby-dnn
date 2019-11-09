@@ -2,8 +2,9 @@
 [![Gem Version](https://badge.fury.io/rb/ruby-dnn.svg)](https://badge.fury.io/rb/ruby-dnn)  
 [![Build Status](https://travis-ci.org/unagiootoro/ruby-dnn.svg?branch=master)](https://travis-ci.org/unagiootoro/ruby-dnn)
 
-ruby-dnn is a ruby deep learning library. This library supports full connected neural network and convolution neural network.
-Currently, you can get 99% accuracy with MNIST and 74% with CIFAR 10.
+ruby-dnn is a ruby deep learning library. This library supports full connected neural network and convolution neural network
+and recurrent neural network.
+Currently, you can get 99% accuracy with MNIST and 78% with CIFAR 10.
 
 ## Installation
 
@@ -79,8 +80,9 @@ If you want to know more detailed information, please refer to the source code.
 || Implemented classes |
 |:-----------|------------:|
 | Connections | Dense, Conv2D, Conv2DTranspose, Embedding, SimpleRNN, LSTM, GRU |
-| Layers | Flatten, Reshape, Dropout, BatchNormalization, MaxPool2D, AvgPool2D, UnPool2D |
 | Activations | Sigmoid, Tanh, Softsign, Softplus, Swish, ReLU, LeakyReLU, ELU |
+| Basic | Flatten, Reshape, Dropout, BatchNormalization |
+| Pooling | MaxPool2D, AvgPool2D, GlobalAvgPool2D, UnPool2D |
 | Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, RMSPropGraves, Adam, AdaBound |
 | Losses | MeanSquaredError, MeanAbsoluteError, Hinge, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
 
