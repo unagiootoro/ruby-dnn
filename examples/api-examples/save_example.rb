@@ -20,9 +20,9 @@ BATCH_SIZE = 128
 # Select save style from USE_MARSHAL or USE_JSON.
 SAVE_STYLE = USE_MARSHAL
 
-# When set a true, save data included optimizer status.
+# When set a true, save data included model structure.
 # This setting is enabled when SAVE_STYLE is USE_MARSHAL.
-INCLUDE_OPTIMIZER = false
+INCLUDE_MODEL = true
 
 x_train, y_train = MNIST.load_train
 x_test, y_test = MNIST.load_test
@@ -64,7 +64,7 @@ model.setup(Adam.new, SoftmaxCrossEntropy.new)
 model.train(x_train, y_train, EPOCHS, batch_size: BATCH_SIZE, test: [x_test, y_test])
 
 if SAVE_STYLE == USE_MARSHAL
-  saver = MarshalSaver.new(model, include_optimizer: INCLUDE_OPTIMIZER)
+  saver = MarshalSaver.new(model, include_model: INCLUDE_MODEL)
   saver.save("trained_mnist.marshal")
   # model.save("trained_mnist.marshal") # This code is equivalent to the code above.
 elsif SAVE_STYLE == USE_JSON
