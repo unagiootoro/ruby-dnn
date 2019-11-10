@@ -9,22 +9,6 @@ class TestLambdaCallback < MiniTest::Unit::TestCase
 end
 
 class StubCallbacksTestModel < DNN::Models::Model
-  attr_accessor :file_name
-
-  def save(file_name)
-    @file_name = file_name
-  end
-end
-
-class TestCheckPoint < MiniTest::Unit::TestCase
-  def test_after_epoch
-    cbk = DNN::Callbacks::CheckPoint.new("save")
-    stub_model = StubCallbacksTestModel.new
-    cbk.model = stub_model
-    stub_model.last_log[:epoch] = 1
-    cbk.after_epoch
-    assert_equal "save_epoch1.marshal", stub_model.file_name
-  end
 end
 
 class TestEarlyStopping < MiniTest::Unit::TestCase
