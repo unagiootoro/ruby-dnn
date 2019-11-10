@@ -25,9 +25,9 @@ module DNN
     def self.load_train
       downloads
       x_fname = DOWNLOADS_PATH + "/downloads/#{DIR_STL10}/train_X.bin"
-      raise DNN_CIFAR100_LoadError.new(%`file "#{x_fname}" is not found.`) unless File.exist?(x_fname)
-      y_fname = DOWNLOADS_PATH + "/downloads/#{DIR_STL10}/train_Y.bin"
-      raise DNN_CIFAR100_LoadError.new(%`file "#{y_fname}" is not found.`) unless File.exist?(y_fname)
+      raise DNN_STL10_LoadError.new(%`file "#{x_fname}" is not found.`) unless File.exist?(x_fname)
+      y_fname = DOWNLOADS_PATH + "/downloads/#{DIR_STL10}/train_y.bin"
+      raise DNN_STL10_LoadError.new(%`file "#{y_fname}" is not found.`) unless File.exist?(y_fname)
       x_bin = File.binread(x_fname)
       y_bin = File.binread(y_fname)
       x_train = Numo::UInt8.from_binary(x_bin).reshape(5000, 3, 96, 96).transpose(0, 2, 3, 1).clone
@@ -38,9 +38,9 @@ module DNN
     def self.load_test
       downloads
       x_fname = DOWNLOADS_PATH + "/downloads/#{DIR_STL10}/test_X.bin"
-      raise DNN_CIFAR100_LoadError.new(%`file "#{x_fname}" is not found.`) unless File.exist?(x_fname)
-      y_fname = DOWNLOADS_PATH + "/downloads/#{DIR_STL10}/test_Y.bin"
-      raise DNN_CIFAR100_LoadError.new(%`file "#{y_fname}" is not found.`) unless File.exist?(y_fname)
+      raise DNN_STL10_LoadError.new(%`file "#{x_fname}" is not found.`) unless File.exist?(x_fname)
+      y_fname = DOWNLOADS_PATH + "/downloads/#{DIR_STL10}/test_y.bin"
+      raise DNN_STL10_LoadError.new(%`file "#{y_fname}" is not found.`) unless File.exist?(y_fname)
       x_bin = File.binread(x_fname)
       y_bin = File.binread(y_fname)
       x_test = Numo::UInt8.from_binary(x_bin).reshape(8000, 3, 96, 96).transpose(0, 2, 3, 1).clone
@@ -54,7 +54,7 @@ module DNN
       end
       downloads
       x_fname = DOWNLOADS_PATH + "/downloads/#{DIR_STL10}/unlabeled_X.bin"
-      raise DNN_CIFAR100_LoadError.new(%`file "#{x_fname}" is not found.`) unless File.exist?(x_fname)
+      raise DNN_STL10_LoadError.new(%`file "#{x_fname}" is not found.`) unless File.exist?(x_fname)
       num_datas = range.end - range.begin
       length = num_datas * 3 * 96 * 96
       ofs = range.begin * 3 * 96 * 96
