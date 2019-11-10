@@ -20,7 +20,6 @@ dcgan = DCGAN.new(gen, dis)
 dis.setup(Adam.new(alpha: 0.00001, beta1: 0.1), SigmoidCrossEntropy.new)
 dcgan.setup(Adam.new(alpha: 0.0002, beta1: 0.5), SigmoidCrossEntropy.new)
 dcgan.add_callback(CheckPoint.new("trained/dcgan_model"))
-dcgan.predict1(Numo::SFloat.zeros(20))
 
 x_train, * = MNIST.load_train
 x_train = Numo::SFloat.cast(x_train)
