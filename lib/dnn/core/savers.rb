@@ -96,20 +96,19 @@ module DNN
       end
 
       private def dump_bin
+        params_data = @model.get_all_params_data
         if @include_model
-          params_data = @model.get_all_params_data
           @model.clean_layers
           data = {
             version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape,
             params: params_data, model: @model
           }
-          @model.set_all_params_data(params_data)
         else
-          data = {
-            version: VERSION, class: @model.class.name, params: @model.get_all_params_data
-          }
+          data = { version: VERSION, class: @model.class.name, params: params_data }
         end
-        Zlib::Deflate.deflate(Marshal.dump(data))
+        bin = Zlib::Deflate.deflate(Marshal.dump(data))
+        @model.set_all_params_data(params_data) if @include_model
+        bin
       end
     end
 
