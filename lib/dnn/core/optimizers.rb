@@ -63,7 +63,7 @@ module DNN
 
       # @param [Float] lr Learning rate.
       # @param [Float] momentum Momentum coefficient.
-      def initialize(lr = 0.01, momentum: 0, clip_norm: nil)
+      def initialize(lr: 0.01, momentum: 0, clip_norm: nil)
         super(clip_norm: clip_norm)
         @lr = lr
         @momentum = momentum
@@ -87,13 +87,13 @@ module DNN
       end
 
       def load_hash(hash)
-        initialize(hash[:lr], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
+        initialize(lr: hash[:lr], momentum: hash[:momentum], clip_norm: hash[:clip_norm])
       end
     end
 
     class Nesterov < SGD
-      def initialize(lr = 0.01, momentum: 0.9, clip_norm: nil)
-        super(lr, momentum: momentum, clip_norm: clip_norm)
+      def initialize(lr: 0.01, momentum: 0.9, clip_norm: nil)
+        super(lr: lr, momentum: momentum, clip_norm: clip_norm)
       end
 
       private def update_params(params)
@@ -112,7 +112,7 @@ module DNN
 
       # @param [Float] lr Learning rate.
       # @param [Float] eps Value to avoid division by zero.
-      def initialize(lr = 0.01, eps: 1e-7, clip_norm: nil)
+      def initialize(lr: 0.01, eps: 1e-7, clip_norm: nil)
         super(clip_norm: clip_norm)
         @lr = lr
         @eps = eps
@@ -132,7 +132,7 @@ module DNN
       end
 
       def load_hash(hash)
-        initialize(hash[:lr], eps: hash[:eps], clip_norm: hash[:clip_norm])
+        initialize(lr: hash[:lr], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
     end
 
@@ -144,7 +144,7 @@ module DNN
       # @param [Float] lr Learning rate.
       # @param [Float] alpha Moving average index of past slopes.
       # @param [Float] eps Value to avoid division by zero.
-      def initialize(lr = 0.001, alpha: 0.9, eps: 1e-7, clip_norm: nil)
+      def initialize(lr: 0.001, alpha: 0.9, eps: 1e-7, clip_norm: nil)
         super(clip_norm: clip_norm)
         @lr = lr
         @alpha = alpha
@@ -165,7 +165,7 @@ module DNN
       end
 
       def load_hash(hash)
-        initialize(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
+        initialize(lr: hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
     end
 
@@ -211,7 +211,7 @@ module DNN
       # @param [Float] lr Learning rate.
       # @param [Float] alpha Moving average index of past slopes.
       # @param [Float] eps Value to avoid division by zero.
-      def initialize(lr = 0.0001, alpha: 0.95, eps: 0.0001, clip_norm: nil)
+      def initialize(lr: 0.0001, alpha: 0.95, eps: 0.0001, clip_norm: nil)
         super(clip_norm: clip_norm)
         @lr = lr
         @alpha = alpha
@@ -235,7 +235,7 @@ module DNN
       end
 
       def load_hash(hash)
-        initialize(hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
+        initialize(lr: hash[:lr], alpha: hash[:alpha], eps: hash[:eps], clip_norm: hash[:clip_norm])
       end
     end
 

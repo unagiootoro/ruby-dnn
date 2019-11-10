@@ -36,7 +36,7 @@ class TestSGD < MiniTest::Unit::TestCase
   def test_update
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
-    sgd = SGD.new(0.1)
+    sgd = SGD.new(lr: 0.1)
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     sgd.update([dense])
     assert_equal(-0.1, dense.weight.data.mean.round(2))
@@ -47,7 +47,7 @@ class TestSGD < MiniTest::Unit::TestCase
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
-    sgd = SGD.new(0.1, momentum: 1)
+    sgd = SGD.new(lr: 0.1, momentum: 1)
     sgd.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     sgd.update([dense])
@@ -58,7 +58,7 @@ class TestSGD < MiniTest::Unit::TestCase
   def test_update3
     dense = Dense.new(2, weight_initializer: Zeros.new)
     dense.build([1])
-    sgd = SGD.new(0.1, clip_norm: Math.sqrt(16) / 2)
+    sgd = SGD.new(lr: 0.1, clip_norm: Math.sqrt(16) / 2)
     dense.weight.grad = Numo::SFloat.new(*dense.weight.data.shape).fill(2)
     dense.bias.grad = Numo::SFloat.new(*dense.bias.data.shape).fill(2)
     sgd.update([dense])
@@ -100,7 +100,7 @@ class TestNesterov < MiniTest::Unit::TestCase
   def test_update
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
-    nesterov = Nesterov.new(0.1, momentum: 0.9)
+    nesterov = Nesterov.new(lr: 0.1, momentum: 0.9)
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     nesterov.update([dense])
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
@@ -184,7 +184,7 @@ class TestRMSProp < MiniTest::Unit::TestCase
   def test_update
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
-    rmsprop = RMSProp.new(0.01, alpha: 0.5)
+    rmsprop = RMSProp.new(lr: 0.01, alpha: 0.5)
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     rmsprop.update([dense])
     assert_equal(-0.0141, dense.weight.data.mean.round(4))
@@ -267,7 +267,7 @@ class TestRMSPropGraves < MiniTest::Unit::TestCase
   def test_update
     dense = Dense.new(10, weight_initializer: Zeros.new)
     dense.build([10])
-    rmsprop = RMSPropGraves.new(0.01, alpha: 0.5)
+    rmsprop = RMSPropGraves.new(lr: 0.01, alpha: 0.5)
     dense.weight.grad = Numo::SFloat.ones(*dense.weight.data.shape)
     rmsprop.update([dense])
     assert_equal(-0.02, dense.weight.data.mean.round(4))
