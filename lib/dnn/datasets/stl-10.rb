@@ -30,7 +30,7 @@ module DNN
       raise DNN_STL10_LoadError.new(%`file "#{y_fname}" is not found.`) unless File.exist?(y_fname)
       x_bin = File.binread(x_fname)
       y_bin = File.binread(y_fname)
-      x_train = Numo::UInt8.from_binary(x_bin).reshape(5000, 3, 96, 96).transpose(0, 2, 3, 1).clone
+      x_train = Numo::UInt8.from_binary(x_bin).reshape(5000, 3, 96, 96).transpose(0, 3, 2, 1).clone
       y_train = Numo::UInt8.from_binary(y_bin)
       [x_train, y_train]
     end
@@ -43,7 +43,7 @@ module DNN
       raise DNN_STL10_LoadError.new(%`file "#{y_fname}" is not found.`) unless File.exist?(y_fname)
       x_bin = File.binread(x_fname)
       y_bin = File.binread(y_fname)
-      x_test = Numo::UInt8.from_binary(x_bin).reshape(8000, 3, 96, 96).transpose(0, 2, 3, 1).clone
+      x_test = Numo::UInt8.from_binary(x_bin).reshape(8000, 3, 96, 96).transpose(0, 3, 2, 1).clone
       y_test = Numo::UInt8.from_binary(y_bin)
       [x_test, y_test]
     end
@@ -59,7 +59,7 @@ module DNN
       length = num_datas * 3 * 96 * 96
       ofs = range.begin * 3 * 96 * 96
       x_bin = File.binread(x_fname, length, ofs)
-      Numo::UInt8.from_binary(x_bin).reshape(num_datas, 3, 96, 96).transpose(0, 2, 3, 1).clone
+      Numo::UInt8.from_binary(x_bin).reshape(num_datas, 3, 96, 96).transpose(0, 3, 2, 1).clone
     end
   end
 end
