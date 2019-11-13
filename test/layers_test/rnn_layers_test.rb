@@ -209,6 +209,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     rnn = SimpleRNN.new(64)
     rnn.build([16, 64])
     assert_equal [1, 16, 64], rnn.forward(x).shape
+    assert_kind_of SimpleRNNDense, rnn.instance_variable_get(:@layers)[15]
   end
 
   def test_forward2
@@ -290,7 +291,6 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat.new(32, 64).fill(2), rnn.weight.data
     assert_equal Numo::SFloat.new(64, 64).fill(2), rnn.recurrent_weight.data
     assert_equal Numo::SFloat.new(64).fill(2), rnn.bias.data
-    assert_kind_of SimpleRNNDense, rnn.instance_variable_get(:@layers)[15]
   end
 end
 
@@ -417,6 +417,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     lstm = LSTM.new(64)
     lstm.build([16, 64])
     assert_equal [1, 16, 64], lstm.forward(x).shape
+    assert_kind_of LSTMDense, lstm.instance_variable_get(:@layers)[15]
   end
 
   def test_forward2
@@ -488,7 +489,6 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat.new(32, 256).fill(2), lstm.weight.data
     assert_equal Numo::SFloat.new(64, 256).fill(2), lstm.recurrent_weight.data
     assert_equal Numo::SFloat.new(256).fill(2), lstm.bias.data
-    assert_kind_of LSTMDense, lstm.instance_variable_get(:@layers)[15]
   end
 
   def test_to_hash
@@ -632,6 +632,5 @@ class TestGRU < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat.new(32, 192).fill(2), gru.weight.data
     assert_equal Numo::SFloat.new(64, 192).fill(2), gru.recurrent_weight.data
     assert_equal Numo::SFloat.new(192).fill(2), gru.bias.data
-    assert_kind_of GRUDense, gru.instance_variable_get(:@layers)[15]
   end
 end

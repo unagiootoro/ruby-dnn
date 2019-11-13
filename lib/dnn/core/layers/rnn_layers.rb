@@ -31,7 +31,7 @@ module DNN
         @num_nodes = num_nodes
         @stateful = stateful
         @return_sequences = return_sequences
-        @layers = []
+        @hidden_layers = []
         @hidden = Param.new
         @recurrent_weight = Param.new(nil, Xumo::SFloat[0])
         @recurrent_weight_initializer = recurrent_weight_initializer
@@ -46,14 +46,19 @@ module DNN
         @time_length = @input_shape[0]
       end
 
+      private def create_hidden_layer
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'create_hidden_layer'"
+      end
+
       def forward(xs)
+        create_hidden_layer
         @xs_shape = xs.shape
         hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
         h = @stateful && @hidden.data ? @hidden.data : Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
-          @layers[t].trainable = @trainable
-          h = @layers[t].forward(x, h)
+          @hidden_layers[t].trainable = @trainable
+          h = @hidden_layers[t].forward(x, h)
           hs[true, t, false] = h
         end
         @hidden.data = h
@@ -70,7 +75,7 @@ module DNN
         dh = 0
         (dh2s.shape[1] - 1).downto(0) do |t|
           dh2 = dh2s[true, t, false]
-          dx, dh = @layers[t].backward(dh2 + dh)
+          dx, dh = @hidden_layers[t].backward(dh2 + dh)
           dxs[true, t, false] = dx
         end
         dxs
@@ -196,9 +201,10 @@ module DNN
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes)
         @bias.data = Xumo::SFloat.new(@num_nodes) if @bias
         init_weight_and_bias
-        @time_length.times do
-          @layers << SimpleRNNDense.new(@weight, @recurrent_weight, @bias, @activation)
-        end
+      end
+
+      def create_hidden_layer
+        @hidden_layers = Array.new(@time_length) { SimpleRNNDense.new(@weight, @recurrent_weight, @bias, @activation) }
       end
 
       def to_hash
@@ -301,12 +307,14 @@ module DNN
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 4)
         @bias.data = Xumo::SFloat.new(@num_nodes * 4) if @bias
         init_weight_and_bias
-        @time_length.times do
-          @layers << LSTMDense.new(@weight, @recurrent_weight, @bias)
-        end
+      end
+
+      def create_hidden_layer
+        @hidden_layers = Array.new(@time_length) { LSTMDense.new(@weight, @recurrent_weight, @bias) }
       end
 
       def forward(xs)
+        create_hidden_layer
         @xs_shape = xs.shape
         hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
         h = nil
@@ -319,8 +327,8 @@ module DNN
         c ||= Xumo::SFloat.zeros(xs.shape[0], @num_nodes)
         xs.shape[1].times do |t|
           x = xs[true, t, false]
-          @layers[t].trainable = @trainable
-          h, c = @layers[t].forward(x, h, c)
+          @hidden_layers[t].trainable = @trainable
+          h, c = @hidden_layers[t].forward(x, h, c)
           hs[true, t, false] = h
         end
         @hidden.data = h
@@ -339,7 +347,7 @@ module DNN
         dc = 0
         (dh2s.shape[1] - 1).downto(0) do |t|
           dh2 = dh2s[true, t, false]
-          dx, dh, dc = @layers[t].backward(dh2 + dh, dc)
+          dx, dh, dc = @hidden_layers[t].backward(dh2 + dh, dc)
           dxs[true, t, false] = dx
         end
         dxs
@@ -444,9 +452,10 @@ module DNN
         @recurrent_weight.data = Xumo::SFloat.new(@num_nodes, @num_nodes * 3)
         @bias.data = Xumo::SFloat.new(@num_nodes * 3) if @bias
         init_weight_and_bias
-        @time_length.times do
-          @layers << GRUDense.new(@weight, @recurrent_weight, @bias)
-        end
+      end
+
+      def create_hidden_layer
+        @hidden_layers = Array.new(@time_length) { GRUDense.new(@weight, @recurrent_weight, @bias) }
       end
     end
 
