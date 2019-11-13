@@ -209,7 +209,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     rnn = SimpleRNN.new(64)
     rnn.build([16, 64])
     assert_equal [1, 16, 64], rnn.forward(x).shape
-    assert_kind_of SimpleRNNDense, rnn.instance_variable_get(:@layers)[15]
+    assert_kind_of SimpleRNNDense, rnn.instance_variable_get(:@hidden_layers)[15]
   end
 
   def test_forward2
@@ -417,7 +417,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     lstm = LSTM.new(64)
     lstm.build([16, 64])
     assert_equal [1, 16, 64], lstm.forward(x).shape
-    assert_kind_of LSTMDense, lstm.instance_variable_get(:@layers)[15]
+    assert_kind_of LSTMDense, lstm.instance_variable_get(:@hidden_layers)[15]
   end
 
   def test_forward2
