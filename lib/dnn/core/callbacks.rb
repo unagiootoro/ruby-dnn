@@ -44,7 +44,7 @@ module DNN
       end
 
       def after_epoch
-        saver = Savers::MarshalSaver.new(self, include_model: @include_model)
+        saver = Savers::MarshalSaver.new(@model, include_model: @include_model)
         saver.save(@base_file_name + "_epoch#{model.last_log[:epoch]}.marshal")
       end
     end
