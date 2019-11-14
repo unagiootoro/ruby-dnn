@@ -42,12 +42,9 @@ module DNN
 
       def load_bin(bin)
         data = JSON.parse(bin, symbolize_names: true)
-        opt = Optimizers::Optimizer.from_hash(data[:optimizer])
-        loss_func = Losses::Loss.from_hash(data[:loss_func])
-        @model.setup(opt, loss_func)
-        @model.load_hash(data[:layers_hash]) if data[:layers_hash]
-        @model.instance_variable_set(:@built, false)
-        @model.predict1(Xumo::SFloat.zeros(*data[:input_shape]))
+        unless @model.class.name == data[:class]
+          raise DNN_Error, "Class name is not mismatch. Target model is #{@model.class.name}. But loading model is #{data[:class]}."
+        end
         set_all_params_base64_data(data[:params])
       end
 
@@ -116,10 +113,7 @@ module DNN
       private
 
       def dump_bin
-        data = {
-          version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape, params: get_all_params_base64_data,
-          layers_hash: @model.to_hash, optimizer: @model.optimizer.to_hash, loss_func: @model.loss_func.to_hash
-        }
+        data = { version: VERSION, class: @model.class.name, params: get_all_params_base64_data }
         JSON.dump(data)
       end
 
