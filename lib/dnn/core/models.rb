@@ -203,8 +203,12 @@ module DNN
             end
 
             if test
-              test_met = test(test[0], test[1], batch_size: batch_size)
-              print "  " + metrics_to_str(test_met) if verbose
+              acc, loss = if test.is_a?(Array)
+                evaluate(test[0], test[1], batch_size: batch_size)
+              else
+                evaluate_by_iterator(test, batch_size: batch_size)
+              end
+              print "  " + metrics_to_str({ accuracy: acc, test_loss: loss }) if verbose
             end
             puts "" if verbose
             call_callbacks(:after_epoch)
@@ -226,16 +230,6 @@ module DNN
       private def train_step(x, y)
         loss_value = train_on_batch(x, y)
         { loss: loss_value }
-      end
-
-      # Implement the test process to be performed.
-      # @param [Numo::SFloat] x Input training data.
-      # @param [Numo::SFloat] y Output training data.
-      # @param [Integer] batch_size Batch size used for one test.
-      # @return [Hash] Hash of contents to be output to log.
-      private def test(x, y, batch_size: 100)
-        acc, test_loss = evaluate(x, y, batch_size: batch_size)
-        { accuracy: acc, test_loss: test_loss }
       end
 
       # Training once.
@@ -266,13 +260,17 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def evaluate(x, y, batch_size: 100)
         check_xy_type(x, y)
-        num_test_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
+        evaluate_by_iterator(Iterator.new(x, y, random: false))
+      end
+
+      # Evaluate model by iterator
+      def evaluate_by_iterator(test_iterator, batch_size: 100)
+        num_test_datas = test_iterator.num_datas
         batch_size = batch_size >= num_test_datas[0] ? num_test_datas : batch_size
-        iter = Iterator.new(x, y, random: false)
         total_correct = 0
         sum_loss = 0
         max_steps = (num_test_datas.to_f / batch_size).ceil
-        iter.foreach(batch_size) do |x_batch, y_batch|
+        test_iterator.foreach(batch_size) do |x_batch, y_batch|
           correct, loss_value = test_on_batch(x_batch, y_batch)
           total_correct += correct
           sum_loss += loss_value
