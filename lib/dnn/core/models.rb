@@ -234,7 +234,7 @@ module DNN
       # @param [Integer] batch_size Batch size used for one test.
       # @return [Hash] Hash of contents to be output to log.
       private def test(x, y, batch_size: 100)
-        acc, test_loss = accuracy(x, y, batch_size: batch_size)
+        acc, test_loss = evaluate(x, y, batch_size: batch_size)
         { accuracy: acc, test_loss: test_loss }
       end
 
@@ -259,12 +259,12 @@ module DNN
         loss_value
       end
 
-      # Evaluate model and get accuracy of test data.
+      # Evaluate model and get accuracy and loss of test data.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
       # @param [Integer] batch_size Batch size used for one test.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-      def accuracy(x, y, batch_size: 100)
+      def evaluate(x, y, batch_size: 100)
         check_xy_type(x, y)
         num_test_datas = x.is_a?(Array) ? x[0].shape[0] : x.shape[0]
         batch_size = batch_size >= num_test_datas[0] ? num_test_datas : batch_size
@@ -291,16 +291,16 @@ module DNN
       def test_on_batch(x, y)
         call_callbacks(:before_test_on_batch)
         x = forward(x, false)
-        correct = evaluate(x, y)
+        correct = accuracy(x, y)
         loss_value = @loss_func.loss(x, y)
         call_callbacks(:after_test_on_batch)
         [correct, loss_value]
       end
 
-      # Implement the process to evaluate this model.
+      # Implement the process to accuracy this model.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
-      private def evaluate(x, y)
+      private def accuracy(x, y)
         if x.shape[1..-1] == [1]
           correct = 0
           x.shape[0].times do |i|

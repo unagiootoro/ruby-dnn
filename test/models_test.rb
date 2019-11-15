@@ -105,23 +105,23 @@ class TestSequential < MiniTest::Unit::TestCase
   end
 
   # It is accuracy is 1.
-  def test_accuracy
+  def test_evaluate
     model = Sequential.new
     model << InputLayer.new(3)
     model.setup(SGD.new, MeanSquaredError.new)
     x = Numo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
     y = Numo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
-    assert_equal 1, model.accuracy(x, y, batch_size: 1).first
+    assert_equal 1, model.evaluate(x, y, batch_size: 1).first
   end
 
   # It is accuracy is 0.5.
-  def test_accuracy2
+  def test_evaluate2
     model = Sequential.new
     model << InputLayer.new(3)
     model.setup(SGD.new, MeanSquaredError.new)
     x = Numo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
     y = Numo::SFloat[[0, 1, 0.5], [0, 1, 0.5]]
-    assert_equal 0.5, model.accuracy(x, y).first
+    assert_equal 0.5, model.evaluate(x, y).first
   end
 
   def test_test_on_batch
