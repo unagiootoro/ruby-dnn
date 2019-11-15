@@ -47,7 +47,7 @@ class MLP < Model
   end
 
   def call(x)
-    x = InputLayer.(x)
+    x = InputLayer.new(784).(x)
     x = @l1.(x)
     x = @bn1.(x)
     x = ReLU.(x)
@@ -73,6 +73,8 @@ elsif SAVE_STYLE == USE_JSON
 end
 
 model2 = MLP.new
+model2.setup(Adam.new, SoftmaxCrossEntropy.new)
+model2.predict1(Numo::SFloat.zeros(784))
 if SAVE_STYLE == USE_MARSHAL
   loader = MarshalLoader.new(model2)
   loader.load("trained_mnist.marshal")
@@ -82,4 +84,4 @@ elsif SAVE_STYLE == USE_JSON
   loader.load("trained_mnist.json")
 end
 
-puts model2.accuracy(x_test, y_test)
+puts model2.evaluate(x_test, y_test)
