@@ -158,7 +158,7 @@ module DNN
 
       # Start training by iterator.
       # Setup the model before use this method.
-      # @param [Iterator] train_iterator Iterator used for training.
+      # @param [DNN::Iterator] train_iterator Iterator used for training.
       # @param [Integer] epochs Number of training.
       # @param [Integer] batch_size Batch size used for one training.
       # @param [Integer] initial_epoch Initial epoch.
@@ -260,10 +260,13 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def evaluate(x, y, batch_size: 100)
         check_xy_type(x, y)
-        evaluate_by_iterator(Iterator.new(x, y, random: false))
+        evaluate_by_iterator(Iterator.new(x, y, random: false), batch_size: batch_size)
       end
 
-      # Evaluate model by iterator
+      # Evaluate model by iterator.
+      # @param [DNN::Iterator] test_iterator Iterator used for testing.
+      # @param [Integer] batch_size Batch size used for one test.
+      # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def evaluate_by_iterator(test_iterator, batch_size: 100)
         num_test_datas = test_iterator.num_datas
         batch_size = batch_size >= num_test_datas[0] ? num_test_datas : batch_size
@@ -298,6 +301,7 @@ module DNN
       # Implement the process to accuracy this model.
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
+      # @return [Integer] Returns the test data accuracy.
       private def accuracy(x, y)
         if x.shape[1..-1] == [1]
           correct = 0
