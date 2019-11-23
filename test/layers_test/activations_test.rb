@@ -14,6 +14,14 @@ class TestSigmoid < MiniTest::Unit::TestCase
     grad = sigmoid.backward(1)
     assert_equal Numo::SFloat[0.25, 0.1966], grad.round(4)
   end
+
+  def test_backward2
+    sigmoid = DNN::Layers::Sigmoid.new
+    x = Numo::DFloat[0, 1]
+    sigmoid.forward(x)
+    grad = sigmoid.backward(1)
+    assert_equal DNN::Utils.numerical_grad(x, sigmoid.method(:forward)).round(4), grad.round(4)
+  end
 end
 
 class TestTanh < MiniTest::Unit::TestCase
@@ -29,6 +37,14 @@ class TestTanh < MiniTest::Unit::TestCase
     tanh.forward(x)
     grad = tanh.backward(1)
     assert_equal Numo::SFloat[1, 0.42], grad.round(4)
+  end
+
+  def test_backward2
+    tanh = DNN::Layers::Tanh.new
+    x = Numo::DFloat[0, 1]
+    tanh.forward(x)
+    grad = tanh.backward(1)
+    assert_equal DNN::Utils.numerical_grad(x, tanh.method(:forward)).round(4), grad.round(4)
   end
 end
 
@@ -46,6 +62,14 @@ class TestSoftsign < MiniTest::Unit::TestCase
     grad = softsign.backward(1)
     assert_equal Numo::SFloat[1, 0.25], grad.round(4)
   end
+
+  def test_backward2
+    softsign = DNN::Layers::Softsign.new
+    x = Numo::DFloat[0, 1]
+    softsign.forward(x)
+    grad = softsign.backward(1)
+    assert_equal DNN::Utils.numerical_grad(x, softsign.method(:forward)).round(4), grad.round(4)
+  end
 end
 
 class TestSoftplus < MiniTest::Unit::TestCase
@@ -62,6 +86,14 @@ class TestSoftplus < MiniTest::Unit::TestCase
     grad = softplus.backward(1)
     assert_equal Numo::SFloat[0.5, 0.7311], grad.round(4)
   end
+
+  def test_backward2
+    softplus = DNN::Layers::Softplus.new
+    x = Numo::DFloat[0, 1]
+    softplus.forward(x)
+    grad = softplus.backward(1)
+    assert_equal DNN::Utils.numerical_grad(x, softplus.method(:forward)).round(4), grad.round(4)
+  end
 end
 
 class TestSwish < MiniTest::Unit::TestCase
@@ -77,6 +109,14 @@ class TestSwish < MiniTest::Unit::TestCase
     swish.forward(x)
     grad = swish.backward(1)
     assert_equal Numo::SFloat[0.5, 0.9277], grad.round(4)
+  end
+
+  def test_backward2
+    swish = DNN::Layers::Swish.new
+    x = Numo::DFloat[0, 1]
+    swish.forward(x)
+    grad = swish.backward(1)
+    assert_equal DNN::Utils.numerical_grad(x, swish.method(:forward)).round(4), grad.round(4)
   end
 end
 
@@ -120,6 +160,14 @@ class TestLeakyReLU < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0.3, 0.3, 1], grad.round(4)
   end
 
+  def test_backward2
+    lrelu = DNN::Layers::LeakyReLU.new
+    x = Numo::DFloat[-2, 1, 2]
+    lrelu.forward(x)
+    grad = lrelu.backward(1)
+    assert_equal DNN::Utils.numerical_grad(x, lrelu.method(:forward)).round(4), Numo::DFloat.cast(grad).round(4)
+  end
+
   def test_to_hash
     lrelu = DNN::Layers::LeakyReLU.new
     expected_hash = { class: "DNN::Layers::LeakyReLU", alpha: 0.3 }
@@ -152,9 +200,41 @@ class TestELU < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0.1353, 1, 1], grad.round(4)
   end
 
+  def test_backward2
+    elu = DNN::Layers::ELU.new
+    x = Numo::DFloat[-2, 1, 2]
+    elu.forward(x)
+    grad = elu.backward(1)
+    assert_equal DNN::Utils.numerical_grad(x, elu.method(:forward)).round(4), grad.round(4)
+  end
+
   def test_to_hash
     elu = DNN::Layers::ELU.new
     expected_hash = { class: "DNN::Layers::ELU", alpha: 1.0 }
     assert_equal expected_hash, elu.to_hash
+  end
+
+  class TestMish < MiniTest::Unit::TestCase
+    def test_forward
+      mish = DNN::Layers::Mish.new
+      y = mish.forward(Numo::SFloat[0, 1])
+      assert_equal Numo::SFloat[0, 0.8651], y.round(4)
+    end
+  
+    def test_backward
+      mish = DNN::Layers::Mish.new
+      x = Numo::SFloat[0, 1]
+      mish.forward(x)
+      grad = mish.backward(1)
+      assert_equal Numo::SFloat[0.6, 1.049], grad.round(4)
+    end
+
+    def test_backward2
+      mish = DNN::Layers::Mish.new
+      x = Numo::DFloat[0, 1]
+      mish.forward(x)
+      grad = mish.backward(1)
+      assert_equal DNN::Utils.numerical_grad(x, mish.method(:forward)).round(4), grad.round(4)
+    end
   end
 end

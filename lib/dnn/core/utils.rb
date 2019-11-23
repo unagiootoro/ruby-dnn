@@ -30,5 +30,10 @@ module DNN
     def self.softmax(x)
       Losses::SoftmaxCrossEntropy.softmax(x)
     end
+
+    # Perform numerical differentiation.
+    def self.numerical_grad(x, func)
+      (func.(x + 1e-7) - func.(x)) / 1e-7
+    end
   end
 end
