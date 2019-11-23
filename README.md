@@ -39,9 +39,9 @@ model << ReLU.new
 
 model << Dense.new(10)
 
-model.setup(RMSProp.new, SoftmaxCrossEntropy.new)
+model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
-model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
+model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
 ```
 
 When create a model with 'define by run' style:  
@@ -70,7 +70,7 @@ model = MLP.new
 
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
-model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
+model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
 ```
 
 Please refer to examples for basic usage.  
@@ -80,7 +80,7 @@ If you want to know more detailed information, please refer to the source code.
 || Implemented classes |
 |:-----------|------------:|
 | Connections | Dense, Conv2D, Conv2DTranspose, Embedding, SimpleRNN, LSTM, GRU |
-| Activations | Sigmoid, Tanh, Softsign, Softplus, Swish, ReLU, LeakyReLU, ELU |
+| Activations | Sigmoid, Tanh, Softsign, Softplus, Swish, ReLU, LeakyReLU, ELU, Mish |
 | Basic | Flatten, Reshape, Dropout, BatchNormalization |
 | Pooling | MaxPool2D, AvgPool2D, GlobalAvgPool2D, UnPool2D |
 | Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, RMSPropGraves, Adam, AdaBound |
