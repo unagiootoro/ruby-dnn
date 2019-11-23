@@ -134,5 +134,18 @@ module DNN
       end
     end
 
+    class Mish < Layer
+      def forward(x)
+        @x = x
+        x * Xumo::NMath.tanh(Softplus.new.forward(x))
+      end
+
+      def backward(dy)
+        omega = 4 * (@x + 1) + 4 * Xumo::NMath.exp(2 * @x) + Xumo::NMath.exp(3 * @x) + Xumo::NMath.exp(@x) * (4 * @x + 6)
+        delta = 2 * Xumo::NMath.exp(@x) + Xumo::NMath.exp(2 * @x) + 2
+        dy * (Xumo::NMath.exp(@x) * omega) / delta**2
+      end
+    end
+
   end
 end
