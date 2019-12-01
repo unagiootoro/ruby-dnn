@@ -6,7 +6,6 @@ require_relative "dcgan"
 include DNN::Optimizers
 include DNN::Losses
 include DNN::Callbacks
-MNIST = DNN::MNIST
 
 Numo::SFloat.srand(rand(1 << 31))
 
@@ -21,7 +20,7 @@ dis.setup(Adam.new(alpha: 0.00001, beta1: 0.1), SigmoidCrossEntropy.new)
 dcgan.setup(Adam.new(alpha: 0.0002, beta1: 0.5), SigmoidCrossEntropy.new)
 dcgan.add_callback(CheckPoint.new("trained/dcgan_model"))
 
-x_train, * = MNIST.load_train
+x_train, * = DNN::MNIST.load_train
 x_train = Numo::SFloat.cast(x_train)
 x_train = x_train / 127.5 - 1
 

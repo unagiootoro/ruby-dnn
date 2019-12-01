@@ -7,9 +7,8 @@ include DNN::Models
 include DNN::Layers
 include DNN::Optimizers
 include DNN::Losses
-Iris = DNN::Iris
 
-x, y = Iris.load(true)
+x, y = DNN::Iris.load(true)
 x_train, y_train = x[0...100, true], y[0...100]
 x_test, y_test = x[100...150, true], y[100...150]
 
@@ -27,4 +26,8 @@ model << Dense.new(3)
 
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
-model.train(x_train, y_train, 1000, batch_size: 10, test: [x_test, y_test])
+model.train(x_train, y_train, 500, batch_size: 32, test: [x_test, y_test])
+
+accuracy, loss = model.evaluate(x_test, y_test)
+puts "accuracy: #{accuracy}"
+puts "loss: #{loss}"
