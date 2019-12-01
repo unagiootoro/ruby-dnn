@@ -269,7 +269,7 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def evaluate_by_iterator(test_iterator, batch_size: 100)
         num_test_datas = test_iterator.num_datas
-        batch_size = batch_size >= num_test_datas[0] ? num_test_datas : batch_size
+        batch_size = batch_size >= num_test_datas ? num_test_datas : batch_size
         total_correct = 0
         sum_loss = 0
         max_steps = (num_test_datas.to_f / batch_size).ceil
