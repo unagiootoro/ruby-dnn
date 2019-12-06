@@ -6,6 +6,12 @@ class TestLambdaCallback < MiniTest::Unit::TestCase
     cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch, func)
     assert_equal true, cbk.before_epoch
   end
+
+  def test_initialize2
+    # Use block
+    cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch) { return true }
+    assert_equal true, cbk.before_epoch
+  end
 end
 
 class StubCallbacksTestModel < DNN::Models::Model

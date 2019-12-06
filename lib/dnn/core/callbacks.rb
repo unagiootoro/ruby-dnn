@@ -27,7 +27,8 @@ module DNN
 
     # This callback wrap the lambda function.
     class LambdaCallback < Callback
-      def initialize(event, lambda)
+      def initialize(event, lambda = nil, &block)
+        lambda = block unless lambda
         instance_eval do
           define_singleton_method(event) { lambda.call }
         end
