@@ -38,15 +38,19 @@ module DNN
     # A callback that save the model at the after of the epoch.
     # @param [String] base_file_name Base file name for saving.
     # @param [Boolean] include_model When set a true, save data included model structure.
+    # @param [Integer] interval Save interval.
     class CheckPoint < Callback
-      def initialize(base_file_name, include_model: true)
+      def initialize(base_file_name, include_model: true, interval: 1)
         @base_file_name = base_file_name
         @include_model = include_model
+        @interval = interval
       end
 
       def after_epoch
         saver = Savers::MarshalSaver.new(@model, include_model: @include_model)
-        saver.save(@base_file_name + "_epoch#{model.last_log[:epoch]}.marshal")
+        if @model.last_log[:epoch] % @interval == 0
+          saver.save(@base_file_name + "_epoch#{model.last_log[:epoch]}.marshal")
+        end
       end
     end
 
