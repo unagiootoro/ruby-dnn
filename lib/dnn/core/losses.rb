@@ -65,8 +65,7 @@ module DNN
 
     class MeanSquaredError < Loss
       def forward(y, t)
-        batch_size = t.shape[0]
-        0.5 * ((y - t)**2).sum / batch_size
+        0.5 * ((y - t)**2).mean(0).sum
       end
 
       def backward(y, t)
@@ -76,8 +75,7 @@ module DNN
 
     class MeanAbsoluteError < Loss
       def forward(y, t)
-        batch_size = t.shape[0]
-        (y - t).abs.sum / batch_size
+        (y - t).abs.mean(0).sum
       end
 
       def backward(y, t)
@@ -119,13 +117,11 @@ module DNN
       private
 
       def loss_l1(y, t)
-        batch_size = t.shape[0]
-        (y - t).abs.sum / batch_size
+        (y - t).abs.mean(0).sum
       end
 
       def loss_l2(y, t)
-        batch_size = t.shape[0]
-        0.5 * ((y - t)**2).sum / batch_size
+        0.5 * ((y - t)**2).mean(0).sum
       end
     end
 
@@ -147,8 +143,7 @@ module DNN
 
       def forward(y, t)
         @x = SoftmaxCrossEntropy.softmax(y)
-        batch_size = t.shape[0]
-        -(t * Xumo::NMath.log(@x + @eps)).sum / batch_size
+        -(t * Xumo::NMath.log(@x + @eps)).mean(0).sum
       end
 
       def backward(y, t)
