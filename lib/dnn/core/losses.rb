@@ -17,7 +17,7 @@ module DNN
         end
         loss_value = forward(y, t)
         loss_value += regularizers_forward(layers) if layers
-        loss_value.is_a?(Float) ? loss_value : loss_value.sum
+        loss_value
       end
 
       def forward(y, t)
@@ -89,7 +89,7 @@ module DNN
     class Hinge < Loss
       def forward(y, t)
         @a = 1 - y * t
-        Xumo::SFloat.maximum(0, @a)
+        Xumo::SFloat.maximum(0, @a).mean(0).sum
       end
 
       def backward(y, t)
@@ -177,7 +177,7 @@ module DNN
 
       def forward(y, t)
         @x = SigmoidCrossEntropy.sigmoid(y)
-        -(t * Xumo::NMath.log(@x + @eps) + (1 - t) * Xumo::NMath.log(1 - @x + @eps))
+        -(t * Xumo::NMath.log(@x + @eps) + (1 - t) * Xumo::NMath.log(1 - @x + @eps)).mean(0).sum
       end
 
       def backward(y, t)

@@ -90,7 +90,7 @@ class TestHinge < MiniTest::Unit::TestCase
     y = Numo::SFloat[[1, 1]]
     t = Numo::SFloat[[0.7, 1.5]]
     out_y = loss.forward(y, t)
-    assert_equal Numo::SFloat[[0.3, 0]], out_y.round(4)
+    assert_equal 0.3, out_y.round(4)
   end
 
   def test_backward
@@ -184,7 +184,7 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[1, 0]]
     out_y = loss.forward(y, t)
-    assert_equal Numo::SFloat[[0.6931, 1.3133]], out_y.round(4)
+    assert_equal 2.0064, out_y.round(4)
   end
 
   def test_backward
