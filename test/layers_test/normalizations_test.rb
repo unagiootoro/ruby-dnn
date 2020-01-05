@@ -16,7 +16,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     assert_equal 1e-7, batch_norm.eps
   end
 
-  def test_forward_numo
+  def test_forward_node
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     batch_norm.gamma.data = Numo::SFloat.new(10).fill(3)
@@ -27,7 +27,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     assert_equal expected, batch_norm.forward_node(x).round(4)
   end
 
-  def test_forward_numo2
+  def test_forward_node2
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     batch_norm.gamma.data = Numo::SFloat.new(10).fill(3)
@@ -40,7 +40,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     assert_equal expected, batch_norm.forward_node(x).round(4)
   end
 
-  def test_backward_numo
+  def test_backward_node
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
@@ -52,7 +52,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]], batch_norm.beta.grad
   end
 
-  def test_backward_numo2
+  def test_backward_node2
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     batch_norm.trainable = false

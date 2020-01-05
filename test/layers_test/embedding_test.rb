@@ -21,7 +21,7 @@ class TestEmbedding < MiniTest::Unit::TestCase
     assert_kind_of L2, embed.weight_regularizer
   end
 
-  def test_forward_numo
+  def test_forward_node
     embed = Embedding.new(2, 3)
     embed.build([2])
     embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
@@ -30,7 +30,7 @@ class TestEmbedding < MiniTest::Unit::TestCase
     assert_equal expected, embed.forward_node(x).round(4)
   end
 
-  def test_backward_numo
+  def test_backward_node
     embed = Embedding.new(2, 3)
     embed.build([2])
     embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])

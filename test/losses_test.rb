@@ -19,7 +19,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
   # end
 
   # It is matches the expected value of forward_node.
-  def test_forward_numo
+  def test_forward_node
     loss = DNN::Losses::MeanSquaredError.new
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[2, 4]]
@@ -28,7 +28,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
   end
 
   # It is matches the expected value of backward_node.
-  def test_backward_numo
+  def test_backward_node
     loss = DNN::Losses::MeanSquaredError.new
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[2, 4]]
@@ -65,7 +65,7 @@ end
 
 
 class TestMeanAbsoluteError < MiniTest::Unit::TestCase
-  def test_forward_numo
+  def test_forward_node
     loss = DNN::Losses::MeanAbsoluteError.new
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[2, 4]]
@@ -73,7 +73,7 @@ class TestMeanAbsoluteError < MiniTest::Unit::TestCase
     assert_equal 5, out_y.round(4)
   end
 
-  def test_backward_numo
+  def test_backward_node
     loss = DNN::Losses::MeanAbsoluteError.new
     y = Numo::SFloat[[-1, 2]]
     t = Numo::SFloat[[2, 4]]
@@ -85,7 +85,7 @@ end
 
 
 class TestHinge < MiniTest::Unit::TestCase
-  def test_forward_numo
+  def test_forward_node
     loss = DNN::Losses::Hinge.new
     y = Numo::SFloat[[1, 1]]
     t = Numo::SFloat[[0.7, 1.5]]
@@ -93,7 +93,7 @@ class TestHinge < MiniTest::Unit::TestCase
     assert_equal 0.3, out_y.round(4)
   end
 
-  def test_backward_numo
+  def test_backward_node
     loss = DNN::Losses::Hinge.new
     y = Numo::SFloat[[1, 1]]
     t = Numo::SFloat[[0.7, 1.5]]
@@ -105,7 +105,7 @@ end
 
 
 class TestHuberLoss < MiniTest::Unit::TestCase
-  def test_forward_numo
+  def test_forward_node
     loss = DNN::Losses::HuberLoss.new
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[2, 4]]
@@ -113,7 +113,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
     assert_equal 5, out_y.round(4)
   end
 
-  def test_forward_numo2
+  def test_forward_node2
     loss = DNN::Losses::HuberLoss.new
     y = Numo::SFloat[[0, 1.0]]
     t = Numo::SFloat[[0.5, 1.25]]
@@ -121,7 +121,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
     assert_equal 0.1563, out_y.round(4)
   end
 
-  def test_backward_numo
+  def test_backward_node
     loss = DNN::Losses::HuberLoss.new
     y = Numo::SFloat[[-1, 2]]
     t = Numo::SFloat[[-3, 4]]
@@ -130,7 +130,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[1, -1]], grad.round(4)
   end
 
-  def test_backward_numo2
+  def test_backward_node2
     loss = DNN::Losses::HuberLoss.new
     y = Numo::SFloat[[-1, 2]]
     t = Numo::SFloat[[-0.5, 1.7]]
@@ -148,7 +148,7 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
     assert_equal 1e-4, loss.eps
   end
 
-  def test_forward_numo
+  def test_forward_node
     loss = DNN::Losses::SoftmaxCrossEntropy.new
     y = Numo::SFloat[[0, 1, 2]]
     t = Numo::SFloat[[0, 0, 1]]
@@ -156,7 +156,7 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
     assert_equal 0.4076, out_y.round(4)
   end
 
-  def test_backward_numo
+  def test_backward_node
     loss = DNN::Losses::SoftmaxCrossEntropy.new
     y = Numo::SFloat[[0, 1, 2]]
     t = Numo::SFloat[[0, 0, 1]]
@@ -179,7 +179,7 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     assert_equal 1e-4, loss.eps
   end
 
-  def test_forward_numo
+  def test_forward_node
     loss = DNN::Losses::SigmoidCrossEntropy.new
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[1, 0]]
@@ -187,7 +187,7 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     assert_equal 2.0064, out_y.round(4)
   end
 
-  def test_backward_numo
+  def test_backward_node
     loss = DNN::Losses::SigmoidCrossEntropy.new
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[1, 0]]

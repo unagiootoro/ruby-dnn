@@ -95,7 +95,7 @@ end
 
 
 class TestSimpleRNNDense < MiniTest::Unit::TestCase
-  def test_forward_numo
+  def test_forward_node
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     w = DNN::Param.new
@@ -109,7 +109,7 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     assert_equal [1, 16], dense.forward_node(x, h).shape
   end
 
-  def test_backward_numo
+  def test_backward_node
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
@@ -130,7 +130,7 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     assert_equal [1, 16], dh.shape
   end
 
-  def test_backward_numo2
+  def test_backward_node2
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
@@ -147,7 +147,7 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     assert_nil dense.instance_variable_get(:@bias)
   end
 
-  def test_backward_numo3
+  def test_backward_node3
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
@@ -203,7 +203,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_kind_of ReLU, rnn.activation
   end
 
-  def test_forward_numo
+  def test_forward_node
     x = Numo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64)
     rnn.build([16, 64])
@@ -211,7 +211,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_kind_of SimpleRNNDense, rnn.instance_variable_get(:@hidden_layers)[15]
   end
 
-  def test_forward_numo2
+  def test_forward_node2
     x = Numo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64, stateful: true)
     rnn.build([16, 64])
@@ -219,7 +219,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal [1, 16, 64], rnn.forward_node(x).shape
   end
 
-  def test_backward_numo
+  def test_backward_node
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64)
@@ -228,7 +228,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal [1, 16, 64], rnn.backward_node(y).shape
   end
 
-  def test_backward_numo2
+  def test_backward_node2
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64, use_bias: false)
@@ -238,7 +238,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_nil rnn.bias
   end
 
-  def test_backward_numo3
+  def test_backward_node3
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64)
@@ -251,7 +251,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0], rnn.bias.grad
   end
 
-  def test_backward_numo4
+  def test_backward_node4
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64, stateful: true)
@@ -297,7 +297,7 @@ end
 
 
 class TestLSTMDense < MiniTest::Unit::TestCase
-  def test_forward_numo
+  def test_forward_node
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     c = Numo::SFloat.new(1, 16).seq
@@ -314,7 +314,7 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     assert_equal [1, 16], c2.shape
   end
 
-  def test_backward_numo
+  def test_backward_node
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(1, 16).seq
@@ -338,7 +338,7 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     assert_equal [1, 16], dc.shape
   end
 
-  def test_backward_numo2
+  def test_backward_node2
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(1, 16).seq
@@ -357,7 +357,7 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     assert_nil dense.instance_variable_get(:@bias)
   end
 
-  def test_backward_numo3
+  def test_backward_node3
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(1, 16).seq
@@ -413,7 +413,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal false, lstm.return_sequences
   end
 
-  def test_forward_numo
+  def test_forward_node
     x = Numo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64)
     lstm.build([16, 64])
@@ -421,7 +421,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_kind_of LSTMDense, lstm.instance_variable_get(:@hidden_layers)[15]
   end
 
-  def test_forward_numo2
+  def test_forward_node2
     x = Numo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64, stateful: true)
     lstm.build([16, 64])
@@ -429,7 +429,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal [1, 16, 64], lstm.forward_node(x).shape
   end
 
-  def test_backward_numo
+  def test_backward_node
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64)
@@ -438,7 +438,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal [1, 16, 64], lstm.backward_node(y).shape
   end
 
-  def test_backward_numo2
+  def test_backward_node2
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64, use_bias: false)
@@ -448,7 +448,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_nil lstm.bias
   end
 
-  def test_backward_numo3
+  def test_backward_node3
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64)
@@ -461,7 +461,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0], lstm.bias.grad
   end
 
-  def test_backward_numo4
+  def test_backward_node4
     x = Numo::SFloat.new(1, 16, 64).seq
     y = Numo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64, stateful: true)
@@ -529,7 +529,7 @@ end
 
 
 class TestGRUDense < MiniTest::Unit::TestCase
-  def test_forward_numo
+  def test_forward_node
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     w = DNN::Param.new
@@ -543,7 +543,7 @@ class TestGRUDense < MiniTest::Unit::TestCase
     assert_equal [1, 16], dense.forward_node(x, h).shape
   end
 
-  def test_backward_numo
+  def test_backward_node
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
@@ -563,7 +563,7 @@ class TestGRUDense < MiniTest::Unit::TestCase
     assert_equal [1, 16], dh.shape
   end
 
-  def test_backward_numo2
+  def test_backward_node2
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
@@ -583,7 +583,7 @@ class TestGRUDense < MiniTest::Unit::TestCase
     assert_nil dense.instance_variable_get(:@bias)
   end
 
-  def test_backward_numo3
+  def test_backward_node3
     x = Numo::SFloat.new(1, 64).seq
     h = Numo::SFloat.new(1, 16).seq
     dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
