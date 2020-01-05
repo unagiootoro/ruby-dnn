@@ -39,8 +39,8 @@ module DNN
       end
 
       def backward_node(dy)
-        dx1 = dy * (1 / (@x2 + 1e-7))
-        dx2 = dy * -(@x1 / (@x2**2 + 1e-7))
+        dx1 = dy / @x2
+        dx2 = dy * -(@x1 / @x2**2)
         [dx1, dx2]
       end
     end
@@ -78,7 +78,7 @@ module DNN
       end
 
       def backward_node(dy)
-        dy * (1 / @x)
+        dy / @x
       end
     end
 
@@ -150,14 +150,16 @@ module DNN
       end
 
       def forward_node(x)
-        @dim = x.shape[@axis]
+        @dim = @axis ? x.shape[@axis] : x.size
         x.mean(axis: @axis, keepdims: true)
       end
 
       def backward_node(dy)
         dx = dy
-        (@dim - 1).times do
-          dx.concatenate(dy, axis: @axis)
+        if @axis
+          (@dim - 1).times do
+            dx.concatenate(dy, axis: @axis)
+          end
         end
         dx / @dim
       end
