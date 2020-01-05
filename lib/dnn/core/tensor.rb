@@ -3,6 +3,14 @@ module DNN
     attr_reader :data
     attr_accessor :link
 
+    def self.convert(inputs)
+      if inputs.is_a?(Array)
+        inputs.map { |input| Tensor.new(input) }
+      else
+        Tensor.new(inputs)
+      end
+    end
+
     def initialize(data, link = nil)
       @data = data
       @link = link

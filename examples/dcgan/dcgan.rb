@@ -19,7 +19,7 @@ class Generator < Model
     @bn6 = BatchNormalization.new
   end
 
-  def call(x)
+  def forward(x)
     x = InputLayer.new(20).(x)
     x = @l1.(x)
     x = @bn1.(x)
@@ -63,7 +63,7 @@ class Discriminator < Model
     @l6 = Dense.new(1)
   end
 
-  def call(x, trainable = true)
+  def forward(x, trainable = true)
     @l1.trainable = trainable
     @l2.trainable = trainable
     @l3.trainable = trainable
@@ -103,7 +103,7 @@ class DCGAN < Model
     @dis = dis
   end
 
-  def call(x)
+  def forward(x)
     x = @gen.(x)
     x = @dis.(x, false)
     x

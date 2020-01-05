@@ -27,7 +27,7 @@ class Generator < Model
     @bn9 = BatchNormalization.new
   end
 
-  def call(x)
+  def forward(x)
     input = InputLayer.new(@input_shape).(x)
     x = @l1.(input)
     x = @bn1.(x)
@@ -97,7 +97,7 @@ class Discriminator < Model
     @bn6 = BatchNormalization.new
   end
 
-  def call(inputs, trainable = true)
+  def forward(inputs, trainable = true)
     trainable_layers.each do |layer|
       layer.trainable = trainable
     end
@@ -149,7 +149,7 @@ class DCGAN < Model
     @dis = dis
   end
 
-  def call(input)
+  def forward(input)
     x = @gen.(input)
     x = @dis.([input, x], false)
     x

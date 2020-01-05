@@ -38,8 +38,12 @@ module DNN
     end
 
     class Chain
+      def forward(x)
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
+      end
+
       def call(x)
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'call'"
+        forward(x)
       end
 
       # Get the all layers.
@@ -109,11 +113,19 @@ module DNN
       def initialize
         @optimizer = nil
         @loss_func = nil
-        @last_link = nil
         @built = false
         @callbacks = []
         @layers_cache = nil
         @last_log = {}
+      end
+
+      def call(inputs)
+        @layers_cache = nil
+        output_tensor = forward(inputs)
+        unless @built
+          @built = true
+        end
+        output_tensor
       end
 
       # Set optimizer and loss_func to model.
@@ -242,9 +254,9 @@ module DNN
         raise DNN_Error, "The model is not loss_func setup complete." unless @loss_func
         check_xy_type(x, y)
         call_callbacks(:before_train_on_batch)
-        out = forward(x, true)
-        tensor_y = Tensor.new(y)
-        loss = @loss_func.loss(out, tensor_y, layers)
+        DNN.learning_phase = true
+        out = call(Tensor.convert(x))
+        loss = @loss_func.loss(out, Tensor.convert(y), layers)
         loss.link.backward(Xumo::SFloat.zeros(y[0...1, false].shape))
         @optimizer.update(get_all_trainable_params)
         @last_log[:train_loss] = loss.data
@@ -290,9 +302,10 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def test_on_batch(x, y)
         call_callbacks(:before_test_on_batch)
-        out = forward(x, false)
+        DNN.learning_phase = false
+        out = call(Tensor.convert(x))
         correct = accuracy(out.data, y)
-        loss = @loss_func.(out, Tensor.new(y))
+        loss = @loss_func.(out, Tensor.convert(y))
         call_callbacks(:after_test_on_batch)
         [correct, loss.data]
       end
@@ -322,7 +335,8 @@ module DNN
       # @param [Boolean] use_loss_activation Use loss activation when loss has an activation.
       def predict(x, use_loss_activation: true)
         check_xy_type(x)
-        out = forward(x, false)
+        DNN.learning_phase = false
+        out = call(Tensor.convert(x))
         y = out.data
         if use_loss_activation && @loss_func.class.respond_to?(:activation)
           y = @loss_func.class.activation(y)
@@ -402,7 +416,6 @@ module DNN
           layer.clean
         end
         @loss_func.clean
-        @last_link = nil
         @layers_cache = nil
       end
 
@@ -423,22 +436,6 @@ module DNN
       end
 
       private
-
-      def forward(x, learning_phase)
-        DNN.learning_phase = learning_phase
-        @layers_cache = nil
-        inputs = if x.is_a?(Array)
-                   x.map { |a| Tensor.new(a, nil) }
-                 else
-                   Tensor.new(x, nil)
-                 end
-        output_tensor = call(inputs)
-        @last_link = output_tensor.link
-        unless @built
-          @built = true
-        end
-        output_tensor
-      end
 
       def get_all_trainable_params
         layers.select { |layer| layer.is_a?(Layers::TrainableLayer) && layer.trainable }
@@ -514,7 +511,7 @@ module DNN
         @stack.delete(layer) ? true : false
       end
 
-      def call(x)
+      def forward(x)
         @stack.each do |layer|
           x = layer.(x)
         end

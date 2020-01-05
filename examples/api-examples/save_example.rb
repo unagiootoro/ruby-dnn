@@ -45,7 +45,7 @@ class MLP < Model
     @bn2 = BatchNormalization.new
   end
 
-  def call(x)
+  def forward(x)
     x = InputLayer.new(784).(x)
     x = @l1.(x)
     x = @bn1.(x)
