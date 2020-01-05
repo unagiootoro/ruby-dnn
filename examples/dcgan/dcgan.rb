@@ -63,14 +63,7 @@ class Discriminator < Model
     @l6 = Dense.new(1)
   end
 
-  def forward(x, trainable = true)
-    @l1.trainable = trainable
-    @l2.trainable = trainable
-    @l3.trainable = trainable
-    @l4.trainable = trainable
-    @l5.trainable = trainable
-    @l6.trainable = trainable
-
+  def forward(x)
     x = InputLayer.new([28, 28, 1]).(x)
     x = @l1.(x)
     x = LeakyReLU.(x, 0.2)
@@ -91,6 +84,18 @@ class Discriminator < Model
     x = @l6.(x)
     x
   end
+
+  def enable_training
+    trainable_layers.each do |layer|
+      layer.trainable = true
+    end
+  end
+  
+  def disable_training
+    trainable_layers.each do |layer|
+      layer.trainable = false
+    end
+  end
 end
 
 class DCGAN < Model
@@ -105,7 +110,8 @@ class DCGAN < Model
 
   def forward(x)
     x = @gen.(x)
-    x = @dis.(x, false)
+    @dis.disable_training
+    x = @dis.(x)
     x
   end
 
@@ -115,6 +121,7 @@ class DCGAN < Model
     images = @gen.predict(noise)
     x = x_batch.concatenate(images)
     y = Numo::SFloat.cast([1] * batch_size + [0] * batch_size).reshape(batch_size * 2, 1)
+    @dis.enable_training
     dis_loss = @dis.train_on_batch(x, y)
 
     noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)

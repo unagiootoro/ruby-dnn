@@ -38,6 +38,7 @@ num_batchs = x_in.shape[0] / batch_size
     images = gen.predict(x_in)
     y_real = Numo::SFloat.ones(batch_size, 1)
     y_fake = Numo::SFloat.zeros(batch_size, 1)
+    dis.enable_training
     dis_loss = dis.train_on_batch([x_in, x_out], y_real)
     dis_loss += dis.train_on_batch([x_in, images], y_fake)
 

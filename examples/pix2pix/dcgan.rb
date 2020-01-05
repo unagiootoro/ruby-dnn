@@ -97,11 +97,7 @@ class Discriminator < Model
     @bn6 = BatchNormalization.new
   end
 
-  def forward(inputs, trainable = true)
-    trainable_layers.each do |layer|
-      layer.trainable = trainable
-    end
-
+  def forward(inputs)
     input, images = *inputs
     x = InputLayer.new(@gen_input_shape).(input)
     x = @l1_1.(x)
@@ -137,6 +133,18 @@ class Discriminator < Model
     x = @l7.(x)
     x
   end
+
+  def enable_training
+    trainable_layers.each do |layer|
+      layer.trainable = true
+    end
+  end
+  
+  def disable_training
+    trainable_layers.each do |layer|
+      layer.trainable = false
+    end
+  end
 end
 
 class DCGAN < Model
@@ -151,7 +159,8 @@ class DCGAN < Model
 
   def forward(input)
     x = @gen.(input)
-    x = @dis.([input, x], false)
+    @dis.disable_training
+    x = @dis.([input, x])
     x
   end
 end
