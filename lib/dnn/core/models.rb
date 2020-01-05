@@ -1,6 +1,7 @@
 module DNN
   module Models
 
+    # This class is used to hold multiple layers in an array.
     class LayersList < Array
       def self.from_hash_list(hash_list)
         layers_list = new
@@ -38,12 +39,18 @@ module DNN
     end
 
     class Chain
-      def forward(x)
+      # Forward propagation.
+      # @param [Tensor] input_tensor Input tensor.
+      # @return [Tensor] Output tensor.
+      def forward(input_tensor)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
-      def call(x)
-        forward(x)
+      # Forward propagation and create a link.
+      # @param [Tensor] input_tensor Input tensor.
+      # @return [Tensor] Output tensor.
+      def call(input_tensor)
+        forward(input_tensor)
       end
 
       # Get the all layers.

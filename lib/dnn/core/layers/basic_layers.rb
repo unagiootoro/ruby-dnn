@@ -2,9 +2,9 @@ module DNN
   module Layers
 
     module LayerNode
-      def forward(input)
-        x = input.data
-        prev_link = (input.is_a?(Tensor) ? input.link : input)
+      def forward(input_tensor)
+        x = input_tensor.data
+        prev_link = (input_tensor.is_a?(Tensor) ? input_tensor.link : input_tensor)
         y = forward_node(x)
         link = Link.new(prev_link, self)
         Tensor.new(y, link)
@@ -66,15 +66,10 @@ module DNN
       end
 
       # Forward propagation.
-      # @param [Numo::SFloat] x Input data.
-      def forward(x)
+      # @param [Tensor] input_tensor Input tensor.
+      # @return [Tensor] Output tensor.
+      def forward(input_tensor)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
-      end
-
-      # Backward propagation.
-      # @param [Numo::SFloat] dy Differential value of output data.
-      def backward(dy)
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward'"
       end
 
       # Please reimplement this method as needed.
@@ -95,6 +90,7 @@ module DNN
         initialize
       end
 
+      # Clean the layer state.
       def clean
         input_shape = @input_shape
         hash = to_hash
