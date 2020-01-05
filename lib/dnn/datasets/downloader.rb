@@ -1,11 +1,7 @@
 require "net/http"
 
 module DNN
-  if ENV["RUBY_DNN_DOWNLOADS_PATH"]
-    DOWNLOADS_PATH = ENV["RUBY_DNN_DOWNLOADS_PATH"]
-  else
-    DOWNLOADS_PATH = __dir__
-  end
+  DOWNLOADS_PATH = ENV["RUBY_DNN_DOWNLOADS_PATH"] || __dir__
 
   class DNN_DownloadError < DNN_Error; end
 

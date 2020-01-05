@@ -27,7 +27,7 @@ module DNN
       bin = ""
       (1..5).each do |i|
         fname = DOWNLOADS_PATH + "/downloads/#{DIR_CIFAR10}/data_batch_#{i}.bin"
-        raise DNN_CIFAR10_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
+        raise DNN_CIFAR10_LoadError, %`file "#{fname}" is not found.` unless File.exist?(fname)
         bin << File.binread(fname)
       end
       datas = Numo::UInt8.from_binary(bin).reshape(50000, 3073)
@@ -40,7 +40,7 @@ module DNN
     def self.load_test
       downloads
       fname = DOWNLOADS_PATH + "/downloads/#{DIR_CIFAR10}/test_batch.bin"
-      raise DNN_CIFAR10_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
+      raise DNN_CIFAR10_LoadError, %`file "#{fname}" is not found.` unless File.exist?(fname)
       bin = File.binread(fname)
       datas = Numo::UInt8.from_binary(bin).reshape(10000, 3073)
       x_test = datas[true, 1...3073]

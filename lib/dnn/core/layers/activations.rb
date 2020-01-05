@@ -112,7 +112,7 @@ module DNN
 
     class ELU < Layer
       include LayerNode
-      
+
       attr_reader :alpha
 
       # @param [Float] alpha The slope when the output value is negative.

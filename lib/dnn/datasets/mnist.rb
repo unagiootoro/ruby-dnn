@@ -31,12 +31,8 @@ module DNN
       downloads
       train_images_file_path = get_file_path(TRAIN_IMAGES_FILE_NAME)
       train_labels_file_path = get_file_path(TRAIN_LABELS_FILE_NAME)
-      unless File.exist?(train_images_file_path)
-        raise DNN_MNIST_LoadError.new(%`file "#{train_images_file_path}" is not found.`)
-      end
-      unless File.exist?(train_labels_file_path)
-        raise DNN_MNIST_LoadError.new(%`file "#{train_labels_file_path}" is not found.`)
-      end
+      raise DNN_MNIST_LoadError, %`file "#{train_images_file_path}" is not found.` unless File.exist?(train_images_file_path)
+      raise DNN_MNIST_LoadError, %`file "#{train_labels_file_path}" is not found.` unless File.exist?(train_labels_file_path)
       images = load_images(train_images_file_path)
       labels = load_labels(train_labels_file_path)
       [images, labels]
@@ -46,12 +42,8 @@ module DNN
       downloads
       test_images_file_path = get_file_path(TEST_IMAGES_FILE_NAME)
       test_labels_file_path = get_file_path(TEST_LABELS_FILE_NAME)
-      unless File.exist?(test_images_file_path)
-        raise DNN_MNIST_LoadError.new(%`file "#{test_images_file_path}" is not found.`)
-      end
-      unless File.exist?(test_labels_file_path)
-        raise DNN_MNIST_LoadError.new(%`file "#{test_labels_file_path}" is not found.`)
-      end
+      raise DNN_MNIST_LoadError, %`file "#{test_images_file_path}" is not found.` unless File.exist?(test_images_file_path)
+      raise DNN_MNIST_LoadError, %`file "#{test_labels_file_path}" is not found.` unless File.exist?(test_labels_file_path)
       images = load_images(test_images_file_path)
       labels = load_labels(test_labels_file_path)
       [images, labels]

@@ -26,7 +26,7 @@ module DNN
       downloads
       bin = ""
       fname = DOWNLOADS_PATH + "/downloads/#{DIR_CIFAR100}/train.bin"
-      raise DNN_CIFAR100_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
+      raise DNN_CIFAR100_LoadError, %`file "#{fname}" is not found.` unless File.exist?(fname)
       bin << File.binread(fname)
       datas = Numo::UInt8.from_binary(bin).reshape(50000, 3074)
       x_train = datas[true, 2...3074]
@@ -38,7 +38,7 @@ module DNN
     def self.load_test
       downloads
       fname = DOWNLOADS_PATH + "/downloads/#{DIR_CIFAR100}/test.bin"
-      raise DNN_CIFAR100_LoadError.new(%`file "#{fname}" is not found.`) unless File.exist?(fname)
+      raise DNN_CIFAR100_LoadError, %`file "#{fname}" is not found.` unless File.exist?(fname)
       bin = File.binread(fname)
       datas = Numo::UInt8.from_binary(bin).reshape(10000, 3074)
       x_test = datas[true, 2...3074]

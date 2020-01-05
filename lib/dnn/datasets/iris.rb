@@ -21,7 +21,7 @@ module DNN
 
     def self.load(shuffle = false, shuffle_seed = rand(1 << 31))
       downloads
-      csv_array = CSV.read(url_to_file_name(URL_CSV)).select { |a| a.length > 0 }
+      csv_array = CSV.read(url_to_file_name(URL_CSV)).reject(&:empty?)
       x = Numo::SFloat.zeros(csv_array.length, 4)
       y = Numo::SFloat.zeros(csv_array.length)
       csv_array.each.with_index do |(sepal_length, sepal_width, petal_length, petal_width, classes), i|
@@ -30,14 +30,14 @@ module DNN
         x[i, 2] = petal_length.to_f
         x[i, 3] = petal_width.to_f
         y[i] = case classes
-        when "Iris-setosa"
-          SETOSA
-        when "Iris-versicolor"
-          VERSICOLOR
-        when "Iris-virginica"
-          VIRGINICA
-        else
-          raise DNN_Iris_LoadError.new("Unknown class name '#{classes}' for iris")
+               when "Iris-setosa"
+                 SETOSA
+               when "Iris-versicolor"
+                 VERSICOLOR
+               when "Iris-virginica"
+                 VIRGINICA
+               else
+                 raise DNN_Iris_LoadError, "Unknown class name '#{classes}' for iris"
         end
       end
       if shuffle

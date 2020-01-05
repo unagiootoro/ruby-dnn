@@ -136,7 +136,7 @@ module DNN
 
     class InputLayer < Layer
       include LayerNode
-      
+
       def self.call(input)
         shape = input.is_a?(Tensor) ? input.data.shape : input.shape
         new(shape[1..-1]).(input)

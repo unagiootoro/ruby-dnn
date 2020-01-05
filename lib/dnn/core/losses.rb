@@ -182,7 +182,7 @@ module DNN
 
     class SigmoidCrossEntropy < Loss
       include Layers::MergeLayerNode
-      
+
       attr_accessor :eps
 
       class << self

@@ -20,7 +20,7 @@ module DNN
       end
 
       def to_hash_list
-        map { |layer| layer.to_hash }
+        map(&:to_hash)
       end
 
       # Get the all layers.
@@ -129,9 +129,7 @@ module DNN
       def call(inputs)
         @layers_cache = nil
         output_tensor = forward(inputs)
-        unless @built
-          @built = true
-        end
+        @built = true unless @built
         output_tensor
       end
 
@@ -223,10 +221,10 @@ module DNN
 
             if test
               acc, loss = if test.is_a?(Array)
-                evaluate(test[0], test[1], batch_size: batch_size)
-              else
-                evaluate_by_iterator(test, batch_size: batch_size)
-              end
+                            evaluate(test[0], test[1], batch_size: batch_size)
+                          else
+                            evaluate_by_iterator(test, batch_size: batch_size)
+                          end
               print "  " + metrics_to_str({ accuracy: acc, test_loss: loss }) if verbose
             end
             puts "" if verbose
@@ -407,9 +405,7 @@ module DNN
       # @return [DNN::Layers::Layer] Return the layer.
       def get_layer(name)
         layer = instance_variable_get("@#{name}")
-        if layer.is_a?(Layers::Layer) || layer.is_a?(Chain) || layer.is_a?(LayersList)
-          return layer
-        end
+        return layer if layer.is_a?(Layers::Layer) || layer.is_a?(Chain) || layer.is_a?(LayersList)
         nil
       end
 
@@ -419,9 +415,7 @@ module DNN
       end
 
       def clean_layers
-        layers.each do |layer|
-          layer.clean
-        end
+        layers.each(&:clean)
         @loss_func.clean
         @layers_cache = nil
       end
