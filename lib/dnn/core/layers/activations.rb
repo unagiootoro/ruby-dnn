@@ -2,70 +2,84 @@ module DNN
   module Layers
 
     class Sigmoid < Layer
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         @y = 1 / (1 + Xumo::NMath.exp(-x))
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy * (1 - @y) * @y
       end
     end
 
     class Tanh < Layer
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         @y = Xumo::NMath.tanh(x)
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy * (1 - @y**2)
       end
     end
 
     class Softsign < Layer
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         @x = x
         x / (1 + x.abs)
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy * (1 / (1 + @x.abs)**2)
       end
     end
 
     class Softplus < Layer
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         @x = x
         Xumo::NMath.log(1 + Xumo::NMath.exp(x))
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy * (1 / (1 + Xumo::NMath.exp(-@x)))
       end
     end
 
     class Swish < Layer
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         @x = x
         @y = x * (1 / (1 + Xumo::NMath.exp(-x)))
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy * (@y + (1 / (1 + Xumo::NMath.exp(-@x))) * (1 - @y))
       end
     end
 
     class ReLU < Layer
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         @x = x
         Xumo::SFloat.maximum(0, x)
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy * Xumo::SFloat.cast(@x > 0)
       end
     end
 
     class LeakyReLU < Layer
+      include LayerNode
+
       attr_reader :alpha
 
       # @param [Float] alpha The slope when the output value is negative.
@@ -74,14 +88,14 @@ module DNN
         @alpha = alpha
       end
 
-      def forward(x)
+      def forward_node(x)
         @x = x
         a = Xumo::SFloat.ones(x.shape)
         a[x <= 0] = @alpha
         x * a
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dx = Xumo::SFloat.ones(@x.shape)
         dx[@x <= 0] = @alpha
         dy * dx
@@ -97,6 +111,8 @@ module DNN
     end
 
     class ELU < Layer
+      include LayerNode
+      
       attr_reader :alpha
 
       # @param [Float] alpha The slope when the output value is negative.
@@ -105,7 +121,7 @@ module DNN
         @alpha = alpha
       end
 
-      def forward(x)
+      def forward_node(x)
         @x = x
         x1 = Xumo::SFloat.zeros(x.shape)
         x1[x >= 0] = 1
@@ -116,7 +132,7 @@ module DNN
         x1 + x2
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dx = Xumo::SFloat.ones(@x.shape)
         dx[@x < 0] = 0
         dx2 = Xumo::SFloat.zeros(@x.shape)
@@ -135,12 +151,14 @@ module DNN
     end
 
     class Mish < Layer
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         @x = x
-        x * Xumo::NMath.tanh(Softplus.new.forward(x))
+        x * Xumo::NMath.tanh(Softplus.new.forward_node(x))
       end
 
-      def backward(dy)
+      def backward_node(dy)
         omega = 4 * (@x + 1) + 4 * Xumo::NMath.exp(2 * @x) + Xumo::NMath.exp(3 * @x) + Xumo::NMath.exp(@x) * (4 * @x + 6)
         delta = 2 * Xumo::NMath.exp(@x) + Xumo::NMath.exp(2 * @x) + 2
         dy * (Xumo::NMath.exp(@x) * omega) / delta**2

@@ -19,16 +19,20 @@ module DNN
         @clip_norm = clip_norm
       end
 
+      def update(params)
+        clip_grads(params) if @clip_norm
+        update_params(params)
+        params.each do |param|
+          param.grad = Xumo::SFloat[0]
+        end
+      end
+
       # Update layers has params.
-      def update(layers)
+      def update_layers(layers)
         target_params = layers.select { |layer| layer.is_a?(Layers::TrainableLayer) && layer.trainable }
                               .map { |layer| layer.get_params.values }.flatten.compact
                               .select(&:grad)
-        clip_grads(target_params) if @clip_norm
-        update_params(target_params)
-        target_params.each do |param|
-          param.grad = Xumo::SFloat[0]
-        end
+        update(target_params)
       end
 
       def to_hash(merge_hash = nil)

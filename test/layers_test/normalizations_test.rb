@@ -16,7 +16,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     assert_equal 1e-7, batch_norm.eps
   end
 
-  def test_forward
+  def test_forward_numo
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     batch_norm.gamma.data = Numo::SFloat.new(10).fill(3)
@@ -24,10 +24,10 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
     DNN.learning_phase = true
-    assert_equal expected, batch_norm.forward(x).round(4)
+    assert_equal expected, batch_norm.forward_node(x).round(4)
   end
 
-  def test_forward2
+  def test_forward_numo2
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     batch_norm.gamma.data = Numo::SFloat.new(10).fill(3)
@@ -37,29 +37,29 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
     DNN.learning_phase = false
-    assert_equal expected, batch_norm.forward(x).round(4)
+    assert_equal expected, batch_norm.forward_node(x).round(4)
   end
 
-  def test_backward
+  def test_backward_numo
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     DNN.learning_phase = true
-    batch_norm.forward(x)
-    grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
+    batch_norm.forward_node(x)
+    grad = batch_norm.backward_node(Numo::SFloat.ones(*x.shape))
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], batch_norm.gamma.grad
     assert_equal Numo::SFloat[[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]], batch_norm.beta.grad
   end
 
-  def test_backward2
+  def test_backward_numo2
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     batch_norm.trainable = false
     x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
     DNN.learning_phase = true
-    batch_norm.forward(x)
-    grad = batch_norm.backward(Numo::SFloat.ones(*x.shape))
+    batch_norm.forward_node(x)
+    grad = batch_norm.backward_node(Numo::SFloat.ones(*x.shape))
     assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
     assert_equal Numo::SFloat[0], batch_norm.gamma.grad
     assert_equal Numo::SFloat[0], batch_norm.beta.grad

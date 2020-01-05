@@ -1,6 +1,28 @@
 module DNN
   module Layers
 
+    module LayerNode
+      def forward(input)
+        x = input.data
+        prev_link = (input.is_a?(Tensor) ? input.link : input)
+        y = forward_node(x)
+        link = Link.new(prev_link, self)
+        Tensor.new(y, link)
+      end
+
+      def backward(dy)
+        backward_node(dy)
+      end
+
+      def forward_node(x)
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward_node'"
+      end
+
+      def backward_node(dy)
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward_node'"
+      end
+    end
+
     # Super class of all layer classes.
     class Layer
       attr_reader :input_shape
@@ -26,12 +48,9 @@ module DNN
       # @param [Tensor] input_tensor Input tensor.
       # @return [Tensor] Output tensor.
       def call(input_tensor)
-        x = input_tensor.data
-        prev_link = input_tensor.link
-        build(x.shape[1..-1]) unless built?
-        y = forward(x)
-        link = Link.new(prev_link, self)
-        Tensor.new(y, link)
+        input_tensor = Tensor.new(input_tensor) if !input_tensor.is_a?(Tensor) && !input_tensor.is_a?(Param)
+        build(input_tensor.data.shape[1..-1]) unless built?
+        forward(input_tensor)
       end
 
       # Build the layer.
@@ -120,6 +139,8 @@ module DNN
     end
 
     class InputLayer < Layer
+      include LayerNode
+      
       def self.call(input)
         shape = input.is_a?(Tensor) ? input.data.shape : input.shape
         new(shape[1..-1]).(input)
@@ -140,21 +161,21 @@ module DNN
           x = input
           prev_link = nil
         end
-        Tensor.new(forward(x), Link.new(prev_link, self))
+        Tensor.new(forward_node(x), Link.new(prev_link, self))
       end
 
       def build(input_shape)
         @built = true
       end
 
-      def forward(x)
+      def forward_node(x)
         unless x.shape[1..-1] == @input_shape
           raise DNN_ShapeError, "The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}."
         end
         x
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy
       end
 
@@ -248,6 +269,8 @@ module DNN
     end
 
     class Dense < Connection
+      include LayerNode
+
       attr_reader :num_nodes
 
       # @param [Integer] num_nodes Number of nodes.
@@ -273,14 +296,14 @@ module DNN
         init_weight_and_bias
       end
 
-      def forward(x)
+      def forward_node(x)
         @x = x
         y = x.dot(@weight.data)
         y += @bias.data if @bias
         y
       end
 
-      def backward(dy)
+      def backward_node(dy)
         if @trainable
           @weight.grad += @x.transpose.dot(dy)
           @bias.grad += dy.sum(0) if @bias
@@ -307,11 +330,13 @@ module DNN
     end
 
     class Flatten < Layer
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         x.reshape(x.shape[0], *output_shape)
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy.reshape(dy.shape[0], *@input_shape)
       end
 
@@ -321,6 +346,8 @@ module DNN
     end
 
     class Reshape < Layer
+      include LayerNode
+
       attr_reader :output_shape
 
       def initialize(output_shape)
@@ -328,11 +355,11 @@ module DNN
         @output_shape = output_shape
       end
 
-      def forward(x)
+      def forward_node(x)
         x.reshape(x.shape[0], *@output_shape)
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy.reshape(dy.shape[0], *@input_shape)
       end
 
@@ -345,7 +372,69 @@ module DNN
       end
     end
 
+    class Lasso < Layer
+      include LayerNode
+
+      attr_accessor :l1_lambda
+
+      # @param [Float] l1_lambda L1 regularizer coefficient.
+      def initialize(l1_lambda = 0.01)
+        super()
+        @l1_lambda = l1_lambda
+      end
+
+      def forward_node(x)
+        @x = x
+        @l1_lambda * x.abs.sum
+      end
+
+      def backward_node(dy)
+        dx = Xumo::SFloat.ones(*@x.shape)
+        dx[@x < 0] = -1
+        @l1_lambda * dx
+      end
+
+      def to_hash
+        super(l1_lambda: @l1_lambda)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:l1_lambda])
+      end
+    end
+
+    class Ridge < Layer
+      include LayerNode
+
+      attr_accessor :l2_lambda
+
+      # @param [Float] l2_lambda L2 regularizer coefficient.
+      def initialize(l2_lambda = 0.01)
+        super()
+        @l2_lambda = l2_lambda
+      end
+
+      def forward_node(x)
+        @x = x
+        0.5 * @l2_lambda * (x**2).sum
+      end
+
+      def backward_node(dy)
+        @l2_lambda * @x
+      end
+
+      def to_hash
+        super(l2_lambda: @l2_lambda)
+      end
+
+      def load_hash(hash)
+        initialize(hash[:l2_lambda])
+      end
+    end
+
     class Dropout < Layer
+      include LayerNode
+
       attr_accessor :dropout_ratio
       attr_reader :use_scale
 
@@ -361,7 +450,7 @@ module DNN
         @rnd = Random.new(@seed)
       end
 
-      def forward(x)
+      def forward_node(x)
         if DNN.learning_phase
           Xumo::SFloat.srand(@rnd.rand(1 << 31))
           @mask = Xumo::SFloat.new(*x.shape).rand < @dropout_ratio
@@ -372,7 +461,7 @@ module DNN
         x
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy[@mask] = 0
         dy
       end

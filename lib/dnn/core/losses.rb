@@ -2,6 +2,10 @@ module DNN
   module Losses
 
     class Loss
+      def self.call(y, t, *args)
+        new(*args).(y, t)
+      end
+
       def self.from_hash(hash)
         return nil unless hash
         loss_class = DNN.const_get(hash[:class])
@@ -11,31 +15,30 @@ module DNN
         loss
       end
 
+      def call(y, t)
+        forward(y, t)
+      end
+
       def loss(y, t, layers = nil)
         unless y.shape == t.shape
           raise DNN_ShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
         end
-        loss_value = forward(y, t)
-        loss_value += regularizers_forward(layers) if layers
-        loss_value
+        loss = call(y, t)
+        loss = regularizers_forward(loss, layers) if layers
+        loss
       end
 
       def forward(y, t)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
-      def backward(y, t)
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward'"
-      end
-
-      def regularizers_forward(layers)
-        loss_value = 0
+      def regularizers_forward(loss, layers)
         regularizers = layers.select { |layer| layer.respond_to?(:regularizers) }
                              .map(&:regularizers).flatten
         regularizers.each do |regularizer|
-          loss_value = regularizer.forward(loss_value)
+          loss = regularizer.forward(loss)
         end
-        loss_value
+        loss
       end
 
       def regularizers_backward(layers)
@@ -64,22 +67,30 @@ module DNN
     end
 
     class MeanSquaredError < Loss
-      def forward(y, t)
+      include Layers::MergeLayerNode
+
+      def forward_node(y, t)
+        @y = y
+        @t = t
         0.5 * ((y - t)**2).mean(0).sum
       end
 
-      def backward(y, t)
-        y - t
+      def backward_node(dy)
+        @y - @t
       end
     end
 
     class MeanAbsoluteError < Loss
-      def forward(y, t)
+      include Layers::MergeLayerNode
+
+      def forward_node(y, t)
+        @y = y
+        @t = t
         (y - t).abs.mean(0).sum
       end
 
-      def backward(y, t)
-        dy = y - t
+      def backward_node(d)
+        dy = @y - @t
         dy[dy >= 0] = 1
         dy[dy < 0] = -1
         dy
@@ -87,26 +98,33 @@ module DNN
     end
 
     class Hinge < Loss
-      def forward(y, t)
+      include Layers::MergeLayerNode
+
+      def forward_node(y, t)
+        @t = t
         @a = 1 - y * t
         Xumo::SFloat.maximum(0, @a).mean(0).sum
       end
 
-      def backward(y, t)
+      def backward_node(d)
         a = Xumo::SFloat.ones(*@a.shape)
         a[@a <= 0] = 0
-        a * -t
+        a * -@t
       end
     end
 
     class HuberLoss < Loss
-      def forward(y, t)
+      include Layers::MergeLayerNode
+
+      def forward_node(y, t)
+        @y = y
+        @t = t
         loss_l1_value = loss_l1(y, t)
         @loss_value = loss_l1_value > 1 ? loss_l1_value : loss_l2(y, t)
       end
 
-      def backward(y, t)
-        dy = y - t
+      def backward_node(d)
+        dy = @y - @t
         if @loss_value > 1
           dy[dy >= 0] = 1
           dy[dy < 0] = -1
@@ -126,6 +144,8 @@ module DNN
     end
 
     class SoftmaxCrossEntropy < Loss
+      include Layers::MergeLayerNode
+
       attr_accessor :eps
 
       class << self
@@ -141,13 +161,14 @@ module DNN
         @eps = eps
       end
 
-      def forward(y, t)
+      def forward_node(y, t)
+        @t = t
         @x = SoftmaxCrossEntropy.softmax(y)
         -(t * Xumo::NMath.log(@x + @eps)).mean(0).sum
       end
 
-      def backward(y, t)
-        @x - t
+      def backward_node(d)
+        @x - @t
       end
 
       def to_hash
@@ -160,11 +181,13 @@ module DNN
     end
 
     class SigmoidCrossEntropy < Loss
+      include Layers::MergeLayerNode
+      
       attr_accessor :eps
 
       class << self
         def sigmoid(y)
-          Layers::Sigmoid.new.forward(y)
+          Layers::Sigmoid.new.forward_node(y)
         end
 
         alias activation sigmoid
@@ -175,13 +198,14 @@ module DNN
         @eps = eps
       end
 
-      def forward(y, t)
+      def forward_node(y, t)
+        @t = t
         @x = SigmoidCrossEntropy.sigmoid(y)
         -(t * Xumo::NMath.log(@x + @eps) + (1 - t) * Xumo::NMath.log(1 - @x + @eps)).mean(0).sum
       end
 
-      def backward(y, t)
-        @x - t
+      def backward_node(d)
+        @x - @t
       end
 
       def to_hash

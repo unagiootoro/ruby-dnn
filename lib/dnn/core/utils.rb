@@ -23,7 +23,7 @@ module DNN
 
     # Return the result of the sigmoid function.
     def self.sigmoid(x)
-      Layers::Sigmoid.new.forward(x)
+      Losses::SigmoidCrossEntropy.sigmoid(x)
     end
 
     # Return the result of the softmax function.

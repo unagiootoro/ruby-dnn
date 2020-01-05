@@ -242,15 +242,14 @@ module DNN
         raise DNN_Error, "The model is not loss_func setup complete." unless @loss_func
         check_xy_type(x, y)
         call_callbacks(:before_train_on_batch)
-        x = forward(x, true)
-        loss_value = @loss_func.loss(x, y, layers)
-        dy = @loss_func.backward(x, y)
-        backward(dy)
-        @optimizer.update(layers)
-        @loss_func.regularizers_backward(layers)
-        @last_log[:train_loss] = loss_value
+        out = forward(x, true)
+        tensor_y = Tensor.new(y)
+        loss = @loss_func.loss(out, tensor_y, layers)
+        loss.link.backward(Xumo::SFloat.zeros(y[0...1, false].shape))
+        @optimizer.update(get_all_trainable_params)
+        @last_log[:train_loss] = loss.data
         call_callbacks(:after_train_on_batch)
-        loss_value
+        loss.data
       end
 
       # Evaluate model and get accuracy and loss of test data.
@@ -291,11 +290,11 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def test_on_batch(x, y)
         call_callbacks(:before_test_on_batch)
-        x = forward(x, false)
-        correct = accuracy(x, y)
-        loss_value = @loss_func.loss(x, y)
+        out = forward(x, false)
+        correct = accuracy(out.data, y)
+        loss = @loss_func.(out, Tensor.new(y))
         call_callbacks(:after_test_on_batch)
-        [correct, loss_value]
+        [correct, loss.data]
       end
 
       # Implement the process to accuracy this model.
@@ -323,7 +322,8 @@ module DNN
       # @param [Boolean] use_loss_activation Use loss activation when loss has an activation.
       def predict(x, use_loss_activation: true)
         check_xy_type(x)
-        y = forward(x, false)
+        out = forward(x, false)
+        y = out.data
         if use_loss_activation && @loss_func.class.respond_to?(:activation)
           y = @loss_func.class.activation(y)
         end
@@ -437,11 +437,13 @@ module DNN
         unless @built
           @built = true
         end
-        output_tensor.data
+        output_tensor
       end
 
-      def backward(dy)
-        @last_link.backward(dy)
+      def get_all_trainable_params
+        layers.select { |layer| layer.is_a?(Layers::TrainableLayer) && layer.trainable }
+              .map { |layer| layer.get_params.values }.flatten.compact
+              .select(&:grad)
       end
 
       def call_callbacks(event)

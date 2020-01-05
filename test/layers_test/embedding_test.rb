@@ -21,24 +21,24 @@ class TestEmbedding < MiniTest::Unit::TestCase
     assert_kind_of L2, embed.weight_regularizer
   end
 
-  def test_forward
+  def test_forward_numo
     embed = Embedding.new(2, 3)
     embed.build([2])
     embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
     x = Numo::Int32.cast([[0, 1], [0, 2]])
     expected = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
-    assert_equal expected, embed.forward(x).round(4)
+    assert_equal expected, embed.forward_node(x).round(4)
   end
 
-  def test_backward
+  def test_backward_numo
     embed = Embedding.new(2, 3)
     embed.build([2])
     embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
     x = Numo::Int32.cast([[0, 1], [2, 2]])
     dy = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
     expected = Numo::SFloat.cast([0.1, 0.2, 0.4])
-    embed.forward(x)
-    embed.backward(dy)
+    embed.forward_node(x)
+    embed.backward_node(dy)
     assert_equal expected, embed.weight.grad.round(4)
   end
 

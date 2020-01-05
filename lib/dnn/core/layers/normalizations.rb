@@ -2,6 +2,8 @@ module DNN
   module Layers
 
     class BatchNormalization < TrainableLayer
+      include LayerNode
+
       attr_reader :gamma
       attr_reader :beta
       attr_reader :running_mean
@@ -32,7 +34,7 @@ module DNN
         @running_var.data = Xumo::SFloat.zeros(*output_shape)
       end
 
-      def forward(x)
+      def forward_node(x)
         if DNN.learning_phase
           mean = x.mean(axis: @axis, keepdims: true)
           @xc = x - mean
@@ -49,7 +51,7 @@ module DNN
         @gamma.data * xn + @beta.data
       end
 
-      def backward(dy)
+      def backward_node(dy)
         batch_size = dy.shape[@axis]
         if @trainable
           @beta.grad = dy.sum(axis: @axis, keepdims: true)

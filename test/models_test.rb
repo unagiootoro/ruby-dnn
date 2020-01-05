@@ -7,7 +7,6 @@ include DNN::Initializers
 include DNN::Losses
 include DNN::Models
 
-
 class TestSequential < MiniTest::Unit::TestCase
   def test_initialize
     model = Sequential.new([InputLayer.new([10]), Dense.new(10)])
@@ -104,7 +103,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 0, loss
   end
 
-  # It is accuracy is 1.
+  # # It is accuracy is 1.
   def test_evaluate
     model = Sequential.new
     model << InputLayer.new(3)
@@ -114,7 +113,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 1, model.evaluate(x, y, batch_size: 1).first
   end
 
-  # It is accuracy is 0.5.
+  # # It is accuracy is 0.5.
   def test_evaluate2
     model = Sequential.new
     model << InputLayer.new(3)
@@ -141,7 +140,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 0, loss
   end
 
-  # It is matching dense forward result and unuse loss activation.
+  # # It is matching dense forward result and unuse loss activation.
   def test_predict
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense = Dense.new(2)
@@ -156,7 +155,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[65, 130], [155, 310]], model.predict(x, use_loss_activation: false)
   end
 
-  # It is matching dense forward result and use loss activation.
+  # # It is matching dense forward result and use loss activation.
   def test_predict2
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense = Dense.new(2)
@@ -171,7 +170,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[1, 1], [1, 1]], model.predict(x, use_loss_activation: true)
   end
 
-  # It is matching dense forward result.
+  # # It is matching dense forward result.
   def test_predict1
     x = Numo::SFloat[1, 2, 3]
     dense = Dense.new(2)
@@ -186,7 +185,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[65, 130], model.predict1(x)
   end
 
-  # It is including callback function in @callback.
+  # # It is including callback function in @callback.
   def test_add_callback
     model = Sequential.new
     cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch, proc {})
@@ -194,7 +193,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal [cbk], model.instance_variable_get(:@callbacks)
   end
 
-  # It is not including callback function in @callback.
+  # # It is not including callback function in @callback.
   def test_clear_callbacks
     model = Sequential.new
     cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch, proc {})
@@ -203,7 +202,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal [], model.instance_variable_get(:@callbacks)
   end
 
-  # It is running all callback function.
+  # # It is running all callback function.
   def test_call_callbacks
     call_cnt = 0
     call_flg = [0, 0]
@@ -266,7 +265,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_kind_of Dense, model.get_layer(:stack)[1]
   end
 
-  # It is result of load marshal is as expected.
+  # # It is result of load marshal is as expected.
   def test_set_all_params_data
     dense0 = DNN::Layers::Dense.new(5)
     dense1 = DNN::Layers::Dense.new(1)
@@ -287,7 +286,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal model.predict1(x), model2.predict1(x)
   end
 
-  # It is result of load marshal is as expected.
+  # # It is result of load marshal is as expected.
   def test_get_all_params_data
     model = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)

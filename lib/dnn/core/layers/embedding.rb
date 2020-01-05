@@ -24,7 +24,7 @@ module DNN
 
       def call(input_tensor)
         build(@input_shape) unless built?
-        Tensor.new(forward(input_tensor.data), Link.new(nil, self))
+        Tensor.new(forward_node(input_tensor.data), Link.new(nil, self))
       end
 
       def build(input_shape)
@@ -34,7 +34,7 @@ module DNN
         @weight_regularizer.param = @weight if @weight_regularizer
       end
 
-      def forward(x)
+      def forward_node(x)
         @x = x
         y = Xumo::SFloat.zeros(*x.shape)
         x.shape[0].times do |i|
@@ -43,7 +43,7 @@ module DNN
         y
       end
 
-      def backward(dy)
+      def backward_node(dy)
         @weight.grad += Xumo::SFloat.zeros(*@weight.data.shape)
         @x.shape[0].times do |i|
           @x.shape[1].times do |j|

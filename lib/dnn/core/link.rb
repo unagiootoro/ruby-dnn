@@ -26,9 +26,14 @@ module DNN
     end
 
     def backward(dy)
-      dy1, dy2 = *@layer.backward(dy)
+      dys = @layer.backward(dy)
+      if dys.is_a?(Array)
+        dy1, dy2 = *dys
+      else
+        dy1 = dys
+      end
       @prev1&.backward(dy1)
-      @prev2&.backward(dy2)
+      @prev2&.backward(dy2) if dy2
     end
   end
 end

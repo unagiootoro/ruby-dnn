@@ -11,17 +11,6 @@ class TestLayer < MiniTest::Unit::TestCase
     assert_equal layer.instance_variable_get(:@built), false
   end
 
-  def test_call
-    layer = Layer.new
-    layer.send(:define_singleton_method, :forward) { |x| Numo::SFloat[1] }
-    prev_link = DNN::Link.new
-    input_tensor = DNN::Tensor.new(Numo::SFloat[0], prev_link)
-    output_tensor = layer.call(input_tensor)
-    
-    assert_equal Numo::SFloat[1], output_tensor.data
-    assert_equal prev_link, output_tensor.link.prev
-  end
-
   def test_build
     layer = Layer.new
     layer.build([10])
@@ -76,13 +65,13 @@ class TestInputLayer < MiniTest::Unit::TestCase
   def test_forward
     layer = InputLayer.new(2)
     x = Numo::SFloat[[0, 1]]
-    assert_equal x, layer.forward(x)
+    assert_equal x, layer.forward_node(x)
   end
 
   def test_backward
     layer = InputLayer.new(2)
     dy = Numo::SFloat[[0, 1]]
-    assert_equal dy, layer.backward(dy)
+    assert_equal dy, layer.backward_node(dy)
   end
 
   def test_to_hash
@@ -127,7 +116,7 @@ class TestDense < MiniTest::Unit::TestCase
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
     dense.bias.data = Numo::SFloat[5, 10]
-    y = dense.forward(x)
+    y = dense.forward_node(x)
     assert_equal Numo::SFloat[[65, 130], [155, 310]], y
   end
 
@@ -135,7 +124,7 @@ class TestDense < MiniTest::Unit::TestCase
     dense = Dense.new(2, use_bias: false)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    y = dense.forward(x)
+    y = dense.forward_node(x)
     assert_equal Numo::SFloat[[60, 120], [150, 300]], y
     assert_nil dense.bias
   end
@@ -145,8 +134,8 @@ class TestDense < MiniTest::Unit::TestCase
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
     dense.bias.data = Numo::SFloat[5, 10]
-    dense.forward(x)
-    grad = dense.backward(Numo::SFloat[1])
+    dense.forward_node(x)
+    grad = dense.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
     assert_equal Numo::SFloat[5, 7, 9], dense.weight.grad.round(4)
     assert_in_delta 1.0, dense.bias.grad
@@ -156,8 +145,8 @@ class TestDense < MiniTest::Unit::TestCase
     dense = Dense.new(2, use_bias: false)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.forward(x)
-    grad = dense.backward(Numo::SFloat[1])
+    dense.forward_node(x)
+    grad = dense.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
     assert_equal Numo::SFloat[5, 7, 9], dense.weight.grad.round(4)
     assert_nil dense.bias
@@ -168,10 +157,10 @@ class TestDense < MiniTest::Unit::TestCase
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
     dense.bias.data = Numo::SFloat[5, 10]
-    dense.forward(x)
-    dense.forward(x)
-    dense.backward(Numo::SFloat[1])
-    grad = dense.backward(Numo::SFloat[1])
+    dense.forward_node(x)
+    dense.forward_node(x)
+    dense.backward_node(Numo::SFloat[1])
+    grad = dense.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
     assert_equal Numo::SFloat[10, 14, 18], dense.weight.grad.round(4)
     assert_in_delta 2.0, dense.bias.grad
@@ -183,8 +172,8 @@ class TestDense < MiniTest::Unit::TestCase
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
     dense.bias.data = Numo::SFloat[5, 10]
-    dense.forward(x)
-    grad = dense.backward(Numo::SFloat[1])
+    dense.forward_node(x)
+    grad = dense.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[30, 30, 30], grad.round(4)
     assert_equal Numo::SFloat[0], dense.weight.grad.round(4)
     assert_equal Numo::SFloat[0], dense.bias.grad
@@ -239,7 +228,7 @@ class TestFlatten < MiniTest::Unit::TestCase
     flatten = Flatten.new
     x = Numo::SFloat.zeros(10, 32, 32, 3)
     flatten.build([32, 32, 3])
-    y = flatten.forward(x)
+    y = flatten.forward_node(x)
     assert_equal [10, 3072], y.shape
   end
 
@@ -247,9 +236,9 @@ class TestFlatten < MiniTest::Unit::TestCase
     flatten = Flatten.new
     x = Numo::SFloat.zeros(10, 32, 32, 3)
     flatten.build([32, 32, 3])
-    flatten.forward(x)
+    flatten.forward_node(x)
     dy = Numo::SFloat.zeros(10, 3072)
-    assert_equal [10, 32, 32, 3], flatten.backward(dy).shape
+    assert_equal [10, 32, 32, 3], flatten.backward_node(dy).shape
   end
 end
 
@@ -267,7 +256,7 @@ class TestReshape < MiniTest::Unit::TestCase
     reshape = Reshape.new([32, 32, 3])
     reshape.build([3072])
     x = Numo::SFloat.zeros(10, 3072)
-    y = reshape.forward(x)
+    y = reshape.forward_node(x)
     assert_equal [10, 32, 32, 3], y.shape
   end
 
@@ -275,9 +264,9 @@ class TestReshape < MiniTest::Unit::TestCase
     reshape = Reshape.new([32, 32, 3])
     reshape.build([3072])
     x = Numo::SFloat.zeros(10, 3072)
-    reshape.forward(x)
+    reshape.forward_node(x)
     dy = Numo::SFloat.zeros(10, 32, 32, 3)
-    assert_equal [10, 3072], reshape.backward(dy).shape
+    assert_equal [10, 3072], reshape.backward_node(dy).shape
   end
 
   def test_to_hash
@@ -290,6 +279,69 @@ class TestReshape < MiniTest::Unit::TestCase
   end
 end
 
+class TestLasso < MiniTest::Unit::TestCase
+  def test_from_hash
+    hash = {
+      class: "DNN::Layers::Lasso",
+      l1_lambda: 0.1,
+    }
+    lasso = Lasso.from_hash(hash)
+    assert_equal 0.1, lasso.l1_lambda
+  end
+
+  def test_forward_node
+    lasso = Lasso.new(0.1)
+    assert_equal 0.4, lasso.forward_node(Numo::SFloat[-2, 2])
+  end
+
+  def test_backward_node
+    lasso = Lasso.new(0.1)
+    lasso.forward_node(Numo::SFloat[-2, 2])
+    grad = lasso.backward_node(1)
+    assert_equal Numo::SFloat[-0.1, 0.1], grad.round(4)
+  end
+
+  def test_to_hash
+    expected_hash = {
+      class: "DNN::Layers::Lasso",
+      l1_lambda: 0.01,
+    }
+    lasso = Lasso.new
+    assert_equal expected_hash, lasso.to_hash
+  end
+end
+
+class TestRidge < MiniTest::Unit::TestCase
+  def test_from_hash
+    hash = {
+      class: "DNN::Layers::Ridge",
+      l2_lambda: 0.1,
+    }
+    ridge = Ridge.from_hash(hash)
+    assert_equal 0.1, ridge.l2_lambda
+  end
+
+  def test_forward_node
+    ridge = Ridge.new(0.1)
+    assert_equal 0.4, ridge.forward_node(Numo::SFloat[-2, 2])
+  end
+
+  def test_backward_node
+    ridge = Ridge.new(0.1)
+    ridge.forward_node(Numo::SFloat[-2, 2])
+    grad = ridge.backward_node(1)
+    assert_equal Numo::SFloat[-0.2, 0.2], grad.round(4)
+  end
+
+  def test_to_hash
+    expected_hash = {
+      class: "DNN::Layers::Ridge",
+      l2_lambda: 0.01,
+    }
+    ridge = Ridge.new
+    assert_equal expected_hash, ridge.to_hash
+  end
+end
 
 class TestDropout < MiniTest::Unit::TestCase
   def test_from_hash
@@ -309,7 +361,7 @@ class TestDropout < MiniTest::Unit::TestCase
     dropout = Dropout.new(0.5, seed: 0)
     dropout.build([100])
     DNN.learning_phase = true
-    num = dropout.forward(Numo::SFloat.ones(100)).sum.round
+    num = dropout.forward_node(Numo::SFloat.ones(100)).sum.round
     assert num.between?(30, 70)
   end
 
@@ -317,7 +369,7 @@ class TestDropout < MiniTest::Unit::TestCase
     dropout = Dropout.new(0.3, use_scale: true)
     dropout.build([1])
     DNN.learning_phase = false
-    num = dropout.forward(Numo::SFloat.ones(10)).sum.round(1)
+    num = dropout.forward_node(Numo::SFloat.ones(10)).sum.round(1)
     assert_equal 7.0, num
   end
 
@@ -325,7 +377,7 @@ class TestDropout < MiniTest::Unit::TestCase
     dropout = Dropout.new(0.3, use_scale: false)
     dropout.build([1])
     DNN.learning_phase = false
-    num = dropout.forward(Numo::SFloat.ones(10)).sum.round(1)
+    num = dropout.forward_node(Numo::SFloat.ones(10)).sum.round(1)
     assert_equal 10.0, num
   end
 
@@ -333,8 +385,8 @@ class TestDropout < MiniTest::Unit::TestCase
     dropout = Dropout.new
     dropout.build([1])
     DNN.learning_phase = true
-    y = dropout.forward(Numo::SFloat.ones(10))
-    dy = dropout.backward(Numo::SFloat.ones(10))
+    y = dropout.forward_node(Numo::SFloat.ones(10))
+    dy = dropout.backward_node(Numo::SFloat.ones(10))
     assert_equal y.round, dy.round
   end
 

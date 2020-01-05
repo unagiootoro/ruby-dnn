@@ -8,6 +8,7 @@ module DNN
 end
 
 require_relative "dnn/version"
+require_relative "dnn/core/monkey_patch"
 require_relative "dnn/core/error"
 require_relative "dnn/core/global"
 require_relative "dnn/core/tensor"
@@ -22,6 +23,7 @@ require_relative "dnn/core/layers/merge_layers"
 require_relative "dnn/core/layers/cnn_layers"
 require_relative "dnn/core/layers/embedding"
 require_relative "dnn/core/layers/rnn_layers"
+require_relative "dnn/core/layers/math_layers"
 require_relative "dnn/core/optimizers"
 require_relative "dnn/core/losses"
 require_relative "dnn/core/initializers"

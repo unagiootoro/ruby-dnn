@@ -84,6 +84,7 @@ module DNN
     end
 
     class Conv2D < Connection
+      include LayerNode
       include Conv2DUtils
 
       attr_reader :num_filters
@@ -130,7 +131,7 @@ module DNN
         @out_size = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
 
-      def forward(x)
+      def forward_node(x)
         x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         @col = im2col(x, *@out_size, *@filter_size, @strides)
@@ -139,7 +140,7 @@ module DNN
         y.reshape(x.shape[0], *@out_size, y.shape[3])
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy = dy.reshape(dy.shape[0..2].reduce(:*), dy.shape[3])
         if @trainable
           @weight.grad += @col.transpose.dot(dy)
@@ -186,6 +187,7 @@ module DNN
     end
 
     class Conv2DTranspose < Connection
+      include LayerNode
       include Conv2DUtils
 
       attr_reader :num_filters
@@ -232,7 +234,7 @@ module DNN
         @out_size = calc_conv2d_transpose_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
 
-      def forward(x)
+      def forward_node(x)
         bsize = x.shape[0]
         x = x.reshape(x.shape[0..2].reduce(:*), x.shape[3])
         @x = x
@@ -243,7 +245,7 @@ module DNN
         @padding ? zero_padding_bwd(y, @pad_size) : y
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dy = zero_padding(dy, @pad_size) if @padding
         col = im2col(dy, *input_shape[0..1], *@filter_size, @strides)
         if @trainable
@@ -291,6 +293,7 @@ module DNN
 
     # Super class of all pooling2D class.
     class Pool2D < Layer
+      include LayerNode
       include Conv2DUtils
 
       attr_reader :pool_size
@@ -345,7 +348,9 @@ module DNN
     end
 
     class MaxPool2D < Pool2D
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
@@ -354,7 +359,7 @@ module DNN
         col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
-      def backward(dy)
+      def backward_node(dy)
         dmax = Xumo::SFloat.zeros(dy.size * @pool_size.reduce(:*))
         dmax[@max_index.flatten] = dy.flatten
         dcol = dmax.reshape(dy.shape[0..2].reduce(:*), @pool_size.reduce(:*) * dy.shape[3])
@@ -364,7 +369,9 @@ module DNN
     end
 
     class AvgPool2D < Pool2D
-      def forward(x)
+      include LayerNode
+
+      def forward_node(x)
         x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         col = im2col(x, *@out_size, *@pool_size, @strides)
@@ -372,7 +379,7 @@ module DNN
         col.mean(1).reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
-      def backward(dy)
+      def backward_node(dy)
         row_length = @pool_size.reduce(:*)
         dy /= row_length
         davg = Xumo::SFloat.zeros(dy.size, row_length)
@@ -391,24 +398,15 @@ module DNN
           raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
         super
-        @avg_pool2d = AvgPool2D.new(input_shape[0..1])
-        @avg_pool2d.build(input_shape)
-        @flatten = Flatten.new
-        @flatten.build([1, 1, input_shape[2]])
       end
 
       def forward(x)
-        y = @avg_pool2d.forward(x)
-        @flatten.forward(y)
-      end
-
-      def backward(dy)
-        dy = @flatten.backward(dy)
-        @avg_pool2d.backward(dy)
+        Flatten.(AvgPool2D.(x, input_shape[0..1]))
       end
     end
 
     class UnPool2D < Layer
+      include LayerNode
       include Conv2DUtils
 
       attr_reader :unpool_size
@@ -432,7 +430,7 @@ module DNN
         @num_channel = input_shape[2]
       end
 
-      def forward(x)
+      def forward_node(x)
         @x_shape = x.shape
         unpool_h, unpool_w = @unpool_size
         x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
@@ -444,7 +442,7 @@ module DNN
         x2.reshape(x.shape[0], *@out_size, x.shape[3])
       end
 
-      def backward(dy)
+      def backward_node(dy)
         in_size = input_shape[0..1]
         col = im2col(dy, *in_size, *@unpool_size, @unpool_size)
         col = col.reshape(dy.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dy.shape[3])

@@ -17,10 +17,6 @@ module DNN
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
-      def backward
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward'"
-      end
-
       def to_hash(merge_hash)
         hash = { class: self.class.name }
         hash.merge!(merge_hash)
@@ -33,25 +29,25 @@ module DNN
     end
 
     class L1 < Regularizer
-      attr_accessor :l1_lambda
-
       # @param [Float] l1_lambda L1 regularizer coefficient.
       def initialize(l1_lambda = 0.01)
-        @l1_lambda = l1_lambda
+        @l1 = Layers::Lasso.new(l1_lambda)
       end
 
       def forward(x)
-        x + @l1_lambda * @param.data.abs.sum
+        x + @l1.(@param)
       end
 
-      def backward
-        dparam = Xumo::SFloat.ones(*@param.data.shape)
-        dparam[@param.data < 0] = -1
-        @param.grad += @l1_lambda * dparam
+      def l1_lambda
+        @l1.l1_lambda
+      end
+
+      def l1_lambda=(lam)
+        @l1.l1_lambda = lam
       end
 
       def to_hash
-        super(l1_lambda: @l1_lambda)
+        super(l1_lambda: l1_lambda)
       end
 
       def load_hash(hash)
@@ -60,23 +56,25 @@ module DNN
     end
 
     class L2 < Regularizer
-      attr_accessor :l2_lambda
-
       # @param [Float] l2_lambda L2 regularizer coefficient.
       def initialize(l2_lambda = 0.01)
-        @l2_lambda = l2_lambda
+        @l2 = Layers::Ridge.new(l2_lambda)
       end
 
       def forward(x)
-        x + 0.5 * @l2_lambda * (@param.data**2).sum
+        x + @l2.(@param)
       end
 
-      def backward
-        @param.grad += @l2_lambda * @param.data
+      def l2_lambda
+        @l2.l2_lambda
+      end
+
+      def l2_lambda=(lam)
+        @l2.l2_lambda = lam
       end
 
       def to_hash
-        super(l2_lambda: @l2_lambda)
+        super(l2_lambda: l2_lambda)
       end
 
       def load_hash(hash)
@@ -85,27 +83,31 @@ module DNN
     end
 
     class L1L2 < Regularizer
-      attr_accessor :l1_lambda
-      attr_accessor :l2_lambda
-
       # @param [Float] l1_lambda L1 regularizer coefficient.
       # @param [Float] l2_lambda L2 regularizer coefficient.
       def initialize(l1_lambda = 0.01, l2_lambda = 0.01)
-        @l1_lambda = l1_lambda
-        @l2_lambda = l2_lambda
+        @l1 = Layers::Lasso.new(l1_lambda)
+        @l2 = Layers::Ridge.new(l2_lambda)
       end
 
       def forward(x)
-        l1 = @l1_lambda * @param.data.abs.sum
-        l2 = 0.5 * @l2_lambda * (@param.data**2).sum
-        x + l1 + l2
+        x + @l1.(@param) + @l2.(@param)
       end
 
-      def backward
-        dparam = Xumo::SFloat.ones(*@param.data.shape)
-        dparam[@param.data < 0] = -1
-        @param.grad += @l1_lambda * dparam
-        @param.grad += @l2_lambda * @param.data
+      def l1_lambda
+        @l1.l1_lambda
+      end
+
+      def l1_lambda=(lam)
+        @l1.l1_lambda = lam
+      end
+
+      def l2_lambda
+        @l2.l2_lambda
+      end
+
+      def l2_lambda=(lam)
+        @l2.l2_lambda = lam
       end
 
       def to_hash

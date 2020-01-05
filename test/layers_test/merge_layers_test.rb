@@ -6,16 +6,16 @@ include DNN::Initializers
 include DNN::Regularizers
 
 class TestAdd < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_numo
     add = Add.new
-    y = add.forward(Numo::SFloat[1, 2], Numo::SFloat[3, 4])
+    y = add.forward_node(Numo::SFloat[1, 2], Numo::SFloat[3, 4])
     assert_equal Numo::SFloat[4, 6], y.round(4)
   end
 
-  def test_backward
+  def test_backward_numo
     add = Add.new
-    add.forward(Numo::SFloat[1, 2], Numo::SFloat[3, 4])
-    dx1, dx2 = add.backward(Numo::SFloat[1, 2])
+    add.forward_node(Numo::SFloat[1, 2], Numo::SFloat[3, 4])
+    dx1, dx2 = add.backward_node(Numo::SFloat[1, 2])
     assert_equal Numo::SFloat[1, 2], dx1
     assert_equal Numo::SFloat[1, 2], dx2
   end
@@ -23,16 +23,16 @@ end
 
 
 class TestMul < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_numo
     mul = Mul.new
-    y = mul.forward(Numo::SFloat[1, 2], Numo::SFloat[3, 4])
+    y = mul.forward_node(Numo::SFloat[1, 2], Numo::SFloat[3, 4])
     assert_equal Numo::SFloat[3, 8], y.round(4)
   end
 
-  def test_backward
+  def test_backward_numo
     mul = Mul.new
-    mul.forward(Numo::SFloat[1, 2], Numo::SFloat[3, 4])
-    dx1, dx2 = mul.backward(Numo::SFloat[1, 2])
+    mul.forward_node(Numo::SFloat[1, 2], Numo::SFloat[3, 4])
+    dx1, dx2 = mul.backward_node(Numo::SFloat[1, 2])
     assert_equal Numo::SFloat[3, 8], dx1
     assert_equal Numo::SFloat[1, 4], dx2
   end
@@ -45,16 +45,16 @@ class TestConcatenate < MiniTest::Unit::TestCase
     assert_equal 0, con.axis
   end
 
-  def test_forward
+  def test_forward_numo
     con = Concatenate.new
-    y = con.forward(Numo::SFloat[[1, 2]], Numo::SFloat[[3, 4]])
+    y = con.forward_node(Numo::SFloat[[1, 2]], Numo::SFloat[[3, 4]])
     assert_equal Numo::SFloat[[1, 2, 3, 4]], y.round(4)
   end
 
-  def test_backward
+  def test_backward_numo
     con = Concatenate.new
-    con.forward(Numo::SFloat[[1, 2, 3]], Numo::SFloat[[4, 5]])
-    dx1, dx2 = con.backward(Numo::SFloat[[6, 7, 8, 9, 10]])
+    con.forward_node(Numo::SFloat[[1, 2, 3]], Numo::SFloat[[4, 5]])
+    dx1, dx2 = con.backward_node(Numo::SFloat[[6, 7, 8, 9, 10]])
     assert_equal Numo::SFloat[[6, 7, 8]], dx1
     assert_equal Numo::SFloat[[9, 10]], dx2
   end

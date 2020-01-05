@@ -3,6 +3,8 @@ module DNN
 
     # Super class of all RNN classes.
     class RNN < Connection
+      include LayerNode
+
       attr_reader :num_nodes
       attr_reader :recurrent_weight
       attr_reader :hidden
@@ -50,7 +52,7 @@ module DNN
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'create_hidden_layer'"
       end
 
-      def forward(xs)
+      def forward_node(xs)
         create_hidden_layer
         @xs_shape = xs.shape
         hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
@@ -58,14 +60,14 @@ module DNN
         xs.shape[1].times do |t|
           x = xs[true, t, false]
           @hidden_layers[t].trainable = @trainable
-          h = @hidden_layers[t].forward(x, h)
+          h = @hidden_layers[t].forward_node(x, h)
           hs[true, t, false] = h
         end
         @hidden.data = h
         @return_sequences ? hs : h
       end
 
-      def backward(dh2s)
+      def backward_node(dh2s)
         unless @return_sequences
           dh = dh2s
           dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
@@ -75,7 +77,7 @@ module DNN
         dh = 0
         (dh2s.shape[1] - 1).downto(0) do |t|
           dh2 = dh2s[true, t, false]
-          dx, dh = @hidden_layers[t].backward(dh2 + dh)
+          dx, dh = @hidden_layers[t].backward_node(dh2 + dh)
           dxs[true, t, false] = dx
         end
         dxs
@@ -134,7 +136,9 @@ module DNN
       end
     end
 
-    class SimpleRNNDense
+    class SimpleRNNDense < Layer
+      include LayerNode
+
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias, activation)
@@ -145,16 +149,16 @@ module DNN
         @trainable = true
       end
 
-      def forward(x, h)
+      def forward_node(x, h)
         @x = x
         @h = h
         h2 = x.dot(@weight.data) + h.dot(@recurrent_weight.data)
         h2 += @bias.data if @bias
-        @activation.forward(h2)
+        @activation.forward_node(h2)
       end
 
-      def backward(dh2)
-        dh2 = @activation.backward(dh2)
+      def backward_node(dh2)
+        dh2 = @activation.backward_node(dh2)
         if @trainable
           @weight.grad += @x.transpose.dot(dh2)
           @recurrent_weight.grad += @h.transpose.dot(dh2)
@@ -226,7 +230,9 @@ module DNN
       end
     end
 
-    class LSTMDense
+    class LSTMDense < Layer
+      include LayerNode
+
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias)
@@ -241,7 +247,7 @@ module DNN
         @trainable = true
       end
 
-      def forward(x, h, c)
+      def forward_node(x, h, c)
         @x = x
         @h = h
         @c = c
@@ -249,25 +255,25 @@ module DNN
         a = x.dot(@weight.data) + h.dot(@recurrent_weight.data)
         a += @bias.data if @bias
 
-        @forget = @forget_sigmoid.forward(a[true, 0...num_nodes])
-        @g = @g_tanh.forward(a[true, num_nodes...(num_nodes * 2)])
-        @in = @in_sigmoid.forward(a[true, (num_nodes * 2)...(num_nodes * 3)])
-        @out = @out_sigmoid.forward(a[true, (num_nodes * 3)..-1])
+        @forget = @forget_sigmoid.forward_node(a[true, 0...num_nodes])
+        @g = @g_tanh.forward_node(a[true, num_nodes...(num_nodes * 2)])
+        @in = @in_sigmoid.forward_node(a[true, (num_nodes * 2)...(num_nodes * 3)])
+        @out = @out_sigmoid.forward_node(a[true, (num_nodes * 3)..-1])
 
         c2 = @forget * c + @g * @in
-        @tanh_c2 = @tanh.forward(c2)
+        @tanh_c2 = @tanh.forward_node(c2)
         h2 = @out * @tanh_c2
         [h2, c2]
       end
 
-      def backward(dh2, dc2)
+      def backward_node(dh2, dc2)
         dh2_tmp = @tanh_c2 * dh2
-        dc2_tmp = @tanh.backward(@out * dh2) + dc2
+        dc2_tmp = @tanh.backward_node(@out * dh2) + dc2
 
-        dout = @out_sigmoid.backward(dh2_tmp)
-        din = @in_sigmoid.backward(dc2_tmp * @g)
-        dg = @g_tanh.backward(dc2_tmp * @in)
-        dforget = @forget_sigmoid.backward(dc2_tmp * @c)
+        dout = @out_sigmoid.backward_node(dh2_tmp)
+        din = @in_sigmoid.backward_node(dc2_tmp * @g)
+        dg = @g_tanh.backward_node(dc2_tmp * @in)
+        dforget = @forget_sigmoid.backward_node(dc2_tmp * @c)
 
         da = Xumo::SFloat.hstack([dforget, dg, din, dout])
 
@@ -313,7 +319,7 @@ module DNN
         @hidden_layers = Array.new(@time_length) { LSTMDense.new(@weight, @recurrent_weight, @bias) }
       end
 
-      def forward(xs)
+      def forward_node(xs)
         create_hidden_layer
         @xs_shape = xs.shape
         hs = Xumo::SFloat.zeros(xs.shape[0], @time_length, @num_nodes)
@@ -328,7 +334,7 @@ module DNN
         xs.shape[1].times do |t|
           x = xs[true, t, false]
           @hidden_layers[t].trainable = @trainable
-          h, c = @hidden_layers[t].forward(x, h, c)
+          h, c = @hidden_layers[t].forward_node(x, h, c)
           hs[true, t, false] = h
         end
         @hidden.data = h
@@ -336,7 +342,7 @@ module DNN
         @return_sequences ? hs : h
       end
 
-      def backward(dh2s)
+      def backward_node(dh2s)
         unless @return_sequences
           dh = dh2s
           dh2s = Xumo::SFloat.zeros(dh.shape[0], @time_length, dh.shape[1])
@@ -347,7 +353,7 @@ module DNN
         dc = 0
         (dh2s.shape[1] - 1).downto(0) do |t|
           dh2 = dh2s[true, t, false]
-          dx, dh, dc = @hidden_layers[t].backward(dh2 + dh, dc)
+          dx, dh, dc = @hidden_layers[t].backward_node(dh2 + dh, dc)
           dxs[true, t, false] = dx
         end
         dxs
@@ -363,7 +369,9 @@ module DNN
       end
     end
 
-    class GRUDense
+    class GRUDense < Layer
+      include LayerNode
+
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias)
@@ -376,7 +384,7 @@ module DNN
         @trainable = true
       end
 
-      def forward(x, h)
+      def forward_node(x, h)
         @x = x
         @h = h
         num_nodes = h.shape[1]
@@ -384,23 +392,23 @@ module DNN
         @weight2_a = @recurrent_weight.data[true, 0...(num_nodes * 2)]
         a = x.dot(@weight_a) + h.dot(@weight2_a)
         a += @bias.data[0...(num_nodes * 2)] if @bias
-        @update = @update_sigmoid.forward(a[true, 0...num_nodes])
-        @reset = @reset_sigmoid.forward(a[true, num_nodes..-1])
+        @update = @update_sigmoid.forward_node(a[true, 0...num_nodes])
+        @reset = @reset_sigmoid.forward_node(a[true, num_nodes..-1])
 
         @weight_h = @weight.data[true, (num_nodes * 2)..-1]
         @weight2_h = @recurrent_weight.data[true, (num_nodes * 2)..-1]
         @tanh_h = if @bias
                     bias_h = @bias.data[(num_nodes * 2)..-1]
-                    @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h) + bias_h)
+                    @tanh.forward_node(x.dot(@weight_h) + (h * @reset).dot(@weight2_h) + bias_h)
                   else
-                    @tanh.forward(x.dot(@weight_h) + (h * @reset).dot(@weight2_h))
+                    @tanh.forward_node(x.dot(@weight_h) + (h * @reset).dot(@weight2_h))
                   end
         h2 = (1 - @update) * @tanh_h + @update * h
         h2
       end
 
-      def backward(dh2)
-        dtanh_h = @tanh.backward(dh2 * (1 - @update))
+      def backward_node(dh2)
+        dtanh_h = @tanh.backward_node(dh2 * (1 - @update))
         dh = dh2 * @update
 
         if @trainable
@@ -411,8 +419,8 @@ module DNN
         dx = dtanh_h.dot(@weight_h.transpose)
         dh += dtanh_h.dot(@weight2_h.transpose) * @reset
 
-        dreset = @reset_sigmoid.backward(dtanh_h.dot(@weight2_h.transpose) * @h)
-        dupdate = @update_sigmoid.backward(dh2 * @h - dh2 * @tanh_h)
+        dreset = @reset_sigmoid.backward_node(dtanh_h.dot(@weight2_h.transpose) * @h)
+        dupdate = @update_sigmoid.backward_node(dh2 * @h - dh2 * @tanh_h)
         da = Xumo::SFloat.hstack([dupdate, dreset])
         if @trainable
           dweight_a = @x.transpose.dot(da)
