@@ -55,7 +55,7 @@ class MLP < Model
     @l3 = Dense.new(10)
   end
 
-  def call(x)
+  def forward(x)
     x = InputLayer.new(784).(x)
     x = @l1.(x)
     x = ReLU.(x)
