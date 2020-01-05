@@ -134,7 +134,7 @@ module DNN
         dx = dy.clone
         if @axis
           (@dim - 1).times do
-            dx.concatenate(dy, axis: @axis)
+            dx = dx.concatenate(dy, axis: @axis)
           end
         end
         dx
@@ -158,7 +158,7 @@ module DNN
         dx = dy
         if @axis
           (@dim - 1).times do
-            dx.concatenate(dy, axis: @axis)
+            dx = dx.concatenate(dy, axis: @axis)
           end
         end
         dx / @dim
