@@ -109,14 +109,14 @@ module DNN
       end
 
       def backward_node(dy)
-        dy * (1 / 2 * Xumo::NMath.sqrt(@x))
+        dy * (1.0 / 2 * Xumo::NMath.sqrt(@x))
       end
     end
 
     class Sum < Layer
       include LayerNode
 
-      def initialize(axis: 1)
+      def initialize(axis: 0)
         super()
         @axis = axis
       end
@@ -144,7 +144,7 @@ module DNN
     class Mean < Layer
       include LayerNode
 
-      def initialize(axis: 1)
+      def initialize(axis: 0)
         super()
         @axis = axis
       end
