@@ -3,7 +3,6 @@ require "dnn/datasets/iris"
 # If you use numo/linalg then please uncomment out.
 # require "numo/linalg/autoloader"
 
-include DNN::Models
 include DNN::Layers
 include DNN::Optimizers
 include DNN::Losses
@@ -15,19 +14,44 @@ x_test, y_test = x[100...150, true], y[100...150]
 y_train = DNN::Utils.to_categorical(y_train, 3, Numo::SFloat)
 y_test = DNN::Utils.to_categorical(y_test, 3, Numo::SFloat)
 
-model = Sequential.new
+epochs = 1000
+batch_size = 32
 
-model << InputLayer.new(4)
+opt = Adam.new
+lf = SoftmaxCrossEntropy.new
 
-model << Dense.new(64)
-model << ReLU.new
+train_iter = DNN::Iterator.new(x_train, y_train)
+test_iter = DNN::Iterator.new(x_test, y_test, random: false)
 
-model << Dense.new(3)
+w1 = DNN::Param.new(Numo::SFloat.new(4, 16).rand_norm)
+b1 = DNN::Param.new(Numo::SFloat.zeros(16))
+w2 = DNN::Param.new(Numo::SFloat.new(16, 3).rand_norm)
+b2 = DNN::Param.new(Numo::SFloat.zeros(3))
 
-model.setup(Adam.new, SoftmaxCrossEntropy.new)
+net = -> x, y do
+  h = Dot.(x, w1) + b1
+  h = Sigmoid.(h)
+  out = Dot.(h, w2) + b2
+  out
+end
 
-model.train(x_train, y_train, 500, batch_size: 32, test: [x_test, y_test])
+(1..epochs).each do |epoch|
+  train_iter.foreach(batch_size) do |x_batch, y_batch, step|
+    x = DNN::Tensor.convert(x_batch)
+    y = DNN::Tensor.convert(y_batch)
+    out = net.(x, y)
+    loss = lf.(out, y)
+    loss.link.backward(nil)
+    puts "epoch: #{epoch}, step: #{step}, loss = #{loss.data}"
+    opt.update([w1, b1, w2, b2])
+  end
+end
 
-accuracy, loss = model.evaluate(x_test, y_test)
-puts "accuracy: #{accuracy}"
-puts "loss: #{loss}"
+correct = 0
+test_iter.foreach(batch_size) do |x_batch, y_batch, step|
+  x = DNN::Tensor.convert(x_batch)
+  y = DNN::Tensor.convert(y_batch)
+  out = net.(x, y)
+  correct += out.data.max_index(axis: 1).eq(y_batch.max_index(axis: 1)).count
+end
+puts "correct = #{correct}"
