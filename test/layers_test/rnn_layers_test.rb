@@ -106,7 +106,7 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16).fill(0)
 
     dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
-    assert_equal [1, 16], dense.forward_node(x, h).shape
+    assert_equal [1, 16], dense.forward(x, h).shape
   end
 
   def test_backward_node
@@ -124,8 +124,8 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     b.grad = 0
 
     dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
-    dense.forward_node(x, h)
-    dx, dh = dense.backward_node(dh2)
+    dense.forward(x, h)
+    dx, dh = dense.backward(dh2)
     assert_equal [1, 64], dx.shape
     assert_equal [1, 16], dh.shape
   end
@@ -142,8 +142,8 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     w2.grad = 0
 
     dense = SimpleRNNDense.new(w, w2, nil, Tanh.new)
-    dense.forward_node(x, h)
-    dense.backward_node(dh2)
+    dense.forward(x, h)
+    dense.backward(dh2)
     assert_nil dense.instance_variable_get(:@bias)
   end
 
@@ -163,8 +163,8 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
 
     dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
     dense.trainable = false
-    dense.forward_node(x, h)
-    dense.backward_node(dh2)
+    dense.forward(x, h)
+    dense.backward(dh2)
     assert_equal 0, dense.instance_variable_get(:@weight).grad
     assert_equal 0, dense.instance_variable_get(:@recurrent_weight).grad
     assert_equal 0, dense.instance_variable_get(:@bias).grad
@@ -309,7 +309,7 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16 * 4).fill(0)
 
     dense = LSTMDense.new(w, w2, b)
-    h2, c2 = dense.forward_node(x, h, c)
+    h2, c2 = dense.forward(x, h, c)
     assert_equal [1, 16], h2.shape
     assert_equal [1, 16], c2.shape
   end
@@ -331,8 +331,8 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     b.grad = 0
 
     dense = LSTMDense.new(w, w2, b)
-    dense.forward_node(x, h, c)
-    dx, dh, dc = dense.backward_node(dh2, dc2)
+    dense.forward(x, h, c)
+    dx, dh, dc = dense.backward(dh2, dc2)
     assert_equal [1, 64], dx.shape
     assert_equal [1, 16], dh.shape
     assert_equal [1, 16], dc.shape
@@ -352,8 +352,8 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     w2.grad = 0
 
     dense = LSTMDense.new(w, w2, nil)
-    dense.forward_node(x, h, c)
-    dense.backward_node(dh2, dc2)
+    dense.forward(x, h, c)
+    dense.backward(dh2, dc2)
     assert_nil dense.instance_variable_get(:@bias)
   end
 
@@ -375,8 +375,8 @@ class TestLSTMDense < MiniTest::Unit::TestCase
 
     dense = LSTMDense.new(w, w2, b)
     dense.trainable = false
-    dense.forward_node(x, h, c)
-    dense.backward_node(dh2, dc2)
+    dense.forward(x, h, c)
+    dense.backward(dh2, dc2)
     assert_equal 0, dense.instance_variable_get(:@weight).grad
     assert_equal 0, dense.instance_variable_get(:@recurrent_weight).grad
     assert_equal 0, dense.instance_variable_get(:@bias).grad
@@ -540,7 +540,7 @@ class TestGRUDense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16 * 3).fill(0)
 
     dense = GRUDense.new(w, w2, b)
-    assert_equal [1, 16], dense.forward_node(x, h).shape
+    assert_equal [1, 16], dense.forward(x, h).shape
   end
 
   def test_backward_node
@@ -557,8 +557,8 @@ class TestGRUDense < MiniTest::Unit::TestCase
     b.data = Numo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
     dense = GRUDense.new(w, w2, b)
-    dense.forward_node(x, h)
-    dx, dh = dense.backward_node(dh2)
+    dense.forward(x, h)
+    dx, dh = dense.backward(dh2)
     assert_equal [1, 64], dx.shape
     assert_equal [1, 16], dh.shape
   end
@@ -578,8 +578,8 @@ class TestGRUDense < MiniTest::Unit::TestCase
     b.grad = 0
 
     dense = GRUDense.new(w, w2, nil)
-    dense.forward_node(x, h)
-    dense.backward_node(dh2)
+    dense.forward(x, h)
+    dense.backward(dh2)
     assert_nil dense.instance_variable_get(:@bias)
   end
 
@@ -598,8 +598,8 @@ class TestGRUDense < MiniTest::Unit::TestCase
     b.grad = 0
     dense = GRUDense.new(w, w2, b)
     dense.trainable = false
-    dense.forward_node(x, h)
-    dense.backward_node(dh2)
+    dense.forward(x, h)
+    dense.backward(dh2)
     assert_equal 0, dense.instance_variable_get(:@weight).grad
     assert_equal 0, dense.instance_variable_get(:@recurrent_weight).grad
     assert_equal 0, dense.instance_variable_get(:@bias).grad

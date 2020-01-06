@@ -60,7 +60,7 @@ module DNN
         xs.shape[1].times do |t|
           x = xs[true, t, false]
           @hidden_layers[t].trainable = @trainable
-          h = @hidden_layers[t].forward_node(x, h)
+          h = @hidden_layers[t].forward(x, h)
           hs[true, t, false] = h
         end
         @hidden.data = h
@@ -77,7 +77,7 @@ module DNN
         dh = 0
         (dh2s.shape[1] - 1).downto(0) do |t|
           dh2 = dh2s[true, t, false]
-          dx, dh = @hidden_layers[t].backward_node(dh2 + dh)
+          dx, dh = @hidden_layers[t].backward(dh2 + dh)
           dxs[true, t, false] = dx
         end
         dxs
@@ -136,9 +136,7 @@ module DNN
       end
     end
 
-    class SimpleRNNDense < Layer
-      include LayerNode
-
+    class SimpleRNNDense
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias, activation)
@@ -149,7 +147,7 @@ module DNN
         @trainable = true
       end
 
-      def forward_node(x, h)
+      def forward(x, h)
         @x = x
         @h = h
         h2 = x.dot(@weight.data) + h.dot(@recurrent_weight.data)
@@ -157,7 +155,7 @@ module DNN
         @activation.forward_node(h2)
       end
 
-      def backward_node(dh2)
+      def backward(dh2)
         dh2 = @activation.backward_node(dh2)
         if @trainable
           @weight.grad += @x.transpose.dot(dh2)
@@ -230,9 +228,7 @@ module DNN
       end
     end
 
-    class LSTMDense < Layer
-      include LayerNode
-
+    class LSTMDense
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias)
@@ -247,7 +243,7 @@ module DNN
         @trainable = true
       end
 
-      def forward_node(x, h, c)
+      def forward(x, h, c)
         @x = x
         @h = h
         @c = c
@@ -266,7 +262,7 @@ module DNN
         [h2, c2]
       end
 
-      def backward_node(dh2, dc2)
+      def backward(dh2, dc2)
         dh2_tmp = @tanh_c2 * dh2
         dc2_tmp = @tanh.backward_node(@out * dh2) + dc2
 
@@ -334,7 +330,7 @@ module DNN
         xs.shape[1].times do |t|
           x = xs[true, t, false]
           @hidden_layers[t].trainable = @trainable
-          h, c = @hidden_layers[t].forward_node(x, h, c)
+          h, c = @hidden_layers[t].forward(x, h, c)
           hs[true, t, false] = h
         end
         @hidden.data = h
@@ -353,7 +349,7 @@ module DNN
         dc = 0
         (dh2s.shape[1] - 1).downto(0) do |t|
           dh2 = dh2s[true, t, false]
-          dx, dh, dc = @hidden_layers[t].backward_node(dh2 + dh, dc)
+          dx, dh, dc = @hidden_layers[t].backward(dh2 + dh, dc)
           dxs[true, t, false] = dx
         end
         dxs
@@ -370,8 +366,6 @@ module DNN
     end
 
     class GRUDense < Layer
-      include LayerNode
-
       attr_accessor :trainable
 
       def initialize(weight, recurrent_weight, bias)
@@ -384,7 +378,7 @@ module DNN
         @trainable = true
       end
 
-      def forward_node(x, h)
+      def forward(x, h)
         @x = x
         @h = h
         num_nodes = h.shape[1]
@@ -407,7 +401,7 @@ module DNN
         h2
       end
 
-      def backward_node(dh2)
+      def backward(dh2)
         dtanh_h = @tanh.backward_node(dh2 * (1 - @update))
         dh = dh2 * @update
 
