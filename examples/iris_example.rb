@@ -41,7 +41,7 @@ end
     y = DNN::Tensor.convert(y_batch)
     out = net.(x, y)
     loss = lf.(out, y)
-    loss.link.backward(nil)
+    loss.link.backward
     puts "epoch: #{epoch}, step: #{step}, loss = #{loss.data}"
     opt.update([w1, b1, w2, b2])
   end
