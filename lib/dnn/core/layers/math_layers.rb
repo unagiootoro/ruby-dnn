@@ -96,7 +96,7 @@ module DNN
       end
 
       def backward_node(dy)
-        @index * @x**(@index - 1)
+        dy * @index * @x**(@index - 1)
       end
     end
 
