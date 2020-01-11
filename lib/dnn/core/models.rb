@@ -353,7 +353,12 @@ module DNN
       # @param [Numo::SFloat] x Input data. However, x is single data.
       def predict1(x, use_loss_activation: true)
         check_xy_type(x)
-        predict(x.reshape(1, *x.shape), use_loss_activation: use_loss_activation)[0, false]
+        input = if x.is_a?(Array)
+                  x.map { |v| v.reshape(1, *v.shape) }
+                else
+                  x.reshape(1, *x.shape)
+                end
+        predict(input, use_loss_activation: use_loss_activation)[0, false]
       end
 
       # Add callback function.
