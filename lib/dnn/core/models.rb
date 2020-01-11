@@ -262,7 +262,7 @@ module DNN
         DNN.learning_phase = true
         out = call(Tensor.convert(x))
         loss = @loss_func.loss(out, Tensor.convert(y), layers)
-        loss.link.backward(Xumo::SFloat.zeros(y[0...1, false].shape))
+        loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
         @optimizer.update(get_all_trainable_params)
         @last_log[:train_loss] = loss.data
         call_callbacks(:after_train_on_batch)
@@ -458,7 +458,7 @@ module DNN
         if !x.is_a?(Xumo::SFloat) && !x.is_a?(Array)
           raise TypeError, "x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class."
         end
-        if y && !y.is_a?(Xumo::SFloat) && !x.is_a?(Array)
+        if y && !y.is_a?(Xumo::SFloat) && !y.is_a?(Array)
           raise TypeError, "y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class."
         end
       end

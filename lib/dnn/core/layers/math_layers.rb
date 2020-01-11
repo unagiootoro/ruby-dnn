@@ -2,6 +2,8 @@ module DNN
   module Layers
 
     class Add < MergeLayer
+      include MergeLayerNode
+
       def forward_node(x1, x2)
         x1 + x2
       end
@@ -12,6 +14,8 @@ module DNN
     end
 
     class Sub < MergeLayer
+      include MergeLayerNode
+
       def forward_node(x1, x2)
         x1 - x2
       end
@@ -22,6 +26,8 @@ module DNN
     end
 
     class Mul < MergeLayer
+      include MergeLayerNode
+
       def forward_node(x1, x2)
         @x1, @x2 = x1, x2
         x1 * x2
@@ -33,6 +39,8 @@ module DNN
     end
 
     class Div < MergeLayer
+      include MergeLayerNode
+
       def forward_node(x1, x2)
         @x1, @x2 = x1, x2
         x1 / x2
@@ -46,6 +54,8 @@ module DNN
     end
 
     class Dot < MergeLayer
+      include MergeLayerNode
+
       def forward_node(x1, x2)
         @x1, @x2 = x1, x2
         x1.dot(x2)
@@ -60,12 +70,11 @@ module DNN
       include LayerNode
 
       def forward_node(x)
-        @x = x
-        Xumo::NMath.exp(x)
+        @y = Xumo::NMath.exp(x)
       end
 
       def backward_node(dy)
-        dy * Xumo::NMath.exp(@x)
+        dy * @y
       end
     end
 
@@ -122,20 +131,16 @@ module DNN
       end
 
       def forward_node(x)
-        if @axis
-          @dim = x.shape[@axis]
-          x.sum(axis: @axis, keepdims: true)
-        else
-          x.sum
-        end
+        @x_shape = x.shape
+        @dim = x.shape[@axis]
+        x.sum(axis: @axis, keepdims: true)
       end
 
       def backward_node(dy)
-        dx = dy.clone
-        if @axis
-          (@dim - 1).times do
-            dx = dx.concatenate(dy, axis: @axis)
-          end
+        return dy if @x_shape == dy.shape
+        dx = dy
+        (@dim - 1).times do
+          dx = dx.concatenate(dy, axis: @axis)
         end
         dx
       end
@@ -150,16 +155,16 @@ module DNN
       end
 
       def forward_node(x)
-        @dim = @axis ? x.shape[@axis] : x.size
+        @x_shape = x.shape
+        @dim = x.shape[@axis]
         x.mean(axis: @axis, keepdims: true)
       end
 
       def backward_node(dy)
+        return dy / @dim if @x_shape == dy.shape
         dx = dy
-        if @axis
-          (@dim - 1).times do
-            dx = dx.concatenate(dy, axis: @axis)
-          end
+        (@dim - 1).times do
+          dx = dx.concatenate(dy, axis: @axis)
         end
         dx / @dim
       end

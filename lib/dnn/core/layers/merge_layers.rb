@@ -26,8 +26,6 @@ module DNN
     end
 
     class MergeLayer < Layers::Layer
-      include MergeLayerNode
-
       def self.call(x1, x2, *args)
         new(*args).call(x1, x2)
       end
@@ -45,6 +43,8 @@ module DNN
     end
 
     class Concatenate < MergeLayer
+      include MergeLayerNode
+
       attr_reader :axis
 
       def initialize(axis: 1)

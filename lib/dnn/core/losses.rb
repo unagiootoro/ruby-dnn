@@ -75,8 +75,8 @@ module DNN
         0.5 * ((y - t)**2).mean(0).sum
       end
 
-      def backward_node(dy)
-        @y - @t
+      def backward_node(d)
+        (@y - @t) / @y.shape[0]
       end
     end
 
@@ -90,10 +90,10 @@ module DNN
       end
 
       def backward_node(d)
-        dy = @y - @t
+        dy = (@y - @t)
         dy[dy >= 0] = 1
         dy[dy < 0] = -1
-        dy
+        dy / @y.shape[0]
       end
     end
 
@@ -109,7 +109,7 @@ module DNN
       def backward_node(d)
         a = Xumo::SFloat.ones(*@a.shape)
         a[@a <= 0] = 0
-        a * -@t
+        (a * -@t) / a.shape[0]
       end
     end
 
@@ -124,12 +124,12 @@ module DNN
       end
 
       def backward_node(d)
-        dy = @y - @t
+        dy = (@y - @t)
         if @loss_value > 1
           dy[dy >= 0] = 1
           dy[dy < 0] = -1
         end
-        dy
+        dy / @y.shape[0]
       end
 
       private
@@ -168,7 +168,7 @@ module DNN
       end
 
       def backward_node(d)
-        @x - @t
+        (@x - @t) / @x.shape[0]
       end
 
       def to_hash
@@ -205,7 +205,7 @@ module DNN
       end
 
       def backward_node(d)
-        @x - @t
+        (@x - @t) / @x.shape[0]
       end
 
       def to_hash
