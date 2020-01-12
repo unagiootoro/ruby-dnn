@@ -35,7 +35,7 @@ module DNN
         return nil unless hash
         layer_class = DNN.const_get(hash[:class])
         layer = layer_class.allocate
-        raise DNN_Error, "#{layer.class} is not an instance of #{self} class." unless layer.is_a?(self)
+        raise DNNError, "#{layer.class} is not an instance of #{self} class." unless layer.is_a?(self)
         layer.load_hash(hash)
         layer
       end
@@ -153,7 +153,7 @@ module DNN
 
       def forward_node(x)
         unless x.shape[1..-1] == @input_shape
-          raise DNN_ShapeError, "The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}."
+          raise DNNShapeError, "The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}."
         end
         x
       end
@@ -168,14 +168,14 @@ module DNN
 
       def >>(layer)
         if RUBY_VERSION < "2.6.0"
-          raise DNN_Error, "Function composition is not supported before ruby version 2.6.0."
+          raise DNNError, "Function composition is not supported before ruby version 2.6.0."
         end
         to_proc >> layer
       end
 
       def <<(layer)
         if RUBY_VERSION < "2.6.0"
-          raise DNN_Error, "Function composition is not supported before ruby version 2.6.0."
+          raise DNNError, "Function composition is not supported before ruby version 2.6.0."
         end
         to_proc << layer
       end
@@ -270,7 +270,7 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 1
-          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 1 dimensional."
+          raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 1 dimensional."
         end
         super
         num_prev_units = input_shape[0]

@@ -159,8 +159,8 @@ module DNN
                             initial_epoch: 1,
                             test: nil,
                             verbose: true)
-        raise DNN_Error, "The model is not optimizer setup complete." unless @optimizer
-        raise DNN_Error, "The model is not loss_func setup complete." unless @loss_func
+        raise DNNError, "The model is not optimizer setup complete." unless @optimizer
+        raise DNNError, "The model is not loss_func setup complete." unless @loss_func
 
         num_train_datas = train_iterator.num_datas
         num_train_datas = num_train_datas / batch_size * batch_size if train_iterator.last_round_down
@@ -227,8 +227,8 @@ module DNN
       # @param [Numo::SFloat] y Output training data.
       # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
       def train_on_batch(x, y)
-        raise DNN_Error, "The model is not optimizer setup complete." unless @optimizer
-        raise DNN_Error, "The model is not loss_func setup complete." unless @loss_func
+        raise DNNError, "The model is not optimizer setup complete." unless @optimizer
+        raise DNNError, "The model is not loss_func setup complete." unless @loss_func
         check_xy_type(x, y)
         call_callbacks(:before_train_on_batch)
         DNN.learning_phase = true

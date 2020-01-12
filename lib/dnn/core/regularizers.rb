@@ -8,7 +8,7 @@ module DNN
         return nil unless hash
         regularizer_class = DNN.const_get(hash[:class])
         regularizer = regularizer_class.allocate
-        raise DNN_Error, "#{regularizer.class} is not an instance of #{self} class." unless regularizer.is_a?(self)
+        raise DNNError, "#{regularizer.class} is not an instance of #{self} class." unless regularizer.is_a?(self)
         regularizer.load_hash(hash)
         regularizer
       end

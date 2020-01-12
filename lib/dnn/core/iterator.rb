@@ -21,7 +21,7 @@ module DNN
     # @param [Integer] batch_size Required batch size.
     # @return [Array] Returns the mini batch in the form [x_batch, y_batch].
     def next_batch(batch_size)
-      raise DNN_Error, "This iterator has not next batch. Please call reset." unless has_next?
+      raise DNNError, "This iterator has not next batch. Please call reset." unless has_next?
       if @indexes.length <= batch_size
         batch_indexes = @indexes
         @has_next = false

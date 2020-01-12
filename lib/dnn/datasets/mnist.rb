@@ -4,7 +4,7 @@ require_relative "downloader"
 
 module DNN
   module MNIST
-    class DNN_MNIST_LoadError < DNN_Error; end
+    class DNN_MNIST_LoadError < DNNError; end
 
     URL_BASE = "http://yann.lecun.com/exdb/mnist/"
 

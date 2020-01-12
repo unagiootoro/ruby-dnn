@@ -7,7 +7,7 @@ DIR_STL10 = "stl10_binary"
 
 module DNN
   module STL10
-    class DNN_STL10_LoadError < DNN_Error; end
+    class DNN_STL10_LoadError < DNNError; end
 
     def self.downloads
       return if Dir.exist?(DOWNLOADS_PATH + "/downloads/" + DIR_STL10)
@@ -49,7 +49,7 @@ module DNN
     end
 
     def self.load_unlabeled(range = 0...100000)
-      raise DNN_Error, "Range must between 0 and 100000. (But the end is excluded)" unless range.begin >= 0 && range.end <= 100000
+      raise DNNError, "Range must between 0 and 100000. (But the end is excluded)" unless range.begin >= 0 && range.end <= 100000
       downloads
       x_fname = DOWNLOADS_PATH + "/downloads/#{DIR_STL10}/unlabeled_X.bin"
       raise DNN_STL10_LoadError, %`file "#{x_fname}" is not found.` unless File.exist?(x_fname)

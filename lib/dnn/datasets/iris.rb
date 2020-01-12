@@ -2,7 +2,7 @@ require "csv"
 require_relative "downloader"
 
 module DNN
-  class DNN_Iris_LoadError < DNN_Error; end
+  class DNN_Iris_LoadError < DNNError; end
 
   module Iris
     URL_CSV = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"

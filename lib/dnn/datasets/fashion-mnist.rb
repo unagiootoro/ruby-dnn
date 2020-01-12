@@ -5,7 +5,7 @@ require_relative "mnist"
 
 module DNN
   module FashionMNIST
-    class DNN_MNIST_LoadError < DNN_Error; end
+    class DNN_MNIST_LoadError < DNNError; end
 
     URL_BASE = "http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/"
 

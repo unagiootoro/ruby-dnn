@@ -18,7 +18,7 @@ module DNN
         elsif @data.shape == grad.shape[1..-1]
           @grad += grad.sum(0)
         else
-          raise DNN_Error, "Shape is missmatch."
+          raise DNNError, "Shape is missmatch."
         end
       else
         @grad = Xumo::SFloat[0]

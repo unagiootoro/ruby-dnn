@@ -10,7 +10,7 @@ module DNN
         return nil unless hash
         loss_class = DNN.const_get(hash[:class])
         loss = loss_class.allocate
-        raise DNN_Error, "#{loss.class} is not an instance of #{self} class." unless loss.is_a?(self)
+        raise DNNError, "#{loss.class} is not an instance of #{self} class." unless loss.is_a?(self)
         loss.load_hash(hash)
         loss
       end
@@ -21,7 +21,7 @@ module DNN
 
       def loss(y, t, layers = nil)
         unless y.shape == t.shape
-          raise DNN_ShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
+          raise DNNShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
         end
         loss = call(y, t)
         loss = regularizers_forward(loss, layers) if layers

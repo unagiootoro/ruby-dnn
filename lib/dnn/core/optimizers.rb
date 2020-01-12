@@ -9,7 +9,7 @@ module DNN
         return nil unless hash
         optimizer_class = DNN.const_get(hash[:class])
         optimizer = optimizer_class.allocate
-        raise DNN_Error, "#{optimizer.class} is not an instance of #{self} class." unless optimizer.is_a?(self)
+        raise DNNError, "#{optimizer.class} is not an instance of #{self} class." unless optimizer.is_a?(self)
         optimizer.load_hash(hash)
         optimizer
       end

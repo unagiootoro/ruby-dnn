@@ -1,5 +1,5 @@
 module DNN
-  class DNN_Error < StandardError; end
+  class DNNError < StandardError; end
 
-  class DNN_ShapeError < DNN_Error; end
+  class DNNShapeError < DNNError; end
 end

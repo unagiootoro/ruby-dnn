@@ -6,7 +6,7 @@ module DNN
         return nil unless hash
         initializer_class = DNN.const_get(hash[:class])
         initializer = initializer_class.allocate
-        raise DNN_Error, "#{initializer.class} is not an instance of #{self} class." unless initializer.is_a?(self)
+        raise DNNError, "#{initializer.class} is not an instance of #{self} class." unless initializer.is_a?(self)
         initializer.load_hash(hash)
         initializer
       end

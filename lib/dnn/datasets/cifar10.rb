@@ -7,7 +7,7 @@ DIR_CIFAR10 = "cifar-10-batches-bin"
 
 module DNN
   module CIFAR10
-    class DNN_CIFAR10_LoadError < DNN_Error; end
+    class DNN_CIFAR10_LoadError < DNNError; end
 
     def self.downloads
       return if Dir.exist?(DOWNLOADS_PATH + "/downloads/" + DIR_CIFAR10)

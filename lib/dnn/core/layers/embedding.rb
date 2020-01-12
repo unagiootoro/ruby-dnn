@@ -65,14 +65,14 @@ module DNN
 
       def >>(layer)
         if RUBY_VERSION < "2.6.0"
-          raise DNN_Error, "Function composition is not supported before ruby version 2.6.0."
+          raise DNNError, "Function composition is not supported before ruby version 2.6.0."
         end
         to_proc >> layer
       end
 
       def <<(layer)
         if RUBY_VERSION < "2.6.0"
-          raise DNN_Error, "Function composition is not supported before ruby version 2.6.0."
+          raise DNNError, "Function composition is not supported before ruby version 2.6.0."
         end
         to_proc << layer
       end

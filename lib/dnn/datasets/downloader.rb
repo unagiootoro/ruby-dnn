@@ -3,7 +3,7 @@ require "net/http"
 module DNN
   DOWNLOADS_PATH = ENV["RUBY_DNN_DOWNLOADS_PATH"] || __dir__
 
-  class DNN_DownloadError < DNN_Error; end
+  class DNN_DownloadError < DNNError; end
 
   class Downloader
     def self.download(url, dir_path = nil)

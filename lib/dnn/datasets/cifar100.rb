@@ -7,7 +7,7 @@ DIR_CIFAR100 = "cifar-100-binary"
 
 module DNN
   module CIFAR100
-    class DNN_CIFAR100_LoadError < DNN_Error; end
+    class DNN_CIFAR100_LoadError < DNNError; end
 
     def self.downloads
       return if Dir.exist?(DOWNLOADS_PATH + "/downloads/" + DIR_CIFAR100)

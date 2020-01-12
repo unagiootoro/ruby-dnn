@@ -25,7 +25,7 @@ module DNN
       private def load_bin(bin)
         data = Marshal.load(Zlib::Inflate.inflate(bin))
         unless @model.class.name == data[:class]
-          raise DNN_Error, "Class name is not mismatch. Target model is #{@model.class.name}. But loading model is #{data[:class]}."
+          raise DNNError, "Class name is not mismatch. Target model is #{@model.class.name}. But loading model is #{data[:class]}."
         end
         if data[:model]
           data[:model].instance_variables.each do |ivar|
@@ -43,7 +43,7 @@ module DNN
       def load_bin(bin)
         data = JSON.parse(bin, symbolize_names: true)
         unless @model.class.name == data[:class]
-          raise DNN_Error, "Class name is not mismatch. Target model is #{@model.class.name}. But loading model is #{data[:class]}."
+          raise DNNError, "Class name is not mismatch. Target model is #{@model.class.name}. But loading model is #{data[:class]}."
         end
         set_all_params_base64_data(data[:params])
       end

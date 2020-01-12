@@ -114,7 +114,7 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
+          raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
         super
         prev_h, prev_w, num_prev_filters = *input_shape
@@ -217,7 +217,7 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
+          raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
         super
         prev_h, prev_w, num_prev_filters = *input_shape
@@ -316,7 +316,7 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
+          raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
         super
         prev_h, prev_w = input_shape[0..1]
@@ -394,7 +394,7 @@ module DNN
     class GlobalAvgPool2D < Layer
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
+          raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
         super
       end
@@ -418,7 +418,7 @@ module DNN
 
       def build(input_shape)
         unless input_shape.length == 3
-          raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
+          raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
         super
         prev_h, prev_w = input_shape[0..1]
