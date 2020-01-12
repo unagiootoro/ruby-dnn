@@ -293,7 +293,6 @@ module DNN
 
     # Super class of all pooling2D class.
     class Pool2D < Layer
-      include LayerNode
       include Conv2DUtils
 
       attr_reader :pool_size

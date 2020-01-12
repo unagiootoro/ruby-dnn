@@ -25,7 +25,7 @@ module DNN
       end
     end
 
-    class MergeLayer < Layers::Layer
+    class MergeLayer < Layer
       def self.call(x1, x2, *args)
         new(*args).call(x1, x2)
       end
