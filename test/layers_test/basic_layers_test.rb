@@ -49,6 +49,7 @@ class TestInputLayer < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {class: "DNN::Layers::InputLayer", input_shape: [10]}
     layer = InputLayer.from_hash(hash)
+    layer.build([1])
     assert_equal [10], layer.output_shape
   end
 
@@ -181,6 +182,7 @@ class TestDense < MiniTest::Unit::TestCase
 
   def test_output_shape
     dense = Dense.new(10)
+    dense.build([1])
     assert_equal [10], dense.output_shape
   end
 
@@ -246,9 +248,10 @@ class TestReshape < MiniTest::Unit::TestCase
   def test_load
     hash = {
       class: "DNN::Layers::Reshape",
-      output_shape: [32, 32, 3],
+      shape: [32, 32, 3],
     }
     reshape = Reshape.from_hash(hash)
+    reshape.build([32 * 32 * 3])
     assert_equal [32, 32, 3], reshape.output_shape
   end
 
@@ -272,7 +275,7 @@ class TestReshape < MiniTest::Unit::TestCase
   def test_to_hash
     expected_hash = {
       class: "DNN::Layers::Reshape",
-      output_shape: [32, 32, 3],
+      shape: [32, 32, 3],
     }
     reshape = Reshape.new([32, 32, 3])
     assert_equal expected_hash, reshape.to_hash

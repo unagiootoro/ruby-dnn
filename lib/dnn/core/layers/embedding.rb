@@ -25,7 +25,7 @@ module DNN
       end
 
       def build(input_shape)
-        @built = true
+        super(@input_shape)
         @weight.data = Xumo::SFloat.new(@input_length)
         @weight_initializer.init_param(self, @weight)
         @weight_regularizer.param = @weight if @weight_regularizer

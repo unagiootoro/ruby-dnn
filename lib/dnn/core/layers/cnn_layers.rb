@@ -116,19 +116,19 @@ module DNN
         unless input_shape.length == 3
           raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
-        super
         prev_h, prev_w, num_prev_filters = *input_shape
+        @pad_size = if @padding == true
+          calc_conv2d_padding_size(prev_h, prev_w, *@filter_size, @strides)
+        elsif @padding.is_a?(Array)
+          @padding
+        else
+          [0, 0]
+        end
+        @out_size = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
+        super
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * num_prev_filters, @num_filters)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
-        @pad_size = if @padding == true
-                      calc_conv2d_padding_size(prev_h, prev_w, *@filter_size, @strides)
-                    elsif @padding.is_a?(Array)
-                      @padding
-                    else
-                      [0, 0]
-                    end
-        @out_size = calc_conv2d_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
 
       def forward_node(x)
@@ -151,7 +151,7 @@ module DNN
         @padding ? zero_padding_bwd(dx, @pad_size) : dx
       end
 
-      def output_shape
+      def compute_output_shape
         [*@out_size, @num_filters]
       end
 
@@ -219,19 +219,19 @@ module DNN
         unless input_shape.length == 3
           raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
-        super
         prev_h, prev_w, num_prev_filters = *input_shape
+        @pad_size = if @padding == true
+          calc_conv2d_transpose_padding_size(prev_h, prev_w, *@filter_size, @strides)
+        elsif @padding.is_a?(Array)
+          @padding
+        else
+          [0, 0]
+        end
+        @out_size = calc_conv2d_transpose_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
+        super
         @weight.data = Xumo::SFloat.new(@filter_size.reduce(:*) * @num_filters, num_prev_filters)
         @bias.data = Xumo::SFloat.new(@num_filters) if @bias
         init_weight_and_bias
-        @pad_size = if @padding == true
-                      calc_conv2d_transpose_padding_size(prev_h, prev_w, *@filter_size, @strides)
-                    elsif @padding.is_a?(Array)
-                      @padding
-                    else
-                      [0, 0]
-                    end
-        @out_size = calc_conv2d_transpose_out_size(prev_h, prev_w, *@filter_size, *@pad_size, @strides)
       end
 
       def forward_node(x)
@@ -240,23 +240,23 @@ module DNN
         @x = x
         col = x.dot(@weight.data.transpose)
         img_shape = [bsize, @out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1], @num_filters]
-        y = col2im(col, img_shape, *input_shape[0..1], *@filter_size, @strides)
+        y = col2im(col, img_shape, *@input_shape[0..1], *@filter_size, @strides)
         y += @bias.data if @bias
         @padding ? zero_padding_bwd(y, @pad_size) : y
       end
 
       def backward_node(dy)
         dy = zero_padding(dy, @pad_size) if @padding
-        col = im2col(dy, *input_shape[0..1], *@filter_size, @strides)
+        col = im2col(dy, *@input_shape[0..1], *@filter_size, @strides)
         if @trainable
           @weight.grad += col.transpose.dot(@x)
           @bias.grad += col.reshape(col.shape[0] * @filter_size.reduce(:*), @num_filters).sum(0) if @bias
         end
         dx = col.dot(@weight.data)
-        dx.reshape(dy.shape[0], *input_shape)
+        dx.reshape(dy.shape[0], *@input_shape)
       end
 
-      def output_shape
+      def compute_output_shape
         [*@out_size, @num_filters]
       end
 
@@ -318,7 +318,6 @@ module DNN
         unless input_shape.length == 3
           raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
-        super
         prev_h, prev_w = input_shape[0..1]
         @num_channel = input_shape[2]
         @pad_size = if @padding == true
@@ -329,9 +328,10 @@ module DNN
                       [0, 0]
                     end
         @out_size = calc_conv2d_out_size(prev_h, prev_w, *@pool_size, *@pad_size, @strides)
+        super
       end
 
-      def output_shape
+      def compute_output_shape
         [*@out_size, @num_channel]
       end
 
@@ -400,7 +400,7 @@ module DNN
       end
 
       def forward(x)
-        Flatten.(AvgPool2D.(x, input_shape[0..1]))
+        Flatten.(AvgPool2D.(x, @input_shape[0..1]))
       end
     end
 
@@ -420,13 +420,13 @@ module DNN
         unless input_shape.length == 3
           raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 3 dimensional."
         end
-        super
         prev_h, prev_w = input_shape[0..1]
         unpool_h, unpool_w = @unpool_size
         out_h = prev_h * unpool_h
         out_w = prev_w * unpool_w
         @out_size = [out_h, out_w]
         @num_channel = input_shape[2]
+        super
       end
 
       def forward_node(x)
@@ -442,13 +442,13 @@ module DNN
       end
 
       def backward_node(dy)
-        in_size = input_shape[0..1]
+        in_size = @input_shape[0..1]
         col = im2col(dy, *in_size, *@unpool_size, @unpool_size)
         col = col.reshape(dy.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dy.shape[3])
         col.sum(1).reshape(dy.shape[0], *in_size, dy.shape[3])
       end
 
-      def output_shape
+      def compute_output_shape
         [*@out_size, @num_channel]
       end
 

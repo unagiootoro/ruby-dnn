@@ -22,6 +22,7 @@ module DNN
     # Super class of all layer classes.
     class Layer
       attr_reader :input_shape
+      attr_reader :output_shape
 
       def self.call(x, *args)
         new(*args).(x)
@@ -53,6 +54,7 @@ module DNN
       # @param [Array] input_shape Setting the shape of the input data.
       def build(input_shape)
         @input_shape = input_shape
+        @output_shape = compute_output_shape
         @built = true
       end
 
@@ -71,7 +73,7 @@ module DNN
       # Please reimplement this method as needed.
       # The default implementation return input_shape.
       # @return [Array] Return the shape of the output data.
-      def output_shape
+      def compute_output_shape
         @input_shape
       end
 
@@ -144,7 +146,7 @@ module DNN
       end
 
       def build(input_shape)
-        @built = true
+        super(@input_shape)
       end
 
       def forward_node(x)
@@ -290,7 +292,7 @@ module DNN
         dy.dot(@weight.data.transpose)
       end
 
-      def output_shape
+      def compute_output_shape
         [@num_units]
       end
 
@@ -312,14 +314,14 @@ module DNN
       include LayerNode
 
       def forward_node(x)
-        x.reshape(x.shape[0], *output_shape)
+        x.reshape(x.shape[0], *@output_shape)
       end
 
       def backward_node(dy)
         dy.reshape(dy.shape[0], *@input_shape)
       end
 
-      def output_shape
+      def compute_output_shape
         [@input_shape.reduce(:*)]
       end
     end
@@ -327,11 +329,13 @@ module DNN
     class Reshape < Layer
       include LayerNode
 
-      attr_reader :output_shape
-
-      def initialize(output_shape)
+      def initialize(shape)
         super()
-        @output_shape = output_shape
+        @shape = shape
+      end
+
+      def compute_output_shape
+        @shape
       end
 
       def forward_node(x)
@@ -343,11 +347,11 @@ module DNN
       end
 
       def to_hash
-        super(output_shape: @output_shape)
+        super(shape: @shape)
       end
 
       def load_hash(hash)
-        initialize(hash[:output_shape])
+        initialize(hash[:shape])
       end
     end
 

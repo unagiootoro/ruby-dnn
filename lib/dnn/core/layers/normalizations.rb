@@ -28,10 +28,10 @@ module DNN
 
       def build(input_shape)
         super
-        @gamma.data = Xumo::SFloat.ones(*output_shape)
-        @beta.data = Xumo::SFloat.zeros(*output_shape)
-        @running_mean.data = Xumo::SFloat.zeros(*output_shape)
-        @running_var.data = Xumo::SFloat.zeros(*output_shape)
+        @gamma.data = Xumo::SFloat.ones(*@output_shape)
+        @beta.data = Xumo::SFloat.zeros(*@output_shape)
+        @running_mean.data = Xumo::SFloat.zeros(*@output_shape)
+        @running_var.data = Xumo::SFloat.zeros(*@output_shape)
       end
 
       def forward_node(x)

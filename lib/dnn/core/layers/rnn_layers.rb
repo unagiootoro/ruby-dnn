@@ -45,7 +45,6 @@ module DNN
           raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 2 dimensional."
         end
         super
-        @time_length = @input_shape[0]
       end
 
       private def create_hidden_layer
@@ -83,7 +82,8 @@ module DNN
         dxs
       end
 
-      def output_shape
+      def compute_output_shape
+        @time_length = @input_shape[0]
         @return_sequences ? [@time_length, @num_units] : [@num_units]
       end
 
@@ -449,7 +449,7 @@ module DNN
 
       def build(input_shape)
         super
-        num_prev_units = @input_shape[1]
+        num_prev_units = input_shape[1]
         @weight.data = Xumo::SFloat.new(num_prev_units, @num_units * 3)
         @recurrent_weight.data = Xumo::SFloat.new(@num_units, @num_units * 3)
         @bias.data = Xumo::SFloat.new(@num_units * 3) if @bias
