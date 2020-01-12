@@ -28,7 +28,7 @@ module DNN
     # This callback wrap the lambda function.
     class LambdaCallback < Callback
       # @param [Symbol] event Event to execute callback.
-      # @yield Register the contents of the callback. 
+      # @yield Register the contents of the callback.
       def initialize(event, &block)
         instance_eval do
           define_singleton_method(event) { block.call }
