@@ -61,6 +61,9 @@ class Discriminator < Model
     @l4 = Conv2D.new(64, 4, padding: true)
     @l5 = Dense.new(1024)
     @l6 = Dense.new(1)
+    @bn1 = BatchNormalization.new
+    @bn2 = BatchNormalization.new
+    @bn3 = BatchNormalization.new
   end
 
   def forward(x)
@@ -69,12 +72,15 @@ class Discriminator < Model
     x = LeakyReLU.(x, 0.2)
 
     x = @l2.(x)
+    x = @bn1.(x)
     x = LeakyReLU.(x, 0.2)
 
     x = @l3.(x)
+    x = @bn2.(x)
     x = LeakyReLU.(x, 0.2)
 
     x = @l4.(x)
+    x = @bn3.(x)
     x = LeakyReLU.(x, 0.2)
 
     x = Flatten.(x)
@@ -119,10 +125,11 @@ class DCGAN < Model
     batch_size = x_batch.shape[0]
     noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
     images = @gen.predict(noise)
-    x = x_batch.concatenate(images)
-    y = Numo::SFloat.cast([1] * batch_size + [0] * batch_size).reshape(batch_size * 2, 1)
+    y_real = Numo::SFloat.ones(batch_size, 1)
+    y_fake = Numo::SFloat.zeros(batch_size, 1)
     @dis.enable_training
-    dis_loss = @dis.train_on_batch(x, y)
+    dis_loss = @dis.train_on_batch(x_batch, y_real)
+    dis_loss + @dis.train_on_batch(images, y_fake)
 
     noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
     label = Numo::SFloat.cast([1] * batch_size).reshape(batch_size, 1)
