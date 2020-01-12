@@ -133,12 +133,6 @@ module DNN
     end
 
     class InputLayer < Layer
-      include LayerNode
-
-      def self.call(input)
-        new(input.data.shape[1..-1]).(input)
-      end
-
       # @param [Array] input_dim_or_shape Setting the shape or dimension of the input data.
       def initialize(input_dim_or_shape)
         super()
@@ -149,15 +143,11 @@ module DNN
         super(@input_shape)
       end
 
-      def forward_node(x)
+      def forward(x)
         unless x.shape[1..-1] == @input_shape
           raise DNNShapeError, "The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}."
         end
         x
-      end
-
-      def backward_node(dy)
-        dy
       end
 
       def to_proc

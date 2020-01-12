@@ -63,16 +63,11 @@ class TestInputLayer < MiniTest::Unit::TestCase
     assert_equal [10], layer.instance_variable_get(:@input_shape)
   end
 
-  def test_forward_node
+  def test_forward
     layer = InputLayer.new(2)
     x = Numo::SFloat[[0, 1]]
-    assert_equal x, layer.forward_node(x)
-  end
-
-  def test_backward_node
-    layer = InputLayer.new(2)
-    dy = Numo::SFloat[[0, 1]]
-    assert_equal dy, layer.backward_node(dy)
+    out = layer.forward(DNN::Tensor.new(x))
+    assert_equal x, out.data
   end
 
   def test_to_hash
