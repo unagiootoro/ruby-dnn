@@ -27,10 +27,11 @@ module DNN
 
     # This callback wrap the lambda function.
     class LambdaCallback < Callback
-      def initialize(event, lambda = nil, &block)
-        lambda = block unless lambda
+      # @param [Symbol] event Event to execute callback.
+      # @yield Register the contents of the callback. 
+      def initialize(event, &block)
         instance_eval do
-          define_singleton_method(event) { lambda.call }
+          define_singleton_method(event) { block.call }
         end
       end
     end
@@ -55,6 +56,9 @@ module DNN
     end
 
     # A callback to stop training the model early after test on batch.
+    # @param [Symbol] trigger A log that triggers early stopping.
+    #                         Specify one of train_loss, test_loss, test_accuracy.
+    # @param [Float] tolerance Tolerance value for early stopping.
     class EarlyStopping < Callback
       def initialize(trigger, tolerance)
         @trigger = trigger
