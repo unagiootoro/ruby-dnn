@@ -39,6 +39,10 @@ module DNN
     end
 
     class Chain
+      def initialize
+        @layers_cache = nil
+      end
+
       # Forward propagation.
       # @param [Tensor] input_tensor Input tensor.
       # @return [Tensor] Output tensor.
@@ -56,6 +60,7 @@ module DNN
       # Get the all layers.
       # @return [Array] All layers array.
       def layers
+        return @layers_cache if @layers_cache
         layers_array = []
         instance_variables.sort.each do |ivar|
           obj = instance_variable_get(ivar)
@@ -65,7 +70,7 @@ module DNN
             layers_array.concat(obj.layers)
           end
         end
-        layers_array
+        @layers_cache = layers_array
       end
     end
 
@@ -86,16 +91,15 @@ module DNN
       end
 
       def initialize
+        super
         @optimizer = nil
         @loss_func = nil
         @built = false
         @callbacks = []
-        @layers_cache = nil
         @last_log = {}
       end
 
       def call(inputs)
-        @layers_cache = nil
         output_tensor = forward(inputs)
         @built = true unless @built
         output_tensor
@@ -387,12 +391,15 @@ module DNN
         @built
       end
 
+      # Clean all layers.
       def clean_layers
         layers.each(&:clean)
         @loss_func.clean
         @layers_cache = nil
       end
 
+      # Get parameter data of all layers.
+      # @return [Array] Parameter data.
       def get_all_params_data
         trainable_layers.map do |layer|
           layer.get_params.to_h do |key, param|
@@ -401,6 +408,8 @@ module DNN
         end
       end
 
+      # Set parameter data of all layers.
+      # @param [Array] params_data Parameter data obtained by get_all_params_data.
       def set_all_params_data(params_data)
         trainable_layers.each.with_index do |layer, i|
           params_data[i].each do |(key, data)|
