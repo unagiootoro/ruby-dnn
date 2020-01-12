@@ -220,14 +220,14 @@ class TestConv2D < MiniTest::Unit::TestCase
   end
 
 
-  def test_forward
+  def test_forward_node
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     conv2d = DNN::Layers::Conv2D.new(16, 5)
     conv2d.build([32, 32, 3])
     assert_equal [1, 28, 28, 16], conv2d.forward_node(x).shape
   end
 
-  def test_backward
+  def test_backward_node
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     dy = Numo::SFloat.new(1, 28, 28, 16).seq
     conv2d = DNN::Layers::Conv2D.new(16, 5)
@@ -236,7 +236,7 @@ class TestConv2D < MiniTest::Unit::TestCase
     assert_equal [1, 32, 32, 3], conv2d.backward_node(dy).shape
   end
 
-  def test_backward2
+  def test_backward_node2
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     dy = Numo::SFloat.new(1, 28, 28, 16).seq
     conv2d = DNN::Layers::Conv2D.new(16, 5, use_bias: false)
@@ -246,7 +246,7 @@ class TestConv2D < MiniTest::Unit::TestCase
     assert_nil conv2d.bias
   end
 
-  def test_backward3
+  def test_backward_node3
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     dy = Numo::SFloat.new(1, 28, 28, 16).seq
     conv2d = DNN::Layers::Conv2D.new(16, 5)
@@ -354,14 +354,14 @@ class TestConv2DTranspose < MiniTest::Unit::TestCase
     assert_equal [32, 32], conv2d_t.instance_variable_get(:@out_size)
   end
 
-  def test_forward
+  def test_forward_node
     x = Numo::SFloat.new(1, 16, 16, 3).seq
     conv2d_t = DNN::Layers::Conv2DTranspose.new(8, 2, strides: 2)
     conv2d_t.build([16, 16, 3])
     assert_equal [1, 32, 32, 8], conv2d_t.forward_node(x).shape
   end
 
-  def test_backward
+  def test_backward_node
     x = Numo::SFloat.new(1, 16, 16, 3).seq
     dy = Numo::SFloat.new(1, 32, 32, 8).seq
     conv2d_t = DNN::Layers::Conv2DTranspose.new(8, 2, strides: 2)
@@ -459,14 +459,14 @@ class TestMaxPool2D < MiniTest::Unit::TestCase
     assert_equal [32, 16], pool2d.instance_variable_get(:@out_size)
   end
 
-  def test_forward
+  def test_forward_node
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     pool2d = DNN::Layers::MaxPool2D.new(2)
     pool2d.build([32, 32, 3])
     assert_equal [1, 16, 16, 3], pool2d.forward_node(x).shape
   end
 
-  def test_backward
+  def test_backward_node
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     dy = Numo::SFloat.new(1, 16, 16, 3).seq
     pool2d = DNN::Layers::MaxPool2D.new(2)
@@ -497,14 +497,14 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
     assert_equal true, pool2d.padding
   end
 
-  def test_forward
+  def test_forward_node
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     pool2d = DNN::Layers::AvgPool2D.new(2)
     pool2d.build([32, 32, 3])
     assert_equal [1, 16, 16, 3], pool2d.forward_node(x).shape
   end
 
-  def test_backward
+  def test_backward_node
     x = Numo::SFloat.new(1, 32, 32, 3).seq
     dy = Numo::SFloat.new(1, 16, 16, 3).seq
     pool2d = DNN::Layers::AvgPool2D.new(2)
@@ -515,7 +515,7 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
 end
 
 class TestGlobalAvgPoo2D < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_node
     x = DNN::Tensor.new(Numo::SFloat.new(1, 8, 8, 64).seq)
     pool2d = GlobalAvgPool2D.new
     pool2d.build([8, 8, 64])
@@ -533,7 +533,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
     assert_equal [2, 2], unpool2d.unpool_size
   end
 
-  def test_forward
+  def test_forward_node
     x = Numo::SFloat.new(1, 8, 8, 3).seq
     unpool2d = DNN::Layers::UnPool2D.new(2)
     unpool2d.build([8, 8, 3])
@@ -541,7 +541,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
     assert_equal [1, 16, 16, 3], y.shape
   end
 
-  def test_backward
+  def test_backward_node
     x = Numo::SFloat.new(1, 8, 8, 3).seq
     dy = Numo::SFloat.new(1, 16, 16, 3).seq
     unpool2d = DNN::Layers::UnPool2D.new(2)

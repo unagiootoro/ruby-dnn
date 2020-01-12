@@ -1,13 +1,13 @@
 require "test_helper"
 
 class TestSigmoid < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_node
     sigmoid = DNN::Layers::Sigmoid.new
     y = sigmoid.forward_node(Numo::SFloat[0, 1])
     assert_equal Numo::SFloat[0.5, 0.7311], y.round(4)
   end
 
-  def test_backward
+  def test_backward_node
     sigmoid = DNN::Layers::Sigmoid.new
     x = Numo::SFloat[0, 1]
     sigmoid.forward_node(x)
@@ -15,7 +15,7 @@ class TestSigmoid < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0.25, 0.1966], grad.round(4)
   end
 
-  def test_backward2
+  def test_backward_node2
     sigmoid = DNN::Layers::Sigmoid.new
     x = Numo::DFloat[0, 1]
     sigmoid.forward_node(x)
@@ -25,13 +25,13 @@ class TestSigmoid < MiniTest::Unit::TestCase
 end
 
 class TestTanh < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_node
     tanh = DNN::Layers::Tanh.new
     y = tanh.forward_node(Numo::SFloat[0, 1])
     assert_equal Numo::SFloat[0, 0.7616], y.round(4)
   end
 
-  def test_backward
+  def test_backward_node
     tanh = DNN::Layers::Tanh.new
     x = Numo::SFloat[0, 1]
     tanh.forward_node(x)
@@ -39,7 +39,7 @@ class TestTanh < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[1, 0.42], grad.round(4)
   end
 
-  def test_backward2
+  def test_backward_node2
     tanh = DNN::Layers::Tanh.new
     x = Numo::DFloat[0, 1]
     tanh.forward_node(x)
@@ -49,13 +49,13 @@ class TestTanh < MiniTest::Unit::TestCase
 end
 
 class TestSoftsign < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_node
     softsign = DNN::Layers::Softsign.new
     y = softsign.forward_node(Numo::SFloat[0, 1])
     assert_equal Numo::SFloat[0, 0.5], y.round(4)
   end
 
-  def test_backward
+  def test_backward_node
     softsign = DNN::Layers::Softsign.new
     x = Numo::SFloat[0, 1]
     softsign.forward_node(x)
@@ -63,7 +63,7 @@ class TestSoftsign < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[1, 0.25], grad.round(4)
   end
 
-  def test_backward2
+  def test_backward_node2
     softsign = DNN::Layers::Softsign.new
     x = Numo::DFloat[0, 1]
     softsign.forward_node(x)
@@ -73,13 +73,13 @@ class TestSoftsign < MiniTest::Unit::TestCase
 end
 
 class TestSoftplus < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_node
     softplus = DNN::Layers::Softplus.new
     y = softplus.forward_node(Numo::SFloat[0, 1])
     assert_equal Numo::SFloat[0.6931, 1.3133], y.round(4)
   end
 
-  def test_backward
+  def test_backward_node
     softplus = DNN::Layers::Softplus.new
     x = Numo::SFloat[0, 1]
     softplus.forward_node(x)
@@ -87,7 +87,7 @@ class TestSoftplus < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0.5, 0.7311], grad.round(4)
   end
 
-  def test_backward2
+  def test_backward_node2
     softplus = DNN::Layers::Softplus.new
     x = Numo::DFloat[0, 1]
     softplus.forward_node(x)
@@ -97,13 +97,13 @@ class TestSoftplus < MiniTest::Unit::TestCase
 end
 
 class TestSwish < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_node
     swish = DNN::Layers::Swish.new
     y = swish.forward_node(Numo::SFloat[0, 1])
     assert_equal Numo::SFloat[0, 0.7311], y.round(4)
   end
 
-  def test_backward
+  def test_backward_node
     swish = DNN::Layers::Swish.new
     x = Numo::SFloat[0, 1]
     swish.forward_node(x)
@@ -111,7 +111,7 @@ class TestSwish < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0.5, 0.9277], grad.round(4)
   end
 
-  def test_backward2
+  def test_backward_node2
     swish = DNN::Layers::Swish.new
     x = Numo::DFloat[0, 1]
     swish.forward_node(x)
@@ -121,13 +121,13 @@ class TestSwish < MiniTest::Unit::TestCase
 end
 
 class TestReLU < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_node
     relu = DNN::Layers::ReLU.new
     y = relu.forward_node(Numo::SFloat[-2, 0, 2])
     assert_equal Numo::SFloat[0, 0, 2], y
   end
 
-  def test_backward
+  def test_backward_node
     relu = DNN::Layers::ReLU.new
     relu.forward_node(Numo::SFloat[-2, 0, 2])
     grad = relu.backward_node(1)
@@ -147,20 +147,20 @@ class TestLeakyReLU < MiniTest::Unit::TestCase
     assert_equal 0.3, lrelu.alpha
   end
 
-  def test_forward
+  def test_forward_node
     lrelu = DNN::Layers::LeakyReLU.new
     y = lrelu.forward_node(Numo::SFloat[-2, 0, 2])
     assert_equal Numo::SFloat[-0.6, 0, 2], y.round(4)
   end
 
-  def test_backward
+  def test_backward_node
     lrelu = DNN::Layers::LeakyReLU.new
     lrelu.forward_node(Numo::SFloat[-2, 0, 2])
     grad = lrelu.backward_node(1)
     assert_equal Numo::SFloat[0.3, 0.3, 1], grad.round(4)
   end
 
-  def test_backward2
+  def test_backward_node2
     lrelu = DNN::Layers::LeakyReLU.new
     x = Numo::DFloat[-2, 1, 2]
     lrelu.forward_node(x)
@@ -187,20 +187,20 @@ class TestELU < MiniTest::Unit::TestCase
     assert_equal 1.0, elu.alpha
   end
 
-  def test_forward
+  def test_forward_node
     elu = DNN::Layers::ELU.new
     y = elu.forward_node(Numo::SFloat[-2, 0, 2])
     assert_equal Numo::SFloat[-0.8647, 0, 2], y.round(4)
   end
 
-  def test_backward
+  def test_backward_node
     elu = DNN::Layers::ELU.new
     elu.forward_node(Numo::SFloat[-2, 0, 2])
     grad = elu.backward_node(1)
     assert_equal Numo::SFloat[0.1353, 1, 1], grad.round(4)
   end
 
-  def test_backward2
+  def test_backward_node2
     elu = DNN::Layers::ELU.new
     x = Numo::DFloat[-2, 1, 2]
     elu.forward_node(x)
@@ -215,13 +215,13 @@ class TestELU < MiniTest::Unit::TestCase
   end
 
   class TestMish < MiniTest::Unit::TestCase
-    def test_forward
+    def test_forward_node
       mish = DNN::Layers::Mish.new
       y = mish.forward_node(Numo::SFloat[0, 1])
       assert_equal Numo::SFloat[0, 0.8651], y.round(4)
     end
   
-    def test_backward
+    def test_backward_node
       mish = DNN::Layers::Mish.new
       x = Numo::SFloat[0, 1]
       mish.forward_node(x)
@@ -229,7 +229,7 @@ class TestELU < MiniTest::Unit::TestCase
       assert_equal Numo::SFloat[0.6, 1.049], grad.round(4)
     end
 
-    def test_backward2
+    def test_backward_node2
       mish = DNN::Layers::Mish.new
       x = Numo::DFloat[0, 1]
       mish.forward_node(x)

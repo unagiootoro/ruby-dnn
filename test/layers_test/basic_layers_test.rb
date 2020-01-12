@@ -62,13 +62,13 @@ class TestInputLayer < MiniTest::Unit::TestCase
     assert_equal [10], layer.instance_variable_get(:@input_shape)
   end
 
-  def test_forward
+  def test_forward_node
     layer = InputLayer.new(2)
     x = Numo::SFloat[[0, 1]]
     assert_equal x, layer.forward_node(x)
   end
 
-  def test_backward
+  def test_backward_node
     layer = InputLayer.new(2)
     dy = Numo::SFloat[[0, 1]]
     assert_equal dy, layer.backward_node(dy)
@@ -111,7 +111,7 @@ class TestDense < MiniTest::Unit::TestCase
     assert_equal [100], dense.bias.data.shape
   end
 
-  def test_forward
+  def test_forward_node
     dense = Dense.new(2)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
@@ -120,7 +120,7 @@ class TestDense < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[65, 130], [155, 310]], y
   end
 
-  def test_forward2
+  def test_forward_node2
     dense = Dense.new(2, use_bias: false)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
@@ -129,7 +129,7 @@ class TestDense < MiniTest::Unit::TestCase
     assert_nil dense.bias
   end
 
-  def test_backward
+  def test_backward_node
     dense = Dense.new(2)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
@@ -141,7 +141,7 @@ class TestDense < MiniTest::Unit::TestCase
     assert_in_delta 1.0, dense.bias.grad
   end
 
-  def test_backward2
+  def test_backward_node2
     dense = Dense.new(2, use_bias: false)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
@@ -152,7 +152,7 @@ class TestDense < MiniTest::Unit::TestCase
     assert_nil dense.bias
   end
 
-  def test_backward3
+  def test_backward_node3
     dense = Dense.new(2)
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
@@ -166,7 +166,7 @@ class TestDense < MiniTest::Unit::TestCase
     assert_in_delta 2.0, dense.bias.grad
   end
 
-  def test_backward4
+  def test_backward_node4
     dense = Dense.new(2)
     dense.trainable = false
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
@@ -224,7 +224,7 @@ end
 
 
 class TestFlatten < MiniTest::Unit::TestCase
-  def test_forward
+  def test_forward_node
     flatten = Flatten.new
     x = Numo::SFloat.zeros(10, 32, 32, 3)
     flatten.build([32, 32, 3])
@@ -232,7 +232,7 @@ class TestFlatten < MiniTest::Unit::TestCase
     assert_equal [10, 3072], y.shape
   end
 
-  def test_backward
+  def test_backward_node
     flatten = Flatten.new
     x = Numo::SFloat.zeros(10, 32, 32, 3)
     flatten.build([32, 32, 3])
@@ -252,7 +252,7 @@ class TestReshape < MiniTest::Unit::TestCase
     assert_equal [32, 32, 3], reshape.output_shape
   end
 
-  def test_forward
+  def test_forward_node
     reshape = Reshape.new([32, 32, 3])
     reshape.build([3072])
     x = Numo::SFloat.zeros(10, 3072)
@@ -260,7 +260,7 @@ class TestReshape < MiniTest::Unit::TestCase
     assert_equal [10, 32, 32, 3], y.shape
   end
 
-  def test_backward
+  def test_backward_node
     reshape = Reshape.new([32, 32, 3])
     reshape.build([3072])
     x = Numo::SFloat.zeros(10, 3072)
@@ -357,7 +357,7 @@ class TestDropout < MiniTest::Unit::TestCase
     assert_equal false, dropout.use_scale
   end
 
-  def test_forward
+  def test_forward_node
     dropout = Dropout.new(0.5, seed: 0)
     dropout.build([100])
     DNN.learning_phase = true
@@ -365,7 +365,7 @@ class TestDropout < MiniTest::Unit::TestCase
     assert num.between?(30, 70)
   end
 
-  def test_forward2
+  def test_forward_node2
     dropout = Dropout.new(0.3, use_scale: true)
     dropout.build([1])
     DNN.learning_phase = false
@@ -373,7 +373,7 @@ class TestDropout < MiniTest::Unit::TestCase
     assert_equal 7.0, num
   end
 
-  def test_forward3
+  def test_forward_node3
     dropout = Dropout.new(0.3, use_scale: false)
     dropout.build([1])
     DNN.learning_phase = false
@@ -381,7 +381,7 @@ class TestDropout < MiniTest::Unit::TestCase
     assert_equal 10.0, num
   end
 
-  def test_backward
+  def test_backward_node
     dropout = Dropout.new
     dropout.build([1])
     DNN.learning_phase = true
