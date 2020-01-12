@@ -1,5 +1,20 @@
 require "test_helper"
 
+class TestNeg < MiniTest::Unit::TestCase
+  def test_forward_node
+    neg = DNN::Layers::Neg.new
+    y = neg.forward_node(Numo::SFloat[1, 2])
+    assert_equal Numo::SFloat[-1, -2], y.round(4)
+  end
+
+  def test_backward_node
+    neg = DNN::Layers::Neg.new
+    neg.forward_node(Numo::SFloat[1, 2])
+    dx = neg.backward_node(Numo::SFloat[3, 4])
+    assert_equal Numo::SFloat[-3, -4], dx
+  end
+end
+
 class TestAdd < MiniTest::Unit::TestCase
   def test_forward_node
     add = DNN::Layers::Add.new

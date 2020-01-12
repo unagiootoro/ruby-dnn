@@ -25,7 +25,7 @@ module DNN
     end
 
     def -@
-      self * -1
+      Neg.(self)
     end
 
     def +(other)

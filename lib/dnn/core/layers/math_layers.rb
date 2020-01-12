@@ -1,6 +1,18 @@
 module DNN
   module Layers
 
+    class Neg < Layer
+      include LayerNode
+
+      def forward_node(x)
+        -x
+      end
+
+      def backward_node(dy)
+        -dy
+      end
+    end
+
     class Add < MergeLayer
       include MergeLayerNode
 
