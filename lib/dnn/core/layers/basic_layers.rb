@@ -10,10 +10,6 @@ module DNN
         Tensor.new(y, link)
       end
 
-      def backward(dy)
-        backward_node(dy)
-      end
-
       def forward_node(x)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward_node'"
       end

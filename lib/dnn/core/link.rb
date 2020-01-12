@@ -9,7 +9,7 @@ module DNN
     end
 
     def backward(dy = Numo::SFloat[1])
-      dy = @layer_node.backward(dy)
+      dy = @layer_node.backward_node(dy)
       @prev&.backward(dy)
     end
   end
@@ -26,7 +26,7 @@ module DNN
     end
 
     def backward(dy = Numo::SFloat[1])
-      dys = @layer_node.backward(dy)
+      dys = @layer_node.backward_node(dy)
       if dys.is_a?(Array)
         dy1, dy2 = *dys
       else
