@@ -60,6 +60,9 @@ module DNN
       @has_next
     end
 
+    # Run a loop with all data separated by batch
+    # @param [Integer] batch_size Batch size.
+    # @yield Executes block by receiving the specified arguments (x_batch, y_batch).
     def foreach(batch_size, &block)
       steps = @last_round_down ? @num_datas / batch_size : (@num_datas.to_f / batch_size).ceil
       steps.times do |step|
