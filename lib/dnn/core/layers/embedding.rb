@@ -24,11 +24,6 @@ module DNN
         @weight = Param.new(nil, Xumo::SFloat[0])
       end
 
-      def call(input_tensor)
-        build(@input_shape) unless built?
-        Tensor.new(forward_node(input_tensor.data), Link.new(nil, self))
-      end
-
       def build(input_shape)
         @built = true
         @weight.data = Xumo::SFloat.new(@input_length)
