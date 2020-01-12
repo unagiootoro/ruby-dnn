@@ -33,7 +33,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[2, 4]]
     loss.forward_node(y, t)
-    grad = loss.backward_node(nil)
+    grad = loss.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[[-2, -3]], grad.round(4)
   end
 
@@ -78,7 +78,7 @@ class TestMeanAbsoluteError < MiniTest::Unit::TestCase
     y = Numo::SFloat[[-1, 2]]
     t = Numo::SFloat[[2, 4]]
     loss.forward_node(y, t)
-    grad = loss.backward_node(nil)
+    grad = loss.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[[-1, -1]], grad.round(4)
   end
 end
@@ -98,7 +98,7 @@ class TestHinge < MiniTest::Unit::TestCase
     y = Numo::SFloat[[1, 1]]
     t = Numo::SFloat[[0.7, 1.5]]
     loss.forward_node(y, t)
-    grad = loss.backward_node(nil)
+    grad = loss.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[[-0.7, 0]], grad.round(4)
   end
 end
@@ -126,7 +126,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
     y = Numo::SFloat[[-1, 2]]
     t = Numo::SFloat[[-3, 4]]
     loss.forward_node(y, t)
-    grad = loss.backward_node(nil)
+    grad = loss.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[[1, -1]], grad.round(4)
   end
 
@@ -135,7 +135,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
     y = Numo::SFloat[[-1, 2]]
     t = Numo::SFloat[[-0.5, 1.7]]
     loss.forward_node(y, t)
-    grad = loss.backward_node(nil)
+    grad = loss.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[[-0.5, 0.3]], grad.round(4)
   end
 end
@@ -161,7 +161,7 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
     y = Numo::SFloat[[0, 1, 2]]
     t = Numo::SFloat[[0, 0, 1]]
     loss.forward_node(y, t)
-    grad = loss.backward_node(nil)
+    grad = loss.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[[0.09, 0.2447, -0.3348]], grad.round(4)
   end
 
@@ -192,7 +192,7 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
     y = Numo::SFloat[[0, 1]]
     t = Numo::SFloat[[1, 0]]
     loss.forward_node(y, t)
-    grad = loss.backward_node(nil)
+    grad = loss.backward_node(Numo::SFloat[1])
     assert_equal Numo::SFloat[[-0.5, 0.7311]], grad.round(4)
   end
 
