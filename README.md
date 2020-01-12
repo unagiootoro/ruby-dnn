@@ -42,6 +42,11 @@ model << Dense.new(10)
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
+
+
+accuracy, loss = model.evaluate(x_test, y_test)
+puts "accuracy: #{accuracy}"
+puts "loss: #{loss}"
 ```
 
 When create a model with 'define by run' style:  
@@ -71,6 +76,10 @@ model = MLP.new
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
+
+accuracy, loss = model.evaluate(x_test, y_test)
+puts "accuracy: #{accuracy}"
+puts "loss: #{loss}"
 ```
 
 Please refer to examples for basic usage.  
@@ -85,6 +94,19 @@ If you want to know more detailed information, please refer to the source code.
 | Pooling | MaxPool2D, AvgPool2D, GlobalAvgPool2D, UnPool2D |
 | Optimizers | SGD, Nesterov, AdaGrad, RMSProp, AdaDelta, RMSPropGraves, Adam, AdaBound |
 | Losses | MeanSquaredError, MeanAbsoluteError, Hinge, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
+
+## Datasets
+● Iris  
+● MNIST  
+● Fashion-MNIST  
+● CIFAR-10  
+● CIFAR-100  
+● STL-10
+
+## Examples
+● VAE  
+● DCGAN  
+● Pix2pix
 
 ## TODO
 ● Write a test.  
