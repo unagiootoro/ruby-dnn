@@ -253,7 +253,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(2)
     model << sequential
     model.predict1(Numo::SFloat.zeros(2))
-    assert_equal 1, model.trainable_layers[1].num_nodes
+    assert_equal 1, model.trainable_layers[1].num_units
   end
 
   def test_get_layer
@@ -328,7 +328,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model.add(Dense.new(10))
     model.insert(1, Dense.new(20))
     model.predict1(Numo::SFloat.zeros(10))
-    assert_equal 20, model.layers[1].num_nodes
+    assert_equal 20, model.layers[1].num_units
   end
 
   # It is matching [].

@@ -122,8 +122,8 @@ module DNN
 
       def init_param(layer, param)
         Xumo::SFloat.srand(@seed)
-        num_prev_nodes = layer.input_shape.reduce(:*)
-        param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes)
+        num_prev_units = layer.input_shape.reduce(:*)
+        param.data = param.data.rand_norm / Math.sqrt(num_prev_units)
       end
     end
 
@@ -134,8 +134,8 @@ module DNN
 
       def init_param(layer, param)
         Xumo::SFloat.srand(@seed)
-        num_prev_nodes = layer.input_shape.reduce(:*)
-        param.data = param.data.rand_norm / Math.sqrt(num_prev_nodes) * Math.sqrt(2)
+        num_prev_units = layer.input_shape.reduce(:*)
+        param.data = param.data.rand_norm / Math.sqrt(num_prev_units) * Math.sqrt(2)
       end
     end
 

@@ -40,7 +40,7 @@ class TestLayer < MiniTest::Unit::TestCase
     dense = Dense.new(20)
     dense.build([10])
     dense.clean
-    assert_equal 20, dense.num_nodes
+    assert_equal 20, dense.num_units
   end
 end
 
@@ -86,7 +86,7 @@ class TestDense < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Layers::Dense",
-      num_nodes: 100,
+      num_units: 100,
       weight_initializer: RandomUniform.new.to_hash,
       bias_initializer: RandomNormal.new.to_hash,
       weight_regularizer: L1.new.to_hash,
@@ -94,7 +94,7 @@ class TestDense < MiniTest::Unit::TestCase
       use_bias: false,
     }
     dense = Dense.from_hash(hash)
-    assert_equal 100, dense.num_nodes
+    assert_equal 100, dense.num_units
     assert_kind_of RandomUniform, dense.weight_initializer
     assert_kind_of RandomNormal, dense.bias_initializer
     assert_kind_of L1, dense.weight_regularizer
@@ -201,7 +201,7 @@ class TestDense < MiniTest::Unit::TestCase
     dense = Dense.new(100, weight_regularizer: L1.new, bias_regularizer: L2.new)
     expected_hash = {
       class: "DNN::Layers::Dense",
-      num_nodes: 100,
+      num_units: 100,
       weight_initializer: dense.weight_initializer.to_hash,
       bias_initializer: dense.bias_initializer.to_hash,
       weight_regularizer: dense.weight_regularizer.to_hash,

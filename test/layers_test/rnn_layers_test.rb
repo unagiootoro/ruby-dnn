@@ -11,7 +11,7 @@ class TestRNN < MiniTest::Unit::TestCase
                   weight_regularizer: DNN::Regularizers::L1.new,
                   recurrent_weight_regularizer: DNN::Regularizers::L2.new,
                   bias_regularizer: DNN::Regularizers::L1L2.new)
-    assert_equal 64, rnn.num_nodes
+    assert_equal 64, rnn.num_units
     assert_equal true, rnn.stateful
     assert_equal false, rnn.return_sequences
   end
@@ -49,7 +49,7 @@ class TestRNN < MiniTest::Unit::TestCase
                   bias_regularizer: DNN::Regularizers::L1L2.new)
     expected_hash = {
       class: "DNN::Layers::RNN",
-      num_nodes: 64,
+      num_units: 64,
       weight_initializer: rnn.weight_initializer.to_hash,
       recurrent_weight_initializer: rnn.recurrent_weight_initializer.to_hash,
       bias_initializer: rnn.bias_initializer.to_hash,
@@ -177,7 +177,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Layers::SimpleRNN",
-      num_nodes: 64,
+      num_units: 64,
       weight_initializer: DNN::Initializers::RandomUniform.new.to_hash,
       recurrent_weight_initializer: DNN::Initializers::RandomUniform.new.to_hash,
       bias_initializer: DNN::Initializers::RandomUniform.new.to_hash,
@@ -190,7 +190,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
       activation: ReLU.new.to_hash,
     }
     rnn = SimpleRNN.from_hash(hash)
-    assert_equal 64, rnn.num_nodes
+    assert_equal 64, rnn.num_units
     assert_kind_of DNN::Initializers::RandomUniform, rnn.weight_initializer
     assert_kind_of DNN::Initializers::RandomUniform, rnn.recurrent_weight_initializer
     assert_kind_of DNN::Initializers::RandomUniform, rnn.bias_initializer
@@ -269,7 +269,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
                         bias_regularizer: DNN::Regularizers::L1L2.new)
     expected_hash = {
       class: "DNN::Layers::SimpleRNN",
-      num_nodes: 64,
+      num_units: 64,
       weight_initializer: rnn.weight_initializer.to_hash,
       recurrent_weight_initializer: rnn.recurrent_weight_initializer.to_hash,
       bias_initializer: rnn.bias_initializer.to_hash,
@@ -389,7 +389,7 @@ class TestLSTM < MiniTest::Unit::TestCase
   def test_from_hash
     hash = {
       class: "DNN::Layers::LSTM",
-      num_nodes: 64,
+      num_units: 64,
       weight_initializer: DNN::Initializers::RandomUniform.new.to_hash,
       recurrent_weight_initializer: DNN::Initializers::RandomUniform.new.to_hash,
       bias_initializer: DNN::Initializers::RandomUniform.new.to_hash,
@@ -401,7 +401,7 @@ class TestLSTM < MiniTest::Unit::TestCase
       return_sequences: false,
     }
     lstm = LSTM.from_hash(hash)
-    assert_equal 64, lstm.num_nodes
+    assert_equal 64, lstm.num_units
     assert_kind_of DNN::Initializers::RandomUniform, lstm.weight_initializer
     assert_kind_of DNN::Initializers::RandomUniform, lstm.recurrent_weight_initializer
     assert_kind_of DNN::Initializers::RandomUniform, lstm.bias_initializer
@@ -499,7 +499,7 @@ class TestLSTM < MiniTest::Unit::TestCase
                     bias_regularizer: DNN::Regularizers::L1L2.new)
     expected_hash = {
       class: "DNN::Layers::LSTM",
-      num_nodes: 64,
+      num_units: 64,
       weight_initializer: lstm.weight_initializer.to_hash,
       recurrent_weight_initializer: lstm.recurrent_weight_initializer.to_hash,
       bias_initializer: lstm.bias_initializer.to_hash,
@@ -615,7 +615,7 @@ class TestGRU < MiniTest::Unit::TestCase
                   bias_regularizer: DNN::Regularizers::L1L2.new)
     expected_hash = {
       class: "DNN::Layers::GRU",
-      num_nodes: 64,
+      num_units: 64,
       weight_initializer: gru.weight_initializer.to_hash,
       recurrent_weight_initializer: gru.recurrent_weight_initializer.to_hash,
       bias_initializer: gru.bias_initializer.to_hash,

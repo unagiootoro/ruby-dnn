@@ -254,10 +254,10 @@ module DNN
     class Dense < Connection
       include LayerNode
 
-      attr_reader :num_nodes
+      attr_reader :num_units
 
-      # @param [Integer] num_nodes Number of nodes.
-      def initialize(num_nodes,
+      # @param [Integer] num_units Number of nodes.
+      def initialize(num_units,
                      weight_initializer: Initializers::RandomNormal.new,
                      bias_initializer: Initializers::Zeros.new,
                      weight_regularizer: nil,
@@ -265,7 +265,7 @@ module DNN
                      use_bias: true)
         super(weight_initializer: weight_initializer, bias_initializer: bias_initializer,
               weight_regularizer: weight_regularizer, bias_regularizer: bias_regularizer, use_bias: use_bias)
-        @num_nodes = num_nodes
+        @num_units = num_units
       end
 
       def build(input_shape)
@@ -273,9 +273,9 @@ module DNN
           raise DNN_ShapeError, "Input shape is #{input_shape}. But input shape must be 1 dimensional."
         end
         super
-        num_prev_nodes = input_shape[0]
-        @weight.data = Xumo::SFloat.new(num_prev_nodes, @num_nodes)
-        @bias.data = Xumo::SFloat.new(@num_nodes) if @bias
+        num_prev_units = input_shape[0]
+        @weight.data = Xumo::SFloat.new(num_prev_units, @num_units)
+        @bias.data = Xumo::SFloat.new(@num_units) if @bias
         init_weight_and_bias
       end
 
@@ -295,15 +295,15 @@ module DNN
       end
 
       def output_shape
-        [@num_nodes]
+        [@num_units]
       end
 
       def to_hash
-        super(num_nodes: @num_nodes)
+        super(num_units: @num_units)
       end
 
       def load_hash(hash)
-        initialize(hash[:num_nodes],
+        initialize(hash[:num_units],
                    weight_initializer: Initializers::Initializer.from_hash(hash[:weight_initializer]),
                    bias_initializer: Initializers::Initializer.from_hash(hash[:bias_initializer]),
                    weight_regularizer: Regularizers::Regularizer.from_hash(hash[:weight_regularizer]),
