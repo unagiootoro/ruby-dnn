@@ -2,11 +2,11 @@ module DNN
   module Layers
 
     module LayerNode
-      def forward(input_tensor)
-        x = input_tensor.data
-        prev_link = (input_tensor.is_a?(Tensor) ? input_tensor.link : input_tensor)
+      def forward(input)
+        x = input.data
+        prev = (input.is_a?(Tensor) ? input.link : input)
         y = forward_node(x)
-        link = Link.new(prev_link, self)
+        link = Link.new(prev, self)
         Tensor.new(y, link)
       end
 
@@ -45,12 +45,12 @@ module DNN
       end
 
       # Forward propagation and create a link.
-      # @param [Tensor] input_tensor Input tensor.
+      # @param [Tensor | Param] input Input tensor or param.
       # @return [Tensor] Output tensor.
-      def call(input_tensor)
-        input_tensor = Tensor.new(input_tensor) if !input_tensor.is_a?(Tensor) && !input_tensor.is_a?(Param)
-        build(input_tensor.data.shape[1..-1]) unless built?
-        forward(input_tensor)
+      def call(input)
+        input = Tensor.new(input) if !input.is_a?(Tensor) && !input.is_a?(Param)
+        build(input.data.shape[1..-1]) unless built?
+        forward(input)
       end
 
       # Build the layer.
@@ -66,9 +66,9 @@ module DNN
       end
 
       # Forward propagation.
-      # @param [Tensor] input_tensor Input tensor.
+      # @param [Tensor] input Input tensor or param.
       # @return [Tensor] Output tensor.
-      def forward(input_tensor)
+      def forward(input)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
@@ -138,26 +138,13 @@ module DNN
       include LayerNode
 
       def self.call(input)
-        shape = input.is_a?(Tensor) ? input.data.shape : input.shape
-        new(shape[1..-1]).(input)
+        new(input.data.shape[1..-1]).(input)
       end
 
       # @param [Array] input_dim_or_shape Setting the shape or dimension of the input data.
       def initialize(input_dim_or_shape)
         super()
         @input_shape = input_dim_or_shape.is_a?(Array) ? input_dim_or_shape : [input_dim_or_shape]
-      end
-
-      def call(input)
-        build(@input_shape) unless built?
-        if input.is_a?(Tensor)
-          x = input.data
-          prev_link = input&.link
-        else
-          x = input
-          prev_link = nil
-        end
-        Tensor.new(forward_node(x), Link.new(prev_link, self))
       end
 
       def build(input_shape)

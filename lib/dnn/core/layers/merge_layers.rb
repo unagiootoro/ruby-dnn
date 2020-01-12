@@ -2,13 +2,13 @@ module DNN
   module Layers
 
     module MergeLayerNode
-      def forward(input_tensor1, input_tensor2)
-        x1 = input_tensor1.data
-        x2 = input_tensor2.data
-        prev_link1 = (input_tensor1.is_a?(Tensor) ? input_tensor1.link : input_tensor1)
-        prev_link2 = (input_tensor2.is_a?(Tensor) ? input_tensor2.link : input_tensor2)
+      def forward(input1, input2)
+        x1 = input1.data
+        x2 = input2.data
+        prev1 = (input1.is_a?(Tensor) ? input1.link : input1)
+        prev2 = (input2.is_a?(Tensor) ? input2.link : input2)
         y = forward_node(x1, x2)
-        link = TwoInputLink.new(prev_link1, prev_link2, self)
+        link = TwoInputLink.new(prev1, prev2, self)
         Tensor.new(y, link)
       end
 
@@ -30,15 +30,15 @@ module DNN
         new(*args).call(x1, x2)
       end
 
-      def call(input_tensor1, input_tensor2)
-        input_tensor1 = Tensor.new(input_tensor1) if !input_tensor1.is_a?(Tensor) && !input_tensor1.is_a?(Param)
-        input_tensor2 = Tensor.new(input_tensor2) if !input_tensor2.is_a?(Tensor) && !input_tensor2.is_a?(Param)
-        if input_tensor1.data.is_a?(Numo::NArray)
-          build(input_tensor1.data.shape[1..-1]) unless built?
+      def call(input1, input2)
+        input1 = Tensor.new(input1) if !input1.is_a?(Tensor) && !input1.is_a?(Param)
+        input2 = Tensor.new(input2) if !input2.is_a?(Tensor) && !input2.is_a?(Param)
+        if input1.data.is_a?(Numo::NArray)
+          build(input1.data.shape[1..-1]) unless built?
         else
           build([1]) unless built?
         end
-        forward(input_tensor1, input_tensor2)
+        forward(input1, input2)
       end
     end
 
