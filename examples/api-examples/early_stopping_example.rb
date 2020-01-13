@@ -35,7 +35,7 @@ class MLP < Model
   end
 
   def forward(x)
-    x = InputLayer.(x)
+    x = InputLayer.new(784).(x)
     x = @l1.(x)
     x = @bn1.(x)
     x = ReLU.(x)
