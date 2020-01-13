@@ -73,3 +73,13 @@ class Float
     end
   end
 end
+
+if RUBY_VERSION < "2.6.0"
+  class Hash
+    alias dnn__to_h to_h
+    def to_h(&block)
+      dnn__to_h unless block
+      map(&block).to_h
+    end
+  end
+end
