@@ -72,6 +72,38 @@ module DNN
         end
         @layers_cache = layers_array
       end
+
+      def to_hash
+        layers_hash = { class: self.class.name }
+        instance_variables.sort.each do |ivar|
+          obj = instance_variable_get(ivar)
+          if obj.is_a?(Layers::Layer) || obj.is_a?(Chain)
+            layers_hash[ivar] = obj.to_hash
+          elsif obj.is_a?(LayersList)
+            layers_hash[ivar] = obj.to_hash_list
+          end
+        end
+        layers_hash
+      end
+
+      def load_hash(layers_hash)
+        instance_variables.sort.each do |ivar|
+          hash_or_array = layers_hash[ivar]
+          if hash_or_array.is_a?(Array)
+            instance_variable_set(ivar, LayersList.from_hash_list(hash_or_array))
+          elsif hash_or_array.is_a?(Hash)
+            obj_class = DNN.const_get(hash_or_array[:class])
+            obj = obj_class.allocate
+            if obj.is_a?(Chain)
+              obj = obj_class.new
+              obj.load_hash(hash_or_array)
+              instance_variable_set(ivar, obj)
+            else
+              instance_variable_set(ivar, Layers::Layer.from_hash(hash_or_array))
+            end
+          end
+        end
+      end
     end
 
     # This class deals with the model of the network.
