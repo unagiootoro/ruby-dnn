@@ -290,13 +290,13 @@ module DNN
             else
               @loss_func[i].loss(out, Tensor.convert(y[i]))
             end
-            loss_data << loss.data
+            loss_data << loss.data.to_f
             loss.link.backward(Xumo::SFloat.ones(y[i][0...1, false].shape[0], 1))
           end
         else
           out = output_tensors
           loss = @loss_func.loss(out, Tensor.convert(y), layers)
-          loss_data = loss.data
+          loss_data = loss.data.to_f
           loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
         end
         @optimizer.update(get_all_trainable_params)
@@ -372,13 +372,13 @@ module DNN
           output_tensors.each.with_index do |out, i|
             correct << accuracy(out.data, y[i])
             loss = @loss_func[i].(out, Tensor.convert(y[i]))
-            loss_data << loss.data
+            loss_data << loss.data.to_f
           end
         else
           out = output_tensors
           correct = accuracy(out.data, y)
           loss = @loss_func.(out, Tensor.convert(y))
-          loss_data = loss.data
+          loss_data = loss.data.to_f
         end
         call_callbacks(:after_test_on_batch)
         [correct, loss_data]
