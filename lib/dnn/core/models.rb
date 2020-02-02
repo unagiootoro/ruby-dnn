@@ -632,5 +632,40 @@ module DNN
       end
     end
 
+    class FixedModel < Model
+      attr_reader :layers
+
+      def initialize(output_tensor, layers)
+        super()
+        @input_link = get_input_link(output_tensor.link)
+        @layers = layers
+      end
+
+      def forward(input_tensors)
+        if input_tensors.is_a?(Array)
+          input_tensors.each do |tensor|
+            @input_link.forward(tensor)
+          end
+        else
+          @input_link.forward(input_tensors)
+        end
+      end
+
+      private
+
+      def get_input_link(last_link)
+        get_input_link = -> link do
+          if link.is_a?(Link)
+            return link unless link.prev
+            get_input_link.(link.prev)
+          else
+            return link unless link.prev1
+            get_input_link.(link.prev1)
+          end
+        end
+        get_input_link.(last_link)
+      end
+    end
+
   end
 end

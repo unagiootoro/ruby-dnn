@@ -7,6 +7,7 @@ module DNN
         prev = (input.is_a?(Tensor) ? input.link : input)
         y = forward_node(x)
         link = Link.new(prev, self)
+        prev.next = link if prev.is_a?(Link)
         Tensor.new(y, link)
       end
 
