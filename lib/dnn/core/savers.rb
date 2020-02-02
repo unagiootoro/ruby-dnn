@@ -97,7 +97,7 @@ module DNN
         if @include_model
           @model.clean_layers
           data = {
-            version: VERSION, class: @model.class.name, input_shape: @model.layers.first.input_shape,
+            version: VERSION, class: @model.class.name,
             params: params_data, model: @model
           }
         else
