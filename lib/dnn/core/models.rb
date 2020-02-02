@@ -77,7 +77,6 @@ module DNN
     # This class deals with the model of the network.
     class Model < Chain
       attr_accessor :optimizer
-      attr_accessor :loss_func
       attr_reader :last_log
 
       # Load marshal model.
@@ -100,9 +99,9 @@ module DNN
       end
 
       def call(input_tensors)
-        output_tensor = forward(input_tensors)
+        output_tensors = forward(input_tensors)
         @built = true unless @built
-        output_tensor
+        output_tensors
       end
 
       # Set optimizer and loss_func to model.
@@ -112,11 +111,29 @@ module DNN
         unless optimizer.is_a?(Optimizers::Optimizer)
           raise TypeError, "optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class."
         end
-        unless loss_func.is_a?(Losses::Loss)
-          raise TypeError, "loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss class."
+        unless loss_func.is_a?(Losses::Loss) || loss_func.is_a?(Array)
+          raise TypeError, "loss_func:#{loss_func.class} is not an instance of DNN::Losses::Loss or Array class."
         end
         @optimizer = optimizer
-        @loss_func = loss_func
+        self.loss_func = loss_func
+      end
+
+      def loss_func
+        @loss_func
+      end
+
+      def loss_func=(lfs)
+        if lfs.is_a?(Array)
+          @loss_func = []
+          lfs.each.with_index do |lf, i|
+            unless lf.is_a?(Losses::Loss)
+              raise TypeError, "loss_func[#{i}]:#{lf.class} is not an instance of DNN::Losses::Loss class."
+            end
+            @loss_func << lf
+          end
+        else
+          @loss_func = lfs
+        end
       end
 
       # Start training.
@@ -232,13 +249,28 @@ module DNN
         check_xy_type(x, y)
         call_callbacks(:before_train_on_batch)
         DNN.learning_phase = true
-        out = call(Tensor.convert(x))
-        loss = @loss_func.loss(out, Tensor.convert(y), layers)
-        loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
+        output_tensors = call(Tensor.convert(x))
+        if output_tensors.is_a?(Array)
+          loss_data = []
+          output_tensors.each.with_index do |out, i|
+            loss = if i == 0
+              @loss_func[i].loss(out, Tensor.convert(y[i]), layers)
+            else
+              @loss_func[i].loss(out, Tensor.convert(y[i]))
+            end
+            loss_data << loss.data
+            loss.link.backward(Xumo::SFloat.ones(y[i][0...1, false].shape[0], 1))
+          end
+        else
+          out = output_tensors
+          loss = @loss_func.loss(out, Tensor.convert(y), layers)
+          loss_data = loss.data
+          loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
+        end
         @optimizer.update(get_all_trainable_params)
-        @last_log[:train_loss] = loss.data
+        @last_log[:train_loss] = loss_data
         call_callbacks(:after_train_on_batch)
-        loss.data
+        loss_data
       end
 
       # Evaluate model and get accuracy and loss of test data.
@@ -258,33 +290,66 @@ module DNN
       def evaluate_by_iterator(test_iterator, batch_size: 100)
         num_test_datas = test_iterator.num_datas
         batch_size = batch_size >= num_test_datas ? num_test_datas : batch_size
-        total_correct = 0
-        sum_loss = 0
+        if @loss_func.is_a?(Array)
+          total_correct = Array.new(@loss_func.length, 0)
+          sum_loss = Array.new(@loss_func.length, 0)
+        else
+          total_correct = 0
+          sum_loss = 0
+        end
         max_steps = (num_test_datas.to_f / batch_size).ceil
         test_iterator.foreach(batch_size) do |x_batch, y_batch|
           correct, loss_value = test_on_batch(x_batch, y_batch)
-          total_correct += correct
-          sum_loss += loss_value
+          if @loss_func.is_a?(Array)
+            @loss_func.each_index do |i|
+              total_correct[i] += correct[i]
+              sum_loss[i] += loss_value[i]
+            end
+          else
+            total_correct += correct
+            sum_loss += loss_value
+          end
         end
-        mean_loss = sum_loss / max_steps
-        acc = total_correct.to_f / num_test_datas
+        if @loss_func.is_a?(Array)
+          mean_loss = Array.new(@loss_func.length, 0)
+          acc = Array.new(@loss_func.length, 0)
+          @loss_func.each_index do |i|
+            mean_loss[i] += sum_loss[i] / max_steps
+            acc[i] += total_correct[i].to_f / num_test_datas
+          end
+        else
+          mean_loss = sum_loss / max_steps
+          acc = total_correct.to_f / num_test_datas
+        end
         @last_log[:test_loss] = mean_loss
         @last_log[:test_accuracy] = acc
         [acc, mean_loss]
       end
 
       # Evaluate once.
-      # @param [Numo::SFloat] x Input test data.
-      # @param [Numo::SFloat] y Output test data.
+      # @param [Numo::SFloat | Array] x Input test data.
+      # @param [Numo::SFloat | Array] y Output test data.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       def test_on_batch(x, y)
         call_callbacks(:before_test_on_batch)
         DNN.learning_phase = false
-        out = call(Tensor.convert(x))
-        correct = accuracy(out.data, y)
-        loss = @loss_func.(out, Tensor.convert(y))
+        output_tensors = call(Tensor.convert(x))
+        if output_tensors.is_a?(Array)
+          correct = []
+          loss_data = []
+          output_tensors.each.with_index do |out, i|
+            correct << accuracy(out.data, y[i])
+            loss = @loss_func[i].(out, Tensor.convert(y[i]))
+            loss_data << loss.data
+          end
+        else
+          out = output_tensors
+          correct = accuracy(out.data, y)
+          loss = @loss_func.(out, Tensor.convert(y))
+          loss_data = loss.data
+        end
         call_callbacks(:after_test_on_batch)
-        [correct, loss.data]
+        [correct, loss_data]
       end
 
       # Implement the process to accuracy this model.
@@ -313,12 +378,23 @@ module DNN
       def predict(x, use_loss_activation: true)
         check_xy_type(x)
         DNN.learning_phase = false
-        out = call(Tensor.convert(x))
-        y = out.data
-        if use_loss_activation && @loss_func.class.respond_to?(:activation)
-          y = @loss_func.class.activation(y)
+        output_tensors = call(Tensor.convert(x))
+        if output_tensors.is_a?(Array)
+          lfs = @loss_func
+          ary_output_tensors = output_tensors
+        else
+          lfs = [@loss_func]
+          ary_output_tensors = [output_tensors]
         end
-        y
+        ys = []
+        ary_output_tensors.each.with_index do |out, i|
+          y = out.data
+          if use_loss_activation && lfs[i].class.respond_to?(:activation)
+            y = lfs[i].class.activation(y)
+          end
+          ys << y
+        end
+        output_tensors.is_a?(Array) ? ys : ys.first
       end
 
       # Predict one data.
@@ -433,15 +509,37 @@ module DNN
       end
 
       def metrics_to_str(mertics)
-        mertics.map { |key, num| "#{key}: #{sprintf('%.4f', num)}" }.join(", ")
+        mertics.map { |key, values|
+          str_values = if values.is_a?(Array)
+                         values_fmt = values.map { |v| sprintf('%.4f', v) }
+                         "[#{values_fmt.join(", ")}]"
+                       else
+                         sprintf('%.4f', values)
+                       end
+          "#{key}: #{str_values}"
+        }.join(", ")
       end
 
       def check_xy_type(x, y = nil)
         if !x.is_a?(Xumo::SFloat) && !x.is_a?(Array)
           raise TypeError, "x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class."
         end
+        if x.is_a?(Array)
+          x.each.with_index do |v, i|
+            unless v.is_a?(Xumo::SFloat)
+              raise TypeError, "x[#{i}]:#{v.class.name} is not an instance of #{Xumo::SFloat.name} class."
+            end
+          end
+        end
         if y && !y.is_a?(Xumo::SFloat) && !y.is_a?(Array)
           raise TypeError, "y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class."
+        end
+        if y.is_a?(Array)
+          y.each.with_index do |v, i|
+            unless v.is_a?(Xumo::SFloat)
+              raise TypeError, "x[#{i}]:#{v.class.name} is not an instance of #{Xumo::SFloat.name} class."
+            end
+          end
         end
       end
     end

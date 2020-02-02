@@ -7,6 +7,18 @@ include DNN::Initializers
 include DNN::Losses
 include DNN::Models
 
+class StubMultiOutputModel < DNN::Models::Model
+  def initialize(dense)
+    super()
+    @dense = dense
+  end
+
+  def forward(x)
+    out = @dense.(x)
+    [out, out]
+  end
+end
+
 class TestSequential < MiniTest::Unit::TestCase
   def test_initialize
     model = Sequential.new([InputLayer.new([10]), Dense.new(10)])
@@ -103,7 +115,22 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 0, loss
   end
 
-  # # It is accuracy is 1.
+  # Test multiple outputs.
+  def test_train_on_batch2
+    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Numo::SFloat[[65, 130], [155, 310]]
+    dense = Dense.new(2)
+    dense.build([3])
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Numo::SFloat[5, 10]
+    model = StubMultiOutputModel.new(dense)
+    model.setup(SGD.new, [MeanSquaredError.new, MeanSquaredError.new])
+    loss = model.train_on_batch(x, [y, y])
+
+    assert_equal [0, 0], loss
+  end
+
+  # It is accuracy is 1.
   def test_evaluate
     model = Sequential.new
     model << InputLayer.new(3)
@@ -113,7 +140,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 1, model.evaluate(x, y, batch_size: 1).first
   end
 
-  # # It is accuracy is 0.5.
+  # It is accuracy is 0.5.
   def test_evaluate2
     model = Sequential.new
     model << InputLayer.new(3)
@@ -140,7 +167,23 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 0, loss
   end
 
-  # # It is matching dense forward result and unuse loss activation.
+  # Test multiple outputs.
+  def test_test_on_batch2
+    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Numo::SFloat[[65, 130], [155, 310]]
+    dense = Dense.new(2)
+    dense.build([3])
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Numo::SFloat[5, 10]
+    model = StubMultiOutputModel.new(dense)
+    model.setup(SGD.new, [MeanSquaredError.new, MeanSquaredError.new])
+    corrects, losss = model.test_on_batch(x, [y, y])
+
+    assert_equal [2, 2], corrects
+    assert_equal [0, 0], losss
+  end
+
+  # It is matching dense forward result and unuse loss activation.
   def test_predict
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense = Dense.new(2)
@@ -155,7 +198,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[65, 130], [155, 310]], model.predict(x, use_loss_activation: false)
   end
 
-  # # It is matching dense forward result and use loss activation.
+  # It is matching dense forward result and use loss activation.
   def test_predict2
     x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense = Dense.new(2)
@@ -170,7 +213,21 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[[1, 1], [1, 1]], model.predict(x, use_loss_activation: true)
   end
 
-  # # It is matching dense forward result.
+  # Test multiple outputs.
+  def test_predict3
+    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    expected_y = [Numo::SFloat[[1, 1], [1, 1]], Numo::SFloat[[1, 1], [1, 1]]]
+    dense = Dense.new(2)
+    dense.build([3])
+    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Numo::SFloat[5, 10]
+    model = StubMultiOutputModel.new(dense)
+    model.setup(SGD.new, [SigmoidCrossEntropy.new, SigmoidCrossEntropy.new])
+
+    assert_equal expected_y, model.predict(x, use_loss_activation: true)
+  end
+
+  # It is matching dense forward result.
   def test_predict1
     x = Numo::SFloat[1, 2, 3]
     dense = Dense.new(2)
@@ -185,7 +242,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[65, 130], model.predict1(x)
   end
 
-  # # It is including callback function in @callback.
+  # It is including callback function in @callback.
   def test_add_callback
     model = Sequential.new
     cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch) {}
@@ -193,7 +250,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal [cbk], model.instance_variable_get(:@callbacks)
   end
 
-  # # It is not including callback function in @callback.
+  # It is not including callback function in @callback.
   def test_clear_callbacks
     model = Sequential.new
     cbk = DNN::Callbacks::LambdaCallback.new(:before_epoch) {}
@@ -202,7 +259,7 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal [], model.instance_variable_get(:@callbacks)
   end
 
-  # # It is running all callback function.
+  # It is running all callback function.
   def test_call_callbacks
     call_cnt = 0
     call_flg = [0, 0]
@@ -221,6 +278,20 @@ class TestSequential < MiniTest::Unit::TestCase
     model.add_callback(cbk2)
     model.send(:call_callbacks, :before_epoch)
     assert_equal [1, 2], call_flg
+  end
+
+  def test_metrics_to_str
+    met = { accuracy: 0.00011, test_loss: 0.00011 }
+    str_met = "accuracy: 0.0001, test_loss: 0.0001"
+    model = DNN::Models::Model.new
+    assert_equal str_met, model.send(:metrics_to_str, met)
+  end
+
+  def test_metrics_to_str2
+    met = { accuracy: [0.00011, 0.00011], test_loss: [0.00011, 0.00011] }
+    str_met = "accuracy: [0.0001, 0.0001], test_loss: [0.0001, 0.0001]"
+    model = DNN::Models::Model.new
+    assert_equal str_met, model.send(:metrics_to_str, met)
   end
 
   def test_copy
