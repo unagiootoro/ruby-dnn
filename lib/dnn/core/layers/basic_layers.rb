@@ -78,6 +78,10 @@ module DNN
         @input_shape
       end
 
+      def <<(tensor)
+        self.(tensor)
+      end
+
       # Layer to a hash.
       def to_hash(merge_hash = nil)
         hash = { class: self.class.name }
@@ -153,20 +157,6 @@ module DNN
 
       def to_proc
         method(:call).to_proc
-      end
-
-      def >>(layer)
-        if RUBY_VERSION < "2.6.0"
-          raise DNNError, "Function composition is not supported before ruby version 2.6.0."
-        end
-        to_proc >> layer
-      end
-
-      def <<(layer)
-        if RUBY_VERSION < "2.6.0"
-          raise DNNError, "Function composition is not supported before ruby version 2.6.0."
-        end
-        to_proc << layer
       end
 
       def to_hash

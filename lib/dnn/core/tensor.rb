@@ -16,6 +16,10 @@ module DNN
       @link = link
     end
 
+    def >>(layer)
+      layer.(self)
+    end
+
     def shape
       @data.shape
     end
