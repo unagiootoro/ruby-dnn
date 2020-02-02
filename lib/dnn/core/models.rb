@@ -589,14 +589,14 @@ module DNN
       end
 
       # Add layer to the model.
-      # @param [DNN::Layers::Layer] layer Layer to add to the model.
+      # @param [DNN::Layers::Layer | DNN::Models::Chain] layer Layer or Chain to add to the model.
       # @return [DNN::Models::Model] Return self.
       def add(layer)
         if layer.is_a?(Layers::MergeLayer)
           raise TypeError, "layer: #{layer.class.name} should not be a DNN::Layers::MergeLayer class."
         end
-        unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
-          raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class."
+        unless layer.is_a?(Layers::Layer) || layer.is_a?(Chain)
+          raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Chain class."
         end
         @stack << layer
         self
@@ -605,20 +605,20 @@ module DNN
       alias << add
 
       # Insert layer to the model by index position.
-      # @param [DNN::Layers::Layer] layer Layer to add to the model.
+      # @param [DNN::Layers::Layer | DNN::Models::Chain] layer Layer or Chain to add to the model.
       # @return [DNN::Models::Model] Return self.
       def insert(index, layer)
         if layer.is_a?(Layers::MergeLayer)
           raise TypeError, "layer: #{layer.class.name} should not be a DNN::Layers::MergeLayer class."
         end
-        unless layer.is_a?(Layers::Layer) || layer.is_a?(Model)
-          raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Model class."
+        unless layer.is_a?(Layers::Layer) || layer.is_a?(Chain)
+          raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Chain class."
         end
         @stack.insert(index, layer)
       end
 
       # Remove layer to the model.
-      # @param [DNN::Layers::Layer] layer Layer to remove to the model.
+      # @param [DNN::Layers::Layer | DNN::Models::Chain] layer Layer to remove to the model.
       # @return [Boolean] Return true if success for remove layer.
       def remove(layer)
         @stack.delete(layer) ? true : false
