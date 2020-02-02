@@ -1,5 +1,7 @@
 require "bundler/gem_tasks"
 require "rake/testtask"
+require "yard"
+require "yard/rake/yardoc_task"
 
 Rake::TestTask.new(:test) do |t|
   t.libs << "test"
@@ -18,10 +20,12 @@ end
 
 task :default => [:test, :build_rb_stb_image]
 
-task :doc do
-  src_list = Dir["lib/dnn.rb"]
-  src_list += Dir["lib/dnn/core/*.rb"]
-  src_list += Dir["lib/dnn/core/layers/*.rb"]
-  src_list += Dir["lib/dnn/*.rb"]
-  sh "yardoc #{src_list.join(' ')}"
+YARD::Rake::YardocTask.new do |t|
+  t.files = [
+    "lib/dnn.rb",
+    "lib/dnn/core/*.rb",
+    "lib/dnn/core/layers/*.rb",
+    "lib/dnn/*.rb",
+    "lib/dnn/datasets/*.rb",
+  ]
 end
