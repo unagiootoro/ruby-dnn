@@ -4,7 +4,7 @@
 
 ruby-dnn is a ruby deep learning library. This library supports full connected neural network and convolution neural network
 and recurrent neural network.
-Currently, you can get 99% accuracy with MNIST and 78% with CIFAR 10.
+Currently, you can get 99% accuracy with MNIST and 82% with CIFAR 10.
 
 ## Installation
 
@@ -42,7 +42,6 @@ model << Dense.new(10)
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
 model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
-
 
 accuracy, loss = model.evaluate(x_test, y_test)
 puts "accuracy: #{accuracy}"
