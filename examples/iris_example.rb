@@ -42,7 +42,7 @@ end
     out = net.(x, y)
     loss = lf.(out, y)
     loss.link.backward
-    puts "epoch: #{epoch}, step: #{step}, loss = #{loss.data}"
+    puts "epoch: #{epoch}, step: #{step}, loss = #{loss.data.to_f}"
     opt.update([w1, b1, w2, b2])
   end
 end
