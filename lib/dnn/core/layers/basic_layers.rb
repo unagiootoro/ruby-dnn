@@ -8,7 +8,7 @@ module DNN
         y = forward_node(x)
         link = Link.new(prev, self)
         prev.next = link if prev.is_a?(Link)
-        Tensor.new(y, link)
+        Tensor.convert(y, link)
       end
 
       def forward_node(x)
@@ -46,7 +46,7 @@ module DNN
       # @param [Tensor | Param] input Input tensor or param.
       # @return [Tensor] Output tensor.
       def call(input)
-        input = Tensor.new(input) if !input.is_a?(Tensor) && !input.is_a?(Param)
+        input = Tensor.convert(input) if !input.is_a?(Tensor) && !input.is_a?(Param)
         build(input.data.shape[1..-1]) unless built?
         forward(input)
       end

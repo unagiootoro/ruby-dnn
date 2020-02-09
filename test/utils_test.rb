@@ -15,6 +15,13 @@ class TestUtils < MiniTest::Unit::TestCase
     assert_kind_of Numo::SFloat, y2
   end
 
+  def test_broadcast_to
+    y = Numo::SFloat.new(1, 2, 3, 4).seq
+    x = y.sum(axis: 2)
+    x = DNN::Utils.broadcast_to(x, y.shape)
+    assert_equal y.shape, x.shape
+  end
+
   def test_hash_to_obj
     relu = Utils.hash_to_obj({class: "DNN::Layers::ReLU"})
     assert_kind_of ReLU, relu

@@ -14,7 +14,7 @@ class TestL1 < MiniTest::Unit::TestCase
     param = DNN::Param.new(Numo::SFloat[-2, 2])
     l1 = L1.new(0.1)
     l1.param = param
-    assert_equal 1.4, l1.forward(1).data
+    assert_equal 1.4, l1.forward(1).data.to_f.round(4)
   end
 
   def test_backward
@@ -24,7 +24,7 @@ class TestL1 < MiniTest::Unit::TestCase
     l1 = L1.new(0.1)
     l1.param = param
     out = l1.forward(1)
-    out.link.backward(1)
+    out.link.backward
     assert_equal Numo::SFloat[-1.1, 1.1], l1.instance_variable_get(:@param).grad.round(4)
   end
 
@@ -53,7 +53,7 @@ class TestL2 < MiniTest::Unit::TestCase
     param = DNN::Param.new(Numo::SFloat[-2, 2])
     l2 = L2.new(0.1)
     l2.param = param
-    assert_equal 1.4, l2.forward(1).data
+    assert_equal 1.4, l2.forward(1).data.to_f.round(4)
   end
 
   def test_backward
@@ -61,7 +61,7 @@ class TestL2 < MiniTest::Unit::TestCase
     l2 = L2.new(0.1)
     l2.param = param
     out = l2.forward(1)
-    out.link.backward(1)
+    out.link.backward
     assert_equal Numo::SFloat[-1.2, 1.2], l2.instance_variable_get(:@param).grad.round(4)
   end
 
@@ -92,7 +92,7 @@ class TestL1L2 < MiniTest::Unit::TestCase
     param = DNN::Param.new(Numo::SFloat[-2, 2])
     l1l2 = L1L2.new(0.1, 0.1)
     l1l2.param = param
-    assert_in_delta 1.8, l1l2.forward(1).data
+    assert_in_delta 1.8, l1l2.forward(1).data.to_f.round(4)
   end
 
   def test_backward
@@ -100,7 +100,7 @@ class TestL1L2 < MiniTest::Unit::TestCase
     l1l2 = L1L2.new(0.1, 0.1)
     l1l2.param = param
     out = l1l2.forward(1)
-    out.link.backward(1)
+    out.link.backward
     assert_equal Numo::SFloat[-1.3, 1.3], l1l2.instance_variable_get(:@param).grad.round(4)
   end
 

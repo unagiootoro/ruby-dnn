@@ -1,5 +1,50 @@
 module DNN
   module Layers
+    module MathUtils
+      def self.align_ndim(shape1, shape2)
+        if shape1.length < shape2.length
+          shape2.length.times do |axis|
+            unless shape1[axis] == shape2[axis]
+              shape1.insert(axis, 1)
+            end
+          end
+        elsif shape1.length > shape2.length
+          shape1.length.times do |axis|
+            unless shape1[axis] == shape2[axis]
+              shape2.insert(axis, 1)
+            end
+          end
+        end
+        [shape1, shape2]
+      end
+
+      def self.broadcast_to(x, target_shape)
+        return x if x.shape == target_shape
+        x_shape, target_shape = align_ndim(x.shape, target_shape)
+        x = x.reshape(*x_shape)
+        x_shape.length.times do |axis|
+          unless x.shape[axis] == target_shape[axis]
+            tmp = x
+            (target_shape[axis] - 1).times do
+              x = x.concatenate(tmp, axis: axis)
+            end
+          end
+        end
+        x
+      end
+
+      def self.sum_to(x, target_shape)
+        return x if x.shape == target_shape
+        x_shape, target_shape = align_ndim(x.shape, target_shape)
+        x = x.reshape(*x_shape)
+        x_shape.length.times do |axis|
+          unless x.shape[axis] == target_shape[axis]
+            x = x.sum(axis: axis, keepdims: true)
+          end
+        end
+        x
+      end
+    end
 
     class Neg < Layer
       include LayerNode
@@ -17,11 +62,15 @@ module DNN
       include MergeLayerNode
 
       def forward_node(x1, x2)
+        @x1_shape = x1.shape
+        @x2_shape = x2.shape
         x1 + x2
       end
 
       def backward_node(dy)
-        [dy, dy]
+        dx1 = MathUtils.sum_to(dy, @x1_shape)
+        dx2 = MathUtils.sum_to(dy, @x2_shape)
+        [dx1, dx2]
       end
     end
 
@@ -29,11 +78,15 @@ module DNN
       include MergeLayerNode
 
       def forward_node(x1, x2)
+        @x1_shape = x1.shape
+        @x2_shape = x2.shape
         x1 - x2
       end
 
       def backward_node(dy)
-        [dy, -dy]
+        dx1 = MathUtils.sum_to(dy, @x1_shape)
+        dx2 = MathUtils.sum_to(-dy, @x2_shape)
+        [dx1, dx2]
       end
     end
 
@@ -46,7 +99,9 @@ module DNN
       end
 
       def backward_node(dy)
-        [dy * @x2, dy * @x1]
+        dx1 = MathUtils.sum_to(dy * @x2, @x1.shape)
+        dx2 = MathUtils.sum_to(dy * @x1, @x2.shape)
+        [dx1, dx2]
       end
     end
 
@@ -59,8 +114,8 @@ module DNN
       end
 
       def backward_node(dy)
-        dx1 = dy / @x2
-        dx2 = dy * -(@x1 / @x2**2)
+        dx1 = MathUtils.sum_to(dy / @x2, @x1.shape)
+        dx2 = MathUtils.sum_to(dy * -(@x1 / @x2**2), @x2.shape)
         [dx1, dx2]
       end
     end

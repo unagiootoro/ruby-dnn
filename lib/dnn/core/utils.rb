@@ -21,6 +21,14 @@ module DNN
       dnn_class.from_hash(hash)
     end
 
+    # Broadcast to target shape.
+    # @param [Numo::SFloat] x Data to broadcast.
+    # @param [Array] Shape to broadcast.
+    # @return [Numo::SFloat] Broadcasted data.
+    def self.broadcast_to(x, target_shape)
+      Layers::MathUtils.broadcast_to(x, target_shape)
+    end
+
     # Return the result of the sigmoid function.
     def self.sigmoid(x)
       Losses::SigmoidCrossEntropy.sigmoid(x)

@@ -38,18 +38,22 @@ module DNN
     end
 
     def +(other)
+      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Layers::Add.(self, other)
     end
 
     def -(other)
+      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Layers::Sub.(self, other)
     end
 
     def *(other)
+      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Layers::Mul.(self, other)
     end
 
     def /(other)
+      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Layers::Div.(self, other)
     end
 

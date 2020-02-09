@@ -3,11 +3,13 @@ module DNN
     attr_reader :data
     attr_accessor :link
 
-    def self.convert(inputs)
+    def self.convert(inputs, link = nil)
       if inputs.is_a?(Array)
-        inputs.map { |input| Tensor.new(input) }
+        inputs.map { |input| Tensor.new(input, link) }
+      elsif inputs.is_a?(Integer) || inputs.is_a?(Float)
+        Tensor.new(Xumo::SFloat[inputs], link)
       else
-        Tensor.new(inputs)
+        Tensor.new(inputs, link)
       end
     end
 
@@ -33,18 +35,22 @@ module DNN
     end
 
     def +(other)
+      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Layers::Add.(self, other)
     end
 
     def -(other)
+      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Layers::Sub.(self, other)
     end
 
     def *(other)
+      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Layers::Mul.(self, other)
     end
 
     def /(other)
+      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Layers::Div.(self, other)
     end
 

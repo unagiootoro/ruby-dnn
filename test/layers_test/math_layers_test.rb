@@ -1,5 +1,61 @@
 require "test_helper"
 
+class TestMathUtils < MiniTest::Unit::TestCase
+  def test_align_ndim2
+    shape1 = [1, 2, 3, 4]
+    shape2 = [1, 2, 3, 4]
+    shape1, shape2 = DNN::Layers::MathUtils.align_ndim(shape1, shape2)
+    assert_equal [1, 2, 3, 4], shape1
+    assert_equal [1, 2, 3, 4], shape2
+  end
+
+  def test_align_ndim2
+    shape1 = [3, 4]
+    shape2 = [1, 2, 3, 4]
+    shape1, shape2 = DNN::Layers::MathUtils.align_ndim(shape1, shape2)
+    assert_equal [1, 1, 3, 4], shape1
+    assert_equal [1, 2, 3, 4], shape2
+  end
+
+  def test_align_ndim3
+    shape1 = [1, 2]
+    shape2 = [1, 2, 3, 4]
+    shape1, shape2 = DNN::Layers::MathUtils.align_ndim(shape1, shape2)
+    assert_equal [1, 2, 1, 1], shape1
+    assert_equal [1, 2, 3, 4], shape2
+  end
+
+  def test_align_ndim4
+    shape2 = [3, 4]
+    shape1 = [1, 2, 3, 4]
+    shape1, shape2 = DNN::Layers::MathUtils.align_ndim(shape1, shape2)
+    assert_equal [1, 1, 3, 4], shape2
+    assert_equal [1, 2, 3, 4], shape1
+  end
+
+  def test_align_ndim5
+    shape2 = [1, 2]
+    shape1 = [1, 2, 3, 4]
+    shape1, shape2 = DNN::Layers::MathUtils.align_ndim(shape1, shape2)
+    assert_equal [1, 2, 1, 1], shape2
+    assert_equal [1, 2, 3, 4], shape1
+  end
+
+  def test_broadcast_to
+    y = Numo::SFloat.new(1, 2, 3, 4).seq
+    x = y.sum(axis: 2)
+    x = DNN::Layers::MathUtils.broadcast_to(x, y.shape)
+    assert_equal y.shape, x.shape
+  end
+
+  def test_sum_to
+    x = Numo::SFloat.new(1, 2, 3, 4).seq
+    y = x.sum(axis: 2, keepdims: true)
+    x = DNN::Layers::MathUtils.sum_to(x, y.shape)
+    assert_equal y.shape, x.shape
+  end
+end
+
 class TestNeg < MiniTest::Unit::TestCase
   def test_forward_node
     neg = DNN::Layers::Neg.new
