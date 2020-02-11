@@ -44,7 +44,7 @@ class KerasModelConvertor
     unless @k_model.__class__.__name__ == "Sequential"
       raise DNNKerasModelConvertError.new("#{@k_model.__class__.__name__} models do not support convert.")
     end
-    layers = convert_layers(@k_model.layers)
+    layers = convert_layers
     input_shape = @k_model.layers[0].input_shape.to_a[1..-1]
     input_layer = DNN::Layers::InputLayer.new(input_shape)
     input_layer.build(input_shape)
@@ -53,8 +53,8 @@ class KerasModelConvertor
     dnn_model
   end
 
-  def convert_layers(k_layers)
-    k_layers.map do |k_layer|
+  def convert_layers
+    @k_model.layers.map do |k_layer|
       layer_convert(k_layer)
     end
   end
