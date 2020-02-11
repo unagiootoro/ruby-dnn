@@ -45,10 +45,6 @@ class KerasModelConvertor
       raise DNNKerasModelConvertError.new("#{@k_model.__class__.__name__} models do not support convert.")
     end
     layers = convert_layers
-    input_shape = @k_model.layers[0].input_shape.to_a[1..-1]
-    input_layer = DNN::Layers::InputLayer.new(input_shape)
-    input_layer.build(input_shape)
-    layers.unshift(input_layer)
     dnn_model = DNN::Models::Sequential.new(layers)
     dnn_model
   end
@@ -80,6 +76,13 @@ class KerasModelConvertor
   def build_dnn_layer(k_layer, dnn_layer)
     input_shape, output_shape = get_k_layer_shape(k_layer)
     dnn_layer.build(input_shape)
+  end
+
+  def convert_InputLayer(k_input_layer)
+    input_shape, output_shape = get_k_layer_shape(k_input_layer)
+    input_layer = DNN::Layers::InputLayer.new(input_shape)
+    input_layer.build(input_shape)
+    input_layer
   end
 
   def convert_Dense(k_dense)
