@@ -40,18 +40,26 @@ class KerasModelConvertor
     @k_model = KerasModelConvertor.k_load_model(k_model_name, k_weights_name)
   end
 
-  def convert
+  def convert(not_support_to_nil: false)
     unless @k_model.__class__.__name__ == "Sequential"
       raise DNNKerasModelConvertError.new("#{@k_model.__class__.__name__} models do not support convert.")
     end
-    layers = convert_layers
+    layers = convert_layers(not_support_to_nil: not_support_to_nil)
     dnn_model = DNN::Models::Sequential.new(layers)
     dnn_model
   end
 
-  def convert_layers
+  def convert_layers(not_support_to_nil: false)
     @k_model.layers.map do |k_layer|
-      layer_convert(k_layer)
+      if not_support_to_nil
+        begin
+          layer_convert(k_layer)
+        rescue DNNKerasModelConvertError => e
+          nil
+        end
+      else
+        layer_convert(k_layer)
+      end
     end
   end
 
