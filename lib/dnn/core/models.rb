@@ -109,6 +109,7 @@ module DNN
     # This class deals with the model of the network.
     class Model < Chain
       attr_accessor :optimizer
+      attr_accessor :loss_weights
       attr_reader :last_log
 
       # Load marshal model.
@@ -126,6 +127,7 @@ module DNN
         @optimizer = nil
         @loss_func = nil
         @built = false
+        @loss_weights = nil
         @callbacks = []
         @last_log = {}
       end
@@ -139,7 +141,8 @@ module DNN
       # Set optimizer and loss_func to model.
       # @param [DNN::Optimizers::Optimizer] optimizer Optimizer to use for learning.
       # @param [DNN::Losses::Loss] loss_func Loss function to use for learning.
-      def setup(optimizer, loss_func)
+      # @param [Array | NilClass] loss_weights Setting loss weights contribution.
+      def setup(optimizer, loss_func, loss_weights: nil)
         unless optimizer.is_a?(Optimizers::Optimizer)
           raise TypeError, "optimizer:#{optimizer.class} is not an instance of DNN::Optimizers::Optimizer class."
         end
@@ -148,6 +151,7 @@ module DNN
         end
         @optimizer = optimizer
         self.loss_func = loss_func
+        @loss_weights = loss_weights
       end
 
       def loss_func
@@ -285,17 +289,16 @@ module DNN
         if output_tensors.is_a?(Array)
           loss_data = []
           output_tensors.each.with_index do |out, i|
-            loss = if i == 0
-              @loss_func[i].loss(out, Tensor.convert(y[i]), layers)
-            else
-              @loss_func[i].loss(out, Tensor.convert(y[i]))
-            end
+            loss_opt = {}
+            loss_opt[:layers] = layers if i == 0
+            loss_opt[:loss_weight] = @loss_weights[i] if @loss_weights
+            loss = @loss_func[i].loss(out, Tensor.convert(y[i]), **loss_opt)
             loss_data << loss.data.to_f
             loss.link.backward(Xumo::SFloat.ones(y[i][0...1, false].shape[0], 1))
           end
         else
           out = output_tensors
-          loss = @loss_func.loss(out, Tensor.convert(y), layers)
+          loss = @loss_func.loss(out, Tensor.convert(y), layers: layers)
           loss_data = loss.data.to_f
           loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
         end

@@ -19,7 +19,7 @@ module DNN
         forward(y, t)
       end
 
-      def loss(y, t, layers = nil)
+      def loss(y, t, layers: nil, loss_weight: nil)
         unless y.shape == t.shape
           raise DNNShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
         end
