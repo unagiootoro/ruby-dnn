@@ -27,40 +27,51 @@ end
 
 class DNNKerasModelConvertError < DNN::DNNError; end
 
+class DNNKerasLayerNotConvertSupportError < DNNKerasModelConvertError; end
+
 class KerasModelConvertor
   pyfrom :"keras.models", import: :load_model
 
-  def self.k_load_model(k_model_name, k_weights_name)
-    model = load_model(k_model_name)
-    model.load_weights(k_weights_name) if k_weights_name
-    model
+  def self.load(k_model_name, k_weights_name = nil)
+    k_model = load_model(k_model_name)
+    k_model.load_weights(k_weights_name) if k_weights_name
+    self.new(k_model)
   end
 
-  def initialize(k_model_name, k_weights_name = nil)
-    @k_model = KerasModelConvertor.k_load_model(k_model_name, k_weights_name)
+  def initialize(k_model)
+    @k_model = k_model
   end
 
-  def convert(not_support_to_nil: false)
+  def convert(not_support_to_nil: false, debug_message: false)
     unless @k_model.__class__.__name__ == "Sequential"
       raise DNNKerasModelConvertError.new("#{@k_model.__class__.__name__} models do not support convert.")
     end
-    layers = convert_layers(not_support_to_nil: not_support_to_nil)
+    layers = convert_layers(not_support_to_nil: not_support_to_nil, debug_message: debug_message)
     dnn_model = DNN::Models::Sequential.new(layers)
     dnn_model
   end
 
-  def convert_layers(not_support_to_nil: false)
-    @k_model.layers.map do |k_layer|
-      if not_support_to_nil
+  def convert_layers(not_support_to_nil: false, debug_message: false)
+    layers = []
+    @k_model.layers.each do |k_layer|
+      layer = if not_support_to_nil
         begin
           layer_convert(k_layer)
-        rescue DNNKerasModelConvertError => e
+        rescue DNNKerasLayerNotConvertSupportError => e
           nil
         end
       else
         layer_convert(k_layer)
       end
+      if layer.is_a?(Array)
+        layer.each { |l| puts "Converted #{l.class.name} layer" } if debug_message
+        layers += layer
+      else
+        puts "Converted #{layer.class.name} layer" if debug_message
+        layers << layer
+      end
     end
+    layers
   end
 
   private
@@ -71,7 +82,7 @@ class KerasModelConvertor
     if respond_to?(method_name, true)
       send(method_name, k_layer)
     else
-      raise DNNKerasModelConvertError.new("#{k_layer_name} layer do not support convert.")
+      raise DNNKerasLayerNotConvertSupportError.new("#{k_layer_name} layer do not support convert.")
     end
   end
 
@@ -99,12 +110,21 @@ class KerasModelConvertor
     dense.build(input_shape)
     dense.weight.data = Numpy.to_na(k_dense.get_weights[0])
     dense.bias.data = Numpy.to_na(k_dense.get_weights[1])
-    dense
+    returns = [dense]
+    unless k_dense.get_config[:activation] == "linear"
+      returns << activation_to_dnn_layer(k_dense.get_config[:activation], output_shape)
+    end
+    returns
   end
 
   def convert_Activation(k_activation)
+    input_shape, output_shape = get_k_layer_shape(k_activation)
     activation_name = k_activation.get_config[:activation].to_s
-    activation = case k_activation.get_config[:activation].to_s
+    activation_to_dnn_layer(activation_name, input_shape)
+  end
+
+  def activation_to_dnn_layer(activation_name, shape)
+    activation = case activation_name
     when "sigmoid"
        DNN::Layers::Sigmoid.new
     when "tanh"
@@ -116,7 +136,7 @@ class KerasModelConvertor
     else
       raise DNNKerasModelConvertError.new("#{activation_name} activation do not support convert.")
     end
-    build_dnn_layer(k_activation, activation)
+    activation.build(shape)
     activation
   end
 
@@ -147,19 +167,29 @@ class KerasModelConvertor
     build_dnn_layer(k_conv2d, conv2d)
     conv2d.filters = Numpy.to_na(k_conv2d.get_weights[0])
     conv2d.bias.data = Numpy.to_na(k_conv2d.get_weights[1])
-    conv2d
+    returns = [conv2d]
+    unless k_conv2d.get_config[:activation] == "linear"
+      input_shape, output_shape = get_k_layer_shape(k_conv2d)
+      returns << activation_to_dnn_layer(k_conv2d.get_config[:activation], output_shape)
+    end
+    returns
   end
 
-  def convert_Conv2DTranspose(k_conv2d)
-    padding = k_conv2d.get_config[:padding].to_s == "same" ? true : false
-    filter_size = k_conv2d.get_config[:kernel_size].to_a
-    strides = k_conv2d.get_config[:strides].to_a
-    num_filters = k_conv2d.get_config[:filters]
-    conv2d = DNN::Layers::Conv2DTranspose.new(num_filters, filter_size, padding: padding, strides: strides)
-    build_dnn_layer(k_conv2d, conv2d)
-    conv2d.filters = Numpy.to_na(k_conv2d.get_weights[0])
-    conv2d.bias.data = Numpy.to_na(k_conv2d.get_weights[1])
-    conv2d
+  def convert_Conv2DTranspose(k_conv2d_t)
+    padding = k_conv2d_t.get_config[:padding].to_s == "same" ? true : false
+    filter_size = k_conv2d_t.get_config[:kernel_size].to_a
+    strides = k_conv2d_t.get_config[:strides].to_a
+    num_filters = k_conv2d_t.get_config[:filters]
+    conv2d_t = DNN::Layers::Conv2DTranspose.new(num_filters, filter_size, padding: padding, strides: strides)
+    build_dnn_layer(k_conv2d_t, conv2d_t)
+    conv2d_t.filters = Numpy.to_na(k_conv2d_t.get_weights[0])
+    conv2d_t.bias.data = Numpy.to_na(k_conv2d_t.get_weights[1])
+    returns = [conv2d_t]
+    unless conv2d_t.get_config[:activation] == "linear"
+      input_shape, output_shape = get_k_layer_shape(k_conv2d)
+      returns << activation_to_dnn_layer(conv2d_t.get_config[:activation], output_shape)
+    end
+    returns
   end
 
   def convert_MaxPooling2D(k_max_pool2d)
@@ -169,6 +199,24 @@ class KerasModelConvertor
     max_pool2d = DNN::Layers::MaxPool2D.new(pool_size, padding: padding, strides: strides)
     build_dnn_layer(k_max_pool2d, max_pool2d)
     max_pool2d
+  end
+
+  def convert_AveragePooling2D(k_avg_pool2d)
+    padding = k_avg_pool2d.get_config[:padding].to_s == "same" ? true : false
+    pool_size = k_avg_pool2d.get_config[:pool_size].to_a
+    strides = k_avg_pool2d.get_config[:strides].to_a
+    avg_pool2d = DNN::Layers::AvgPool2D.new(pool_size, padding: padding, strides: strides)
+    build_dnn_layer(k_avg_pool2d, avg_pool2d)
+    avg_pool2d
+  end
+
+  def convert_GlobalAveragePooling2D(k_glb_avg_pool2d)
+    padding = k_glb_avg_pool2d.get_config[:padding].to_s == "same" ? true : false
+    pool_size = k_glb_avg_pool2d.get_config[:pool_size].to_a
+    strides = k_glb_avg_pool2d.get_config[:strides].to_a
+    glb_avg_pool2d = DNN::Layers::GlobalAvgPool2D.new
+    build_dnn_layer(k_glb_avg_pool2d, glb_avg_pool2d)
+    glb_avg_pool2d
   end
 
   def convert_UpSampling2D(k_upsampling2d)
