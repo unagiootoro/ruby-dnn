@@ -24,6 +24,7 @@ module DNN
           raise DNNShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
         end
         loss = call(y, t)
+        loss *= loss_weight if loss_weight
         loss = regularizers_forward(loss, layers) if layers
         loss
       end
