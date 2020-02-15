@@ -43,5 +43,19 @@ module DNN
     def self.numerical_grad(x, func)
       (func.(x + 1e-7) - func.(x)) / 1e-7
     end
+
+    # Convert numo to cumo.
+    def self.numo2cumo(na)
+      b = na.to_binary
+      ca = Cumo::SFloat.from_binary(b)
+      ca.reshape(*na.shape)
+    end
+
+    # Convert cumo to numo.
+    def self.cumo2numo(ca)
+      b = ca.to_binary
+      na = Numo::SFloat.from_binary(b)
+      na.reshape(*ca.shape)
+    end
   end
 end
