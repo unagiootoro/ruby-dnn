@@ -182,18 +182,21 @@ module DNN
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+      # @param [Boolean] accuracy Set true to compute the accuracy.
       def train(x, y, epochs,
                 batch_size: 1,
                 initial_epoch: 1,
                 test: nil,
-                verbose: true)
+                verbose: true,
+                accuracy: true)
         check_xy_type(x, y)
         train_iterator = Iterator.new(x, y)
         train_by_iterator(train_iterator, epochs,
                           batch_size: batch_size,
                           initial_epoch: initial_epoch,
                           test: test,
-                          verbose: verbose)
+                          verbose: verbose,
+                          accuracy: accuracy)
       end
 
       alias fit train
@@ -207,11 +210,13 @@ module DNN
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+      # @param [Boolean] accuracy Set true to compute the accuracy.
       def train_by_iterator(train_iterator, epochs,
                             batch_size: 1,
                             initial_epoch: 1,
                             test: nil,
-                            verbose: true)
+                            verbose: true,
+                            accuracy: true)
         raise DNNError, "The model is not optimizer setup complete." unless @optimizer
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
 
@@ -246,11 +251,18 @@ module DNN
 
             if test
               acc, loss = if test.is_a?(Array)
-                            evaluate(test[0], test[1], batch_size: batch_size)
+                            evaluate(test[0], test[1], batch_size: batch_size, accuracy: accuracy)
                           else
-                            evaluate_by_iterator(test, batch_size: batch_size)
+                            evaluate_by_iterator(test, batch_size: batch_size, accuracy: accuracy)
                           end
-              print "  " + metrics_to_str({ accuracy: acc, test_loss: loss }) if verbose
+              if verbose
+                metrics = if accuracy
+                            { accuracy: acc, test_loss: loss }
+                          else
+                            { test_loss: loss }
+                          end
+                print "  " + metrics_to_str(metrics)
+              end
             end
             puts "" if verbose
             call_callbacks(:after_epoch)
@@ -313,16 +325,18 @@ module DNN
       # @param [Numo::SFloat] y Output test data.
       # @param [Integer] batch_size Batch size used for one test.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-      def evaluate(x, y, batch_size: 100)
+      #                 If accuracy is not needed returns in the form [nil, mean_loss].
+      def evaluate(x, y, batch_size: 100, accuracy: true)
         check_xy_type(x, y)
-        evaluate_by_iterator(Iterator.new(x, y, random: false), batch_size: batch_size)
+        evaluate_by_iterator(Iterator.new(x, y, random: false), batch_size: batch_size, accuracy: accuracy)
       end
 
       # Evaluate model by iterator.
       # @param [DNN::Iterator] test_iterator Iterator used for testing.
       # @param [Integer] batch_size Batch size used for one test.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-      def evaluate_by_iterator(test_iterator, batch_size: 100)
+      #                 If accuracy is not needed returns in the form [nil, mean_loss].
+      def evaluate_by_iterator(test_iterator, batch_size: 100, accuracy: true)
         num_test_datas = test_iterator.num_datas
         batch_size = batch_size >= num_test_datas ? num_test_datas : batch_size
         if @loss_func.is_a?(Array)
@@ -334,27 +348,28 @@ module DNN
         end
         max_steps = (num_test_datas.to_f / batch_size).ceil
         test_iterator.foreach(batch_size) do |x_batch, y_batch|
-          correct, loss_value = test_on_batch(x_batch, y_batch)
+          correct, loss_value = test_on_batch(x_batch, y_batch, accuracy: accuracy)
           if @loss_func.is_a?(Array)
             @loss_func.each_index do |i|
-              total_correct[i] += correct[i]
+              total_correct[i] += correct[i] if accuracy
               sum_loss[i] += loss_value[i]
             end
           else
-            total_correct += correct
+            total_correct += correct if accuracy
             sum_loss += loss_value
           end
         end
+        acc = nil
         if @loss_func.is_a?(Array)
           mean_loss = Array.new(@loss_func.length, 0)
-          acc = Array.new(@loss_func.length, 0)
+          acc = Array.new(@loss_func.length, 0) if accuracy
           @loss_func.each_index do |i|
             mean_loss[i] += sum_loss[i] / max_steps
-            acc[i] += total_correct[i].to_f / num_test_datas
+            acc[i] += total_correct[i].to_f / num_test_datas if accuracy
           end
         else
           mean_loss = sum_loss / max_steps
-          acc = total_correct.to_f / num_test_datas
+          acc = total_correct.to_f / num_test_datas if accuracy
         end
         @last_log[:test_loss] = mean_loss
         @last_log[:test_accuracy] = acc
@@ -364,22 +379,24 @@ module DNN
       # Evaluate once.
       # @param [Numo::SFloat | Array] x Input test data.
       # @param [Numo::SFloat | Array] y Output test data.
-      # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-      def test_on_batch(x, y)
+      # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, loss].
+      #                 If accuracy is not needed returns in the form [nil, loss].
+      def test_on_batch(x, y, accuracy: true)
         call_callbacks(:before_test_on_batch)
         DNN.learning_phase = false
         output_tensors = call(Tensor.convert(x))
+        correct = nil
         if output_tensors.is_a?(Array)
-          correct = []
+          correct = [] if accuracy
           loss_data = []
           output_tensors.each.with_index do |out, i|
-            correct << accuracy(out.data, y[i])
+            correct << accuracy(out.data, y[i]) if accuracy
             loss = @loss_func[i].(out, Tensor.convert(y[i]))
             loss_data << loss.data.to_f
           end
         else
           out = output_tensors
-          correct = accuracy(out.data, y)
+          correct = accuracy(out.data, y) if accuracy
           loss = @loss_func.(out, Tensor.convert(y))
           loss_data = loss.data.to_f
         end
