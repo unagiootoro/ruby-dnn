@@ -95,6 +95,8 @@ If you want to know more detailed information, please refer to the source code.
 | Losses | MeanSquaredError, MeanAbsoluteError, Hinge, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
 
 ## Datasets
+By setting the environment variable "RUBY_DNN_DOWNLOADS_PATH", you can specify the path to read dataset.
+
 ● Iris  
 ● MNIST  
 ● Fashion-MNIST  
