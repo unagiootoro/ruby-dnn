@@ -2,8 +2,6 @@ include DNN::Models
 include DNN::Layers
 
 class Generator < Model
-  attr_reader :generate_images
-
   def initialize(input_shape)
     super()
     @input_shape = input_shape
@@ -27,7 +25,6 @@ class Generator < Model
     @bn7 = BatchNormalization.new
     @bn8 = BatchNormalization.new
     @bn9 = BatchNormalization.new
-    @generate_images = nil
   end
 
   def forward(x)
@@ -75,7 +72,6 @@ class Generator < Model
 
     x = @l11.(x)
     x = Tanh.(x)
-    @generate_images = x.data
     x
   end
 end
@@ -162,9 +158,9 @@ class DCGAN < Model
   end
 
   def forward(input)
-    x = @gen.(input)
+    images = @gen.(input)
     @dis.disable_training
-    x = @dis.([input, x])
-    x
+    out = @dis.([input, images])
+    [images, out]
   end
 end
