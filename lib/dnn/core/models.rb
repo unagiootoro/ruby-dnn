@@ -522,7 +522,13 @@ module DNN
       # Clean all layers.
       def clean_layers
         layers.each(&:clean)
-        @loss_func.clean
+        if @loss_func.is_a?(Array)
+          @loss_func.each do |lf|
+            lf.clean
+          end
+        else
+          @loss_func.clean
+        end
         @layers_cache = nil
       end
 
