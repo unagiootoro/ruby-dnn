@@ -3,6 +3,7 @@ module DNN
 
     # Super class of all optimizer classes.
     class Optimizer
+      attr_reader :status
       attr_accessor :clip_norm
 
       def self.from_hash(hash)
@@ -71,6 +72,7 @@ module DNN
         @lr = lr
         @momentum = momentum
         @v = {}
+        @status = { v: @v }
       end
 
       def to_hash
@@ -120,6 +122,7 @@ module DNN
         @lr = lr
         @eps = eps
         @g = {}
+        @status = { g: @g }
       end
 
       private def update_params(params)
@@ -153,6 +156,7 @@ module DNN
         @alpha = alpha
         @eps = eps
         @g = {}
+        @status = { g: @g }
       end
 
       def to_hash
@@ -184,6 +188,7 @@ module DNN
         @eps = eps
         @h = {}
         @s = {}
+        @status = { h: @h, s: @s }
       end
 
       def to_hash
@@ -221,6 +226,7 @@ module DNN
         @eps = eps
         @m = {}
         @v = {}
+        @status = { m: @m, v: @v }
       end
 
       def to_hash
@@ -265,6 +271,7 @@ module DNN
         @m = {}
         @v = {}
         @s = amsgrad ? {} : nil
+        @status = { m: @m, v: @v, s: @s }
       end
 
       def to_hash

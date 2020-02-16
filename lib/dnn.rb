@@ -5,6 +5,15 @@ module DNN
     require "numo/narray"
     Xumo = ::Numo
   end
+
+  def self.use_cumo?
+    defined? ::Cumo
+  end
+
+  def self.cudnn_available?
+    return false unless defined? ::Cumo
+    Cumo::CUDA::CUDNN.available?
+  end
 end
 
 require_relative "dnn/version"

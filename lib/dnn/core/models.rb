@@ -552,6 +552,25 @@ module DNN
         end
       end
 
+      def to_cpu
+        trainable_layers.each do |layer|
+          layer.get_params.each do |(key, param)|
+            data = param.data
+            if DNN.use_cumo? && data.is_a?(Cumo::NArray)
+              param.data = Utils.cumo2numo(data)
+            end
+          end
+        end
+        @optimizer.status.each do |(key, state)|
+          state.each do |(param, data)|
+            if defined?(Cumo) && data.is_a?(Cumo)
+              state[param] = Utils.cumo2numo(data)
+            end
+          end
+        end
+        self
+      end
+
       private
 
       def get_all_trainable_params
