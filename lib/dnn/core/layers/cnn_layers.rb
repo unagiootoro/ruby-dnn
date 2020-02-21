@@ -6,7 +6,24 @@ module DNN
       private
 
       # img[bsize, out_h, out_w, ch] to col[bsize * out_h * out_w, fil_h * fil_w * ch]
-      def im2col(img, out_h, out_w, fil_h, fil_w, strides)
+      def im2col(*args)
+        if DNN.use_cumo?
+          im2col_gpu(*args)
+        else
+          im2col_cpu(*args)
+        end
+      end
+
+      # col[bsize * out_h * out_w, fil_h * fil_w * ch] to img[bsize, out_h, out_w, ch]
+      def col2im(*args)
+        if DNN.use_cumo?
+          col2im_gpu(*args)
+        else
+          col2im_cpu(*args)
+        end
+      end
+
+      def im2col_cpu(img, out_h, out_w, fil_h, fil_w, strides)
         bsize = img.shape[0]
         ch = img.shape[3]
         col = Xumo::SFloat.zeros(bsize, out_h, out_w, fil_h, fil_w, ch)
@@ -20,8 +37,13 @@ module DNN
         col.reshape(bsize * out_h * out_w, fil_h * fil_w * ch)
       end
 
-      # col[bsize * out_h * out_w, fil_h * fil_w * ch] to img[bsize, out_h, out_w, ch]
-      def col2im(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
+      def im2col_gpu(img, out_h, out_w, fil_h, fil_w, strides)
+        img = Utils.cumo2numo(img)
+        col = im2col_cpu(img, out_h, out_w, fil_h, fil_w, strides)
+        Utils.numo2cumo(col)
+      end
+
+      def col2im_cpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         bsize, img_h, img_w, ch = img_shape
         col = col.reshape(bsize, out_h, out_w, fil_h, fil_w, ch)
         img = Xumo::SFloat.zeros(bsize, img_h, img_w, ch)
@@ -33,6 +55,12 @@ module DNN
           end
         end
         img
+      end
+
+      def col2im_gpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
+        col = Utils.cumo2numo(col)
+        img = im2col_cpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
+        Utils.numo2cumo(img)
       end
 
       def zero_padding(img, pad)
