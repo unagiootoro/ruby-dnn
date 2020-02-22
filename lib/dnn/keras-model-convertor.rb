@@ -9,11 +9,7 @@ require_relative "numo2numpy"
 
 include PyCall::Import
 
-pyimport :numpy, as: :np
 pyimport :keras
-pyfrom :"keras.models", import: :Sequential
-pyfrom :"keras.layers", import: [:Dense, :Dropout, :Conv2D, :Activation, :MaxPooling2D, :Flatten]
-pyfrom :"keras.layers.normalization", import: :BatchNormalization
 
 module DNN
   module Layers
