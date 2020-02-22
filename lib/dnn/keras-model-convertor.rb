@@ -185,9 +185,9 @@ class KerasModelConvertor
     conv2d_t.filters = Numpy.to_na(k_conv2d_t.get_weights[0])
     conv2d_t.bias.data = Numpy.to_na(k_conv2d_t.get_weights[1])
     returns = [conv2d_t]
-    unless conv2d_t.get_config[:activation] == "linear"
+    unless k_conv2d_t.get_config[:activation] == "linear"
       input_shape, output_shape = get_k_layer_shape(k_conv2d)
-      returns << activation_to_dnn_layer(conv2d_t.get_config[:activation], output_shape)
+      returns << activation_to_dnn_layer(k_conv2d_t.get_config[:activation], output_shape)
     end
     returns
   end
