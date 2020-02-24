@@ -3,10 +3,12 @@ module DNN
     attr_accessor :prevs
     attr_accessor :next
     attr_accessor :layer_node
+    attr_reader :num_outputs
 
-    def initialize(prevs = nil, layer_node = nil)
+    def initialize(prevs: nil, layer_node: nil, num_outputs: 1)
       @prevs = prevs
       @layer_node = layer_node
+      @num_outputs = num_outputs
       @next = nil
       @hold = []
     end
@@ -20,7 +22,10 @@ module DNN
     end
 
     def backward(dy = Xumo::SFloat[1])
-      dys = @layer_node.backward_node(dy)
+      @hold << dy
+      return if @hold.length < @num_outputs
+      dys = @layer_node.backward_node(*@hold)
+      @hold = []
       if dys.is_a?(Array)
         dys.each.with_index do |dy, i|
           @prevs[i]&.backward(dy)
