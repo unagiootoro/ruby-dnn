@@ -192,9 +192,13 @@ module DNN
     class Sum < Layer
       include LayerNode
 
-      def initialize(axis: 0)
+      attr_reader :axis
+      attr_reader :keepdims
+
+      def initialize(axis: 0, keepdims: true)
         super()
         @axis = axis
+        @keepdims = keepdims
       end
 
       def forward_node(x)
@@ -204,21 +208,28 @@ module DNN
       end
 
       def backward_node(dy)
-        return dy if @x_shape == dy.shape
-        dx = dy
-        (@dim - 1).times do
-          dx = dx.concatenate(dy, axis: @axis)
-        end
-        dx
+        MathUtils.broadcast_to(dy, @x_shape)
+      end
+
+      def to_hash
+        super(axis: @axis, keepdims: @keepdims)
+      end
+
+      def load_hash(hash)
+        initialize(axis: hash[:axis], keepdims: hash[:keepdims])
       end
     end
 
     class Mean < Layer
       include LayerNode
 
-      def initialize(axis: 0)
+      attr_reader :axis
+      attr_reader :keepdims
+
+      def initialize(axis: 0, keepdims: true)
         super()
         @axis = axis
+        @keepdims = keepdims
       end
 
       def forward_node(x)
@@ -228,12 +239,15 @@ module DNN
       end
 
       def backward_node(dy)
-        return dy / @dim if @x_shape == dy.shape
-        dx = dy
-        (@dim - 1).times do
-          dx = dx.concatenate(dy, axis: @axis)
-        end
-        dx / @dim
+        MathUtils.broadcast_to(dy, @x_shape) / @dim
+      end
+
+      def to_hash
+        super(axis: @axis, keepdims: @keepdims)
+      end
+
+      def load_hash(hash)
+        initialize(axis: hash[:axis], keepdims: hash[:keepdims])
       end
     end
 
