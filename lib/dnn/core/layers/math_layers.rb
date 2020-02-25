@@ -1,7 +1,9 @@
 module DNN
   module Layers
     module MathUtils
-      def self.align_ndim(shape1, shape2)
+      module_function
+
+      def align_ndim(shape1, shape2)
         if shape1.length < shape2.length
           shape2.length.times do |axis|
             unless shape1[axis] == shape2[axis]
@@ -18,7 +20,7 @@ module DNN
         [shape1, shape2]
       end
 
-      def self.broadcast_to(x, target_shape)
+      def broadcast_to(x, target_shape)
         return x if x.shape == target_shape
         x_shape, target_shape = align_ndim(x.shape, target_shape)
         x = x.reshape(*x_shape)
@@ -33,7 +35,7 @@ module DNN
         x
       end
 
-      def self.sum_to(x, target_shape)
+      def sum_to(x, target_shape)
         return x if x.shape == target_shape
         x_shape, target_shape = align_ndim(x.shape, target_shape)
         x = x.reshape(*x_shape)
