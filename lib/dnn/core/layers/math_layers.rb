@@ -1,7 +1,9 @@
 module DNN
   module Layers
     module MathUtils
-      def self.align_ndim(shape1, shape2)
+      module_function
+
+      def align_ndim(shape1, shape2)
         if shape1.length < shape2.length
           shape2.length.times do |axis|
             unless shape1[axis] == shape2[axis]
@@ -18,7 +20,7 @@ module DNN
         [shape1, shape2]
       end
 
-      def self.broadcast_to(x, target_shape)
+      def broadcast_to(x, target_shape)
         return x if x.shape == target_shape
         x_shape, target_shape = align_ndim(x.shape, target_shape)
         x = x.reshape(*x_shape)
@@ -33,7 +35,7 @@ module DNN
         x
       end
 
-      def self.sum_to(x, target_shape)
+      def sum_to(x, target_shape)
         return x if x.shape == target_shape
         x_shape, target_shape = align_ndim(x.shape, target_shape)
         x = x.reshape(*x_shape)
@@ -192,9 +194,13 @@ module DNN
     class Sum < Layer
       include LayerNode
 
-      def initialize(axis: 0)
+      attr_reader :axis
+      attr_reader :keepdims
+
+      def initialize(axis: 0, keepdims: true)
         super()
         @axis = axis
+        @keepdims = keepdims
       end
 
       def forward_node(x)
@@ -204,21 +210,28 @@ module DNN
       end
 
       def backward_node(dy)
-        return dy if @x_shape == dy.shape
-        dx = dy
-        (@dim - 1).times do
-          dx = dx.concatenate(dy, axis: @axis)
-        end
-        dx
+        MathUtils.broadcast_to(dy, @x_shape)
+      end
+
+      def to_hash
+        super(axis: @axis, keepdims: @keepdims)
+      end
+
+      def load_hash(hash)
+        initialize(axis: hash[:axis], keepdims: hash[:keepdims])
       end
     end
 
     class Mean < Layer
       include LayerNode
 
-      def initialize(axis: 0)
+      attr_reader :axis
+      attr_reader :keepdims
+
+      def initialize(axis: 0, keepdims: true)
         super()
         @axis = axis
+        @keepdims = keepdims
       end
 
       def forward_node(x)
@@ -228,12 +241,15 @@ module DNN
       end
 
       def backward_node(dy)
-        return dy / @dim if @x_shape == dy.shape
-        dx = dy
-        (@dim - 1).times do
-          dx = dx.concatenate(dy, axis: @axis)
-        end
-        dx / @dim
+        MathUtils.broadcast_to(dy, @x_shape) / @dim
+      end
+
+      def to_hash
+        super(axis: @axis, keepdims: @keepdims)
+      end
+
+      def load_hash(hash)
+        initialize(axis: hash[:axis], keepdims: hash[:keepdims])
       end
     end
 

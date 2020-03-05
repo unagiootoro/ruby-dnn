@@ -3,7 +3,7 @@ module DNN
 
     # This module is used for convolution.
     module Conv2DUtils
-      private
+      module_function
 
       # img[bsize, out_h, out_w, ch] to col[bsize * out_h * out_w, fil_h * fil_w * ch]
       def im2col(img, out_h, out_w, fil_h, fil_w, strides)
