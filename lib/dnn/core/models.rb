@@ -458,7 +458,12 @@ module DNN
                 else
                   x.reshape(1, *x.shape)
                 end
-        predict(input, use_loss_activation: use_loss_activation)[0, false]
+        y = predict(input, use_loss_activation: use_loss_activation)
+        if y.is_a?(Array)
+          y.map { |v| v[0, false] }
+        else
+          y[0, false]
+        end
       end
 
       # Add callback function.
