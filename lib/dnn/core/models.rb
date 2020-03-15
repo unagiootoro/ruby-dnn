@@ -441,8 +441,9 @@ module DNN
         ys = []
         ary_output_tensors.each.with_index do |out, i|
           y = out.data
-          if use_loss_activation && lfs[i].class.respond_to?(:activation)
-            y = lfs[i].class.activation(y)
+          lf = lfs[i]
+          if use_loss_activation && lf && lf.class.respond_to?(:activation)
+            y = lf.class.activation(y)
           end
           ys << y
         end
@@ -531,7 +532,7 @@ module DNN
           @loss_func.each do |lf|
             lf.clean
           end
-        else
+        elsif @loss_func.is_a?(Losses::Loss)
           @loss_func.clean
         end
         @layers_cache = nil
