@@ -224,6 +224,12 @@ class TestSum < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[3], y.round(4)
   end
 
+  def test_forward_node2
+    sum = DNN::Layers::Sum.new(axis: nil)
+    y = sum.forward_node(Numo::SFloat[1, 2])
+    assert_equal 3, y.round(4)
+  end
+
   def test_backward_node
     sum = DNN::Layers::Sum.new(axis: 0)
     sum.forward_node(Numo::SFloat[1, 2])
@@ -233,6 +239,13 @@ class TestSum < MiniTest::Unit::TestCase
 
   def test_backward_node2
     sum = DNN::Layers::Sum.new(axis: 0)
+    sum.forward_node(Numo::SFloat[1, 2])
+    dx = sum.backward_node(Numo::SFloat[1, 1])
+    assert_equal Numo::SFloat[1, 1], dx.round(4)
+  end
+
+  def test_backward_node3
+    sum = DNN::Layers::Sum.new(axis: nil)
     sum.forward_node(Numo::SFloat[1, 2])
     dx = sum.backward_node(Numo::SFloat[1, 1])
     assert_equal Numo::SFloat[1, 1], dx.round(4)
@@ -258,6 +271,12 @@ class TestMean < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[1.5], y.round(4)
   end
 
+  def test_forward_node2
+    mean = DNN::Layers::Mean.new(axis: nil)
+    y = mean.forward_node(Numo::SFloat[1, 2])
+    assert_equal 1.5, y.round(4)
+  end
+
   def test_backward_node
     mean = DNN::Layers::Mean.new(axis: 0)
     mean.forward_node(Numo::SFloat[1, 2])
@@ -272,9 +291,16 @@ class TestMean < MiniTest::Unit::TestCase
     assert_equal Numo::SFloat[0.5, 0.5], dx.round(4)
   end
 
+  def test_backward_node3
+    mean = DNN::Layers::Mean.new(axis: nil)
+    mean.forward_node(Numo::SFloat[1, 2])
+    dx = mean.backward_node(Numo::SFloat[1, 1])
+    assert_equal Numo::SFloat[0.5, 0.5], dx.round(4)
+  end
+
   def test_to_hash
-    expected_hash = { class: "DNN::Layers::Sum", axis: 0, keepdims: true }
-    sum = DNN::Layers::Sum.new
-    assert_equal expected_hash, sum.to_hash
+    expected_hash = { class: "DNN::Layers::Mean", axis: 0, keepdims: true }
+    mean = DNN::Layers::Mean.new
+    assert_equal expected_hash, mean.to_hash
   end
 end

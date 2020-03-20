@@ -205,8 +205,11 @@ module DNN
 
       def forward_node(x)
         @x_shape = x.shape
-        @dim = x.shape[@axis]
-        x.sum(axis: @axis, keepdims: true)
+        if @axis
+          x.sum(axis: @axis, keepdims: true)
+        else
+          x.sum
+        end
       end
 
       def backward_node(dy)
@@ -236,8 +239,13 @@ module DNN
 
       def forward_node(x)
         @x_shape = x.shape
-        @dim = x.shape[@axis]
-        x.mean(axis: @axis, keepdims: true)
+        if @axis
+          @dim = x.shape[@axis]
+          x.mean(axis: @axis, keepdims: true)
+        else
+          @dim = x.size
+          x.mean
+        end
       end
 
       def backward_node(dy)
