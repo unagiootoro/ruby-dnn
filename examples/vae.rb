@@ -28,24 +28,24 @@ end
 class Encoder < Model
   def initialize
     super
-    @l1 = Dense.new(196)
-    @l2 = Dense.new(49)
-    @l3_1 = Dense.new($z_dim)
-    @l3_2 = Dense.new($z_dim)
+    @d1 = Dense.new(196)
+    @d2 = Dense.new(49)
+    @d3_1 = Dense.new($z_dim)
+    @d3_2 = Dense.new($z_dim)
     @bn1 = BatchNormalization.new
     @bn2 = BatchNormalization.new
   end
 
   def forward(x)
     x = InputLayer.new(784).(x)
-    x = @l1.(x)
+    x = @d1.(x)
     x = @bn1.(x)
     x = ReLU.(x)
-    x = @l2.(x)
+    x = @d2.(x)
     x = @bn2.(x)
     x = ReLU.(x)
-    z_mean = @l3_1.(x)
-    z_sigma = @l3_2.(x)
+    z_mean = @d3_1.(x)
+    z_sigma = @d3_2.(x)
     [z_mean, z_sigma]
   end
 end
@@ -53,16 +53,16 @@ end
 class Decoder < Model
   def initialize
     super
-    @l3 = Dense.new(196)
-    @l4 = Dense.new(784)
+    @d1 = Dense.new(196)
+    @d2 = Dense.new(784)
     @bn1 = BatchNormalization.new
   end
 
   def forward(z)
-    x = @l3.(z)
+    x = @d1.(z)
     x = @bn1.(x)
     x = ReLU.(x)
-    x = @l4.(x)
+    x = @d2.(x)
     x
   end
 end

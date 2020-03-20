@@ -38,22 +38,22 @@ y_test = DNN::Utils.to_categorical(y_test, 10, Numo::SFloat)
 class MLP < Model
   def initialize
     super
-    @l1 = Dense.new(256)
-    @l2 = Dense.new(256)
-    @l3 = Dense.new(10)
+    @d1 = Dense.new(256)
+    @d2 = Dense.new(256)
+    @d3 = Dense.new(10)
     @bn1 = BatchNormalization.new
     @bn2 = BatchNormalization.new
   end
 
   def forward(x)
     x = InputLayer.new(784).(x)
-    x = @l1.(x)
+    x = @d1.(x)
     x = @bn1.(x)
     x = ReLU.(x)
-    x = @l2.(x)
+    x = @d2.(x)
     x = @bn2.(x)
     x = ReLU.(x)
-    x = @l3.(x)
+    x = @d3.(x)
     x
   end
 end

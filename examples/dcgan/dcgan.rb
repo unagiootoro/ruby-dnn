@@ -4,13 +4,13 @@ include DNN::Layers
 class Generator < Model
   def initialize
     super
-    @l1 = Dense.new(1024)
-    @l2 = Dense.new(7 * 7 * 64)
-    @l3 = Conv2DTranspose.new(64, 4, strides: 2, padding: true)
-    @l4 = Conv2D.new(64, 4, padding: true)
-    @l5 = Conv2DTranspose.new(32, 4, strides: 2, padding: true)
-    @l6 = Conv2D.new(32, 4, padding: true)
-    @l7 = Conv2D.new(1, 4, padding: true)
+    @d1 = Dense.new(1024)
+    @d2 = Dense.new(7 * 7 * 64)
+    @cv1 = Conv2D.new(64, 4, padding: true)
+    @cvt1 = Conv2DTranspose.new(64, 4, strides: 2, padding: true)
+    @cvt2 = Conv2DTranspose.new(32, 4, strides: 2, padding: true)
+    @cv2 = Conv2D.new(32, 4, padding: true)
+    @cv3 = Conv2D.new(1, 4, padding: true)
     @bn1 = BatchNormalization.new
     @bn2 = BatchNormalization.new
     @bn3 = BatchNormalization.new
@@ -21,32 +21,32 @@ class Generator < Model
 
   def forward(x)
     x = InputLayer.new(20).(x)
-    x = @l1.(x)
+    x = @d1.(x)
     x = @bn1.(x)
     x = ReLU.(x)
 
-    x = @l2.(x)
+    x = @d2.(x)
     x = @bn2.(x)
     x = ReLU.(x)
 
     x = Reshape.(x, [7, 7, 64])
-    x = @l3.(x)
+    x = @cvt1.(x)
     x = @bn3.(x)
     x = ReLU.(x)
 
-    x = @l4.(x)
+    x = @cv1.(x)
     x = @bn4.(x)
     x = ReLU.(x)
 
-    x = @l5.(x)
+    x = @cvt2.(x)
     x = @bn5.(x)
     x = ReLU.(x)
 
-    x = @l6.(x)
+    x = @cv2.(x)
     x = @bn6.(x)
     x = ReLU.(x)
 
-    x = @l7.(x)
+    x = @cv3.(x)
     x = Tanh.(x)
     x
   end
@@ -55,12 +55,12 @@ end
 class Discriminator < Model
   def initialize
     super
-    @l1 = Conv2D.new(32, 4, strides: 2, padding: true)
-    @l2 = Conv2D.new(32, 4, padding: true)
-    @l3 = Conv2D.new(64, 4, strides: 2, padding: true)
-    @l4 = Conv2D.new(64, 4, padding: true)
-    @l5 = Dense.new(1024)
-    @l6 = Dense.new(1)
+    @cv1 = Conv2D.new(32, 4, strides: 2, padding: true)
+    @cv2 = Conv2D.new(32, 4, padding: true)
+    @cv3 = Conv2D.new(64, 4, strides: 2, padding: true)
+    @cv4 = Conv2D.new(64, 4, padding: true)
+    @d1 = Dense.new(1024)
+    @d2 = Dense.new(1)
     @bn1 = BatchNormalization.new
     @bn2 = BatchNormalization.new
     @bn3 = BatchNormalization.new
@@ -68,26 +68,26 @@ class Discriminator < Model
 
   def forward(x)
     x = InputLayer.new([28, 28, 1]).(x)
-    x = @l1.(x)
+    x = @cv1.(x)
     x = LeakyReLU.(x, 0.2)
 
-    x = @l2.(x)
+    x = @cv2.(x)
     x = @bn1.(x)
     x = LeakyReLU.(x, 0.2)
 
-    x = @l3.(x)
+    x = @cv3.(x)
     x = @bn2.(x)
     x = LeakyReLU.(x, 0.2)
 
-    x = @l4.(x)
+    x = @cv4.(x)
     x = @bn3.(x)
     x = LeakyReLU.(x, 0.2)
 
     x = Flatten.(x)
-    x = @l5.(x)
+    x = @d1.(x)
     x = LeakyReLU.(x, 0.2)
 
-    x = @l6.(x)
+    x = @d2.(x)
     x
   end
 
