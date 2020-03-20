@@ -28,22 +28,22 @@ class MLP < Model
   def initialize
     super
     # Set the initial values of weight and bias to the initial values of He.
-    @l1 = Dense.new(256, weight_initializer: He.new, bias_initializer: He.new)
-    @l2 = Dense.new(256, weight_initializer: He.new, bias_initializer: He.new)
-    @l3 = Dense.new(10, weight_initializer: He.new, bias_initializer: He.new)
+    @d1 = Dense.new(256, weight_initializer: He.new, bias_initializer: He.new)
+    @d2 = Dense.new(256, weight_initializer: He.new, bias_initializer: He.new)
+    @d3 = Dense.new(10, weight_initializer: He.new, bias_initializer: He.new)
     @bn1 = BatchNormalization.new
     @bn2 = BatchNormalization.new
   end
 
   def forward(x)
     x = InputLayer.new(784).(x)
-    x = @l1.(x)
+    x = @d1.(x)
     x = @bn1.(x)
     x = ReLU.(x)
-    x = @l2.(x)
+    x = @d2.(x)
     x = @bn2.(x)
     x = ReLU.(x)
-    x = @l3.(x)
+    x = @d3.(x)
     x
   end
 end

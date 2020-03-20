@@ -23,8 +23,8 @@ epochs = 20
 batch_size = 128
 
 if initial_epoch == 1
-  gen = Generator.new([32, 32, 1])
-  dis = Discriminator.new([32, 32, 1], [32, 32, 3])
+  gen = Generator.new([32, 32, 1], 32)
+  dis = Discriminator.new([32, 32, 1], [32, 32, 3], 32)
   dcgan = DCGAN.new(gen, dis)
   gen.setup(Adam.new(alpha: 0.0002, beta1: 0.5), MeanAbsoluteError.new)
   dis.setup(Adam.new(alpha: 0.00001, beta1: 0.1), SigmoidCrossEntropy.new)

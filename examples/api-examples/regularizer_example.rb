@@ -29,22 +29,22 @@ class MLP < Model
   def initialize
     super
     # Set L2 regularizer(weight decay) for weight and bias.
-    @l1 = Dense.new(256, weight_regularizer: L2.new(L2_LAMBDA), bias_regularizer: L2.new(L2_LAMBDA))
-    @l2 = Dense.new(256, weight_regularizer: L2.new(L2_LAMBDA), bias_regularizer: L2.new(L2_LAMBDA))
-    @l3 = Dense.new(10, weight_regularizer: L2.new(L2_LAMBDA), bias_regularizer: L2.new(L2_LAMBDA))
+    @d1 = Dense.new(256, weight_regularizer: L2.new(L2_LAMBDA), bias_regularizer: L2.new(L2_LAMBDA))
+    @d2 = Dense.new(256, weight_regularizer: L2.new(L2_LAMBDA), bias_regularizer: L2.new(L2_LAMBDA))
+    @d3 = Dense.new(10, weight_regularizer: L2.new(L2_LAMBDA), bias_regularizer: L2.new(L2_LAMBDA))
     @bn1 = BatchNormalization.new
     @bn2 = BatchNormalization.new
   end
 
   def forward(x)
     x = InputLayer.new(784).(x)
-    x = @l1.(x)
+    x = @d1.(x)
     x = @bn1.(x)
     x = ReLU.(x)
-    x = @l2.(x)
+    x = @d2.(x)
     x = @bn2.(x)
     x = ReLU.(x)
-    x = @l3.(x)
+    x = @d3.(x)
     x
   end
 end
