@@ -64,6 +64,19 @@ module DNN
       raise ImageWriteError, "Image write failed." if res == 0
     end
 
+    # Create an image from binary.
+    # @param [String] bin binary data.
+    # @param [Integer] height Image height.
+    # @param [Integer] width Image width.
+    # @param [Integer] channel Image channel.
+    def from_binary(bin, height, width, channel = DNN::Image::RGB)
+      expected_size = height * width * channel
+      unless bin.size == expected_size
+        raise ImageError, "binary size is #{bin.size}, but expected binary size is #{expected_size}"
+      end
+      Numo::UInt8.from_binary(bin).reshape(height, width, channel)
+    end
+
     # Resize the image.
     # @param [Numo::UInt8] img Image to resize.
     # @param [Integer] out_height Image height to resize.
