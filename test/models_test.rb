@@ -195,7 +195,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << dense
     model.setup(SGD.new, SigmoidCrossEntropy.new)
 
-    assert_equal Numo::SFloat[[65, 130], [155, 310]], model.predict(x, use_loss_activation: false)
+    assert_equal Numo::SFloat[[65, 130], [155, 310]], model.predict_on_batch(x, use_loss_activation: false)
   end
 
   # It is matching dense forward result and use loss activation.
@@ -210,7 +210,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << dense
     model.setup(SGD.new, SigmoidCrossEntropy.new)
 
-    assert_equal Numo::SFloat[[1, 1], [1, 1]], model.predict(x, use_loss_activation: true)
+    assert_equal Numo::SFloat[[1, 1], [1, 1]], model.predict_on_batch(x, use_loss_activation: true)
   end
 
   # Test multiple outputs.
@@ -224,7 +224,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model = StubMultiOutputModel.new(dense)
     model.setup(SGD.new, [SigmoidCrossEntropy.new, SigmoidCrossEntropy.new])
 
-    assert_equal expected_y, model.predict(x, use_loss_activation: true)
+    assert_equal expected_y, model.predict_on_batch(x, use_loss_activation: true)
   end
 
   # It is matching dense forward result.
@@ -239,7 +239,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << dense
     model.setup(SGD.new, MeanSquaredError.new)
 
-    assert_equal Numo::SFloat[65, 130], model.predict1(x)
+    assert_equal Numo::SFloat[65, 130], model.predict(x)
   end
 
   # It is including callback function in @callback.
@@ -301,7 +301,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << Dense.new(1)
     model.setup(SGD.new, MeanSquaredError.new)
     model2 = model.copy
-    assert_equal model.predict(x), model2.predict(x)
+    assert_equal model.predict_on_batch(x), model2.predict_on_batch(x)
   end
 
   def test_layers
@@ -311,7 +311,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     model << InputLayer.new(2)
     model << sequential
-    model.predict1(Numo::SFloat.zeros(2))
+    model.predict(Numo::SFloat.zeros(2))
     assert_kind_of InputLayer, model.layers.first
     assert_kind_of Dense, model.layers.last
   end
@@ -323,7 +323,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     model << InputLayer.new(2)
     model << sequential
-    model.predict1(Numo::SFloat.zeros(2))
+    model.predict(Numo::SFloat.zeros(2))
     assert_equal 1, model.trainable_layers[1].num_units
   end
 
@@ -332,7 +332,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(2)
     model << Dense.new(1)
     model.setup(SGD.new, MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(2))
+    model.predict(Numo::SFloat.zeros(2))
     assert_kind_of Dense, model.get_layer(:stack)[1]
   end
 
@@ -342,10 +342,10 @@ class TestSequential < MiniTest::Unit::TestCase
     dense1 = DNN::Layers::Dense.new(1)
     model = DNN::Models::Sequential.new([InputLayer.new(10), dense0, dense1])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
+    model.predict(Numo::SFloat.zeros(10))
     model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
     model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict1(Numo::SFloat.zeros(10))
+    model2.predict(Numo::SFloat.zeros(10))
 
     dense_params_data = [
       { weight: dense0.weight.data, bias:  dense0.bias.data},
@@ -354,23 +354,23 @@ class TestSequential < MiniTest::Unit::TestCase
     model2.set_all_params_data(dense_params_data)
 
     x = Numo::SFloat.new(10).rand
-    assert_equal model.predict1(x), model2.predict1(x)
+    assert_equal model.predict(x), model2.predict(x)
   end
 
   # # It is result of load marshal is as expected.
   def test_get_all_params_data
     model = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
+    model.predict(Numo::SFloat.zeros(10))
     model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
     model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict1(Numo::SFloat.zeros(10))
+    model2.predict(Numo::SFloat.zeros(10))
 
     params_data = model.get_all_params_data
     model2.set_all_params_data(params_data)
 
     x = Numo::SFloat.new(10).rand
-    assert_equal model.predict1(x), model2.predict1(x)
+    assert_equal model.predict(x), model2.predict(x)
   end
 
   def test_add
@@ -380,7 +380,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model2 = Sequential.new
     model2.add(Dense.new(10))
     model.add(model2)
-    model.predict1(Numo::SFloat.zeros(10))
+    model.predict(Numo::SFloat.zeros(10))
     assert_kind_of InputLayer, model.layers[0]
     assert_kind_of Dense, model.layers[1]
   end
@@ -398,7 +398,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model.add(input_layer)
     model.add(Dense.new(10))
     model.insert(1, Dense.new(20))
-    model.predict1(Numo::SFloat.zeros(10))
+    model.predict(Numo::SFloat.zeros(10))
     assert_equal 20, model.layers[1].num_units
   end
 

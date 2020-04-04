@@ -73,7 +73,7 @@ end
 
 model2 = MLP.new
 model2.setup(Adam.new, SoftmaxCrossEntropy.new)
-model2.predict1(Numo::SFloat.zeros(784))
+model2.predict(Numo::SFloat.zeros(784))
 if SAVE_STYLE == USE_MARSHAL
   loader = MarshalLoader.new(model2)
   loader.load("trained_mnist.marshal")
