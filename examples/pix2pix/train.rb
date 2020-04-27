@@ -45,7 +45,7 @@ num_batchs = x_in.shape[0] / batch_size
   num_batchs.times do |index|
     x_in, x_out = iter1.next_batch(batch_size)
 
-    images = gen.predict_on_batch(x_in)
+    images = gen.predict(x_in)
     y_real = Numo::SFloat.ones(batch_size, 1)
     y_fake = Numo::SFloat.zeros(batch_size, 1)
     dis.enable_training

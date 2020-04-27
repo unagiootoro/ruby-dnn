@@ -14,7 +14,7 @@ gen = dcgan.gen
 Numo::SFloat.srand(rand(1 << 31))
 noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
 
-images = gen.predict_on_batch(noise)
+images = gen.predict(noise)
 
 batch_size.times do |i|
   img = Numo::UInt8.cast(((images[i, false] + 1) * 127.5).round)

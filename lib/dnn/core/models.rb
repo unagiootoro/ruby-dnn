@@ -424,10 +424,10 @@ module DNN
         correct
       end
 
-      # Predict batch data.
+      # Predict data.
       # @param [Numo::SFloat] x Input data.
       # @param [Boolean] use_loss_activation Use loss activation when loss has an activation.
-      def predict_on_batch(x, use_loss_activation: true)
+      def predict(x, use_loss_activation: true)
         check_xy_type(x)
         DNN.learning_phase = false
         output_tensors = call(Tensor.convert(x))
@@ -452,14 +452,14 @@ module DNN
 
       # Predict one data.
       # @param [Numo::SFloat] x Input data. However, x is single data.
-      def predict(x, use_loss_activation: true)
+      def predict1(x, use_loss_activation: true)
         check_xy_type(x)
         input = if x.is_a?(Array)
                   x.map { |v| v.reshape(1, *v.shape) }
                 else
                   x.reshape(1, *x.shape)
                 end
-        y = predict_on_batch(input, use_loss_activation: use_loss_activation)
+        y = predict(input, use_loss_activation: use_loss_activation)
         if y.is_a?(Array)
           y.map { |v| v[0, false] }
         else

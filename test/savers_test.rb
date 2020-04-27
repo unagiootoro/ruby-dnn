@@ -5,10 +5,10 @@ class TestMarshalSaver < MiniTest::Unit::TestCase
   def test_dump_bin
     model = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(1)])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model.predict(Numo::SFloat.zeros(10))
+    model.predict1(Numo::SFloat.zeros(10))
     model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(1)])
     model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict(Numo::SFloat.zeros(10))
+    model2.predict1(Numo::SFloat.zeros(10))
 
     saver = DNN::Savers::MarshalSaver.new(model, include_model: false)
     bin = saver.send(:dump_bin)
@@ -16,7 +16,7 @@ class TestMarshalSaver < MiniTest::Unit::TestCase
     loader.send(:load_bin, bin)
 
     x = Numo::SFloat.new(10).rand
-    assert_equal model.predict(x), model2.predict(x)
+    assert_equal model.predict1(x), model2.predict1(x)
   end
 
   # It is can continue training.
@@ -36,7 +36,7 @@ class TestMarshalSaver < MiniTest::Unit::TestCase
     model.train_on_batch(x, y)
     model2.train_on_batch(x, y)
 
-    assert_equal model.predict_on_batch(x), model2.predict_on_batch(x)
+    assert_equal model.predict(x), model2.predict(x)
   end
 
 end
@@ -46,10 +46,10 @@ class TestJSONSaver < MiniTest::Unit::TestCase
   def test_dump_bin
     model = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(1)])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model.predict(Numo::SFloat.zeros(10))
+    model.predict1(Numo::SFloat.zeros(10))
     model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(1)])
     model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict(Numo::SFloat.zeros(10))
+    model2.predict1(Numo::SFloat.zeros(10))
 
     saver = DNN::Savers::JSONSaver.new(model)
     bin = saver.send(:dump_bin)
@@ -57,6 +57,6 @@ class TestJSONSaver < MiniTest::Unit::TestCase
     loader.send(:load_bin, bin)
 
     x = Numo::SFloat.new(10).rand
-    assert_equal model.predict(x), model2.predict(x)
+    assert_equal model.predict1(x), model2.predict1(x)
   end
 end

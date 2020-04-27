@@ -105,7 +105,7 @@ images = []
     z1 = (i / 4.5) - 1
     z2 = (j / 4.5) - 1
     z = Numo::SFloat[z1, z2]
-    out = DNN::Utils.sigmoid(dec.predict(z))
+    out = DNN::Utils.sigmoid(dec.predict1(z))
     img = Numo::UInt8.cast(out * 255).reshape(28, 28, 1)
     DNN::Image.write("img/img_#{i}_#{j}.png", img)
   end

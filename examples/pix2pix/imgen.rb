@@ -19,7 +19,7 @@ dcgan = DCGAN.load("trained/dcgan_model_epoch20.marshal")
 gen = dcgan.gen
 
 x_in, x_out = load_dataset
-images = gen.predict_on_batch(x_in[0...batch_size, false])
+images = gen.predict(x_in[0...batch_size, false])
 
 batch_size.times do |i|
   img = Numo::UInt8.cast(((images[i, false] + 1) * 127.5).round)
