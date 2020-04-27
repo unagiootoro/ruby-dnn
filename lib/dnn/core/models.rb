@@ -474,6 +474,15 @@ module DNN
         @callbacks << callback
       end
 
+      # Add lambda callback.
+      # @param [Symbol] event Event to execute callback.
+      # @yield Register the contents of the callback.
+      def add_lambda_callback(event, &block)
+        callback = Callbacks::LambdaCallback.new(event, &block)
+        callback.model = self
+        @callbacks << callback
+      end
+
       # Clear the callback function registered for each event.
       def clear_callbacks
         @callbacks = []
