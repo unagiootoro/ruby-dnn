@@ -1,27 +1,8 @@
 module DNN
   module Layers
 
-    module SplitLayerNode
-      def forward(input)
-        x = input.data
-        prev = (input.is_a?(Tensor) ? input.link : input)
-        ys = forward_node(x)
-        link = Link.new(prevs: [prev], layer_node: self, num_outputs: 2)
-        prev.next = link if prev.is_a?(Link)
-        ys.map { |y| Tensor.convert(y, link) }
-      end
-
-      def forward_node(x)
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward_node'"
-      end
-
-      def backward_node(dy1, dy2)
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward_node'"
-      end
-    end
-
     class Split < Layer
-      include SplitLayerNode
+      include LayerNode
 
       attr_reader :axis
       attr_reader :dim

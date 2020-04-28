@@ -2,20 +2,21 @@ module DNN
   module Layers
 
     module LayerNode
-      def forward(input)
-        x = input.data
-        prev = (input.is_a?(Tensor) ? input.link : input)
-        y = forward_node(x)
-        link = Link.new(prevs: [prev], layer_node: self)
-        prev.next = link if prev.is_a?(Link)
-        Tensor.convert(y, link)
+      def forward(*inputs)
+        xs = inputs.map(&:data)
+        prevs = inputs.map { |input| input.is_a?(Tensor) ? input.link : input }
+        ys = forward_node(*xs)
+        num_outputs = (ys.is_a?(Array) ? ys.length : 1)
+        link = Link.new(prevs: prevs, layer_node: self, num_outputs: num_outputs)
+        prevs.map { |prev| prev.next = link if prev.is_a?(Link) }
+        Tensor.convert(ys, link)
       end
 
-      def forward_node(x)
+      def forward_node(*xs)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward_node'"
       end
 
-      def backward_node(dy)
+      def backward_node(*dys)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward_node'"
       end
     end

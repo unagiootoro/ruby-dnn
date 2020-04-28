@@ -61,7 +61,7 @@ module DNN
     end
 
     class Add < MergeLayer
-      include MergeLayerNode
+      include LayerNode
 
       def forward_node(x1, x2)
         @x1_shape = x1.shape
@@ -77,7 +77,7 @@ module DNN
     end
 
     class Sub < MergeLayer
-      include MergeLayerNode
+      include LayerNode
 
       def forward_node(x1, x2)
         @x1_shape = x1.shape
@@ -93,7 +93,7 @@ module DNN
     end
 
     class Mul < MergeLayer
-      include MergeLayerNode
+      include LayerNode
 
       def forward_node(x1, x2)
         @x1, @x2 = x1, x2
@@ -108,7 +108,7 @@ module DNN
     end
 
     class Div < MergeLayer
-      include MergeLayerNode
+      include LayerNode
 
       def forward_node(x1, x2)
         @x1, @x2 = x1, x2
@@ -123,7 +123,7 @@ module DNN
     end
 
     class Dot < MergeLayer
-      include MergeLayerNode
+      include LayerNode
 
       def forward_node(x1, x2)
         @x1, @x2 = x1, x2

@@ -1,30 +1,6 @@
 module DNN
   module Layers
 
-    module MergeLayerNode
-      def forward(input1, input2)
-        x1 = input1.data
-        x2 = input2.data
-        prev1 = (input1.is_a?(Tensor) ? input1.link : input1)
-        prev2 = (input2.is_a?(Tensor) ? input2.link : input2)
-        y = forward_node(x1, x2)
-        link = Link.new(prevs: [prev1, prev2], layer_node: self)
-        Tensor.convert(y, link)
-      end
-
-      def backward(dy)
-        backward_node(dy)
-      end
-
-      def forward_node(x1, x2)
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward_node'"
-      end
-
-      def backward_node(dy)
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'backward_node'"
-      end
-    end
-
     class MergeLayer < Layer
       def self.call(x1, x2, *args)
         new(*args).call(x1, x2)
@@ -43,7 +19,7 @@ module DNN
     end
 
     class Concatenate < MergeLayer
-      include MergeLayerNode
+      include LayerNode
 
       attr_reader :axis
 

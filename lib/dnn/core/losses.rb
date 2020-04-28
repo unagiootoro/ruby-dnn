@@ -62,7 +62,7 @@ module DNN
     end
 
     class MeanSquaredError < Loss
-      include Layers::MergeLayerNode
+      include Layers::LayerNode
 
       def forward_node(y, t)
         @y = y
@@ -76,7 +76,7 @@ module DNN
     end
 
     class MeanAbsoluteError < Loss
-      include Layers::MergeLayerNode
+      include Layers::LayerNode
 
       def forward_node(y, t)
         @y = y
@@ -93,7 +93,7 @@ module DNN
     end
 
     class Hinge < Loss
-      include Layers::MergeLayerNode
+      include Layers::LayerNode
 
       def forward_node(y, t)
         @t = t
@@ -109,7 +109,7 @@ module DNN
     end
 
     class HuberLoss < Loss
-      include Layers::MergeLayerNode
+      include Layers::LayerNode
 
       def forward_node(y, t)
         @y = y
@@ -129,7 +129,7 @@ module DNN
     end
 
     class SoftmaxCrossEntropy < Loss
-      include Layers::MergeLayerNode
+      include Layers::LayerNode
 
       attr_accessor :eps
 
@@ -166,7 +166,7 @@ module DNN
     end
 
     class SigmoidCrossEntropy < Loss
-      include Layers::MergeLayerNode
+      include Layers::LayerNode
 
       attr_accessor :eps
 
