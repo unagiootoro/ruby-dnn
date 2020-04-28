@@ -9,9 +9,9 @@ class TestSplit < MiniTest::Unit::TestCase
 
   def test_forward_node
     split = DNN::Layers::Split.new(dim: 2)
-    y1, y2 = split.forward_node(Numo::SFloat[[1, 2, 3, 4]])
+    y1, y2 = split.forward_node(Numo::SFloat[[1, 2, 3, 4, 5]])
     assert_equal Numo::SFloat[[1, 2]], y1.round(4)
-    assert_equal Numo::SFloat[[3, 4]], y2.round(4)
+    assert_equal Numo::SFloat[[3, 4, 5]], y2.round(4)
   end
 
   def test_backward_node

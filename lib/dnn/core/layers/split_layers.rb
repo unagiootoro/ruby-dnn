@@ -36,7 +36,9 @@ module DNN
       def forward_node(x)
         x1_dim = @dim
         x2_dim = x.shape[@axis] - @dim
-        x.split([x1_dim, x1_dim + x2_dim], axis: @axis)
+        y1, y2others = x.split([x1_dim, x1_dim + x2_dim], axis: @axis)
+        y2 = y2others.is_a?(Array) ? y2others[0].concatenate(y2others[1..-1], axis: @axis) : y2others
+        [y1, y2]
       end
 
       def backward_node(dy1, dy2)
