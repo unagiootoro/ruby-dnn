@@ -250,6 +250,14 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal [cbk], model.instance_variable_get(:@callbacks)
   end
 
+  # It is including callback function in @callback.
+  def test_add_lambda_callback
+    model = Sequential.new
+    model.add_lambda_callback(:before_epoch) {}
+    cbk = model.instance_variable_get(:@callbacks)[0]
+    assert_kind_of DNN::Callbacks::LambdaCallback, cbk
+  end
+
   # It is not including callback function in @callback.
   def test_clear_callbacks
     model = Sequential.new
