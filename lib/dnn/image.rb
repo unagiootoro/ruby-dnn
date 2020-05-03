@@ -69,7 +69,7 @@ module DNN
     # @param [Integer] height Image height.
     # @param [Integer] width Image width.
     # @param [Integer] channel Image channel.
-    def from_binary(bin, height, width, channel = DNN::Image::RGB)
+    def self.from_binary(bin, height, width, channel = DNN::Image::RGB)
       expected_size = height * width * channel
       unless bin.size == expected_size
         raise ImageError, "binary size is #{bin.size}, but expected binary size is #{expected_size}"
