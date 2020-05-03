@@ -1,8 +1,9 @@
+require "numo/narray"
+
 module DNN
   if defined? ::Cumo
     Xumo = ::Cumo
   else
-    require "numo/narray"
     Xumo = ::Numo
   end
 
