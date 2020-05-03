@@ -381,6 +381,17 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal model.predict1(x), model2.predict1(x)
   end
 
+  def test_to_cpu
+    x = Numo::SFloat[[0, 0]]
+    model = Sequential.new
+    model << InputLayer.new(2)
+    model << Dense.new(1)
+    model.setup(SGD.new, MeanSquaredError.new)
+    y = model.predict(x)
+    model.to_cpu
+    assert_equal y, model.predict(x)
+  end
+
   def test_add
     model = Sequential.new
     input_layer = InputLayer.new(10)
