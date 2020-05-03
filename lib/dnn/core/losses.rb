@@ -42,12 +42,6 @@ module DNN
         loss
       end
 
-      def regularizers_backward(layers)
-        layers.select { |layer| layer.respond_to?(:regularizers) }.each do |layer|
-          layer.regularizers.each(&:backward)
-        end
-      end
-
       def to_hash(merge_hash = nil)
         hash = { class: self.class.name }
         hash.merge!(merge_hash) if merge_hash
