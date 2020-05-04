@@ -305,13 +305,13 @@ module DNN
             loss_opt[:layers] = layers if i == 0
             loss_opt[:loss_weight] = @loss_weights[i] if @loss_weights
             loss = @loss_func[i].loss(out, Tensor.convert(y[i]), **loss_opt)
-            loss_data << loss.data.to_f
+            loss_data << Utils.to_f(loss.data)
             loss.link.backward(Xumo::SFloat.ones(y[i][0...1, false].shape[0], 1))
           end
         else
           out = output_tensors
           loss = @loss_func.loss(out, Tensor.convert(y), layers: layers)
-          loss_data = loss.data.to_f
+          loss_data = Utils.to_f(loss.data)
           loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
         end
         @optimizer.update(get_all_trainable_params)
@@ -392,13 +392,13 @@ module DNN
           output_tensors.each.with_index do |out, i|
             correct << accuracy(out.data, y[i]) if accuracy
             loss = @loss_func[i].(out, Tensor.convert(y[i]))
-            loss_data << loss.data.to_f
+            loss_data << Utils.to_f(loss.data)
           end
         else
           out = output_tensors
           correct = accuracy(out.data, y) if accuracy
           loss = @loss_func.(out, Tensor.convert(y))
-          loss_data = loss.data.to_f
+          loss_data = Utils.to_f(loss.data)
         end
         call_callbacks(:after_test_on_batch)
         [correct, loss_data]
@@ -603,10 +603,10 @@ module DNN
       def metrics_to_str(mertics)
         mertics.map { |key, values|
           str_values = if values.is_a?(Array)
-                         values_fmt = values.map { |v| sprintf('%.4f', v) }
+                         values_fmt = values.map { |v| sprintf('%.4f', Utils.to_f(v)) }
                          "[#{values_fmt.join(", ")}]"
                        else
-                         sprintf('%.4f', values)
+                         sprintf('%.4f', Utils.to_f(values))
                        end
           "#{key}: #{str_values}"
         }.join(", ")

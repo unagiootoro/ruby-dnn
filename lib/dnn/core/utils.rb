@@ -57,5 +57,14 @@ module DNN
       na = Numo::SFloat.from_binary(b)
       na.reshape(*ca.shape)
     end
+
+    # Force convert to Float.
+    def self.to_f(x)
+      if x.is_a?(Xumo::NArray)
+        x[0].to_f
+      else
+        x.to_f
+      end
+    end
   end
 end
