@@ -19,10 +19,10 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_forward_node
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
-    batch_norm.gamma.data = Numo::SFloat.new(10).fill(3)
-    batch_norm.beta.data = Numo::SFloat.new(10).fill(10)
-    x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
-    expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
+    batch_norm.gamma.data = Xumo::SFloat.new(10).fill(3)
+    batch_norm.beta.data = Xumo::SFloat.new(10).fill(10)
+    x = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)])
+    expected = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(7), Xumo::SFloat.new(10).fill(13)])
     DNN.learning_phase = true
     assert_equal expected, batch_norm.forward_node(x).round(4)
   end
@@ -30,12 +30,12 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_forward_node2
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
-    batch_norm.gamma.data = Numo::SFloat.new(10).fill(3)
-    batch_norm.beta.data = Numo::SFloat.new(10).fill(10)
-    batch_norm.running_mean.data = Numo::SFloat.new(10).fill(15)
-    batch_norm.running_var.data = Numo::SFloat.new(10).fill(25)
-    x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
-    expected = Numo::SFloat.cast([Numo::SFloat.new(10).fill(7), Numo::SFloat.new(10).fill(13)])
+    batch_norm.gamma.data = Xumo::SFloat.new(10).fill(3)
+    batch_norm.beta.data = Xumo::SFloat.new(10).fill(10)
+    batch_norm.running_mean.data = Xumo::SFloat.new(10).fill(15)
+    batch_norm.running_var.data = Xumo::SFloat.new(10).fill(25)
+    x = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)])
+    expected = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(7), Xumo::SFloat.new(10).fill(13)])
     DNN.learning_phase = false
     assert_equal expected, batch_norm.forward_node(x).round(4)
   end
@@ -43,26 +43,26 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_backward_node
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
-    x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
+    x = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)])
     DNN.learning_phase = true
     batch_norm.forward_node(x)
-    grad = batch_norm.backward_node(Numo::SFloat.ones(*x.shape))
-    assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
-    assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], batch_norm.gamma.grad
-    assert_equal Numo::SFloat[[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]], batch_norm.beta.grad
+    grad = batch_norm.backward_node(Xumo::SFloat.ones(*x.shape))
+    assert_equal Xumo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
+    assert_equal Xumo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], batch_norm.gamma.grad
+    assert_equal Xumo::SFloat[[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]], batch_norm.beta.grad
   end
 
   def test_backward_node2
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     batch_norm.trainable = false
-    x = Numo::SFloat.cast([Numo::SFloat.new(10).fill(10), Numo::SFloat.new(10).fill(20)])
+    x = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)])
     DNN.learning_phase = true
     batch_norm.forward_node(x)
-    grad = batch_norm.backward_node(Numo::SFloat.ones(*x.shape))
-    assert_equal Numo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
-    assert_equal Numo::SFloat[0], batch_norm.gamma.grad
-    assert_equal Numo::SFloat[0], batch_norm.beta.grad
+    grad = batch_norm.backward_node(Xumo::SFloat.ones(*x.shape))
+    assert_equal Xumo::SFloat[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], grad.round(4)
+    assert_equal Xumo::SFloat[0], batch_norm.gamma.grad
+    assert_equal Xumo::SFloat[0], batch_norm.beta.grad
   end
 
   def test_to_hash

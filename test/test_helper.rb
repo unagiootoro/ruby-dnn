@@ -3,7 +3,9 @@ require "dnn"
 
 require "minitest/autorun"
 
-class Numo::SFloat
+Xumo = DNN::Xumo
+
+class DNN::Xumo::SFloat
   alias _round round
   def round(ndigits = nil)
     return self.map { |f| f.round(ndigits)} if ndigits
@@ -11,7 +13,7 @@ class Numo::SFloat
   end
 end
 
-class Numo::DFloat
+class DNN::Xumo::DFloat
   alias _round round
   def round(ndigits = nil)
     return self.map { |f| f.round(ndigits)} if ndigits

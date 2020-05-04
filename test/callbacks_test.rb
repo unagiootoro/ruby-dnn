@@ -64,9 +64,9 @@ class TestLogger < MiniTest::Unit::TestCase
     stub_model.last_log[:test_accuracy] = 3
     cbk.after_epoch
 
-    assert_equal Numo::UInt32[1], cbk.get_log(:epoch)
-    assert_equal Numo::SFloat[2], cbk.get_log(:test_loss)
-    assert_equal Numo::SFloat[3], cbk.get_log(:test_accuracy)
+    assert_equal Xumo::UInt32[1], cbk.get_log(:epoch)
+    assert_equal Xumo::SFloat[2], cbk.get_log(:test_loss)
+    assert_equal Xumo::SFloat[3], cbk.get_log(:test_accuracy)
   end
 
   def test_after_train_on_batch
@@ -76,6 +76,6 @@ class TestLogger < MiniTest::Unit::TestCase
     stub_model.last_log[:train_loss] = 1
     cbk.after_train_on_batch
 
-    assert_equal Numo::SFloat[1], cbk.get_log(:train_loss)
+    assert_equal Xumo::SFloat[1], cbk.get_log(:train_loss)
   end
 end

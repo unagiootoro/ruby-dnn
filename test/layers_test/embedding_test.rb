@@ -26,9 +26,9 @@ class TestEmbedding < MiniTest::Unit::TestCase
   def test_forward_node
     embed = Embedding.new(2, 3)
     embed.build([2])
-    embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
-    x = Numo::Int32.cast([[0, 1], [0, 2]])
-    expected = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
+    embed.weight.data = Xumo::SFloat.cast([0.1, 0.2, 0.3])
+    x = Xumo::Int32.cast([[0, 1], [0, 2]])
+    expected = Xumo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
     assert_equal expected, embed.forward_node(x).round(4)
   end
 
@@ -36,19 +36,19 @@ class TestEmbedding < MiniTest::Unit::TestCase
   def test_forward_node2
     embed = Embedding.new(2, 3, mask_zero: true)
     embed.build([2])
-    embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
-    x = Numo::Int32.cast([[0, 1], [0, 2]])
-    expected = Numo::SFloat.cast([[0, 0.2], [0, 0.3]])
+    embed.weight.data = Xumo::SFloat.cast([0.1, 0.2, 0.3])
+    x = Xumo::Int32.cast([[0, 1], [0, 2]])
+    expected = Xumo::SFloat.cast([[0, 0.2], [0, 0.3]])
     assert_equal expected, embed.forward_node(x).round(4)
   end
 
   def test_backward_node
     embed = Embedding.new(2, 3)
     embed.build([2])
-    embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
-    x = Numo::Int32.cast([[0, 1], [2, 2]])
-    dy = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
-    expected = Numo::SFloat.cast([0.1, 0.2, 0.4])
+    embed.weight.data = Xumo::SFloat.cast([0.1, 0.2, 0.3])
+    x = Xumo::Int32.cast([[0, 1], [2, 2]])
+    dy = Xumo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
+    expected = Xumo::SFloat.cast([0.1, 0.2, 0.4])
     embed.forward_node(x)
     embed.backward_node(dy)
     assert_equal expected, embed.weight.grad.round(4)
@@ -58,10 +58,10 @@ class TestEmbedding < MiniTest::Unit::TestCase
   def test_backward_node2
     embed = Embedding.new(2, 3, mask_zero: true)
     embed.build([2])
-    embed.weight.data = Numo::SFloat.cast([0.1, 0.2, 0.3])
-    x = Numo::Int32.cast([[0, 1], [2, 2]])
-    dy = Numo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
-    expected = Numo::SFloat.cast([0, 0.2, 0.4])
+    embed.weight.data = Xumo::SFloat.cast([0.1, 0.2, 0.3])
+    x = Xumo::Int32.cast([[0, 1], [2, 2]])
+    dy = Xumo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
+    expected = Xumo::SFloat.cast([0, 0.2, 0.4])
     embed.forward_node(x)
     embed.backward_node(dy)
     assert_equal expected, embed.weight.grad.round(4)

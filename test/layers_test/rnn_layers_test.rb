@@ -37,9 +37,9 @@ class TestRNN < MiniTest::Unit::TestCase
   def test_reset_state
     rnn = RNN.new(64)
     rnn.build([16, 64])
-    rnn.hidden.data = Numo::SFloat.ones(16, 64)
+    rnn.hidden.data = Xumo::SFloat.ones(16, 64)
     rnn.reset_state
-    assert_equal Numo::SFloat.zeros(16, 64), rnn.hidden.data
+    assert_equal Xumo::SFloat.zeros(16, 64), rnn.hidden.data
   end
 
   def test_to_hash
@@ -96,31 +96,31 @@ end
 
 class TestSimpleRNNDense < MiniTest::Unit::TestCase
   def test_forward
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16).fill(1)
+    w.data = Xumo::SFloat.new(64, 16).fill(1)
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16).fill(1)
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16).fill(0)
+    b.data = Xumo::SFloat.new(16).fill(0)
 
     dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
     assert_equal [1, 16], dense.forward(x, h).shape
   end
 
   def test_backward
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16).fill(1)
+    w.data = Xumo::SFloat.new(64, 16).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16).fill(0)
+    b.data = Xumo::SFloat.new(16).fill(0)
     b.grad = 0
 
     dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
@@ -131,14 +131,14 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
   end
 
   def test_backward2
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16).fill(1)
+    w.data = Xumo::SFloat.new(64, 16).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
 
     dense = SimpleRNNDense.new(w, w2, nil, Tanh.new)
@@ -148,17 +148,17 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
   end
 
   def test_backward3
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16).fill(1)
+    w.data = Xumo::SFloat.new(64, 16).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16).fill(0)
+    b.data = Xumo::SFloat.new(16).fill(0)
     b.grad = 0
 
     dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
@@ -204,7 +204,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   end
 
   def test_forward_node
-    x = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64)
     rnn.build([16, 64])
     assert_equal [1, 16, 64], rnn.forward_node(x).shape
@@ -212,7 +212,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   end
 
   def test_forward_node2
-    x = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64, stateful: true)
     rnn.build([16, 64])
     rnn.forward_node(x)
@@ -220,8 +220,8 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   end
 
   def test_backward_node
-    x = Numo::SFloat.new(1, 16, 64).seq
-    y = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
+    y = Xumo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64)
     rnn.build([16, 64])
     rnn.forward_node(x)
@@ -229,8 +229,8 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   end
 
   def test_backward_node2
-    x = Numo::SFloat.new(1, 16, 64).seq
-    y = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
+    y = Xumo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64, use_bias: false)
     rnn.build([16, 64])
     rnn.forward_node(x)
@@ -239,21 +239,21 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
   end
 
   def test_backward_node3
-    x = Numo::SFloat.new(1, 16, 64).seq
-    y = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
+    y = Xumo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64)
     rnn.trainable = false
     rnn.build([16, 64])
     rnn.forward_node(x)
     rnn.backward_node(y)
-    assert_equal Numo::SFloat[0], rnn.weight.grad
-    assert_equal Numo::SFloat[0], rnn.recurrent_weight.grad
-    assert_equal Numo::SFloat[0], rnn.bias.grad
+    assert_equal Xumo::SFloat[0], rnn.weight.grad
+    assert_equal Xumo::SFloat[0], rnn.recurrent_weight.grad
+    assert_equal Xumo::SFloat[0], rnn.bias.grad
   end
 
   def test_backward_node4
-    x = Numo::SFloat.new(1, 16, 64).seq
-    y = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
+    y = Xumo::SFloat.new(1, 16, 64).seq
     rnn = SimpleRNN.new(64, stateful: true)
     rnn.build([16, 64])
     rnn.forward_node(x)
@@ -289,24 +289,24 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
                             recurrent_weight_initializer: DNN::Initializers::Const.new(2),
                             bias_initializer: DNN::Initializers::Const.new(2))
     rnn.build([16, 32])
-    assert_equal Numo::SFloat.new(32, 64).fill(2), rnn.weight.data
-    assert_equal Numo::SFloat.new(64, 64).fill(2), rnn.recurrent_weight.data
-    assert_equal Numo::SFloat.new(64).fill(2), rnn.bias.data
+    assert_equal Xumo::SFloat.new(32, 64).fill(2), rnn.weight.data
+    assert_equal Xumo::SFloat.new(64, 64).fill(2), rnn.recurrent_weight.data
+    assert_equal Xumo::SFloat.new(64).fill(2), rnn.bias.data
   end
 end
 
 
 class TestLSTMDense < MiniTest::Unit::TestCase
   def test_forward
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    c = Numo::SFloat.new(1, 16).seq
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    c = Xumo::SFloat.new(1, 16).seq
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16 * 4).fill(1)
+    w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16 * 4).fill(0)
+    b.data = Xumo::SFloat.new(16 * 4).fill(0)
 
     dense = LSTMDense.new(w, w2, b)
     h2, c2 = dense.forward(x, h, c)
@@ -315,19 +315,19 @@ class TestLSTMDense < MiniTest::Unit::TestCase
   end
 
   def test_backward
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(1, 16).seq
-    c = Numo::SFloat.new(1, 16).seq
-    dc2 = Numo::SFloat.new(1, 16).seq
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(1, 16).seq
+    c = Xumo::SFloat.new(1, 16).seq
+    dc2 = Xumo::SFloat.new(1, 16).seq
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16 * 4).fill(1)
+    w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16 * 4).fill(0)
+    b.data = Xumo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
     dense = LSTMDense.new(w, w2, b)
@@ -339,16 +339,16 @@ class TestLSTMDense < MiniTest::Unit::TestCase
   end
 
   def test_backward2
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(1, 16).seq
-    c = Numo::SFloat.new(1, 16).seq
-    dc2 = Numo::SFloat.new(1, 16).seq
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(1, 16).seq
+    c = Xumo::SFloat.new(1, 16).seq
+    dc2 = Xumo::SFloat.new(1, 16).seq
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16 * 4).fill(1)
+    w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
 
     dense = LSTMDense.new(w, w2, nil)
@@ -358,19 +358,19 @@ class TestLSTMDense < MiniTest::Unit::TestCase
   end
 
   def test_backward3
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(1, 16).seq
-    c = Numo::SFloat.new(1, 16).seq
-    dc2 = Numo::SFloat.new(1, 16).seq
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(1, 16).seq
+    c = Xumo::SFloat.new(1, 16).seq
+    dc2 = Xumo::SFloat.new(1, 16).seq
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16 * 4).fill(1)
+    w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16 * 4).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16 * 4).fill(0)
+    b.data = Xumo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
     dense = LSTMDense.new(w, w2, b)
@@ -414,7 +414,7 @@ class TestLSTM < MiniTest::Unit::TestCase
   end
 
   def test_forward_node
-    x = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64)
     lstm.build([16, 64])
     assert_equal [1, 16, 64], lstm.forward_node(x).shape
@@ -422,7 +422,7 @@ class TestLSTM < MiniTest::Unit::TestCase
   end
 
   def test_forward_node2
-    x = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64, stateful: true)
     lstm.build([16, 64])
     lstm.forward_node(x)
@@ -430,8 +430,8 @@ class TestLSTM < MiniTest::Unit::TestCase
   end
 
   def test_backward_node
-    x = Numo::SFloat.new(1, 16, 64).seq
-    y = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
+    y = Xumo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64)
     lstm.build([16, 64])
     lstm.forward_node(x)
@@ -439,8 +439,8 @@ class TestLSTM < MiniTest::Unit::TestCase
   end
 
   def test_backward_node2
-    x = Numo::SFloat.new(1, 16, 64).seq
-    y = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
+    y = Xumo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64, use_bias: false)
     lstm.build([16, 64])
     lstm.forward_node(x)
@@ -449,21 +449,21 @@ class TestLSTM < MiniTest::Unit::TestCase
   end
 
   def test_backward_node3
-    x = Numo::SFloat.new(1, 16, 64).seq
-    y = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
+    y = Xumo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64)
     lstm.trainable = false
     lstm.build([16, 64])
     lstm.forward_node(x)
     lstm.backward_node(y)
-    assert_equal Numo::SFloat[0], lstm.weight.grad
-    assert_equal Numo::SFloat[0], lstm.recurrent_weight.grad
-    assert_equal Numo::SFloat[0], lstm.bias.grad
+    assert_equal Xumo::SFloat[0], lstm.weight.grad
+    assert_equal Xumo::SFloat[0], lstm.recurrent_weight.grad
+    assert_equal Xumo::SFloat[0], lstm.bias.grad
   end
 
   def test_backward_node4
-    x = Numo::SFloat.new(1, 16, 64).seq
-    y = Numo::SFloat.new(1, 16, 64).seq
+    x = Xumo::SFloat.new(1, 16, 64).seq
+    y = Xumo::SFloat.new(1, 16, 64).seq
     lstm = LSTM.new(64, stateful: true)
     lstm.build([16, 64])
     lstm.forward_node(x)
@@ -475,11 +475,11 @@ class TestLSTM < MiniTest::Unit::TestCase
   def test_reset_state
     lstm = LSTM.new(64)
     lstm.build([16, 64])
-    lstm.hidden.data = Numo::SFloat.ones(16, 64)
-    lstm.cell.data = Numo::SFloat.ones(16, 64)
+    lstm.hidden.data = Xumo::SFloat.ones(16, 64)
+    lstm.cell.data = Xumo::SFloat.ones(16, 64)
     lstm.reset_state
-    assert_equal Numo::SFloat.zeros(16, 64), lstm.hidden.data
-    assert_equal Numo::SFloat.zeros(16, 64), lstm.cell.data
+    assert_equal Xumo::SFloat.zeros(16, 64), lstm.hidden.data
+    assert_equal Xumo::SFloat.zeros(16, 64), lstm.cell.data
   end
 
   def test_build
@@ -487,9 +487,9 @@ class TestLSTM < MiniTest::Unit::TestCase
                     recurrent_weight_initializer: DNN::Initializers::Const.new(2),
                     bias_initializer: DNN::Initializers::Const.new(2))
     lstm.build([16, 32])
-    assert_equal Numo::SFloat.new(32, 256).fill(2), lstm.weight.data
-    assert_equal Numo::SFloat.new(64, 256).fill(2), lstm.recurrent_weight.data
-    assert_equal Numo::SFloat.new(256).fill(2), lstm.bias.data
+    assert_equal Xumo::SFloat.new(32, 256).fill(2), lstm.weight.data
+    assert_equal Xumo::SFloat.new(64, 256).fill(2), lstm.recurrent_weight.data
+    assert_equal Xumo::SFloat.new(256).fill(2), lstm.bias.data
   end
 
   def test_to_hash
@@ -530,31 +530,31 @@ end
 
 class TestGRUDense < MiniTest::Unit::TestCase
   def test_forward
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16 * 3).fill(1)
+    w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16 * 3).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16 * 3).fill(0)
+    b.data = Xumo::SFloat.new(16 * 3).fill(0)
 
     dense = GRUDense.new(w, w2, b)
     assert_equal [1, 16], dense.forward(x, h).shape
   end
 
   def test_backward
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16 * 3).fill(1)
+    w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16 * 3).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16 * 3).fill(0)
+    b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
     dense = GRUDense.new(w, w2, b)
     dense.forward(x, h)
@@ -564,17 +564,17 @@ class TestGRUDense < MiniTest::Unit::TestCase
   end
 
   def test_backward2
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16 * 3).fill(1)
+    w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16 * 3).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16 * 3).fill(0)
+    b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
 
     dense = GRUDense.new(w, w2, nil)
@@ -584,17 +584,17 @@ class TestGRUDense < MiniTest::Unit::TestCase
   end
 
   def test_backward3
-    x = Numo::SFloat.new(1, 64).seq
-    h = Numo::SFloat.new(1, 16).seq
-    dh2 = Numo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
+    x = Xumo::SFloat.new(1, 64).seq
+    h = Xumo::SFloat.new(1, 16).seq
+    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
     w = DNN::Param.new
-    w.data = Numo::SFloat.new(64, 16 * 3).fill(1)
+    w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
     w2 = DNN::Param.new
-    w2.data = Numo::SFloat.new(16, 16 * 3).fill(1)
+    w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
     b = DNN::Param.new
-    b.data = Numo::SFloat.new(16 * 3).fill(0)
+    b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
     dense = GRUDense.new(w, w2, b)
     dense.trainable = false
@@ -634,8 +634,8 @@ class TestGRU < MiniTest::Unit::TestCase
                   recurrent_weight_initializer: DNN::Initializers::Const.new(2),
                   bias_initializer: DNN::Initializers::Const.new(2))
     gru.build([16, 32])
-    assert_equal Numo::SFloat.new(32, 192).fill(2), gru.weight.data
-    assert_equal Numo::SFloat.new(64, 192).fill(2), gru.recurrent_weight.data
-    assert_equal Numo::SFloat.new(192).fill(2), gru.bias.data
+    assert_equal Xumo::SFloat.new(32, 192).fill(2), gru.weight.data
+    assert_equal Xumo::SFloat.new(64, 192).fill(2), gru.recurrent_weight.data
+    assert_equal Xumo::SFloat.new(192).fill(2), gru.bias.data
   end
 end

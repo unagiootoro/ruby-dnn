@@ -5,7 +5,7 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
 
   # im2col test.
   def test_im2col
-    img = Numo::SFloat.cast([[
+    img = Xumo::SFloat.cast([[
       [
         [1, 2, 3, 4],
         [5, 6, 7, 8],
@@ -19,7 +19,7 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
         [29, 30, 31, 32],
       ]
     ]]).transpose(0, 2, 3, 1)
-    expected_col = Numo::SFloat[
+    expected_col = Xumo::SFloat[
       [1, 17, 2, 18, 3, 19, 5, 21, 6, 22, 7, 23, 9, 25, 10, 26, 11, 27],
       [2, 18, 3, 19, 4, 20, 6, 22, 7, 23, 8, 24, 10, 26, 11, 27, 12, 28],
       [5, 21, 6, 22, 7, 23, 9, 25, 10, 26, 11, 27, 13, 29, 14, 30, 15, 31],
@@ -31,8 +31,8 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
 
   # im2col strides test.
   def test_im2col2
-    img = Numo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
-    expected_col = Numo::SFloat[
+    img = Xumo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
+    expected_col = Xumo::SFloat[
       [1, 17, 2, 18, 5, 21, 6, 22],
       [3, 19, 4, 20, 7, 23, 8, 24],
       [9, 25, 10, 26, 13, 29, 14, 30],
@@ -45,13 +45,13 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
   # col2im test.
   def test_col2im
     img_shape = [1, 4, 4, 2]
-    col = Numo::SFloat[
+    col = Xumo::SFloat[
       [1, 17, 2, 18, 3, 19, 5, 21, 6, 22, 7, 23, 9, 25, 10, 26, 11, 27],
       [2, 18, 3, 19, 4, 20, 6, 22, 7, 23, 8, 24, 10, 26, 11, 27, 12, 28],
       [5, 21, 6, 22, 7, 23, 9, 25, 10, 26, 11, 27, 13, 29, 14, 30, 15, 31],
       [6, 22, 7, 23, 8, 24, 10, 26, 11, 27, 12, 28, 14, 30, 15, 31, 16, 32],
     ]
-    expected_img = Numo::SFloat.cast([[
+    expected_img = Xumo::SFloat.cast([[
       [
         [1*1, 2*2, 3*2, 4*1],
         [5*2, 6*4, 7*4, 8*2],
@@ -72,20 +72,20 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
   # col2im stride test.
   def test_col2im2
     img_shape = [1, 4, 4, 2]
-    col = Numo::SFloat[
+    col = Xumo::SFloat[
       [1, 17, 2, 18, 5, 21, 6, 22],
       [3, 19, 4, 20, 7, 23, 8, 24],
       [9, 25, 10, 26, 13, 29, 14, 30],
       [11, 27, 12, 28, 15, 31, 16, 32],
     ]
-    expected_img = Numo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
+    expected_img = Xumo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
     img = col2im(col, img_shape, 2, 2, 2, 2, [2, 2])
     assert_equal expected_img.round(4), img.round(4)
   end
 
   def test_zero_padding
-    img = Numo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
-    expected_img = Numo::SFloat.cast([[
+    img = Xumo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
+    expected_img = Xumo::SFloat.cast([[
       [
         [0, 0, 0, 0, 0, 0],
         [0, 1, 2, 3, 4, 0],
@@ -107,7 +107,7 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
   end
 
   def test_zero_padding_bwd
-    img = Numo::SFloat.cast([[
+    img = Xumo::SFloat.cast([[
       [
         [0, 0, 0, 0, 0, 0],
         [0, 1, 2, 3, 4, 0],
@@ -125,7 +125,7 @@ class TestConv2D_Utils < MiniTest::Unit::TestCase
         [0, 0, 0, 0, 0, 0],
       ]
     ]]).transpose(0, 2, 3, 1)
-    expected_img = Numo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
+    expected_img = Xumo::SFloat.new(1, 2, 4, 4).seq(1).transpose(0, 2, 3, 1)
     assert_equal expected_img, zero_padding_bwd(img, [2, 2])
   end
 
@@ -221,15 +221,15 @@ class TestConv2D < MiniTest::Unit::TestCase
 
 
   def test_forward_node
-    x = Numo::SFloat.new(1, 32, 32, 3).seq
+    x = Xumo::SFloat.new(1, 32, 32, 3).seq
     conv2d = DNN::Layers::Conv2D.new(16, 5)
     conv2d.build([32, 32, 3])
     assert_equal [1, 28, 28, 16], conv2d.forward_node(x).shape
   end
 
   def test_backward_node
-    x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dy = Numo::SFloat.new(1, 28, 28, 16).seq
+    x = Xumo::SFloat.new(1, 32, 32, 3).seq
+    dy = Xumo::SFloat.new(1, 28, 28, 16).seq
     conv2d = DNN::Layers::Conv2D.new(16, 5)
     conv2d.build([32, 32, 3])
     conv2d.forward_node(x)
@@ -237,8 +237,8 @@ class TestConv2D < MiniTest::Unit::TestCase
   end
 
   def test_backward_node2
-    x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dy = Numo::SFloat.new(1, 28, 28, 16).seq
+    x = Xumo::SFloat.new(1, 32, 32, 3).seq
+    dy = Xumo::SFloat.new(1, 28, 28, 16).seq
     conv2d = DNN::Layers::Conv2D.new(16, 5, use_bias: false)
     conv2d.build([32, 32, 3])
     conv2d.forward_node(x)
@@ -247,15 +247,15 @@ class TestConv2D < MiniTest::Unit::TestCase
   end
 
   def test_backward_node3
-    x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dy = Numo::SFloat.new(1, 28, 28, 16).seq
+    x = Xumo::SFloat.new(1, 32, 32, 3).seq
+    dy = Xumo::SFloat.new(1, 28, 28, 16).seq
     conv2d = DNN::Layers::Conv2D.new(16, 5)
     conv2d.trainable = false
     conv2d.build([32, 32, 3])
     conv2d.forward_node(x)
     conv2d.backward_node(dy)
-    assert_equal Numo::SFloat[0], conv2d.weight.grad
-    assert_equal Numo::SFloat[0], conv2d.bias.grad
+    assert_equal Xumo::SFloat[0], conv2d.weight.grad
+    assert_equal Xumo::SFloat[0], conv2d.bias.grad
   end
 
   def test_output_shape
@@ -273,7 +273,7 @@ class TestConv2D < MiniTest::Unit::TestCase
   def test_filters_set
     conv2d = DNN::Layers::Conv2D.new(16, [4, 5])
     conv2d.build([32, 32, 3])
-    conv2d.filters = Numo::SFloat.zeros(4, 5, 3, 16)
+    conv2d.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
     assert_equal [4 * 5 * 3, 16], conv2d.weight.data.shape
   end
 
@@ -355,15 +355,15 @@ class TestConv2DTranspose < MiniTest::Unit::TestCase
   end
 
   def test_forward_node
-    x = Numo::SFloat.new(1, 16, 16, 3).seq
+    x = Xumo::SFloat.new(1, 16, 16, 3).seq
     conv2d_t = DNN::Layers::Conv2DTranspose.new(8, 2, strides: 2)
     conv2d_t.build([16, 16, 3])
     assert_equal [1, 32, 32, 8], conv2d_t.forward_node(x).shape
   end
 
   def test_backward_node
-    x = Numo::SFloat.new(1, 16, 16, 3).seq
-    dy = Numo::SFloat.new(1, 32, 32, 8).seq
+    x = Xumo::SFloat.new(1, 16, 16, 3).seq
+    dy = Xumo::SFloat.new(1, 32, 32, 8).seq
     conv2d_t = DNN::Layers::Conv2DTranspose.new(8, 2, strides: 2)
     conv2d_t.build([16, 16, 3])
     conv2d_t.forward_node(x)
@@ -387,7 +387,7 @@ class TestConv2DTranspose < MiniTest::Unit::TestCase
   def test_filters_set
     conv2d_t = DNN::Layers::Conv2DTranspose.new(16, [4, 5])
     conv2d_t.build([32, 32, 3])
-    conv2d_t.filters = Numo::SFloat.zeros(4, 5, 3, 16)
+    conv2d_t.filters = Xumo::SFloat.zeros(4, 5, 3, 16)
     assert_equal [4 * 5 * 16, 3], conv2d_t.weight.data.shape
   end
 
@@ -460,15 +460,15 @@ class TestMaxPool2D < MiniTest::Unit::TestCase
   end
 
   def test_forward_node
-    x = Numo::SFloat.new(1, 32, 32, 3).seq
+    x = Xumo::SFloat.new(1, 32, 32, 3).seq
     pool2d = DNN::Layers::MaxPool2D.new(2)
     pool2d.build([32, 32, 3])
     assert_equal [1, 16, 16, 3], pool2d.forward_node(x).shape
   end
 
   def test_backward_node
-    x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dy = Numo::SFloat.new(1, 16, 16, 3).seq
+    x = Xumo::SFloat.new(1, 32, 32, 3).seq
+    dy = Xumo::SFloat.new(1, 16, 16, 3).seq
     pool2d = DNN::Layers::MaxPool2D.new(2)
     pool2d.build([32, 32, 3])
     pool2d.forward_node(x)
@@ -498,15 +498,15 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
   end
 
   def test_forward_node
-    x = Numo::SFloat.new(1, 32, 32, 3).seq
+    x = Xumo::SFloat.new(1, 32, 32, 3).seq
     pool2d = DNN::Layers::AvgPool2D.new(2)
     pool2d.build([32, 32, 3])
     assert_equal [1, 16, 16, 3], pool2d.forward_node(x).shape
   end
 
   def test_backward_node
-    x = Numo::SFloat.new(1, 32, 32, 3).seq
-    dy = Numo::SFloat.new(1, 16, 16, 3).seq
+    x = Xumo::SFloat.new(1, 32, 32, 3).seq
+    dy = Xumo::SFloat.new(1, 16, 16, 3).seq
     pool2d = DNN::Layers::AvgPool2D.new(2)
     pool2d.build([32, 32, 3])
     pool2d.forward_node(x)
@@ -516,7 +516,7 @@ end
 
 class TestGlobalAvgPoo2D < MiniTest::Unit::TestCase
   def test_forward_node
-    x = DNN::Tensor.new(Numo::SFloat.new(1, 8, 8, 64).seq)
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 8, 8, 64).seq)
     pool2d = GlobalAvgPool2D.new
     pool2d.build([8, 8, 64])
     assert_equal [1, 64], pool2d.forward(x).shape
@@ -534,7 +534,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
   end
 
   def test_forward_node
-    x = Numo::SFloat.new(1, 8, 8, 3).seq
+    x = Xumo::SFloat.new(1, 8, 8, 3).seq
     unpool2d = DNN::Layers::UnPool2D.new(2)
     unpool2d.build([8, 8, 3])
     y = unpool2d.forward_node(x)
@@ -542,8 +542,8 @@ class TestUnPool2D < MiniTest::Unit::TestCase
   end
 
   def test_backward_node
-    x = Numo::SFloat.new(1, 8, 8, 3).seq
-    dy = Numo::SFloat.new(1, 16, 16, 3).seq
+    x = Xumo::SFloat.new(1, 8, 8, 3).seq
+    dy = Xumo::SFloat.new(1, 16, 16, 3).seq
     unpool2d = DNN::Layers::UnPool2D.new(2)
     unpool2d.build([8, 8, 3])
     unpool2d.forward_node(x)

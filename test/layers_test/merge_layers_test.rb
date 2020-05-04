@@ -8,16 +8,16 @@ class TestConcatenate < MiniTest::Unit::TestCase
 
   def test_forward_node
     con = DNN::Layers::Concatenate.new
-    y = con.forward_node(Numo::SFloat[[1, 2]], Numo::SFloat[[3, 4]])
-    assert_equal Numo::SFloat[[1, 2, 3, 4]], y.round(4)
+    y = con.forward_node(Xumo::SFloat[[1, 2]], Xumo::SFloat[[3, 4]])
+    assert_equal Xumo::SFloat[[1, 2, 3, 4]], y.round(4)
   end
 
   def test_backward_node
     con = DNN::Layers::Concatenate.new
-    con.forward_node(Numo::SFloat[[1, 2, 3]], Numo::SFloat[[4, 5]])
-    dx1, dx2 = con.backward_node(Numo::SFloat[[6, 7, 8, 9, 10]])
-    assert_equal Numo::SFloat[[6, 7, 8]], dx1
-    assert_equal Numo::SFloat[[9, 10]], dx2
+    con.forward_node(Xumo::SFloat[[1, 2, 3]], Xumo::SFloat[[4, 5]])
+    dx1, dx2 = con.backward_node(Xumo::SFloat[[6, 7, 8, 9, 10]])
+    assert_equal Xumo::SFloat[[6, 7, 8]], dx1
+    assert_equal Xumo::SFloat[[9, 10]], dx2
   end
 
   def test_to_hash

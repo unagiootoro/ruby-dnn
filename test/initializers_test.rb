@@ -30,7 +30,7 @@ class TestConst < MiniTest::Unit::TestCase
     initializer = Const.new(1)
     dense = Dense.new(10)
     dense.build([10])
-    zeros = Numo::SFloat.ones(dense.weight.data.shape)
+    zeros = Xumo::SFloat.ones(dense.weight.data.shape)
     initializer.init_param(self, dense.weight)
     assert_equal zeros, dense.weight.data
   end
@@ -52,7 +52,7 @@ class TestZeros < MiniTest::Unit::TestCase
     initializer = Zeros.new
     dense = Dense.new(10)
     dense.build([10])
-    zeros = Numo::SFloat.zeros(dense.weight.data.shape)
+    zeros = Xumo::SFloat.zeros(dense.weight.data.shape)
     initializer.init_param(self, dense.weight)
     assert_equal zeros, dense.weight.data
   end
@@ -80,8 +80,8 @@ class TestRandomNormal < MiniTest::Unit::TestCase
     dense.build([10])
     initializer.init_param(dense, dense.weight)
 
-    Numo::SFloat.srand(0)
-    expected = Numo::SFloat.new(10, 10).rand_norm(0, 0.05).round(4)
+    Xumo::SFloat.srand(0)
+    expected = Xumo::SFloat.new(10, 10).rand_norm(0, 0.05).round(4)
     assert_equal expected, dense.weight.data.round(4)
   end
 
@@ -113,8 +113,8 @@ class TestRandomUniform < MiniTest::Unit::TestCase
     dense.build([10])
     initializer.init_param(dense, dense.weight)
 
-    Numo::SFloat.srand(0)
-    expected = Numo::SFloat.new(10, 10).rand(-0.05, 0.05).round(4)
+    Xumo::SFloat.srand(0)
+    expected = Xumo::SFloat.new(10, 10).rand(-0.05, 0.05).round(4)
     assert_equal  expected, dense.weight.data.round(4)
   end
 
@@ -138,8 +138,8 @@ class TestXavier < MiniTest::Unit::TestCase
     dense.build([10])
     initializer.init_param(dense, dense.weight)
 
-    Numo::SFloat.srand(0)
-    expected = (Numo::SFloat.new(10, 10).rand_norm / Math.sqrt(10)).round(4)
+    Xumo::SFloat.srand(0)
+    expected = (Xumo::SFloat.new(10, 10).rand_norm / Math.sqrt(10)).round(4)
     assert_equal expected, dense.weight.data.round(4)
   end
 end
@@ -152,8 +152,8 @@ class TestHe < MiniTest::Unit::TestCase
     dense.build([10])
     initializer.init_param(dense, dense.weight)
 
-    Numo::SFloat.srand(0)
-    expected = (Numo::SFloat.new(10, 10).rand_norm / Math.sqrt(10) * Math.sqrt(2)).round(4)
+    Xumo::SFloat.srand(0)
+    expected = (Xumo::SFloat.new(10, 10).rand_norm / Math.sqrt(10) * Math.sqrt(2)).round(4)
     assert_equal expected, dense.weight.data.round(4)
   end
 end

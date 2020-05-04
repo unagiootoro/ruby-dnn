@@ -82,8 +82,8 @@ class TestSequential < MiniTest::Unit::TestCase
     before_test_on_batch_cbk = DNN::Callbacks::LambdaCallback.new(:before_test_on_batch, &before_test_on_batch_f)
     after_test_on_batch_cbk = DNN::Callbacks::LambdaCallback.new(:after_test_on_batch, &after_test_on_batch_f)
 
-    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    y = Numo::SFloat[[65, 130], [155, 310]]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Xumo::SFloat[[65, 130], [155, 310]]
     model = Sequential.new
     model << InputLayer.new(3)
     model << Dense.new(2)
@@ -100,12 +100,12 @@ class TestSequential < MiniTest::Unit::TestCase
   end
 
   def test_train_on_batch
-    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    y = Numo::SFloat[[65, 130], [155, 310]]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Xumo::SFloat[[65, 130], [155, 310]]
     dense = Dense.new(2)
     dense.build([3])
-    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.bias.data = Numo::SFloat[5, 10]
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
     model = Sequential.new
     model << InputLayer.new(3)
     model << dense
@@ -117,12 +117,12 @@ class TestSequential < MiniTest::Unit::TestCase
 
   # Test multiple outputs.
   def test_train_on_batch2
-    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    y = Numo::SFloat[[65, 130], [155, 310]]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Xumo::SFloat[[65, 130], [155, 310]]
     dense = Dense.new(2)
     dense.build([3])
-    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.bias.data = Numo::SFloat[5, 10]
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
     model = StubMultiOutputModel.new(dense)
     model.setup(SGD.new, [MeanSquaredError.new, MeanSquaredError.new])
     loss = model.train_on_batch(x, [y, y])
@@ -135,8 +135,8 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     model << InputLayer.new(3)
     model.setup(SGD.new, MeanSquaredError.new)
-    x = Numo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
-    y = Numo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
+    x = Xumo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
+    y = Xumo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
     assert_equal 1, model.evaluate(x, y, batch_size: 1).first
   end
 
@@ -145,18 +145,18 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     model << InputLayer.new(3)
     model.setup(SGD.new, MeanSquaredError.new)
-    x = Numo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
-    y = Numo::SFloat[[0, 1, 0.5], [0, 1, 0.5]]
+    x = Xumo::SFloat[[0, 0.5, 1], [0.5, 1, 0]]
+    y = Xumo::SFloat[[0, 1, 0.5], [0, 1, 0.5]]
     assert_equal 0.5, model.evaluate(x, y).first
   end
 
   def test_test_on_batch
-    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    y = Numo::SFloat[[65, 130], [155, 310]]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Xumo::SFloat[[65, 130], [155, 310]]
     dense = Dense.new(2)
     dense.build([3])
-    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.bias.data = Numo::SFloat[5, 10]
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
     model = Sequential.new
     model << InputLayer.new(3)
     model << dense
@@ -169,12 +169,12 @@ class TestSequential < MiniTest::Unit::TestCase
 
   # Test multiple outputs.
   def test_test_on_batch2
-    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    y = Numo::SFloat[[65, 130], [155, 310]]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Xumo::SFloat[[65, 130], [155, 310]]
     dense = Dense.new(2)
     dense.build([3])
-    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.bias.data = Numo::SFloat[5, 10]
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
     model = StubMultiOutputModel.new(dense)
     model.setup(SGD.new, [MeanSquaredError.new, MeanSquaredError.new])
     corrects, losss = model.test_on_batch(x, [y, y])
@@ -185,42 +185,42 @@ class TestSequential < MiniTest::Unit::TestCase
 
   # It is matching dense forward result and unuse loss activation.
   def test_predict
-    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense = Dense.new(2)
     dense.build([3])
-    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.bias.data = Numo::SFloat[5, 10]
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
     model = Sequential.new
     model << InputLayer.new(3)
     model << dense
     model.setup(SGD.new, SigmoidCrossEntropy.new)
 
-    assert_equal Numo::SFloat[[65, 130], [155, 310]], model.predict(x, use_loss_activation: false)
+    assert_equal Xumo::SFloat[[65, 130], [155, 310]], model.predict(x, use_loss_activation: false)
   end
 
   # It is matching dense forward result and use loss activation.
   def test_predict2
-    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
     dense = Dense.new(2)
     dense.build([3])
-    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.bias.data = Numo::SFloat[5, 10]
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
     model = Sequential.new
     model << InputLayer.new(3)
     model << dense
     model.setup(SGD.new, SigmoidCrossEntropy.new)
 
-    assert_equal Numo::SFloat[[1, 1], [1, 1]], model.predict(x, use_loss_activation: true)
+    assert_equal Xumo::SFloat[[1, 1], [1, 1]], model.predict(x, use_loss_activation: true)
   end
 
   # Test multiple outputs.
   def test_predict3
-    x = Numo::SFloat[[1, 2, 3], [4, 5, 6]]
-    expected_y = [Numo::SFloat[[1, 1], [1, 1]], Numo::SFloat[[1, 1], [1, 1]]]
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    expected_y = [Xumo::SFloat[[1, 1], [1, 1]], Xumo::SFloat[[1, 1], [1, 1]]]
     dense = Dense.new(2)
     dense.build([3])
-    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.bias.data = Numo::SFloat[5, 10]
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
     model = StubMultiOutputModel.new(dense)
     model.setup(SGD.new, [SigmoidCrossEntropy.new, SigmoidCrossEntropy.new])
 
@@ -229,17 +229,17 @@ class TestSequential < MiniTest::Unit::TestCase
 
   # It is matching dense forward result.
   def test_predict1
-    x = Numo::SFloat[1, 2, 3]
+    x = Xumo::SFloat[1, 2, 3]
     dense = Dense.new(2)
     dense.build([3])
-    dense.weight.data = Numo::SFloat[[10, 20], [10, 20], [10, 20]]
-    dense.bias.data = Numo::SFloat[5, 10]
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
     model = Sequential.new
     model << InputLayer.new(3)
     model << dense
     model.setup(SGD.new, MeanSquaredError.new)
 
-    assert_equal Numo::SFloat[65, 130], model.predict1(x)
+    assert_equal Xumo::SFloat[65, 130], model.predict1(x)
   end
 
   # It is including callback function in @callback.
@@ -303,7 +303,7 @@ class TestSequential < MiniTest::Unit::TestCase
   end
 
   def test_copy
-    x = Numo::SFloat[[0, 0]]
+    x = Xumo::SFloat[[0, 0]]
     model = Sequential.new
     model << InputLayer.new(2)
     model << Dense.new(1)
@@ -319,7 +319,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     model << InputLayer.new(2)
     model << sequential
-    model.predict1(Numo::SFloat.zeros(2))
+    model.predict1(Xumo::SFloat.zeros(2))
     assert_kind_of InputLayer, model.layers.first
     assert_kind_of Dense, model.layers.last
   end
@@ -331,7 +331,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model = Sequential.new
     model << InputLayer.new(2)
     model << sequential
-    model.predict1(Numo::SFloat.zeros(2))
+    model.predict1(Xumo::SFloat.zeros(2))
     assert_equal 1, model.trainable_layers[1].num_units
   end
 
@@ -340,7 +340,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(2)
     model << Dense.new(1)
     model.setup(SGD.new, MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(2))
+    model.predict1(Xumo::SFloat.zeros(2))
     assert_kind_of Dense, model.get_layer(:stack)[1]
   end
 
@@ -350,10 +350,10 @@ class TestSequential < MiniTest::Unit::TestCase
     dense1 = DNN::Layers::Dense.new(1)
     model = DNN::Models::Sequential.new([InputLayer.new(10), dense0, dense1])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
+    model.predict1(Xumo::SFloat.zeros(10))
     model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
     model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict1(Numo::SFloat.zeros(10))
+    model2.predict1(Xumo::SFloat.zeros(10))
 
     dense_params_data = [
       { weight: dense0.weight.data, bias:  dense0.bias.data},
@@ -361,7 +361,7 @@ class TestSequential < MiniTest::Unit::TestCase
     ]
     model2.set_all_params_data(dense_params_data)
 
-    x = Numo::SFloat.new(10).rand
+    x = Xumo::SFloat.new(10).rand
     assert_equal model.predict1(x), model2.predict1(x)
   end
 
@@ -369,20 +369,20 @@ class TestSequential < MiniTest::Unit::TestCase
   def test_get_all_params_data
     model = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
     model.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model.predict1(Numo::SFloat.zeros(10))
+    model.predict1(Xumo::SFloat.zeros(10))
     model2 = DNN::Models::Sequential.new([InputLayer.new(10), Dense.new(5), Dense.new(1)])
     model2.setup(DNN::Optimizers::SGD.new, DNN::Losses::MeanSquaredError.new)
-    model2.predict1(Numo::SFloat.zeros(10))
+    model2.predict1(Xumo::SFloat.zeros(10))
 
     params_data = model.get_all_params_data
     model2.set_all_params_data(params_data)
 
-    x = Numo::SFloat.new(10).rand
+    x = Xumo::SFloat.new(10).rand
     assert_equal model.predict1(x), model2.predict1(x)
   end
 
   def test_to_cpu
-    x = Numo::SFloat[[0, 0]]
+    x = Xumo::SFloat[[0, 0]]
     model = Sequential.new
     model << InputLayer.new(2)
     model << Dense.new(1)
@@ -399,7 +399,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model2 = Sequential.new
     model2.add(Dense.new(10))
     model.add(model2)
-    model.predict1(Numo::SFloat.zeros(10))
+    model.predict1(Xumo::SFloat.zeros(10))
     assert_kind_of InputLayer, model.layers[0]
     assert_kind_of Dense, model.layers[1]
   end
@@ -417,7 +417,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model.add(input_layer)
     model.add(Dense.new(10))
     model.insert(1, Dense.new(20))
-    model.predict1(Numo::SFloat.zeros(10))
+    model.predict1(Xumo::SFloat.zeros(10))
     assert_equal 20, model.layers[1].num_units
   end
 
