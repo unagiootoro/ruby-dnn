@@ -26,7 +26,7 @@ module DNN
       def im2col_cpu(img, out_h, out_w, fil_h, fil_w, strides)
         bsize = img.shape[0]
         ch = img.shape[3]
-        col = Xumo::SFloat.zeros(bsize, out_h, out_w, fil_h, fil_w, ch)
+        col = img.class.zeros(bsize, out_h, out_w, fil_h, fil_w, ch)
         (0...fil_h).each do |i|
           i_range = (i...(i + strides[0] * out_h)).step(strides[0]).to_a
           (0...fil_w).each do |j|
@@ -46,7 +46,7 @@ module DNN
       def col2im_cpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         bsize, img_h, img_w, ch = img_shape
         col = col.reshape(bsize, out_h, out_w, fil_h, fil_w, ch)
-        img = Xumo::SFloat.zeros(bsize, img_h, img_w, ch)
+        img = col.class.zeros(bsize, img_h, img_w, ch)
         (0...fil_h).each do |i|
           i_range = (i...(i + strides[0] * out_h)).step(strides[0]).to_a
           (0...fil_w).each do |j|
@@ -59,7 +59,7 @@ module DNN
 
       def col2im_gpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         col = Utils.cumo2numo(col)
-        img = im2col_cpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
+        img = col2im_cpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         Utils.numo2cumo(img)
       end
 
