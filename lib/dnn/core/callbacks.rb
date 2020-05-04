@@ -131,9 +131,9 @@ module DNN
       def get_log(tag)
         case tag
         when :epoch
-          Numo::UInt32.cast(@log[tag])
+          Xumo::UInt32.cast(@log[tag])
         else
-          Numo::SFloat.cast(@log[tag])
+          Xumo::SFloat.cast(@log[tag])
         end
       end
 
