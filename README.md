@@ -95,7 +95,7 @@ If you want to know more detailed information, please refer to the source code.
 | Losses | MeanSquaredError, MeanAbsoluteError, Hinge, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
 
 ## Datasets
-By setting the environment variable "RUBY_DNN_DOWNLOADS_PATH", you can specify the path to read dataset.
+By setting the environment variable 'RUBY_DNN_DOWNLOADS_PATH', you can specify the path to read dataset.
 
 ● Iris  
 ● MNIST  
@@ -109,10 +109,14 @@ By setting the environment variable "RUBY_DNN_DOWNLOADS_PATH", you can specify t
 ● DCGAN  
 ● Pix2pix
 
+## Use GPU
+If you do 'require "cumo/narray"' before 'require "dnn"', you can run it on GPU.
+Or, set the environment variable 'RUBY_DNN_USE_CUMO 'to'ENABLE' to force the GPU to be used.
+
 ## TODO
 ● Write a test.  
 ● Write a document.  
-● Support to GPU.  
+● Improve performance when using GPU.  
 
 ## Development
 
