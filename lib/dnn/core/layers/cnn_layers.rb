@@ -160,6 +160,22 @@ module DNN
       end
 
       def forward_node(x)
+        if DNN.cudnn_available?
+          _forward_cudnn(x)
+        else
+          _forward_node(x)
+        end
+      end
+
+      def backward_node(dy)
+        if DNN.cudnn_available?
+          _backward_cudnn(dy)
+        else
+          _backward_node(dy)
+        end
+      end
+
+      private def _forward_node(x)
         x = zero_padding(x, @pad_size) if @padding
         @x_shape = x.shape
         @col = im2col(x, *@out_size, *@filter_size, @strides)
@@ -168,7 +184,7 @@ module DNN
         y.reshape(x.shape[0], *@out_size, y.shape[3])
       end
 
-      def backward_node(dy)
+      private def _backward_node(dy)
         dy = dy.reshape(dy.shape[0..2].reduce(:*), dy.shape[3])
         if @trainable
           @weight.grad += @col.transpose.dot(dy)
@@ -177,6 +193,29 @@ module DNN
         dcol = dy.dot(@weight.data.transpose)
         dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
         @padding ? zero_padding_bwd(dx, @pad_size) : dx
+      end
+
+      private def _forward_cudnn(x)
+        x = x.transpose(0, 3, 1, 2)
+        w = filters.transpose(3, 2, 0, 1)
+        @x = x
+        @w = w
+        b = @bias ? @bias.data : nil
+        y = x.conv(w, b: b, stride: @strides, pad: @pad_size)
+        y.transpose(0, 2, 3, 1)
+      end
+
+      private def _backward_cudnn(dy)
+        dy = dy.transpose(0, 3, 1, 2)
+        x = @x
+        w = @w
+        b = @bias.data
+        dx = dy.conv_transpose(w, b: b, stride: @strides, pad: @pad_size, out_size: @input_shape[0..1])
+        # dx = dy.conv_transpose(w, b: b, stride: @strides, pad: @pad_size)
+        dw = x.conv_grad_w(dy, w.shape, stride: @strides, pad: @pad_size)
+        self.filters = dw.tranpose(2, 3, 1, 0)
+        @bias.grad += dy.sum(0) if @bias
+        dx.transpose(0, 2, 3, 1)
       end
 
       def compute_output_shape
