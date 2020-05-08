@@ -567,6 +567,8 @@ module DNN
         end
       end
 
+      # Convert the parameters of model and optimizer for cpu.
+      # @return [DNN::Models::Model] Return self.
       def to_cpu
         trainable_layers.each do |layer|
           layer.get_params.each do |(key, param)|
@@ -578,7 +580,7 @@ module DNN
         end
         @optimizer.status.each do |(key, state)|
           state.each do |(param, data)|
-            if defined?(Cumo) && data.is_a?(Cumo)
+            if DNN.use_cumo? && data.is_a?(Cumo::NArray)
               state[param] = Utils.cumo2numo(data)
             end
           end
