@@ -230,6 +230,7 @@ module DNN
             puts "【 epoch #{epoch}/#{epochs} 】" if verbose
 
             train_iterator.foreach(batch_size) do |x_batch, y_batch, index|
+              @last_log[:step] = index
               train_step_met = train_step(x_batch, y_batch)
               num_trained_datas = (index + 1) * batch_size
               num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas

@@ -104,6 +104,7 @@ module DNN
     # A callback that save the log.
     # The following logs will be recorded.
     # epoch:          Current epoch.
+    # step:           Current step in epoch.
     # train_loss:     Batch training loss.
     # test_loss:      Mean test loss.
     # test_accuracy:  Test accuracy.
@@ -111,6 +112,7 @@ module DNN
       def initialize
         @log = {
           epoch: [],
+          step: [],
           train_loss: [],
           test_loss: [],
           test_accuracy: [],
@@ -122,7 +124,7 @@ module DNN
       end
 
       def after_train_on_batch
-        logging(:train_loss)
+        logging(:train_loss, :step)
       end
 
       # Get a log.
@@ -130,7 +132,7 @@ module DNN
       # @return [Numo::NArray] Return the recorded log.
       def get_log(tag)
         case tag
-        when :epoch
+        when :epoch, :step
           Xumo::UInt32.cast(@log[tag])
         else
           Xumo::SFloat.cast(@log[tag])
