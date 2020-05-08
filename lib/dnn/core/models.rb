@@ -675,6 +675,7 @@ module DNN
           raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Chain class."
         end
         @stack.insert(index, layer)
+        self
       end
 
       # Remove layer to the model.
