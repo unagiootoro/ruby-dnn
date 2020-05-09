@@ -42,13 +42,13 @@ module DNN
       end
 
       def im2col_gpu(img, out_h, out_w, fil_h, fil_w, strides)
-        # img = Utils.cumo2numo(img)
+        img = Utils.cumo2numo(img)
         if DNN.use_exlib?
           col = Exlib.im2col(img, out_h, out_w, fil_h, fil_w, strides)
         else
           col = im2col_cpu(img, out_h, out_w, fil_h, fil_w, strides)
         end
-        # Utils.numo2cumo(col)
+        Utils.numo2cumo(col)
       end
 
       def col2im_cpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
@@ -66,13 +66,13 @@ module DNN
       end
 
       def col2im_gpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
-        # col = Utils.cumo2numo(col)
+        col = Utils.cumo2numo(col)
         if DNN.use_exlib?
           img = Exlib.col2im(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         else
           img = col2im_cpu(col, img_shape, out_h, out_w, fil_h, fil_w, strides)
         end
-        # Utils.numo2cumo(img)
+        Utils.numo2cumo(img)
       end
 
       def zero_padding(img, pad)
