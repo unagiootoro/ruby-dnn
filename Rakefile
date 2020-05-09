@@ -10,6 +10,14 @@ Rake::TestTask.new(:test) do |t|
   t.test_files = FileList["test/*_test.rb", "test/layers_test/*_test.rb"]
 end
 
+task :build_exlib do
+  sh "cd ext/exlib; ruby extconf.rb; make"
+end
+
+task :clean_exlib do
+  sh "cd ext/exlib; make clean; unlink Makefile"
+end
+
 task :build_rb_stb_image do
   sh "cd ext/rb_stb_image; ruby extconf.rb; make"
 end

@@ -25,6 +25,10 @@ module DNN
     return false unless ENV["RUBY_DNN_USE_CUDNN"] == "ENABLE"
     cudnn_available?
   end
+
+  def self.use_exlib?
+    defined? Exlib
+  end
 end
 
 require_relative "dnn/version"
