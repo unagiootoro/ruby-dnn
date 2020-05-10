@@ -1,7 +1,8 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include "im2col_gpu.h"
 
-__global__ void im2col_kernel(float* img, float* col, size_t bsize, size_t img_h, size_t img_w, size_t ch,
+__global__ void im2col_gpu_kernel(float* img, float* col, size_t bsize, size_t img_h, size_t img_w, size_t ch,
                    size_t out_h, size_t out_w, size_t fil_h, size_t fil_w, size_t stride_h, size_t stride_w) {
   size_t n, i, j, k, l, m;
   size_t ofs1, ofs2;
@@ -40,7 +41,7 @@ __global__ void im2col_kernel(float* img, float* col, size_t bsize, size_t img_h
   }
 }
 
-__global__ void col2im_kernel(float* img, float* col, size_t bsize, size_t img_h, size_t img_w, size_t ch,
+__global__ void col2im_gpu_kernel(float* img, float* col, size_t bsize, size_t img_h, size_t img_w, size_t ch,
                    size_t out_h, size_t out_w, size_t fil_h, size_t fil_w, size_t stride_h, size_t stride_w) {
   size_t n, i, j, k, l, m;
   size_t ofs1, ofs2;
@@ -79,12 +80,12 @@ __global__ void col2im_kernel(float* img, float* col, size_t bsize, size_t img_h
   }
 }
 
-void im2col(float* img, float* col, size_t bsize, size_t img_h, size_t img_w, size_t ch,
+void im2col_gpu(float* img, float* col, size_t bsize, size_t img_h, size_t img_w, size_t ch,
                    size_t out_h, size_t out_w, size_t fil_h, size_t fil_w, size_t stride_h, size_t stride_w) {
-  im2col_kernel<<<1,1>>>(img, col, bsize, img_h, img_w, ch, out_h, out_w, fil_h, fil_w, stride_h, stride_w);
+  im2col_gpu_kernel<<<bsize,bsize * out_h * out_w>>>(img, col, bsize, img_h, img_w, ch, out_h, out_w, fil_h, fil_w, stride_h, stride_w);
 }
 
-void col2im(float* img, float* col, size_t bsize, size_t img_h, size_t img_w, size_t ch,
+void col2im_gpu(float* img, float* col, size_t bsize, size_t img_h, size_t img_w, size_t ch,
                    size_t out_h, size_t out_w, size_t fil_h, size_t fil_w, size_t stride_h, size_t stride_w) {
-  col2im_kernel<<<1,1>>>(img, col, bsize, img_h, img_w, ch, out_h, out_w, fil_h, fil_w, stride_h, stride_w);
+  col2im_gpu_kernel<<<bsize,bsize * out_h * out_w>>>(img, col, bsize, img_h, img_w, ch, out_h, out_w, fil_h, fil_w, stride_h, stride_w);
 }

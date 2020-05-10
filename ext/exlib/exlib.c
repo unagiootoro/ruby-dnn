@@ -8,9 +8,9 @@
 #ifdef ENABLE_CUMO
 #include "cumo/narray.h"
 #include "cumo/intern.h"
+#include "im2col_gpu.h"
 #endif
-
-#include "im2col.h"
+#include "im2col_cpu.h"
 
 static char* get_na_ptr(VALUE na);
 
@@ -138,7 +138,7 @@ static VALUE rb_im2col_gpu(VALUE self, VALUE rb_na_img, VALUE rb_out_h, VALUE rb
   rb_na_col = rb_eval_string(script);
   col = (float*)cumo_na_get_pointer(rb_na_col);
 
-  im2col_cpu(img, col, bsize, img_h, img_w, ch, out_h, out_w, fil_h, fil_w, stride_h, stride_w);
+  im2col_gpu(img, col, bsize, img_h, img_w, ch, out_h, out_w, fil_h, fil_w, stride_h, stride_w);
 
   return rb_na_col;
 }
@@ -166,7 +166,7 @@ static VALUE rb_col2im_gpu(VALUE self, VALUE rb_na_col, VALUE rb_img_shape, VALU
   rb_na_img = rb_eval_string(script);
   img = (float*)cumo_na_get_pointer(rb_na_img);
 
-  col2im_cpu(img, col, bsize, img_h, img_w, ch, out_h, out_w, fil_h, fil_w, stride_h, stride_w);
+  col2im_gpu(img, col, bsize, img_h, img_w, ch, out_h, out_w, fil_h, fil_w, stride_h, stride_w);
 
   return rb_na_img;
 }

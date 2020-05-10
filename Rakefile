@@ -11,10 +11,23 @@ Rake::TestTask.new(:test) do |t|
 end
 
 task :build_exlib do
+  sh "cd ext/exlib; nvcc -dc -Xcompiler '-fPIC' im2col_gpu.cu"
+  sh "cd ext/exlib; nvcc -dlink -Xcompiler '-fPIC' im2col_gpu.o -o link_im2col_gpu.o"
+  sh "cd ext/exlib; ar rcs libim2col_gpu.a im2col_gpu.o link_im2col_gpu.o"
+
   sh "cd ext/exlib; ruby extconf.rb; make"
 end
 
 task :clean_exlib do
+  targets = [
+    "ext/exlib/im2col_gpu.o",
+    "ext/exlib/link_im2col_gpu.o",
+    "ext/exlib/libim2col_gpu.a",
+  ]
+  targets.each do |target|
+    File.unlink(target) if File.exist?(target)
+  end
+
   sh "cd ext/exlib; make clean; unlink Makefile"
 end
 

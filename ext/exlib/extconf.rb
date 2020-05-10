@@ -3,8 +3,6 @@ require "numo/narray"
 require "cumo/narray"
 require "mkmf"
 
-$CFLAGS="-O3"
-
 $LOAD_PATH.each do |x|
   if File.exist? File.join(x,"numo/numo/narray.h")
     $INCFLAGS = "-I#{x}/numo " + $INCFLAGS
@@ -27,7 +25,8 @@ $LOAD_PATH.each do |x|
   end
 end
 
-# find_library("exlig_gpu_kernel", "im2col", ".")
+# have_library("exlib_gpu_kernel", "im2col_gpu")
+$libs += " -lim2col_gpu"
 
 if !have_header("cumo/narray.h")
   print <<EOL
@@ -37,6 +36,6 @@ EOL
   exit(1)
 end
 
-$objs = %w[exlib.o im2col.o]
+$objs = %w[exlib.o im2col_cpu.o]
 
 create_makefile("exlib")
