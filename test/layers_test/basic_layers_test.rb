@@ -221,23 +221,15 @@ end
 
 
 class TestFlatten < MiniTest::Unit::TestCase
-  def test_forward_node
+  def test_forward
     flatten = Flatten.new
-    x = Xumo::SFloat.zeros(10, 32, 32, 3)
+    x = DNN::Tensor.convert(Xumo::SFloat.zeros(10, 32, 32, 3))
     flatten.build([32, 32, 3])
-    y = flatten.forward_node(x)
+    y = flatten.(x)
     assert_equal [10, 3072], y.shape
   end
-
-  def test_backward_node
-    flatten = Flatten.new
-    x = Xumo::SFloat.zeros(10, 32, 32, 3)
-    flatten.build([32, 32, 3])
-    flatten.forward_node(x)
-    dy = Xumo::SFloat.zeros(10, 3072)
-    assert_equal [10, 32, 32, 3], flatten.backward_node(dy).shape
-  end
 end
+
 
 class TestReshape < MiniTest::Unit::TestCase
   def test_load
