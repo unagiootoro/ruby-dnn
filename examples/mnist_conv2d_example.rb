@@ -21,13 +21,13 @@ model = Sequential.new
 
 model << InputLayer.new([28, 28, 1])
 
-model << Conv2D.new(16, 5)
+model << Conv2D.new(16, 3)
 model << BatchNormalization.new
 model << ReLU.new
 
 model << MaxPool2D.new(2)
 
-model << Conv2D.new(32, 5)
+model << Conv2D.new(32, 3)
 model << BatchNormalization.new
 model << ReLU.new
 
@@ -42,7 +42,7 @@ model << Dense.new(10)
 
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
-model.train(x_train, y_train, 10, batch_size: 100, test: [x_test, y_test])
+model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
 
 accuracy, loss = model.evaluate(x_test, y_test)
 puts "accuracy: #{accuracy}"

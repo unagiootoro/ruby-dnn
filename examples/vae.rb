@@ -97,7 +97,7 @@ model = VAE.new
 dec = model.dec
 model.setup(Adam.new, VAELoss.new)
 
-model.train(x_train, x_train, 10, batch_size: 100)
+model.train(x_train, x_train, 10, batch_size: 128)
 
 images = []
 10.times do |i|
