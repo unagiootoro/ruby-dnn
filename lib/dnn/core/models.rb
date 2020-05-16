@@ -571,18 +571,47 @@ module DNN
       # Convert the parameters of model and optimizer for cpu.
       # @return [DNN::Models::Model] Return self.
       def to_cpu
+        params_data = get_all_params_data
+        clean_layers
+        set_all_params_data(params_data)
         trainable_layers.each do |layer|
-          layer.get_params.each do |(key, param)|
+          layer.get_params.each do |key, param|
             data = param.data
             if DNN.use_cumo? && data.is_a?(Cumo::NArray)
               param.data = Utils.cumo2numo(data)
             end
           end
         end
-        @optimizer.status.each do |(key, state)|
-          state.each do |(param, data)|
+        @optimizer.status.each do |key, state|
+          next unless state
+          state.each do |param, data|
             if DNN.use_cumo? && data.is_a?(Cumo::NArray)
               state[param] = Utils.cumo2numo(data)
+            end
+          end
+        end
+        self
+      end
+
+      # Convert the parameters of model and optimizer for gpu.
+      # @return [DNN::Models::Model] Return self.
+      def to_gpu
+        params_data = get_all_params_data
+        clean_layers
+        set_all_params_data(params_data)
+        trainable_layers.each do |layer|
+          layer.get_params.each do |(key, param)|
+            data = param.data
+            if DNN.use_cumo? && data.is_a?(Numo::NArray)
+              param.data = Utils.numo2cumo(data)
+            end
+          end
+        end
+        @optimizer.status.each do |(key, state)|
+          next unless state
+          state.each do |(param, data)|
+            if DNN.use_cumo? && data.is_a?(Numo::NArray)
+              state[param] = Utils.numo2cumo(data)
             end
           end
         end

@@ -293,14 +293,8 @@ module DNN
     end
 
     class Flatten < Layer
-      include LayerNode
-
-      def forward_node(x)
-        x.reshape(x.shape[0], *@output_shape)
-      end
-
-      def backward_node(dy)
-        dy.reshape(dy.shape[0], *@input_shape)
+      def forward(x)
+        Reshape.(x, @output_shape)
       end
 
       def compute_output_shape
@@ -321,11 +315,35 @@ module DNN
       end
 
       def forward_node(x)
-        x.reshape(x.shape[0], *@output_shape)
+        if DNN.use_cumo?
+          _forward_gpu(x)
+        else
+          _forward_cpu(x)
+        end
       end
 
       def backward_node(dy)
+        if DNN.use_cumo?
+          _backward_gpu(dy)
+        else
+          _backward_cpu(dy)
+        end
+      end
+
+      def _forward_cpu(x)
+        x.reshape(x.shape[0], *@output_shape)
+      end
+
+      def _backward_cpu(dy)
         dy.reshape(dy.shape[0], *@input_shape)
+      end
+
+      def _forward_gpu(x)
+        x.flatten.reshape(x.shape[0], *@output_shape)
+      end
+
+      def _backward_gpu(dy)
+        dy.flatten.reshape(dy.shape[0], *@input_shape)
       end
 
       def to_hash
