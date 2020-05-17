@@ -160,7 +160,7 @@ module DNN
       end
 
       def forward_node(x)
-        if DNN.cudnn_available?
+        if DNN.use_cudnn?
           _forward_cudnn(x)
         else
           _forward_node(x)
@@ -168,7 +168,7 @@ module DNN
       end
 
       def backward_node(dy)
-        if DNN.cudnn_available?
+        if DNN.use_cudnn?
           _backward_cudnn(dy)
         else
           _backward_node(dy)
@@ -196,24 +196,25 @@ module DNN
       end
 
       private def _forward_cudnn(x)
+        pad_size = @pad_size.map { |s| s / 2 }
         x = x.transpose(0, 3, 1, 2)
         w = filters.transpose(3, 2, 0, 1)
         @x = x
         @w = w
         b = @bias ? @bias.data : nil
-        y = x.conv(w, b: b, stride: @strides, pad: @pad_size)
+        y = x.conv(w, b: b, stride: @strides, pad: pad_size)
         y.transpose(0, 2, 3, 1)
       end
 
       private def _backward_cudnn(dy)
+        pad_size = @pad_size.map { |s| s / 2 }
         dy = dy.transpose(0, 3, 1, 2)
         x = @x
         w = @w
         b = @bias.data
-        dx = dy.conv_transpose(w, b: b, stride: @strides, pad: @pad_size, out_size: @input_shape[0..1])
-        # dx = dy.conv_transpose(w, b: b, stride: @strides, pad: @pad_size)
-        dw = x.conv_grad_w(dy, w.shape, stride: @strides, pad: @pad_size)
-        self.filters = dw.tranpose(2, 3, 1, 0)
+        dx = dy.conv_transpose(w, b: b, stride: @strides, pad: pad_size, out_size: @input_shape[0..1])
+        dw = x.conv_grad_w(dy, w.shape, stride: @strides, pad: pad_size)
+        self.filters = dw.transpose(2, 3, 1, 0)
         @bias.grad += dy.sum(0) if @bias
         dx.transpose(0, 2, 3, 1)
       end
