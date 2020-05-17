@@ -1,10 +1,15 @@
 require "numo/narray"
 
 module DNN
-  if defined? ::Cumo
+  if ENV["RUBY_DNN_USE_CUMO"] == "ENABLE"
+    require "cumo/narray"
     Xumo = ::Cumo
   else
-    Xumo = ::Numo
+    if defined? ::Cumo
+      Xumo = ::Cumo
+    else
+      Xumo = ::Numo
+    end
   end
 
   def self.use_cumo?
@@ -14,6 +19,11 @@ module DNN
   def self.cudnn_available?
     return false unless defined? ::Cumo
     Cumo::CUDA::CUDNN.available?
+  end
+
+  def self.use_cudnn?
+    return false unless ENV["RUBY_DNN_USE_CUDNN"] == "ENABLE"
+    cudnn_available?
   end
 end
 

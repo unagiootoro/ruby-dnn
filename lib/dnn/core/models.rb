@@ -230,6 +230,7 @@ module DNN
             puts "【 epoch #{epoch}/#{epochs} 】" if verbose
 
             train_iterator.foreach(batch_size) do |x_batch, y_batch, index|
+              @last_log[:step] = index
               train_step_met = train_step(x_batch, y_batch)
               num_trained_datas = (index + 1) * batch_size
               num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
@@ -567,19 +568,50 @@ module DNN
         end
       end
 
+      # Convert the parameters of model and optimizer for cpu.
+      # @return [DNN::Models::Model] Return self.
       def to_cpu
+        params_data = get_all_params_data
+        clean_layers
+        set_all_params_data(params_data)
         trainable_layers.each do |layer|
-          layer.get_params.each do |(key, param)|
+          layer.get_params.each do |key, param|
             data = param.data
             if DNN.use_cumo? && data.is_a?(Cumo::NArray)
               param.data = Utils.cumo2numo(data)
             end
           end
         end
-        @optimizer.status.each do |(key, state)|
-          state.each do |(param, data)|
-            if defined?(Cumo) && data.is_a?(Cumo)
+        @optimizer.status.each do |key, state|
+          next unless state
+          state.each do |param, data|
+            if DNN.use_cumo? && data.is_a?(Cumo::NArray)
               state[param] = Utils.cumo2numo(data)
+            end
+          end
+        end
+        self
+      end
+
+      # Convert the parameters of model and optimizer for gpu.
+      # @return [DNN::Models::Model] Return self.
+      def to_gpu
+        params_data = get_all_params_data
+        clean_layers
+        set_all_params_data(params_data)
+        trainable_layers.each do |layer|
+          layer.get_params.each do |(key, param)|
+            data = param.data
+            if DNN.use_cumo? && data.is_a?(Numo::NArray)
+              param.data = Utils.numo2cumo(data)
+            end
+          end
+        end
+        @optimizer.status.each do |(key, state)|
+          next unless state
+          state.each do |(param, data)|
+            if DNN.use_cumo? && data.is_a?(Numo::NArray)
+              state[param] = Utils.numo2cumo(data)
             end
           end
         end
@@ -675,6 +707,7 @@ module DNN
           raise TypeError, "layer: #{layer.class.name} is not an instance of the DNN::Layers::Layer class or DNN::Models::Chain class."
         end
         @stack.insert(index, layer)
+        self
       end
 
       # Remove layer to the model.

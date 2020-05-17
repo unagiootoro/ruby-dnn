@@ -74,8 +74,10 @@ class TestLogger < MiniTest::Unit::TestCase
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
     stub_model.last_log[:train_loss] = 1
+    stub_model.last_log[:step] = 2
     cbk.after_train_on_batch
 
     assert_equal Xumo::SFloat[1], cbk.get_log(:train_loss)
+    assert_equal Xumo::UInt32[2], cbk.get_log(:step)
   end
 end
