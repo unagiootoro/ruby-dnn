@@ -84,6 +84,22 @@ puts "loss: #{loss}"
 Please refer to examples for basic usage.  
 If you want to know more detailed information, please refer to the source code.
 
+## Sample
+●Pix2pix  
+Convert an abstract image into a building image.  
+[https://github.com/unagiootoro/facade-pix2pix](https://github.com/unagiootoro/facade-pix2pix)
+![facade-pix2pix.png](img/facade-pix2pix.png)
+
+●Cycle-GAN  
+Convert apples to oranges and oranges to apples.  
+[https://github.com/unagiootoro/apple2orange-cyclegan](https://github.com/unagiootoro/apple2orange-cyclegan)
+![cycle-gan.PNG](img/cycle-gan.PNG)
+
+●DQN  
+Learn the game so that the pole on the cart does not fall.  
+[https://github.com/unagiootoro/ruby-rl](https://github.com/unagiootoro/ruby-rl)
+![cart-pole.gif](img/cart-pole.gif)
+
 ## Implemented
 || Implemented classes |
 |:-----------|------------:|
@@ -103,11 +119,6 @@ By setting the environment variable 'RUBY_DNN_DOWNLOADS_PATH', you can specify t
 ● CIFAR-10  
 ● CIFAR-100  
 ● STL-10
-
-## Examples
-● VAE  
-● DCGAN  
-● Pix2pix
 
 ## Use GPU
 If you do 'require "cumo/narray"' before 'require "dnn"', you can run it on GPU.
