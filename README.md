@@ -1,6 +1,7 @@
 # ruby-dnn
-[![Gem Version](https://badge.fury.io/rb/ruby-dnn.svg)](https://badge.fury.io/rb/ruby-dnn)  
+[![Gem Version](https://badge.fury.io/rb/ruby-dnn.svg)](https://badge.fury.io/rb/ruby-dnn)
 [![Build Status](https://travis-ci.org/unagiootoro/ruby-dnn.svg?branch=master)](https://travis-ci.org/unagiootoro/ruby-dnn)
+[![Docs Latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://rubydoc.info/gems/ruby-dnn)
 
 ruby-dnn is a ruby deep learning library. This library supports full connected neural network and convolution neural network
 and recurrent neural network.
@@ -85,17 +86,18 @@ Please refer to examples for basic usage.
 If you want to know more detailed information, please refer to the source code.
 
 ## Sample
-●Pix2pix  
+
+* Pix2pix  
 Convert an abstract image into a building image.  
 [https://github.com/unagiootoro/facade-pix2pix](https://github.com/unagiootoro/facade-pix2pix)
 ![facade-pix2pix.png](img/facade-pix2pix.png)
 
-●Cycle-GAN  
+* Cycle-GAN  
 Convert apples to oranges and oranges to apples.  
 [https://github.com/unagiootoro/apple2orange-cyclegan](https://github.com/unagiootoro/apple2orange-cyclegan)
 ![cycle-gan.PNG](img/cycle-gan.PNG)
 
-●DQN  
+* DQN  
 Learn the game so that the pole on the cart does not fall.  
 [https://github.com/unagiootoro/ruby-rl](https://github.com/unagiootoro/ruby-rl)
 ![cart-pole.gif](img/cart-pole.gif)
@@ -111,23 +113,23 @@ Learn the game so that the pole on the cart does not fall.
 | Losses | MeanSquaredError, MeanAbsoluteError, Hinge, HuberLoss, SoftmaxCrossEntropy, SigmoidCrossEntropy |
 
 ## Datasets
-By setting the environment variable 'RUBY_DNN_DOWNLOADS_PATH', you can specify the path to read dataset.
+By setting the environment variable `RUBY_DNN_DOWNLOADS_PATH`, you can specify the path to read dataset.
 
-● Iris  
-● MNIST  
-● Fashion-MNIST  
-● CIFAR-10  
-● CIFAR-100  
-● STL-10
+* Iris  
+* MNIST  
+* Fashion-MNIST  
+* CIFAR-10  
+* CIFAR-100  
+* STL-10
 
 ## Use GPU
-If you do 'require "cumo/narray"' before 'require "dnn"', you can run it on GPU.
-Or, set the environment variable 'RUBY_DNN_USE_CUMO 'to'ENABLE' to force the GPU to be used.
+If you do `require "cumo/narray"` before `require "dnn"`, you can run it on GPU.
+Or, set the environment variable `RUBY_DNN_USE_CUMO` to `ENABLE` to force the GPU to be used.
 
 ## TODO
-● Write a test.  
-● Write a document.  
-● Improve performance when using GPU.  
+* Write a test.  
+* Write a document.  
+* Improve performance when using GPU.  
 
 ## Development
 
