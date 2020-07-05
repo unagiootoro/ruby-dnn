@@ -129,7 +129,7 @@ class DCGAN < Model
     y_fake = Numo::SFloat.zeros(batch_size, 1)
     @dis.enable_training
     dis_loss = @dis.train_on_batch(x_batch, y_real)
-    dis_loss + @dis.train_on_batch(images, y_fake)
+    dis_loss += @dis.train_on_batch(images, y_fake)
 
     noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
     label = Numo::SFloat.cast([1] * batch_size).reshape(batch_size, 1)
