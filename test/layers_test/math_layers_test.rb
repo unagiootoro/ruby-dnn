@@ -1,7 +1,7 @@
 require "test_helper"
 
 class TestMathUtils < MiniTest::Unit::TestCase
-  def test_align_ndim2
+  def test_align_ndim1
     shape1 = [1, 2, 3, 4]
     shape2 = [1, 2, 3, 4]
     shape1, shape2 = DNN::Layers::MathUtils.align_ndim(shape1, shape2)
