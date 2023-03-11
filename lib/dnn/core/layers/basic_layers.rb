@@ -26,8 +26,8 @@ module DNN
       attr_reader :input_shape
       attr_reader :output_shape
 
-      def self.call(x, *args)
-        new(*args).(x)
+      def self.call(x, *args, **kwargs)
+        new(*args, **kwargs).(x)
       end
 
       def self.from_hash(hash)
