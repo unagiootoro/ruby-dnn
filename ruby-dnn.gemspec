@@ -17,6 +17,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "numo-narray"
   spec.add_dependency "archive-tar-minitar"
+  spec.add_development_dependency "rake-compiler"
 
   spec.files         = Dir.chdir(File.expand_path('..', __FILE__)) do
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
