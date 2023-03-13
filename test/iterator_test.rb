@@ -51,4 +51,16 @@ class TestIterator < MiniTest::Unit::TestCase
     end
     assert_equal 3, cnt
   end
+
+  def test_max_steps
+    x_datas = Xumo::Int32.new(10, 1).seq
+    iter = DNN::Iterator.new(x_datas, x_datas, random: false)
+    assert_equal 4, iter.max_steps(3)
+  end
+
+  def test_max_steps2
+    x_datas = Xumo::Int32.new(10, 1).seq
+    iter = DNN::Iterator.new(x_datas, x_datas, random: false, last_round_down: true)
+    assert_equal 3, iter.max_steps(3)
+  end
 end

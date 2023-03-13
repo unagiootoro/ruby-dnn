@@ -64,12 +64,17 @@ module DNN
     # @param [Integer] batch_size Batch size.
     # @yield Executes block by receiving the specified arguments (x_batch, y_batch).
     def foreach(batch_size, &block)
-      steps = @last_round_down ? @num_datas / batch_size : (@num_datas.to_f / batch_size).ceil
-      steps.times do |step|
+      max_steps(batch_size).times do |step|
         x_batch, y_batch = next_batch(batch_size)
         block.call(x_batch, y_batch, step)
       end
       reset
+    end
+
+    # Get max steps for iteration.
+    # @param [Integer] batch_size Batch size.
+    def max_steps(batch_size)
+      @last_round_down ? @num_datas / batch_size : (@num_datas.to_f / batch_size).ceil
     end
   end
 end
