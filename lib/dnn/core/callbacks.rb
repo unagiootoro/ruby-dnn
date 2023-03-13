@@ -6,6 +6,12 @@ module DNN
 
       # Please implement the method used for callback event.
 
+      # Process performed before all training.
+      # def before_train; end
+
+      # Process performed after all training.
+      # def after_train; end
+
       # Process performed before one training.
       # def before_epoch; end
 
@@ -57,7 +63,7 @@ module DNN
 
     # A callback to stop training the model early after test on batch.
     # @param [Symbol] trigger A log that triggers early stopping.
-    #                         Specify one of train_loss, test_loss, test_accuracy.
+    #                         Specify one of :train_loss, :test_loss, :test_accuracy
     # @param [Float] tolerance Tolerance value for early stopping.
     class EarlyStopping < Callback
       def initialize(trigger, tolerance)
@@ -66,11 +72,11 @@ module DNN
       end
 
       def after_train_on_batch
-        throw :stop, "Early stopped." if judge_early_stopping_train
+        @model.request_early_stop if judge_early_stopping_train
       end
 
       def after_epoch
-        throw :stop, "Early stopped." if judge_early_stopping_test
+        @model.request_early_stop if judge_early_stopping_test
       end
 
       private

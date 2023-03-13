@@ -130,6 +130,7 @@ module DNN
         @loss_weights = nil
         @callbacks = []
         @last_log = {}
+        @early_stop_requested = false
       end
 
       def call(input_tensors)
@@ -220,10 +221,13 @@ module DNN
         raise DNNError, "The model is not optimizer setup complete." unless @optimizer
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
 
+        @early_stop_requested = false
+
         num_train_datas = train_iterator.num_datas
         num_train_datas = num_train_datas / batch_size * batch_size if train_iterator.last_round_down
 
         stopped = catch(:stop) do
+          call_callbacks(:before_train)
           (initial_epoch..epochs).each do |epoch|
             @last_log[:epoch] = epoch
             call_callbacks(:before_epoch)
@@ -232,6 +236,7 @@ module DNN
             train_iterator.foreach(batch_size) do |x_batch, y_batch, index|
               @last_log[:step] = index
               train_step_met = train_step(x_batch, y_batch)
+              throw :stop, "Early stopped." if @early_stop_requested
               num_trained_datas = (index + 1) * batch_size
               num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
               log = "\r"
@@ -267,7 +272,9 @@ module DNN
             end
             puts "" if verbose
             call_callbacks(:after_epoch)
+            throw :stop, "Early stopped." if @early_stop_requested
           end
+          call_callbacks(:after_train)
           nil
         end
 
@@ -616,6 +623,11 @@ module DNN
           end
         end
         self
+      end
+
+      # Request training early stop.
+      def request_early_stop
+        @early_stop_requested = true
       end
 
       private

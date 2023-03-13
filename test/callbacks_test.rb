@@ -8,6 +8,7 @@ class TestLambdaCallback < MiniTest::Unit::TestCase
 end
 
 class StubCallbacksTestModel < DNN::Models::Model
+  attr_reader :early_stop_requested
 end
 
 class TestEarlyStopping < MiniTest::Unit::TestCase
@@ -16,29 +17,53 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
     stub_model.last_log[:train_loss] = 0.09
-    assert_throws :stop do
-      cbk.after_train_on_batch
-    end
+    cbk.after_train_on_batch
+    assert_equal stub_model.early_stop_requested, true
+  end
+
+  def test_after_train_on_batch2
+    cbk = DNN::Callbacks::EarlyStopping.new(:train_loss, 0.1)
+    stub_model = StubCallbacksTestModel.new
+    cbk.model = stub_model
+    stub_model.last_log[:train_loss] = 0.11
+    cbk.after_train_on_batch
+    assert_equal stub_model.early_stop_requested, false
   end
 
   def test_after_epoch
-    cbk = DNN::Callbacks::EarlyStopping.new(:test_accuracy, 0.1)
+    cbk = DNN::Callbacks::EarlyStopping.new(:test_loss, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:test_accuracy] = 0.11
-    assert_throws :stop do
-      cbk.after_epoch
-    end
+    stub_model.last_log[:test_loss] = 0.09
+    cbk.after_epoch
+    assert_equal stub_model.early_stop_requested, true
   end
 
   def test_after_epoch2
+    cbk = DNN::Callbacks::EarlyStopping.new(:test_loss, 0.1)
+    stub_model = StubCallbacksTestModel.new
+    cbk.model = stub_model
+    stub_model.last_log[:test_loss] = 0.11
+    cbk.after_epoch
+    assert_equal stub_model.early_stop_requested, false
+  end
+
+  def test_after_epoch3
     cbk = DNN::Callbacks::EarlyStopping.new(:test_accuracy, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
     stub_model.last_log[:test_accuracy] = 0.11
-    assert_throws :stop do
-      cbk.after_epoch
-    end
+    cbk.after_epoch
+    assert_equal stub_model.early_stop_requested, true
+  end
+
+  def test_after_epoch4
+    cbk = DNN::Callbacks::EarlyStopping.new(:test_accuracy, 0.1)
+    stub_model = StubCallbacksTestModel.new
+    cbk.model = stub_model
+    stub_model.last_log[:test_accuracy] = 0.09
+    cbk.after_epoch
+    assert_equal stub_model.early_stop_requested, false
   end
 end
 
