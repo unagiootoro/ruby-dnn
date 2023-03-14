@@ -236,7 +236,6 @@ module DNN
             train_iterator.foreach(batch_size) do |x_batch, y_batch, index|
               @last_log[:step] = index
               train_step_met = train_step(x_batch, y_batch)
-              throw :stop, "Early stopped." if @early_stop_requested
               num_trained_datas = (index + 1) * batch_size
               num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
               log = "\r"
@@ -253,6 +252,7 @@ module DNN
               log << "  #{num_trained_datas}/#{num_train_datas} "
               log << metrics_to_str(train_step_met)
               print log if verbose
+              throw :stop, "Early stopped." if @early_stop_requested
             end
 
             if test
