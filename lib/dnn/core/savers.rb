@@ -14,15 +14,13 @@ module DNN
         load_bin(File.binread(file_name))
       end
 
-      private
-
       def load_bin(bin)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'load_bin'"
       end
     end
 
     class MarshalLoader < Loader
-      private def load_bin(bin)
+      def load_bin(bin)
         data = Marshal.load(Zlib::Inflate.inflate(bin))
         unless @model.class.name == data[:class]
           raise DNNError, "Class name is mismatch. Target model is #{@model.class.name}. But loading model is #{data[:class]}."
@@ -38,8 +36,6 @@ module DNN
     end
 
     class JSONLoader < Loader
-      private
-
       def load_bin(bin)
         data = JSON.parse(bin, symbolize_names: true)
         unless @model.class.name == data[:class]
@@ -48,7 +44,7 @@ module DNN
         set_all_params_base64_data(data[:params])
       end
 
-      def set_all_params_base64_data(params_data)
+      private def set_all_params_base64_data(params_data)
         @model.trainable_layers.each.with_index do |layer, i|
           params_data[i].each do |(key, (shape, base64_data))|
             bin = Base64.decode64(base64_data)
@@ -79,8 +75,6 @@ module DNN
         end
       end
 
-      private
-
       def dump_bin
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'dump_bin'"
       end
@@ -92,7 +86,7 @@ module DNN
         @include_model = include_model
       end
 
-      private def dump_bin
+      def dump_bin
         params_data = @model.get_all_params_data
         if @include_model
           @model.clean_layers
@@ -110,14 +104,12 @@ module DNN
     end
 
     class JSONSaver < Saver
-      private
-
       def dump_bin
         data = { version: VERSION, class: @model.class.name, params: get_all_params_base64_data }
         JSON.dump(data)
       end
 
-      def get_all_params_base64_data
+      private def get_all_params_base64_data
         @model.trainable_layers.map do |layer|
           layer.get_params.to_h do |key, param|
             base64_data = Base64.encode64(param.data.to_binary)
