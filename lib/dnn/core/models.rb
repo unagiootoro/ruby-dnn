@@ -600,12 +600,12 @@ module DNN
       # @param [Boolean] accuracy Set true to compute the accuracy.
       # @param [IO] io Specifies the IO object to use for logging.
       def start_train(x, y, epochs,
-                batch_size: 1,
-                initial_epoch: 1,
-                test: nil,
-                verbose: true,
-                accuracy: true,
-                io: $stdout)
+                      batch_size: 1,
+                      initial_epoch: 1,
+                      test: nil,
+                      verbose: true,
+                      accuracy: true,
+                      io: $stdout)
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
         train_iterator = Iterator.new(x, y)
@@ -630,12 +630,12 @@ module DNN
       # @param [Boolean] accuracy Set true to compute the accuracy.
       # @param [IO] io Specifies the IO object to use for logging.
       def start_train_by_iterator(train_iterator, epochs,
-                            batch_size: 1,
-                            initial_epoch: 1,
-                            test: nil,
-                            verbose: true,
-                            accuracy: true,
-                            io: $stdout)
+                                  batch_size: 1,
+                                  initial_epoch: 1,
+                                  test: nil,
+                                  verbose: true,
+                                  accuracy: true,
+                                  io: $stdout)
         raise DNNError, "The model is not optimizer setup complete." unless @model.optimizer
         raise DNNError, "The model is not loss_func setup complete." unless @model.loss_func
         @model.check_early_stop_requested # Clear early stop request.
@@ -654,10 +654,13 @@ module DNN
         @model.call_callbacks(:before_train)
       end
 
+      # Check if it is currently evaluating.
+      # @return [Boolean] Returns true if currently training.
       def training?
         @state != :none
       end
 
+      # Update trainer.
       def update
         case @state
         when :start_epoch
@@ -857,10 +860,13 @@ module DNN
         @state = :start_step
       end
 
+      # Check if it is currently evaluating.
+      # @return [Boolean] Returns true if currently evaluating.
       def evaluating?
         @state != :none
       end
 
+      # Update evaluator.
       def update
         case @state
         when :start_step
