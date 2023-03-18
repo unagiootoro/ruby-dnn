@@ -192,7 +192,8 @@ module DNN
                 verbose: true,
                 accuracy: true,
                 io: $stdout)
-        check_xy_type(x, y)
+        Utils.check_input_data_type("x", x, Xumo::SFloat)
+        Utils.check_input_data_type("y", y, Xumo::SFloat)
         train_iterator = Iterator.new(x, y)
         train_by_iterator(train_iterator, epochs,
                           batch_size: batch_size,
@@ -310,7 +311,8 @@ module DNN
       def train_on_batch(x, y)
         raise DNNError, "The model is not optimizer setup complete." unless @optimizer
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
-        check_xy_type(x, y)
+        Utils.check_input_data_type("x", x, Xumo::SFloat)
+        Utils.check_input_data_type("y", y, Xumo::SFloat)
         DNN.learning_phase = true
         output_tensors = call(Tensor.convert(x))
         if output_tensors.is_a?(Array)
@@ -340,7 +342,8 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       #                 If accuracy is not needed returns in the form [nil, mean_loss].
       def evaluate(x, y, batch_size: 100, accuracy: true)
-        check_xy_type(x, y)
+        Utils.check_input_data_type("x", x, Xumo::SFloat)
+        Utils.check_input_data_type("y", y, Xumo::SFloat)
         evaluate_by_iterator(Iterator.new(x, y, random: false), batch_size: batch_size, accuracy: accuracy)
       end
 
@@ -441,7 +444,7 @@ module DNN
       # @param [Numo::SFloat] x Input data.
       # @param [Boolean] use_loss_activation Use loss activation when loss has an activation.
       def predict(x, use_loss_activation: true)
-        check_xy_type(x)
+        Utils.check_input_data_type("x", x, Xumo::SFloat)
         DNN.learning_phase = false
         output_tensors = call(Tensor.convert(x))
         if output_tensors.is_a?(Array)
@@ -466,7 +469,7 @@ module DNN
       # Predict one data.
       # @param [Numo::SFloat] x Input data. However, x is single data.
       def predict1(x, use_loss_activation: true)
-        check_xy_type(x)
+        Utils.check_input_data_type("x", x, Xumo::SFloat)
         input = if x.is_a?(Array)
                   x.map { |v| v.reshape(1, *v.shape) }
                 else
@@ -659,29 +662,6 @@ module DNN
                        end
           "#{key}: #{str_values}"
         }.join(", ")
-      end
-
-      def check_xy_type(x, y = nil)
-        if !x.is_a?(Xumo::SFloat) && !x.is_a?(Array)
-          raise TypeError, "x:#{x.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class."
-        end
-        if x.is_a?(Array)
-          x.each.with_index do |v, i|
-            unless v.is_a?(Xumo::SFloat)
-              raise TypeError, "x[#{i}]:#{v.class.name} is not an instance of #{Xumo::SFloat.name} class."
-            end
-          end
-        end
-        if y && !y.is_a?(Xumo::SFloat) && !y.is_a?(Array)
-          raise TypeError, "y:#{y.class.name} is not an instance of #{Xumo::SFloat.name} class or Array class."
-        end
-        if y.is_a?(Array)
-          y.each.with_index do |v, i|
-            unless v.is_a?(Xumo::SFloat)
-              raise TypeError, "x[#{i}]:#{v.class.name} is not an instance of #{Xumo::SFloat.name} class."
-            end
-          end
-        end
       end
     end
 

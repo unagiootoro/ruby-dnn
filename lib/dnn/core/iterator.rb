@@ -4,11 +4,13 @@ module DNN
     attr_reader :num_datas
     attr_reader :last_round_down
 
-    # @param [Numo::SFloat | Array] x_datas input datas.
-    # @param [Numo::SFloat | Array] y_datas output datas.
+    # @param [Numo::NArray | Array] x_datas input datas.
+    # @param [Numo::NArray | Array] y_datas output datas.
     # @param [Boolean] random Set true to return batches randomly. Setting false returns batches in order of index.
     # @param [Boolean] last_round_down Set true to round down for last batch data when call foreach.
     def initialize(x_datas, y_datas, random: true, last_round_down: false)
+      Utils.check_input_data_type("x_datas", x_datas, Xumo::NArray)
+      Utils.check_input_data_type("y_datas", y_datas, Xumo::NArray)
       @x_datas = x_datas
       @y_datas = y_datas
       @random = random
