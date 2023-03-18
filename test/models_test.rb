@@ -300,20 +300,6 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal [1, 2], call_flg
   end
 
-  def test_metrics_to_str
-    met = { accuracy: 0.00011, test_loss: 0.00011 }
-    str_met = "accuracy: 0.0001, test_loss: 0.0001"
-    model = DNN::Models::Model.new
-    assert_equal str_met, model.send(:metrics_to_str, met)
-  end
-
-  def test_metrics_to_str2
-    met = { accuracy: [0.00011, 0.00011], test_loss: [0.00011, 0.00011] }
-    str_met = "accuracy: [0.0001, 0.0001], test_loss: [0.0001, 0.0001]"
-    model = DNN::Models::Model.new
-    assert_equal str_met, model.send(:metrics_to_str, met)
-  end
-
   def test_copy
     x = Xumo::SFloat[[0, 0]]
     model = Sequential.new
@@ -444,5 +430,21 @@ class TestSequential < MiniTest::Unit::TestCase
     model.remove(input_layer)
     model.remove(model2)
     assert_equal [], model.stack
+  end
+end
+
+class TestModelTrainer < MiniTest::Unit::TestCase
+  def test_metrics_to_str
+    met = { accuracy: 0.00011, test_loss: 0.00011 }
+    str_met = "accuracy: 0.0001, test_loss: 0.0001"
+    trainer = DNN::Models::ModelTrainer.new(DNN::Models::Model.new)
+    assert_equal str_met, trainer.send(:metrics_to_str, met)
+  end
+
+  def test_metrics_to_str2
+    met = { accuracy: [0.00011, 0.00011], test_loss: [0.00011, 0.00011] }
+    str_met = "accuracy: [0.0001, 0.0001], test_loss: [0.0001, 0.0001]"
+    trainer = DNN::Models::ModelTrainer.new(DNN::Models::Model.new)
+    assert_equal str_met, trainer.send(:metrics_to_str, met)
   end
 end

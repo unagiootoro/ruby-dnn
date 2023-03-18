@@ -73,6 +73,15 @@ module DNN
       reset
     end
 
+    # Return the number of available data considering last_round_down.
+    def num_usable_datas(batch_size)
+      if @last_round_down
+        max_steps(batch_size) * batch_size
+      else
+        @num_datas
+      end
+    end
+
     # Get max steps for iteration.
     # @param [Integer] batch_size Batch size.
     def max_steps(batch_size)
