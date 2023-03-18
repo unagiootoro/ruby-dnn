@@ -184,12 +184,14 @@ module DNN
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       # @param [Boolean] accuracy Set true to compute the accuracy.
+      # @param [IO] io Specifies the IO object to use for logging.
       def train(x, y, epochs,
                 batch_size: 1,
                 initial_epoch: 1,
                 test: nil,
                 verbose: true,
-                accuracy: true)
+                accuracy: true,
+                io: $stdout)
         check_xy_type(x, y)
         train_iterator = Iterator.new(x, y)
         train_by_iterator(train_iterator, epochs,
@@ -197,7 +199,8 @@ module DNN
                           initial_epoch: initial_epoch,
                           test: test,
                           verbose: verbose,
-                          accuracy: accuracy)
+                          accuracy: accuracy,
+                          io: $stdout)
       end
 
       alias fit train
@@ -212,12 +215,14 @@ module DNN
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
       # @param [Boolean] accuracy Set true to compute the accuracy.
+      # @param [IO] io Specifies the IO object to use for logging.
       def train_by_iterator(train_iterator, epochs,
                             batch_size: 1,
                             initial_epoch: 1,
                             test: nil,
                             verbose: true,
-                            accuracy: true)
+                            accuracy: true,
+                            io: $stdout)
         raise DNNError, "The model is not optimizer setup complete." unless @optimizer
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
 
@@ -231,7 +236,7 @@ module DNN
           (initial_epoch..epochs).each do |epoch|
             @last_log[:epoch] = epoch
             call_callbacks(:before_epoch)
-            puts "【 epoch #{epoch}/#{epochs} 】" if verbose
+            io.puts "【 epoch #{epoch}/#{epochs} 】" if verbose
 
             train_iterator.foreach(batch_size) do |x_batch, y_batch, index|
               @last_log[:step] = index
@@ -254,7 +259,7 @@ module DNN
 
               log << "  #{num_trained_datas}/#{num_train_datas} "
               log << metrics_to_str(train_step_met)
-              print log if verbose
+              io.print log if verbose
               throw :stop, "Early stopped." if @early_stop_requested
             end
 
@@ -270,10 +275,10 @@ module DNN
                           else
                             { test_loss: loss }
                           end
-                print "  " + metrics_to_str(metrics)
+                io.print "  " + metrics_to_str(metrics)
               end
             end
-            puts "" if verbose
+            io.puts "" if verbose
             call_callbacks(:after_epoch)
             throw :stop, "Early stopped." if @early_stop_requested
           end
@@ -282,7 +287,7 @@ module DNN
         end
 
         if stopped
-          puts "\n#{stopped}" if verbose
+          io.puts "\n#{stopped}" if verbose
         end
       end
 
