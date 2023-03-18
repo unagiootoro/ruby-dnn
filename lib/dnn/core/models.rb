@@ -235,7 +235,10 @@ module DNN
 
             train_iterator.foreach(batch_size) do |x_batch, y_batch, index|
               @last_log[:step] = index
+              call_callbacks(:before_train_on_batch)
               train_step_met = train_step(x_batch, y_batch)
+              @last_log[:train_loss] = train_step_met
+              call_callbacks(:after_train_on_batch)
               num_trained_datas = (index + 1) * batch_size
               num_trained_datas = num_trained_datas > num_train_datas ? num_train_datas : num_trained_datas
               log = "\r"
@@ -303,7 +306,6 @@ module DNN
         raise DNNError, "The model is not optimizer setup complete." unless @optimizer
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
         check_xy_type(x, y)
-        call_callbacks(:before_train_on_batch)
         DNN.learning_phase = true
         output_tensors = call(Tensor.convert(x))
         if output_tensors.is_a?(Array)
@@ -323,8 +325,6 @@ module DNN
           loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
         end
         @optimizer.update(get_all_trainable_params)
-        @last_log[:train_loss] = loss_data
-        call_callbacks(:after_train_on_batch)
         loss_data
       end
 
@@ -356,7 +356,9 @@ module DNN
         end
         max_steps = (num_test_datas.to_f / batch_size).ceil
         test_iterator.foreach(batch_size) do |x_batch, y_batch|
+          call_callbacks(:before_test_on_batch)
           correct, loss_value = test_on_batch(x_batch, y_batch, accuracy: accuracy)
+          call_callbacks(:after_test_on_batch)
           if @loss_func.is_a?(Array)
             @loss_func.each_index do |i|
               total_correct[i] += correct[i] if accuracy
@@ -390,7 +392,6 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, loss].
       #                 If accuracy is not needed returns in the form [nil, loss].
       def test_on_batch(x, y, accuracy: true)
-        call_callbacks(:before_test_on_batch)
         DNN.learning_phase = false
         output_tensors = call(Tensor.convert(x))
         correct = nil
@@ -408,7 +409,6 @@ module DNN
           loss = @loss_func.(out, Tensor.convert(y))
           loss_data = Utils.to_f(loss.data)
         end
-        call_callbacks(:after_test_on_batch)
         [correct, loss_data]
       end
 
