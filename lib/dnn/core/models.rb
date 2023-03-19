@@ -260,7 +260,7 @@ module DNN
       # Setup the model before use this method.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
-      # @return [Float | Numo::SFloat] Return loss value in the form of Float or Numo::SFloat.
+      # @return [Float | Array] Return loss value in the form of Float or Array.
       def train_on_batch(x, y)
         raise DNNError, "The model is not optimizer setup complete." unless @optimizer
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
@@ -327,29 +327,39 @@ module DNN
         [@last_log[:test_accuracy], @last_log[:test_loss]]
       end
 
-      # Evaluate once.
+      # Testing process to be performed in one step.
+      # @param [Numo::SFloat] x Input training data.
+      # @param [Numo::SFloat] y Output training data.
+      # @return [Hash] Hash of contents to be output to log.
+      def test_step(x, y, accuracy: false)
+        output_data, loss_data = test_on_batch_internal(x, y)
+        if loss_data.is_a?(Array)
+          loss_value = []
+          accuracy = []
+          loss_data.each_index do |i|
+            loss_value << Utils.to_f(loss_data)
+            accuracy << accuracy(output_data[i], y[i]).to_f / y[i].shape[0]
+          end
+        else
+          loss_value = Utils.to_f(loss_data)
+        end
+        { test_loss: loss_value, test_accuracy: accuracy(output_data, y) }
+      end
+
+      # Test once.
       # @param [Numo::SFloat | Array] x Input test data.
       # @param [Numo::SFloat | Array] y Output test data.
-      # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, loss].
-      #                 If accuracy is not needed returns in the form [nil, loss].
-      def test_on_batch(x, y, accuracy: true)
+      # @return [Float | Array] Return loss value in the form of Float or Array.
+      def test_on_batch(x, y)
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
-        output_data, loss_data = test_on_batch_internal(x, y)
-        correct = nil
-        if output_data.is_a?(Array)
-          correct = [] if accuracy
-          loss_value = []
-          output_data.each_index do |i|
-            correct << accuracy(output_data[i], y[i]) if accuracy
-            loss_value << Utils.to_f(loss_data[i])
-          end
+        *, loss_data = test_on_batch_internal(x, y)
+        if loss_data.is_a?(Array)
+          loss_data.map { |v| Utils.to_f(v) }
         else
-          correct = accuracy(output_data, y) if accuracy
-          loss_value = Utils.to_f(loss_data)
+          Utils.to_f(loss_data)
         end
-        [correct, loss_value]
       end
 
       private def test_on_batch_internal(x, y)
@@ -932,16 +942,16 @@ module DNN
       def test_step
         (x_batch, y_batch) = @test_iterator.next_batch(@batch_size)
         @model.call_callbacks(:before_test_on_batch)
-        correct, loss_value = @model.test_on_batch(x_batch, y_batch, accuracy: @accuracy)
+        test_met = @model.test_step(x_batch, y_batch, accuracy: @accuracy)
         @model.call_callbacks(:after_test_on_batch)
         if @loss_func.is_a?(Array)
           @loss_func.each_index do |i|
-            @total_correct[i] += correct[i] if @accuracy
-            @sum_loss[i] += loss_value[i]
+            @total_correct[i] += test_met[:test_accuracy][i] if @accuracy
+            @sum_loss[i] += test_met[:test_loss][i]
           end
         else
-          @total_correct += correct if @accuracy
-          @sum_loss += loss_value
+          @total_correct += test_met[:test_accuracy] if @accuracy
+          @sum_loss += test_met[:test_loss]
         end
         @state = :end_step
       end

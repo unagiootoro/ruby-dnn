@@ -173,9 +173,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model << InputLayer.new(3)
     model << dense
     model.setup(SGD.new, MeanSquaredError.new)
-    correct, loss = model.test_on_batch(x, y)
-
-    assert_equal 2, correct
+    loss = model.test_on_batch(x, y)
     assert_equal 0, loss
   end
 
@@ -189,9 +187,7 @@ class TestSequential < MiniTest::Unit::TestCase
     dense.bias.data = Xumo::SFloat[5, 10]
     model = StubMultiOutputModel.new(dense)
     model.setup(SGD.new, [MeanSquaredError.new, MeanSquaredError.new])
-    corrects, losss = model.test_on_batch(x, [y, y])
-
-    assert_equal [2, 2], corrects
+    losss = model.test_on_batch(x, [y, y])
     assert_equal [0, 0], losss
   end
 
