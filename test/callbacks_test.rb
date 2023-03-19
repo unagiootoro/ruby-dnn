@@ -13,19 +13,19 @@ end
 
 class TestEarlyStopping < MiniTest::Unit::TestCase
   def test_after_train_on_batch
-    cbk = DNN::Callbacks::EarlyStopping.new(:train_loss, 0.1)
+    cbk = DNN::Callbacks::EarlyStopping.new(:loss, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:train_loss] = 0.09
+    stub_model.last_log[:loss] = 0.09
     cbk.after_train_on_batch
     assert_equal stub_model.early_stop_requested, true
   end
 
   def test_after_train_on_batch2
-    cbk = DNN::Callbacks::EarlyStopping.new(:train_loss, 0.1)
+    cbk = DNN::Callbacks::EarlyStopping.new(:loss, 0.1)
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:train_loss] = 0.11
+    stub_model.last_log[:loss] = 0.11
     cbk.after_train_on_batch
     assert_equal stub_model.early_stop_requested, false
   end
@@ -72,7 +72,7 @@ class TestNaNStopping < MiniTest::Unit::TestCase
     cbk = DNN::Callbacks::NaNStopping.new
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:train_loss] = Float::NAN
+    stub_model.last_log[:loss] = Float::NAN
     assert_throws :stop do
       cbk.after_train_on_batch
     end
@@ -98,11 +98,11 @@ class TestLogger < MiniTest::Unit::TestCase
     cbk = DNN::Callbacks::Logger.new
     stub_model = StubCallbacksTestModel.new
     cbk.model = stub_model
-    stub_model.last_log[:train_loss] = 1
+    stub_model.last_log[:loss] = 1
     stub_model.last_log[:step] = 2
     cbk.after_train_on_batch
 
-    assert_equal Xumo::SFloat[1], cbk.get_log(:train_loss)
+    assert_equal Xumo::SFloat[1], cbk.get_log(:loss)
     assert_equal Xumo::UInt32[2], cbk.get_log(:step)
   end
 end
