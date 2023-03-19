@@ -183,14 +183,14 @@ module DNN
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-      # @param [Boolean] accuracy Set true to compute the accuracy.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @param [IO] io Specifies the IO object to use for logging.
       def train(x, y, epochs,
                 batch_size: 1,
                 initial_epoch: 1,
                 test: nil,
                 verbose: true,
-                accuracy: true,
+                need_accuracy: true,
                 io: $stdout)
         trainer = ModelTrainer.new(self)
         trainer.start_train(x, y, epochs,
@@ -198,7 +198,7 @@ module DNN
                             initial_epoch: initial_epoch,
                             test: test,
                             verbose: verbose,
-                            accuracy: accuracy,
+                            need_accuracy: need_accuracy,
                             io: io)
         trainer.update while trainer.training?
       end
@@ -214,14 +214,14 @@ module DNN
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-      # @param [Boolean] accuracy Set true to compute the accuracy.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @param [IO] io Specifies the IO object to use for logging.
       def train_by_iterator(train_iterator, epochs,
                             batch_size: 1,
                             initial_epoch: 1,
                             test: nil,
                             verbose: true,
-                            accuracy: true,
+                            need_accuracy: true,
                             io: $stdout)
         trainer = ModelTrainer.new(self)
         trainer.start_train_by_iterator(train_iterator, epochs,
@@ -229,7 +229,7 @@ module DNN
                                         initial_epoch: initial_epoch,
                                         test: test,
                                         verbose: verbose,
-                                        accuracy: accuracy,
+                                        need_accuracy: need_accuracy,
                                         io: io)
         trainer.update while trainer.training?
       end
@@ -239,21 +239,26 @@ module DNN
       # Implement the training process to be performed in one step.
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @return [Hash] Hash of contents to be output to log.
-      def train_step(x, y, accuracy: false)
+      def train_step(x, y, need_accuracy: false)
         output_data, loss_data = train_on_batch_internal(x, y)
         if loss_data.is_a?(Array)
           loss_value = []
-          accuracy = []
+          acc = [] if need_accuracy
           loss_data.each_index do |i|
             loss_value << Utils.to_f(loss_data)
-            accuracy << accuracy(output_data[i], y[i]).to_f / y[i].shape[0]
+            acc << accuracy(output_data[i], y[i]).to_f / y[i].shape[0] if need_accuracy
           end
         else
           loss_value = Utils.to_f(loss_data)
-          accuracy = accuracy(output_data, y).to_f / y.shape[0]
+          acc = accuracy(output_data, y).to_f / y.shape[0] if need_accuracy
         end
-        { loss: loss_value, accuracy: accuracy }
+        if need_accuracy
+          { loss: loss_value, accuracy: acc }
+        else
+          { loss: loss_value }
+        end
       end
 
       # Training once.
@@ -304,13 +309,14 @@ module DNN
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
       # @param [Integer] batch_size Batch size used for one test.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       #                 If accuracy is not needed returns in the form [nil, mean_loss].
-      def evaluate(x, y, batch_size: 100, accuracy: true)
+      def evaluate(x, y, batch_size: 100, need_accuracy: true)
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
         evaluator = ModelEvaluator.new(self)
-        evaluator.start_evaluate(x, y, batch_size: batch_size, accuracy: accuracy)
+        evaluator.start_evaluate(x, y, batch_size: batch_size, need_accuracy: need_accuracy)
         evaluator.update while evaluator.evaluating?
         [@last_log[:test_accuracy], @last_log[:test_loss]]
       end
@@ -318,11 +324,12 @@ module DNN
       # Evaluate model by iterator.
       # @param [DNN::Iterator] test_iterator Iterator used for testing.
       # @param [Integer] batch_size Batch size used for one test.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       #                 If accuracy is not needed returns in the form [nil, mean_loss].
-      def evaluate_by_iterator(test_iterator, batch_size: 100, accuracy: true)
+      def evaluate_by_iterator(test_iterator, batch_size: 100, need_accuracy: true)
         evaluator = ModelEvaluator.new(self)
-        evaluator.start_evaluate_by_iterator(test_iterator, batch_size: batch_size, accuracy: accuracy)
+        evaluator.start_evaluate_by_iterator(test_iterator, batch_size: batch_size, need_accuracy: need_accuracy)
         evaluator.update while evaluator.evaluating?
         [@last_log[:test_accuracy], @last_log[:test_loss]]
       end
@@ -331,7 +338,7 @@ module DNN
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
       # @return [Hash] Hash of contents to be output to log.
-      def test_step(x, y, accuracy: false)
+      def test_step(x, y, need_accuracy: false)
         output_data, loss_data = test_on_batch_internal(x, y)
         if loss_data.is_a?(Array)
           loss_value = []
@@ -634,7 +641,7 @@ module DNN
         @epoch = 1
         @test = nil
         @verbose = false
-        @accuracy = false
+        @need_accuracy = false
         @io = nil
         @num_train_datas = 0
       end
@@ -649,14 +656,14 @@ module DNN
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-      # @param [Boolean] accuracy Set true to compute the accuracy.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @param [IO] io Specifies the IO object to use for logging.
       def start_train(x, y, epochs,
                       batch_size: 1,
                       initial_epoch: 1,
                       test: nil,
                       verbose: true,
-                      accuracy: true,
+                      need_accuracy: true,
                       io: $stdout)
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
@@ -666,7 +673,7 @@ module DNN
                                 initial_epoch: initial_epoch,
                                 test: test,
                                 verbose: verbose,
-                                accuracy: accuracy,
+                                need_accuracy: need_accuracy,
                                 io: io)
       end
 
@@ -679,14 +686,14 @@ module DNN
       # @param [Array | NilClass] test If you to test the model for every 1 epoch,
       #                                specify [x_test, y_test]. Don't test to the model, specify nil.
       # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-      # @param [Boolean] accuracy Set true to compute the accuracy.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @param [IO] io Specifies the IO object to use for logging.
       def start_train_by_iterator(train_iterator, epochs,
                                   batch_size: 1,
                                   initial_epoch: 1,
                                   test: nil,
                                   verbose: true,
-                                  accuracy: true,
+                                  need_accuracy: true,
                                   io: $stdout)
         raise DNNError, "The model is not optimizer setup complete." unless @model.optimizer
         raise DNNError, "The model is not loss_func setup complete." unless @model.loss_func
@@ -697,7 +704,7 @@ module DNN
         @epoch = initial_epoch
         @test = test
         @verbose = verbose
-        @accuracy = accuracy
+        @need_accuracy = need_accuracy
         @io = io
         @state = :start_epoch
         @max_steps = train_iterator.max_steps(batch_size)
@@ -754,7 +761,7 @@ module DNN
       def train_step
         (x_batch, y_batch) = @train_iterator.next_batch(@batch_size)
         @model.call_callbacks(:before_train_on_batch)
-        train_step_met = @model.train_step(x_batch, y_batch)
+        train_step_met = @model.train_step(x_batch, y_batch, need_accuracy: @need_accuracy)
         @model.last_log.merge!(train_step_met)
         @model.call_callbacks(:after_train_on_batch)
         num_trained_datas = @step * @batch_size
@@ -816,9 +823,9 @@ module DNN
       def start_evaluate
         @evaluator = ModelEvaluator.new(@model)
         if @test.is_a?(Array)
-          @evaluator.start_evaluate(@test[0], @test[1], batch_size: @batch_size, accuracy: @accuracy)
+          @evaluator.start_evaluate(@test[0], @test[1], batch_size: @batch_size, need_accuracy: @need_accuracy)
         else
-          @evaluator.start_evaluate_by_iterator(@test, batch_size: @batch_size, accuracy: @accuracy)
+          @evaluator.start_evaluate_by_iterator(@test, batch_size: @batch_size, need_accuracy: @need_accuracy)
         end
         @state = :evaluating
       end
@@ -832,7 +839,7 @@ module DNN
 
       def end_evaluate
         if @verbose
-          metrics = if @accuracy
+          metrics = if @need_accuracy
                       { test_accuracy: @model.last_log[:test_accuracy], test_loss: @model.last_log[:test_loss] }
                     else
                       { test_loss: @model.last_log[:test_loss] }
@@ -882,24 +889,26 @@ module DNN
       # @param [Numo::SFloat] x Input test data.
       # @param [Numo::SFloat] y Output test data.
       # @param [Integer] batch_size Batch size used for one test.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       #                 If accuracy is not needed returns in the form [nil, mean_loss].
-      def start_evaluate(x, y, batch_size: 100, accuracy: true)
+      def start_evaluate(x, y, batch_size: 100, need_accuracy: true)
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
-        start_evaluate_by_iterator(Iterator.new(x, y, random: false), batch_size: batch_size, accuracy: accuracy)
+        start_evaluate_by_iterator(Iterator.new(x, y, random: false), batch_size: batch_size, need_accuracy: need_accuracy)
       end
 
       # Start Evaluate model by iterator.
       # @param [DNN::Iterator] test_iterator Iterator used for testing.
       # @param [Integer] batch_size Batch size used for one test.
+      # @param [Boolean] need_accuracy Set true to compute the accuracy.
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
       #                 If accuracy is not needed returns in the form [nil, mean_loss].
-      def start_evaluate_by_iterator(test_iterator, batch_size: 100, accuracy: true)
+      def start_evaluate_by_iterator(test_iterator, batch_size: 100, need_accuracy: true)
         @test_iterator = test_iterator
         @num_test_datas = test_iterator.num_datas
         @batch_size = batch_size >= @num_test_datas ? @num_test_datas : batch_size
-        @accuracy = accuracy
+        @need_accuracy = need_accuracy
         if @loss_func.is_a?(Array)
           @total_correct = Array.new(@loss_func.length, 0)
           @sum_loss = Array.new(@loss_func.length, 0)
@@ -942,15 +951,15 @@ module DNN
       def test_step
         (x_batch, y_batch) = @test_iterator.next_batch(@batch_size)
         @model.call_callbacks(:before_test_on_batch)
-        test_met = @model.test_step(x_batch, y_batch, accuracy: @accuracy)
+        test_met = @model.test_step(x_batch, y_batch, need_accuracy: @need_accuracy)
         @model.call_callbacks(:after_test_on_batch)
         if @loss_func.is_a?(Array)
           @loss_func.each_index do |i|
-            @total_correct[i] += test_met[:test_accuracy][i] if @accuracy
+            @total_correct[i] += test_met[:test_accuracy][i] if @need_accuracy
             @sum_loss[i] += test_met[:test_loss][i]
           end
         else
-          @total_correct += test_met[:test_accuracy] if @accuracy
+          @total_correct += test_met[:test_accuracy] if @need_accuracy
           @sum_loss += test_met[:test_loss]
         end
         @state = :end_step
@@ -969,14 +978,14 @@ module DNN
         acc = nil
         if @loss_func.is_a?(Array)
           mean_loss = Array.new(@loss_func.length, 0)
-          acc = Array.new(@loss_func.length, 0) if accuracy
+          acc = Array.new(@loss_func.length, 0) if @need_accuracy
           @loss_func.each_index do |i|
             mean_loss[i] += @sum_loss[i] / @max_steps
-            acc[i] += @total_correct[i].to_f / @num_test_datas if @accuracy
+            acc[i] += @total_correct[i].to_f / @num_test_datas if @need_accuracy
           end
         else
           mean_loss = @sum_loss / @max_steps
-          acc = @total_correct.to_f / @num_test_datas if @accuracy
+          acc = @total_correct.to_f / @num_test_datas if @need_accuracy
         end
         @model.last_log[:test_loss] = mean_loss
         @model.last_log[:test_accuracy] = acc
