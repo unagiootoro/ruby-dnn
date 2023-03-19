@@ -121,7 +121,7 @@ class DCGAN < Model
     x
   end
 
-  def train_step(x_batch, y_batch)
+  def train_step(x_batch, y_batch, need_accuracy: false)
     batch_size = x_batch.shape[0]
     noise = Numo::SFloat.new(batch_size, 20).rand(-1, 1)
     images = @gen.predict(noise)
