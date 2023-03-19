@@ -240,9 +240,20 @@ module DNN
       # @param [Numo::SFloat] x Input training data.
       # @param [Numo::SFloat] y Output training data.
       # @return [Hash] Hash of contents to be output to log.
-      def train_step(x, y)
-        loss_value = train_on_batch(x, y)
-        { loss: loss_value }
+      def train_step(x, y, accuracy: false)
+        output_data, loss_data = train_on_batch_internal(x, y)
+        if loss_data.is_a?(Array)
+          loss_value = []
+          accuracy = []
+          loss_data.each_index do |i|
+            loss_value << Utils.to_f(loss_data)
+            accuracy << accuracy(output_data[i], y[i]).to_f / y[i].shape[0]
+          end
+        else
+          loss_value = Utils.to_f(loss_data)
+          accuracy = accuracy(output_data, y).to_f / y.shape[0]
+        end
+        { loss: loss_value, accuracy: accuracy }
       end
 
       # Training once.
@@ -255,26 +266,38 @@ module DNN
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
+        *, loss_data = train_on_batch_internal(x, y)
+        if loss_data.is_a?(Array)
+          loss_data.map { |v| Utils.to_f(v) }
+        else
+          Utils.to_f(loss_data)
+        end
+      end
+
+      private def train_on_batch_internal(x, y)
         DNN.learning_phase = true
         output_tensors = call(Tensor.convert(x))
         if output_tensors.is_a?(Array)
+          output_data = []
           loss_data = []
           output_tensors.each.with_index do |out, i|
+            output_data << out.data
             loss_opt = {}
             loss_opt[:layers] = layers if i == 0
             loss_opt[:loss_weight] = @loss_weights[i] if @loss_weights
             loss = @loss_func[i].loss(out, Tensor.convert(y[i]), **loss_opt)
-            loss_data << Utils.to_f(loss.data)
+            loss_data << loss.data
             loss.link.backward(Xumo::SFloat.ones(y[i][0...1, false].shape[0], 1))
           end
         else
           out = output_tensors
+          output_data = out.data
           loss = @loss_func.loss(out, Tensor.convert(y), layers: layers)
-          loss_data = Utils.to_f(loss.data)
+          loss_data = loss.data
           loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
         end
         @optimizer.update(get_all_trainable_params)
-        loss_data
+        [output_data, loss_data]
       end
 
       # Evaluate model and get accuracy and loss of test data.
@@ -310,24 +333,43 @@ module DNN
       # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, loss].
       #                 If accuracy is not needed returns in the form [nil, loss].
       def test_on_batch(x, y, accuracy: true)
+        raise DNNError, "The model is not loss_func setup complete." unless @loss_func
+        Utils.check_input_data_type("x", x, Xumo::SFloat)
+        Utils.check_input_data_type("y", y, Xumo::SFloat)
+        output_data, loss_data = test_on_batch_internal(x, y)
+        correct = nil
+        if output_data.is_a?(Array)
+          correct = [] if accuracy
+          loss_value = []
+          output_data.each_index do |i|
+            correct << accuracy(output_data[i], y[i]) if accuracy
+            loss_value << Utils.to_f(loss_data[i])
+          end
+        else
+          correct = accuracy(output_data, y) if accuracy
+          loss_value = Utils.to_f(loss_data)
+        end
+        [correct, loss_value]
+      end
+
+      private def test_on_batch_internal(x, y)
         DNN.learning_phase = false
         output_tensors = call(Tensor.convert(x))
-        correct = nil
         if output_tensors.is_a?(Array)
-          correct = [] if accuracy
+          output_data = []
           loss_data = []
           output_tensors.each.with_index do |out, i|
-            correct << accuracy(out.data, y[i]) if accuracy
+            output_data << out.data
             loss = @loss_func[i].(out, Tensor.convert(y[i]))
-            loss_data << Utils.to_f(loss.data)
+            loss_data << loss.data
           end
         else
           out = output_tensors
-          correct = accuracy(out.data, y) if accuracy
+          output_data = out.data
           loss = @loss_func.(out, Tensor.convert(y))
-          loss_data = Utils.to_f(loss.data)
+          loss_data = loss.data
         end
-        [correct, loss_data]
+        [output_data, loss_data]
       end
 
       # Implement the process to accuracy this model.
@@ -703,9 +745,9 @@ module DNN
         (x_batch, y_batch) = @train_iterator.next_batch(@batch_size)
         @model.call_callbacks(:before_train_on_batch)
         train_step_met = @model.train_step(x_batch, y_batch)
-        @model.last_log[:train_loss] = train_step_met
+        @model.last_log.merge!(train_step_met)
         @model.call_callbacks(:after_train_on_batch)
-        num_trained_datas = (@step + 1) * @batch_size
+        num_trained_datas = @step * @batch_size
         num_trained_datas = num_trained_datas > @num_train_datas ? @num_train_datas : num_trained_datas
         if @io == $stdout
           log = "\r"
@@ -781,7 +823,7 @@ module DNN
       def end_evaluate
         if @verbose
           metrics = if @accuracy
-                      { accuracy: @model.last_log[:test_accuracy], test_loss: @model.last_log[:test_loss] }
+                      { test_accuracy: @model.last_log[:test_accuracy], test_loss: @model.last_log[:test_loss] }
                     else
                       { test_loss: @model.last_log[:test_loss] }
                     end
