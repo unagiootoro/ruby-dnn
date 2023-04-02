@@ -1,4 +1,4 @@
-require "net/http"
+require "net/https"
 
 module DNN
   DOWNLOADS_PATH = ENV["RUBY_DNN_DOWNLOADS_PATH"] || __dir__
@@ -18,13 +18,22 @@ module DNN
 
     def initialize(url)
       @url = url
-      *, @fqdn, @path = *url.match(%r`https?://(.+?)(/.+)`)
+      *, @protocol, @fqdn, @path = *url.match(%r`(https?)://(.+?)(/.+)`)
     end
 
     def download(dir_path)
       puts %`download "#{@url}"`
       buf = ""
-      Net::HTTP.start(@fqdn) do |http|
+      if @protocol == "http"
+        port = 80
+      elsif @protocol == "https"
+        port = 443
+      else
+        raise "Protocol(#{@protocol}) is not supported."
+      end
+      http = Net::HTTP.new(@fqdn, port)
+      http.use_ssl = true if @protocol == "https"
+      http.start do |http|
         content_length = http.head(@path).content_length
         http.get(@path) do |body_segment|
           buf << body_segment

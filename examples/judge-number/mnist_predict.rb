@@ -12,7 +12,7 @@ end
 def mnist_predict(img, width, height)
   load_model
   img = DNN::Image.from_binary(img, height, width, DNN::Image::RGBA)
-  img = img[true, true, 0...DNN::Image::RGB]
+  img = DNN::Image.to_rgb(img)
   img = DNN::Image.to_gray_scale(img)
   x = Numo::SFloat.cast(img) / 255
   out = $model.predict1(x)

@@ -1,5 +1,5 @@
 require "numo/narray"
-require_relative "../../ext/rb_stb_image/rb_stb_image"
+require_relative "../rb_stb_image"
 
 module DNN
   module Image
@@ -112,6 +112,41 @@ module DNN
         x = x.mean(axis: 2, keepdims: true).concatenate(img[true, true, 3..3], axis: 2)
       end
       Numo::UInt8.cast(x)
+    end
+
+    # Image convert image channel to RGB.
+    # @param [Numo::UInt8] img Image to RGB.
+    def self.to_rgb(img)
+      img_check(img)
+      case img.shape[2]
+      when 1
+        return img.concatenate(img, axis: 2).concatenate(img, axis: 2)
+      when 2
+        img = img[true, true, 0...1]
+        return img.concatenate(img, axis: 2).concatenate(img, axis: 2)
+      when 4
+        return img[true, true, 0...3].clone
+      end
+      img
+    end
+
+    # Image convert image channel to RGBA.
+    # @param [Numo::UInt8] img Image to RGBA.
+    def self.to_rgba(img)
+      img_check(img)
+      case img.shape[2]
+      when 1
+        alpha = Numo::UInt8.new(*img.shape[0..1], 1).fill(255)
+        return img.concatenate(img, axis: 2).concatenate(img, axis: 2).concatenate(alpha, axis: 2)
+      when 2
+        alpha = img[true, true, 1...2]
+        img = img[true, true, 0...1]
+        return img.concatenate(img, axis: 2).concatenate(img, axis: 2).concatenate(alpha, axis: 2)
+      when 3
+        alpha = Numo::UInt8.new(*img.shape[0..1], 1).fill(255)
+        return img.concatenate(alpha, axis: 2)
+      end
+      img
     end
 
     private_class_method def self.img_check(img)

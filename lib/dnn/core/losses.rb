@@ -2,8 +2,8 @@ module DNN
   module Losses
 
     class Loss
-      def self.call(y, t, *args)
-        new(*args).(y, t)
+      def self.call(y, t, *args, **kwargs)
+        new(*args, **kwargs).(y, t)
       end
 
       def self.from_hash(hash)

@@ -94,7 +94,7 @@ end
 
 
 
-class TestSimpleRNNDense < MiniTest::Unit::TestCase
+class TestSimpleRNNCell < MiniTest::Unit::TestCase
   def test_forward
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
@@ -105,8 +105,8 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Xumo::SFloat.new(16).fill(0)
 
-    dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
-    assert_equal [1, 16], dense.forward(x, h).shape
+    cell = SimpleRNNCell.new(w, w2, b, Tanh.new)
+    assert_equal [1, 16], cell.forward(x, h).shape
   end
 
   def test_backward
@@ -123,9 +123,9 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     b.data = Xumo::SFloat.new(16).fill(0)
     b.grad = 0
 
-    dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
-    dense.forward(x, h)
-    dx, dh = dense.backward(dh2)
+    cell = SimpleRNNCell.new(w, w2, b, Tanh.new)
+    cell.forward(x, h)
+    dx, dh = cell.backward(dh2)
     assert_equal [1, 64], dx.shape
     assert_equal [1, 16], dh.shape
   end
@@ -141,10 +141,10 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     w2.data = Xumo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
 
-    dense = SimpleRNNDense.new(w, w2, nil, Tanh.new)
-    dense.forward(x, h)
-    dense.backward(dh2)
-    assert_nil dense.instance_variable_get(:@bias)
+    cell = SimpleRNNCell.new(w, w2, nil, Tanh.new)
+    cell.forward(x, h)
+    cell.backward(dh2)
+    assert_nil cell.instance_variable_get(:@bias)
   end
 
   def test_backward3
@@ -161,13 +161,13 @@ class TestSimpleRNNDense < MiniTest::Unit::TestCase
     b.data = Xumo::SFloat.new(16).fill(0)
     b.grad = 0
 
-    dense = SimpleRNNDense.new(w, w2, b, Tanh.new)
-    dense.trainable = false
-    dense.forward(x, h)
-    dense.backward(dh2)
-    assert_equal 0, dense.instance_variable_get(:@weight).grad
-    assert_equal 0, dense.instance_variable_get(:@recurrent_weight).grad
-    assert_equal 0, dense.instance_variable_get(:@bias).grad
+    cell = SimpleRNNCell.new(w, w2, b, Tanh.new)
+    cell.trainable = false
+    cell.forward(x, h)
+    cell.backward(dh2)
+    assert_equal 0, cell.instance_variable_get(:@weight).grad
+    assert_equal 0, cell.instance_variable_get(:@recurrent_weight).grad
+    assert_equal 0, cell.instance_variable_get(:@bias).grad
   end
 end
 
@@ -208,7 +208,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     rnn = SimpleRNN.new(64)
     rnn.build([16, 64])
     assert_equal [1, 16, 64], rnn.forward_node(x).shape
-    assert_kind_of SimpleRNNDense, rnn.instance_variable_get(:@hidden_layers)[15]
+    assert_kind_of SimpleRNNCell, rnn.instance_variable_get(:@hidden_layers)[15]
   end
 
   def test_forward_node2
@@ -296,7 +296,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
 end
 
 
-class TestLSTMDense < MiniTest::Unit::TestCase
+class TestLSTMCell < MiniTest::Unit::TestCase
   def test_forward
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
@@ -308,8 +308,8 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Xumo::SFloat.new(16 * 4).fill(0)
 
-    dense = LSTMDense.new(w, w2, b)
-    h2, c2 = dense.forward(x, h, c)
+    cell = LSTMCell.new(w, w2, b)
+    h2, c2 = cell.forward(x, h, c)
     assert_equal [1, 16], h2.shape
     assert_equal [1, 16], c2.shape
   end
@@ -330,9 +330,9 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     b.data = Xumo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
-    dense = LSTMDense.new(w, w2, b)
-    dense.forward(x, h, c)
-    dx, dh, dc = dense.backward(dh2, dc2)
+    cell = LSTMCell.new(w, w2, b)
+    cell.forward(x, h, c)
+    dx, dh, dc = cell.backward(dh2, dc2)
     assert_equal [1, 64], dx.shape
     assert_equal [1, 16], dh.shape
     assert_equal [1, 16], dc.shape
@@ -351,10 +351,10 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
 
-    dense = LSTMDense.new(w, w2, nil)
-    dense.forward(x, h, c)
-    dense.backward(dh2, dc2)
-    assert_nil dense.instance_variable_get(:@bias)
+    cell = LSTMCell.new(w, w2, nil)
+    cell.forward(x, h, c)
+    cell.backward(dh2, dc2)
+    assert_nil cell.instance_variable_get(:@bias)
   end
 
   def test_backward3
@@ -373,13 +373,13 @@ class TestLSTMDense < MiniTest::Unit::TestCase
     b.data = Xumo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
-    dense = LSTMDense.new(w, w2, b)
-    dense.trainable = false
-    dense.forward(x, h, c)
-    dense.backward(dh2, dc2)
-    assert_equal 0, dense.instance_variable_get(:@weight).grad
-    assert_equal 0, dense.instance_variable_get(:@recurrent_weight).grad
-    assert_equal 0, dense.instance_variable_get(:@bias).grad
+    cell = LSTMCell.new(w, w2, b)
+    cell.trainable = false
+    cell.forward(x, h, c)
+    cell.backward(dh2, dc2)
+    assert_equal 0, cell.instance_variable_get(:@weight).grad
+    assert_equal 0, cell.instance_variable_get(:@recurrent_weight).grad
+    assert_equal 0, cell.instance_variable_get(:@bias).grad
   end
 end
 
@@ -418,7 +418,7 @@ class TestLSTM < MiniTest::Unit::TestCase
     lstm = LSTM.new(64)
     lstm.build([16, 64])
     assert_equal [1, 16, 64], lstm.forward_node(x).shape
-    assert_kind_of LSTMDense, lstm.instance_variable_get(:@hidden_layers)[15]
+    assert_kind_of LSTMCell, lstm.instance_variable_get(:@hidden_layers)[15]
   end
 
   def test_forward_node2
@@ -528,7 +528,7 @@ class TestLSTM < MiniTest::Unit::TestCase
 end
 
 
-class TestGRUDense < MiniTest::Unit::TestCase
+class TestGRUCell < MiniTest::Unit::TestCase
   def test_forward
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
@@ -539,8 +539,8 @@ class TestGRUDense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
 
-    dense = GRUDense.new(w, w2, b)
-    assert_equal [1, 16], dense.forward(x, h).shape
+    cell = GRUCell.new(w, w2, b)
+    assert_equal [1, 16], cell.forward(x, h).shape
   end
 
   def test_backward
@@ -556,9 +556,9 @@ class TestGRUDense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
-    dense = GRUDense.new(w, w2, b)
-    dense.forward(x, h)
-    dx, dh = dense.backward(dh2)
+    cell = GRUCell.new(w, w2, b)
+    cell.forward(x, h)
+    dx, dh = cell.backward(dh2)
     assert_equal [1, 64], dx.shape
     assert_equal [1, 16], dh.shape
   end
@@ -577,10 +577,10 @@ class TestGRUDense < MiniTest::Unit::TestCase
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
 
-    dense = GRUDense.new(w, w2, nil)
-    dense.forward(x, h)
-    dense.backward(dh2)
-    assert_nil dense.instance_variable_get(:@bias)
+    cell = GRUCell.new(w, w2, nil)
+    cell.forward(x, h)
+    cell.backward(dh2)
+    assert_nil cell.instance_variable_get(:@bias)
   end
 
   def test_backward3
@@ -596,13 +596,13 @@ class TestGRUDense < MiniTest::Unit::TestCase
     b = DNN::Param.new
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
-    dense = GRUDense.new(w, w2, b)
-    dense.trainable = false
-    dense.forward(x, h)
-    dense.backward(dh2)
-    assert_equal 0, dense.instance_variable_get(:@weight).grad
-    assert_equal 0, dense.instance_variable_get(:@recurrent_weight).grad
-    assert_equal 0, dense.instance_variable_get(:@bias).grad
+    cell = GRUCell.new(w, w2, b)
+    cell.trainable = false
+    cell.forward(x, h)
+    cell.backward(dh2)
+    assert_equal 0, cell.instance_variable_get(:@weight).grad
+    assert_equal 0, cell.instance_variable_get(:@recurrent_weight).grad
+    assert_equal 0, cell.instance_variable_get(:@bias).grad
   end
 end
 
