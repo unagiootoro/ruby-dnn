@@ -1,5 +1,6 @@
 require "bundler/gem_tasks"
 require "rake/testtask"
+require "rake/extensiontask"
 require "yard"
 require "yard/rake/yardoc_task"
 
@@ -8,6 +9,14 @@ Rake::TestTask.new(:test) do |t|
   t.libs << "ext"
   t.libs << "lib"
   t.test_files = FileList["test/*_test.rb", "test/layers_test/*_test.rb"]
+end
+
+Rake::ExtensionTask.new "rb_stb_image" do |ext|
+  ext.lib_dir = "lib/rb_stb_image"
+end
+
+Rake::ExtensionTask.new "exlib" do |ext|
+  ext.lib_dir = "lib/exlib"
 end
 
 task :build_exlib do

@@ -41,7 +41,11 @@ module DNN
         end
       end
       if shuffle
-        orig_seed = Random::DEFAULT.seed
+        if RUBY_VERSION.split(".")[0].to_i >= 3
+          orig_seed = Random.seed
+        else
+          orig_seed = Random::DEFAULT.seed
+        end
         srand(shuffle_seed)
         indexs = (0...csv_array.length).to_a.shuffle
         x[indexs, true] = x

@@ -6,6 +6,12 @@ module DNN
 
       # Please implement the method used for callback event.
 
+      # Process performed before all training.
+      # def before_train; end
+
+      # Process performed after all training.
+      # def after_train; end
+
       # Process performed before one training.
       # def before_epoch; end
 
@@ -57,7 +63,7 @@ module DNN
 
     # A callback to stop training the model early after test on batch.
     # @param [Symbol] trigger A log that triggers early stopping.
-    #                         Specify one of train_loss, test_loss, test_accuracy.
+    #                         Specify one of :loss, :test_loss, :test_accuracy
     # @param [Float] tolerance Tolerance value for early stopping.
     class EarlyStopping < Callback
       def initialize(trigger, tolerance)
@@ -66,19 +72,21 @@ module DNN
       end
 
       def after_train_on_batch
-        throw :stop, "Early stopped." if judge_early_stopping_train
+        @model.request_early_stop if judge_early_stopping_train
       end
 
       def after_epoch
-        throw :stop, "Early stopped." if judge_early_stopping_test
+        @model.request_early_stop if judge_early_stopping_test
       end
 
       private
 
       def judge_early_stopping_train
         case @trigger
-        when :train_loss
+        when :loss
           return true if model.last_log[@trigger] <= @tolerance
+        when :accuracy
+          return true if model.last_log[@trigger] >= @tolerance
         end
         false
       end
@@ -97,7 +105,7 @@ module DNN
     # A callback to stop training the model if loss is NaN by after train on batch.
     class NaNStopping < Callback
       def after_train_on_batch
-        throw :stop, "loss is NaN." if model.last_log[:train_loss].nan?
+        throw :stop, "loss is NaN." if model.last_log[:loss].nan?
       end
     end
 
@@ -105,7 +113,8 @@ module DNN
     # The following logs will be recorded.
     # epoch:          Current epoch.
     # step:           Current step in epoch.
-    # train_loss:     Batch training loss.
+    # loss:           Batch training loss.
+    # accuracy:       Batch training accuracy.
     # test_loss:      Mean test loss.
     # test_accuracy:  Test accuracy.
     class Logger < Callback
@@ -113,7 +122,8 @@ module DNN
         @log = {
           epoch: [],
           step: [],
-          train_loss: [],
+          loss: [],
+          accuracy: [],
           test_loss: [],
           test_accuracy: [],
         }
@@ -124,7 +134,7 @@ module DNN
       end
 
       def after_train_on_batch
-        logging(:train_loss, :step)
+        logging(:loss, :step)
       end
 
       # Get a log.

@@ -348,11 +348,11 @@ class TestDropout < MiniTest::Unit::TestCase
   end
 
   def test_forward_node
-    dropout = Dropout.new(0.5, seed: 0)
+    dropout = Dropout.new(0.2, seed: 0)
     dropout.build([100])
     DNN.learning_phase = true
     num = dropout.forward_node(Xumo::SFloat.ones(100)).sum.to_f.round
-    assert num.between?(30, 70)
+    assert num.between?(70, 90)
   end
 
   def test_forward_node2

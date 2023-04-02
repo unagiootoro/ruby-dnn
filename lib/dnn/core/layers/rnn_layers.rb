@@ -1,5 +1,16 @@
 module DNN
   module Layers
+    # Super class of all RNN cells.
+    class RNNCell
+      attr_accessor :trainable
+
+      def initialize(weight, recurrent_weight, bias)
+        @weight = weight
+        @recurrent_weight = recurrent_weight
+        @bias = bias
+        @trainable = true
+      end
+    end
 
     # Super class of all RNN classes.
     class RNN < Connection
@@ -136,15 +147,10 @@ module DNN
       end
     end
 
-    class SimpleRNNDense
-      attr_accessor :trainable
-
+    class SimpleRNNCell < RNNCell
       def initialize(weight, recurrent_weight, bias, activation)
-        @weight = weight
-        @recurrent_weight = recurrent_weight
-        @bias = bias
+        super(weight, recurrent_weight, bias)
         @activation = activation.clone
-        @trainable = true
       end
 
       def forward(x, h)
@@ -206,7 +212,7 @@ module DNN
       end
 
       def create_hidden_layer
-        @hidden_layers = Array.new(@time_length) { SimpleRNNDense.new(@weight, @recurrent_weight, @bias, @activation) }
+        @hidden_layers = Array.new(@time_length) { SimpleRNNCell.new(@weight, @recurrent_weight, @bias, @activation) }
       end
 
       def to_hash
@@ -228,19 +234,14 @@ module DNN
       end
     end
 
-    class LSTMDense
-      attr_accessor :trainable
-
+    class LSTMCell < RNNCell
       def initialize(weight, recurrent_weight, bias)
-        @weight = weight
-        @recurrent_weight = recurrent_weight
-        @bias = bias
+        super(weight, recurrent_weight, bias)
         @tanh = Layers::Tanh.new
         @g_tanh = Layers::Tanh.new
         @forget_sigmoid = Layers::Sigmoid.new
         @in_sigmoid = Layers::Sigmoid.new
         @out_sigmoid = Layers::Sigmoid.new
-        @trainable = true
       end
 
       def forward(x, h, c)
@@ -312,7 +313,7 @@ module DNN
       end
 
       def create_hidden_layer
-        @hidden_layers = Array.new(@time_length) { LSTMDense.new(@weight, @recurrent_weight, @bias) }
+        @hidden_layers = Array.new(@time_length) { LSTMCell.new(@weight, @recurrent_weight, @bias) }
       end
 
       def forward_node(xs)
@@ -365,17 +366,12 @@ module DNN
       end
     end
 
-    class GRUDense < Layer
-      attr_accessor :trainable
-
+    class GRUCell < RNNCell
       def initialize(weight, recurrent_weight, bias)
-        @weight = weight
-        @recurrent_weight = recurrent_weight
-        @bias = bias
+        super(weight, recurrent_weight, bias)
         @update_sigmoid = Layers::Sigmoid.new
         @reset_sigmoid = Layers::Sigmoid.new
         @tanh = Layers::Tanh.new
-        @trainable = true
       end
 
       def forward(x, h)
@@ -457,7 +453,7 @@ module DNN
       end
 
       def create_hidden_layer
-        @hidden_layers = Array.new(@time_length) { GRUDense.new(@weight, @recurrent_weight, @bias) }
+        @hidden_layers = Array.new(@time_length) { GRUCell.new(@weight, @recurrent_weight, @bias) }
       end
     end
 

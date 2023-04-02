@@ -2,8 +2,8 @@ module DNN
   module Layers
 
     class MergeLayer < Layer
-      def self.call(x1, x2, *args)
-        new(*args).call(x1, x2)
+      def self.call(x1, x2, *args, **kwargs)
+        new(*args, **kwargs).call(x1, x2)
       end
 
       def call(input1, input2)

@@ -39,6 +39,20 @@ module DNN
       Losses::SoftmaxCrossEntropy.softmax(x)
     end
 
+    # Check training or evaluate input data type.
+    def self.check_input_data_type(data_name, data, expected_type)
+      if !data.is_a?(expected_type) && !data.is_a?(Array)
+        raise TypeError, "#{data_name}:#{data.class.name} is not an instance of #{expected_type.name} class or Array class."
+      end
+      if data.is_a?(Array)
+        data.each.with_index do |v, i|
+          unless v.is_a?(expected_type)
+            raise TypeError, "#{data_name}[#{i}]:#{v.class.name} is not an instance of #{expected_type.name} class."
+          end
+        end
+      end
+    end
+
     # Perform numerical differentiation.
     def self.numerical_grad(x, func)
       (func.(x + 1e-7) - func.(x)) / 1e-7
