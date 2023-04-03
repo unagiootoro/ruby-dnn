@@ -2,7 +2,7 @@ module DNN
   module Callbacks
 
     class Callback
-      attr_accessor :model
+      attr_accessor :callback_runner
 
       # Please implement the method used for callback event.
 
@@ -43,11 +43,13 @@ module DNN
     end
 
     # A callback that save the model at the after of the epoch.
+    # @param [DNN::Model] model Target model.
     # @param [String] base_file_name Base file name for saving.
     # @param [Boolean] include_model When set a true, save data included model structure.
     # @param [Integer] interval Save interval.
     class CheckPoint < Callback
-      def initialize(base_file_name, include_model: true, interval: 1)
+      def initialize(model, base_file_name, include_model: true, interval: 1)
+        @model = model
         @base_file_name = base_file_name
         @include_model = include_model
         @interval = interval
@@ -55,8 +57,8 @@ module DNN
 
       def after_epoch
         saver = Savers::MarshalSaver.new(@model, include_model: @include_model)
-        if @model.last_log[:epoch] % @interval == 0
-          saver.save(@base_file_name + "_epoch#{model.last_log[:epoch]}.marshal")
+        if @callback_runner.last_log(:epoch) % @interval == 0
+          saver.save(@base_file_name + "_epoch#{model.last_log(:epoch)}.marshal")
         end
       end
     end
@@ -72,11 +74,11 @@ module DNN
       end
 
       def after_train_on_batch
-        @model.request_early_stop if judge_early_stopping_train
+        @callback_runner.request_early_stop if judge_early_stopping_train
       end
 
       def after_epoch
-        @model.request_early_stop if judge_early_stopping_test
+        @callback_runner.request_early_stop if judge_early_stopping_test
       end
 
       private
@@ -84,9 +86,9 @@ module DNN
       def judge_early_stopping_train
         case @trigger
         when :loss
-          return true if model.last_log[@trigger] <= @tolerance
+          return true if @callback_runner.last_log(@trigger) <= @tolerance
         when :accuracy
-          return true if model.last_log[@trigger] >= @tolerance
+          return true if @callback_runner.last_log(@trigger) >= @tolerance
         end
         false
       end
@@ -94,9 +96,9 @@ module DNN
       def judge_early_stopping_test
         case @trigger
         when :test_loss
-          return true if model.last_log[@trigger] <= @tolerance
+          return true if @callback_runner.last_log(@trigger) <= @tolerance
         when :test_accuracy
-          return true if model.last_log[@trigger] >= @tolerance
+          return true if @callback_runner.last_log(@trigger) >= @tolerance
         end
         false
       end
@@ -105,7 +107,7 @@ module DNN
     # A callback to stop training the model if loss is NaN by after train on batch.
     class NaNStopping < Callback
       def after_train_on_batch
-        throw :stop, "loss is NaN." if model.last_log[:loss].nan?
+        throw :stop, "loss is NaN." if @callback_runner.last_log(:loss).nan?
       end
     end
 
@@ -152,7 +154,7 @@ module DNN
       private def logging(*tags)
         tags.each do |tag|
           @log[tag] ||= []
-          @log[tag] << model.last_log[tag]
+          @log[tag] << @callback_runner.last_log(tag)
         end
       end
     end

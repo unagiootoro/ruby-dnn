@@ -1,0 +1,430 @@
+module DNN
+  module TrainerImpl
+    private
+
+    def init_trainer_impl
+      @train_state = :none
+      @initial_epoch = 1
+      @train_step = 1
+      @train_max_steps = 1
+      @train_iterator = nil
+      @max_epochs = 1
+      @train_batch_size = 1
+      @epoch = 1
+      @test = nil
+      @verbose = false
+      @need_accuracy = false
+      @io = nil
+      @num_train_datas = 0
+      @early_stop_requested = false
+    end
+
+    def start_train_internal(train_iterator, epochs,
+                             batch_size: 1,
+                             initial_epoch: 1,
+                             test: nil,
+                             verbose: true,
+                             need_accuracy: true,
+                             io: $stdout)
+      check_model_setup_complete
+      check_early_stop_requested # Clear early stop request.
+      @train_iterator = train_iterator
+      @max_epochs = epochs
+      @train_batch_size = batch_size
+      @epoch = initial_epoch
+      @test = test
+      @verbose = verbose
+      @need_accuracy = need_accuracy
+      @io = io
+      @train_state = :start_train_epoch
+      @train_max_steps = train_iterator.max_steps(batch_size)
+      @num_train_datas = train_iterator.num_usable_datas(batch_size)
+      @line_first_pos = 0
+      call_callbacks(:before_train)
+    end
+
+    def is_training_internal
+      @train_state != :none
+    end
+
+    def request_early_stop_internal
+      @early_stop_requested = true
+    end
+
+    def on_train_step_internal(model, x_batch, y_batch)
+      DNN.learning_phase = true
+      output_tensors = model.(Tensor.new(x_batch))
+      if output_tensors.is_a?(Array)
+        output_data = []
+        loss_data = []
+        output_tensors.each.with_index do |out, i|
+          output_data << out.data
+          loss_opt = {}
+          loss_opt[:layers] = layers if i == 0
+          loss_opt[:loss_weight] = @loss_weights[i] if @loss_weights
+          loss = model.loss_func[i].loss(out, Tensor.new(y_batch[i]), **loss_opt)
+          loss_data << loss.data
+          loss.link.backward(Xumo::SFloat.ones(y_batch[i][0...1, false].shape[0], 1))
+        end
+      else
+        out = output_tensors
+        output_data = out.data
+        loss = model.loss_func.loss(out, Tensor.new(y_batch), layers: model.layers)
+        loss_data = loss.data
+        loss.link.backward(Xumo::SFloat.ones(y_batch[0...1, false].shape[0], 1))
+      end
+      model.optimizer.update(model.get_all_trainable_params)
+
+      if loss_data.is_a?(Array)
+        loss_value = []
+        acc = [] if @need_accuracy
+        loss_data.each_index do |i|
+          loss_value << Utils.to_f(loss_data)
+          acc << accuracy(output_data[i], y_batch[i]).to_f / y_batch[i].shape[0] if @need_accuracy
+        end
+      else
+        loss_value = Utils.to_f(loss_data)
+        acc = model.accuracy(output_data, y_batch).to_f / y_batch.shape[0] if @need_accuracy
+      end
+      if @need_accuracy
+        { loss: loss_value, accuracy: acc }
+      else
+        { loss: loss_value }
+      end
+    end
+
+    def update_trainer_impl
+      case @train_state
+      when :start_train_epoch
+        start_train_epoch
+      when :start_train_step
+        start_train_step
+      when :train_step
+        train_step
+      when :end_train_step
+        end_train_step
+      when :end_train_epoch
+        end_train_epoch
+      when :trainer_start_evaluate
+        trainer_start_evaluate
+      when :trainer_evaluating
+        trainer_evaluating
+      when :trainer_end_evaluate
+        trainer_end_evaluate
+      when :trainer_end_training
+        trainer_end_training
+      end
+    end
+
+    def check_model_setup_complete
+    end
+
+    def check_early_stop_requested
+      if @early_stop_requested
+        @early_stop_requested = false
+        return true
+      end
+      false
+    end
+
+    def start_train_epoch
+      @last_logs[:epoch] = @epoch
+      call_callbacks(:before_epoch)
+      @io.puts "Epoch #{@epoch}/#{@max_epochs}" if @verbose
+      @train_step = 1
+      @train_state = :start_train_step
+    end
+
+    def start_train_step
+      @last_logs[:step] = @train_step
+      @train_state = :train_step
+    end
+
+    # Implement the training process to be performed in one step.
+    # @param [Numo::SFloat] x Input training data.
+    # @param [Numo::SFloat] y Output training data.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @return [Hash] Hash of contents to be output to log.
+    def train_step
+      (x_batch, y_batch) = @train_iterator.next_batch(@train_batch_size)
+      call_callbacks(:before_train_on_batch)
+      train_step_met = on_train_step(x_batch, y_batch)
+      @last_logs.merge!(train_step_met)
+      call_callbacks(:after_train_on_batch)
+      num_trained_datas = @train_step * @train_batch_size
+      num_trained_datas = num_trained_datas > @num_train_datas ? @num_train_datas : num_trained_datas
+      if @io == $stdout
+        log = "\r["
+      else
+        @line_first_pos = @io.pos
+        log = "["
+      end
+      40.times do |i|
+        if i < num_trained_datas * 40 / @num_train_datas
+          log << "="
+        elsif i == num_trained_datas * 40 / @num_train_datas
+          log << ">"
+        else
+          log << "_"
+        end
+      end
+      log << "]  #{num_trained_datas}/#{@num_train_datas} "
+      log << metrics_to_str(train_step_met)
+      @io.print log if @verbose
+      if check_early_stop_requested
+        @io.puts("\nEarly stopped.") if @verbose
+        @train_state = :trainer_end_training
+      else
+        @train_state = :end_train_step
+      end
+    end
+
+    def end_train_step
+      @train_step += 1
+      if @train_step <= @train_max_steps
+        unless @io == $stdout
+          @io.pos = @line_first_pos
+        end
+        @train_state = :start_train_step
+      else
+        @train_state = :end_train_epoch
+      end
+    end
+
+    def end_train_epoch
+      @epoch += 1
+      if @test
+        @train_state = :trainer_start_evaluate
+      else
+        @io.puts "" if @verbose
+        call_callbacks(:after_epoch)
+        if @epoch <= @max_epochs
+          @train_iterator.reset
+          @train_state = :start_train_epoch
+        else
+          @train_state = :none
+        end
+      end
+    end
+
+    def trainer_start_evaluate
+      if @test.is_a?(Array)
+        iter = Iterator.new(@test[0], @test[1], random: false)
+      else
+        iter = @test
+      end
+      start_evaluate_internal(iter, batch_size: @train_batch_size, need_accuracy: @need_accuracy)
+      @train_state = :trainer_evaluating
+    end
+
+    def trainer_evaluating
+      unless is_evaluating_internal
+        @train_state = :trainer_end_evaluate
+      end
+    end
+
+    def trainer_end_evaluate
+      if @verbose
+        metrics = if @need_accuracy
+                    { test_accuracy: @last_logs[:test_accuracy], test_loss: @last_logs[:test_loss] }
+                  else
+                    { test_loss: @last_logs[:test_loss] }
+                  end
+        @io.print "  " + metrics_to_str(metrics)
+      end
+      @io.puts "" if @verbose
+      call_callbacks(:after_epoch)
+      if @epoch <= @max_epochs
+        @train_iterator.reset
+        if check_early_stop_requested
+          @io.puts("Early stopped.") if @verbose
+          @train_state = :trainer_end_training
+        else
+          @train_state = :start_train_epoch
+        end
+      else
+        @train_state = :trainer_end_training
+      end
+    end
+
+    def trainer_end_training
+      call_callbacks(:after_train)
+      @train_state = :none
+    end
+
+    def metrics_to_str(mertics)
+      mertics.map { |key, values|
+        str_values = if values.is_a?(Array)
+                       values_fmt = values.map { |v| sprintf('%.4f', Utils.to_f(v)) }
+                       "[#{values_fmt.join(", ")}]"
+                     else
+                       sprintf('%.4f', Utils.to_f(values))
+                     end
+        "#{key}: #{str_values}"
+      }.join(", ")
+    end
+  end
+
+  class BaseTrainer < CallbackRunner
+    include TrainerImpl
+    include EvaluatorImpl
+
+    def initialize
+      super()
+      init_trainer_impl
+      init_evaluator_impl
+    end
+
+    # Start training.
+    # Setup the model before use this method.
+    # @param [Numo::SFloat] x Input training data.
+    # @param [Numo::SFloat] y Output training data.
+    # @param [Integer] epochs Number of training.
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Integer] initial_epoch Initial epoch.
+    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
+    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
+    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @param [IO] io Specifies the IO object to use for logging.
+    def train(x, y, epochs,
+              batch_size: 1,
+              initial_epoch: 1,
+              test: nil,
+              verbose: true,
+              need_accuracy: true,
+              io: $stdout)
+      start_train(x, y, epochs,
+                  batch_size: batch_size,
+                  initial_epoch: initial_epoch,
+                  test: test,
+                  verbose: verbose,
+                  need_accuracy: need_accuracy,
+                  io: io)
+      update while training?
+    end
+
+    # Start training by iterator.
+    # Setup the model before use this method.
+    # @param [DNN::Iterator] train_iterator Iterator used for training.
+    # @param [Integer] epochs Number of training.
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Integer] initial_epoch Initial epoch.
+    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
+    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
+    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @param [IO] io Specifies the IO object to use for logging.
+    def train_by_iterator(train_iterator, epochs,
+                          batch_size: 1,
+                          initial_epoch: 1,
+                          test: nil,
+                          verbose: true,
+                          need_accuracy: true,
+                          io: $stdout)
+      start_train_by_iterator(train_iterator, epochs,
+                              batch_size: batch_size,
+                              initial_epoch: initial_epoch,
+                              test: test,
+                              verbose: verbose,
+                              need_accuracy: need_accuracy,
+                              io: io)
+      update while training?
+    end
+
+    # Start training.
+    # Setup the model before use this method.
+    # @param [Numo::SFloat] x Input training data.
+    # @param [Numo::SFloat] y Output training data.
+    # @param [Integer] epochs Number of training.
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Integer] initial_epoch Initial epoch.
+    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
+    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
+    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @param [IO] io Specifies the IO object to use for logging.
+    def start_train(x, y, epochs,
+                    batch_size: 1,
+                    initial_epoch: 1,
+                    test: nil,
+                    verbose: true,
+                    need_accuracy: true,
+                    io: $stdout)
+      Utils.check_input_data_type("x", x, Xumo::SFloat)
+      Utils.check_input_data_type("y", y, Xumo::SFloat)
+      train_iterator = Iterator.new(x, y)
+      start_train_by_iterator(train_iterator, epochs,
+                              batch_size: batch_size,
+                              initial_epoch: initial_epoch,
+                              test: test,
+                              verbose: verbose,
+                              need_accuracy: need_accuracy,
+                              io: io)
+    end
+
+    # Start training by iterator.
+    # Setup the model before use this method.
+    # @param [DNN::Iterator] train_iterator Iterator used for training.
+    # @param [Integer] epochs Number of training.
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Integer] initial_epoch Initial epoch.
+    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
+    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
+    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @param [IO] io Specifies the IO object to use for logging.
+    def start_train_by_iterator(train_iterator, epochs,
+                                batch_size: 1,
+                                initial_epoch: 1,
+                                test: nil,
+                                verbose: true,
+                                need_accuracy: true,
+                                io: $stdout)
+      start_train_internal(train_iterator, epochs,
+                           batch_size: batch_size,
+                           initial_epoch: initial_epoch,
+                           test: test,
+                           verbose: verbose,
+                           need_accuracy: need_accuracy,
+                           io: io)
+    end
+
+    # Check if it is currently evaluating.
+    # @return [Boolean] Returns true if currently training.
+    def training?
+      is_training_internal
+    end
+
+    # Update trainer status.
+    def update
+      update_evaluator_impl
+      update_trainer_impl
+    end
+
+    # Request training early stop.
+    def request_early_stop
+      request_early_stop_internal
+    end
+  end
+
+  class Trainer < BaseTrainer
+    def initialize(model)
+      super()
+      @model = model
+    end
+
+    def check_model_setup_complete
+      raise DNNError, "The model is not optimizer setup complete." unless @model.optimizer
+      raise DNNError, "The model is not loss_func setup complete." unless @model.loss_func
+    end
+
+    def on_train_step(x_batch, y_batch)
+      on_train_step_internal(@model, x_batch, y_batch)
+    end
+
+    def on_test_step(x_batch, y_batch)
+      on_test_step_internal(@model, x_batch, y_batch)
+    end
+  end
+end

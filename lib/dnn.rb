@@ -57,4 +57,7 @@ if RUBY_PLATFORM != "wasm32-wasi"
   require_relative "dnn/core/callbacks"
   require_relative "dnn/core/savers"
   require_relative "dnn/core/utils"
+  require_relative "dnn/core/callback_runner"
+  require_relative "dnn/core/evaluator"
+  require_relative "dnn/core/trainer"
 end
