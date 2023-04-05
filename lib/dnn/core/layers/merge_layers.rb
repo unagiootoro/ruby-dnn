@@ -7,8 +7,8 @@ module DNN
       end
 
       def call(input1, input2)
-        input1 = Tensor.convert(input1) if !input1.is_a?(Tensor) && !input1.is_a?(Param)
-        input2 = Tensor.convert(input2) if !input2.is_a?(Tensor) && !input2.is_a?(Param)
+        input1 = Tensor.new(input1) if !input1.is_a?(Tensor) && !input1.is_a?(Param)
+        input2 = Tensor.new(input2) if !input2.is_a?(Tensor) && !input2.is_a?(Param)
         if input1.data.is_a?(Xumo::NArray)
           build(input1.data.shape[1..-1]) unless built?
         else

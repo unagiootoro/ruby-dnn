@@ -129,13 +129,11 @@ module DNN
     end
 
     class SoftmaxCrossEntropy < Loss
-      include Layers::LayerNode
-
       attr_accessor :eps
 
       class << self
         def softmax(y)
-          Xumo::NMath.exp(y) / Xumo::NMath.exp(y).sum(1, keepdims: true)
+          Functions::SoftmaxCrossEntropy.softmax(y)
         end
 
         alias activation softmax
@@ -146,14 +144,8 @@ module DNN
         @eps = eps
       end
 
-      def forward_node(y, t)
-        @t = t
-        @x = SoftmaxCrossEntropy.softmax(y)
-        -(t * Xumo::NMath.log(@x + @eps)).mean(0).sum
-      end
-
-      def backward_node(d)
-        d * (@x - @t) / @x.shape[0]
+      def forward(y, t)
+        Functions::FunctionSpace.softmax_cross_entropy(y, t, eps: @eps)
       end
 
       def to_hash
@@ -166,13 +158,11 @@ module DNN
     end
 
     class SigmoidCrossEntropy < Loss
-      include Layers::LayerNode
-
       attr_accessor :eps
 
       class << self
         def sigmoid(y)
-          Layers::Sigmoid.new.forward_node(y)
+          Functions::SigmoidCrossEntropy.sigmoid(y)
         end
 
         alias activation sigmoid
@@ -183,14 +173,8 @@ module DNN
         @eps = eps
       end
 
-      def forward_node(y, t)
-        @t = t
-        @x = SigmoidCrossEntropy.sigmoid(y)
-        -(t * Xumo::NMath.log(@x + @eps) + (1 - t) * Xumo::NMath.log(1 - @x + @eps)).mean(0).sum
-      end
-
-      def backward_node(d)
-        d * (@x - @t) / @x.shape[0]
+      def forward(y, t)
+        Functions::FunctionSpace.sigmoid_cross_entropy(y, t, eps: @eps)
       end
 
       def to_hash

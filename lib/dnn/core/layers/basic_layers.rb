@@ -9,7 +9,7 @@ module DNN
         num_outputs = (ys.is_a?(Array) ? ys.length : 1)
         link = Link.new(prevs: prevs, layer_node: self, num_outputs: num_outputs)
         prevs.map { |prev| prev.next = link if prev.is_a?(Link) }
-        Tensor.convert(ys, link)
+        Tensor.new(ys, link)
       end
 
       def forward_node(*xs)
@@ -47,7 +47,7 @@ module DNN
       # @param [Tensor | Param] input Input tensor or param.
       # @return [Tensor] Output tensor.
       def call(input)
-        input = Tensor.convert(input) if !input.is_a?(Tensor) && !input.is_a?(Param)
+        input = Tensor.new(input) if !input.is_a?(Tensor) && !input.is_a?(Param)
         build(input.data.shape[1..-1]) unless built?
         forward(input)
       end
@@ -232,8 +232,6 @@ module DNN
     end
 
     class Dense < Connection
-      include LayerNode
-
       attr_reader :num_units
 
       # @param [Integer] num_units Number of nodes.
@@ -259,19 +257,11 @@ module DNN
         init_weight_and_bias
       end
 
-      def forward_node(x)
+      def forward(x)
         @x = x
-        y = x.dot(@weight.data)
-        y += @bias.data if @bias
+        y = x.dot(@weight)
+        y += @bias if @bias
         y
-      end
-
-      def backward_node(dy)
-        if @trainable
-          @weight.grad += @x.transpose.dot(dy)
-          @bias.grad += dy.sum(0) if @bias
-        end
-        dy.dot(@weight.data.transpose)
       end
 
       def compute_output_shape
@@ -294,17 +284,11 @@ module DNN
 
     class Flatten < Layer
       def forward(x)
-        Reshape.(x, @output_shape)
-      end
-
-      def compute_output_shape
-        [@input_shape.reduce(:*)]
+        Functions::FunctionSpace.flatten(x)
       end
     end
 
     class Reshape < Layer
-      include LayerNode
-
       def initialize(shape)
         super()
         @shape = shape
@@ -314,36 +298,8 @@ module DNN
         @shape
       end
 
-      def forward_node(x)
-        if DNN.use_cumo?
-          _forward_gpu(x)
-        else
-          _forward_cpu(x)
-        end
-      end
-
-      def backward_node(dy)
-        if DNN.use_cumo?
-          _backward_gpu(dy)
-        else
-          _backward_cpu(dy)
-        end
-      end
-
-      def _forward_cpu(x)
-        x.reshape(x.shape[0], *@output_shape)
-      end
-
-      def _backward_cpu(dy)
-        dy.reshape(dy.shape[0], *@input_shape)
-      end
-
-      def _forward_gpu(x)
-        x.flatten.reshape(x.shape[0], *@output_shape)
-      end
-
-      def _backward_gpu(dy)
-        dy.flatten.reshape(dy.shape[0], *@input_shape)
+      def forward(x)
+        Functions::FunctionSpace.reshape(x, @shape)
       end
 
       def to_hash
@@ -416,8 +372,6 @@ module DNN
     end
 
     class Dropout < Layer
-      include LayerNode
-
       attr_accessor :dropout_ratio
       attr_reader :use_scale
 
@@ -433,19 +387,8 @@ module DNN
         @rnd = Random.new(@seed)
       end
 
-      def forward_node(x)
-        if DNN.learning_phase
-          Xumo::SFloat.srand(@rnd.rand(1 << 31))
-          @mask = Xumo::SFloat.cast(Xumo::SFloat.new(*x.shape).rand >= @dropout_ratio)
-          x = x * @mask
-        elsif @use_scale
-          x *= (1 - @dropout_ratio)
-        end
-        x
-      end
-
-      def backward_node(dy)
-        dy * @mask
+      def forward(x)
+        Functions::Dropout.new(@dropout_ratio, seed: @seed, use_scale: @use_scale, learning_phase: DNN.learning_phase).(x)
       end
 
       def to_hash

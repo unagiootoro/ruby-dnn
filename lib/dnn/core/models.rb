@@ -189,13 +189,13 @@ module DNN
             loss_opt[:loss_weight] = @loss_weights[i] if @loss_weights
             loss = @loss_func[i].loss(out, Tensor.new(y[i]), **loss_opt)
             loss_data << loss.data
-            loss.link.backward(Xumo::SFloat.ones(y[i][0...1, false].shape[0], 1))
+            loss.backward(Xumo::SFloat.ones(y[i][0...1, false].shape[0], 1))
           end
         else
           out = output_tensors
           loss = @loss_func.loss(out, Tensor.new(y), layers: layers)
           loss_data = loss.data
-          loss.link.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
+          loss.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
         end
         @optimizer.update(get_all_trainable_params)
         if loss_data.is_a?(Array)

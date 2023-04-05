@@ -112,7 +112,6 @@ module DNN
     end
 
     class Conv2D < Connection
-      include LayerNode
       include Conv2DUtils
 
       attr_reader :num_filters
@@ -159,24 +158,8 @@ module DNN
         init_weight_and_bias
       end
 
-      def forward_node(x)
-        x = zero_padding(x, @pad_size) if @padding
-        @x_shape = x.shape
-        @col = im2col(x, *@out_size, *@filter_size, @strides)
-        y = @col.dot(@weight.data)
-        y += @bias.data if @bias
-        y.reshape(x.shape[0], *@out_size, y.shape[3])
-      end
-
-      def backward_node(dy)
-        dy = dy.reshape(dy.shape[0..2].reduce(:*), dy.shape[3])
-        if @trainable
-          @weight.grad += @col.transpose.dot(dy)
-          @bias.grad += dy.sum(0) if @bias
-        end
-        dcol = dy.dot(@weight.data.transpose)
-        dx = col2im(dcol, @x_shape, *@out_size, *@filter_size, @strides)
-        @padding ? zero_padding_bwd(dx, @pad_size) : dx
+      def forward(x)
+        Functions::Conv2D.new(@num_filters, @out_size, @filter_size, @pad_size, strides: @strides, padding: @padding).(x, @weight, @bias)
       end
 
       def compute_output_shape
@@ -215,7 +198,6 @@ module DNN
     end
 
     class Conv2DTranspose < Connection
-      include LayerNode
       include Conv2DUtils
 
       attr_reader :num_filters
@@ -262,26 +244,8 @@ module DNN
         init_weight_and_bias
       end
 
-      def forward_node(x)
-        bsize = x.shape[0]
-        x = x.reshape(x.shape[0..2].reduce(:*), x.shape[3])
-        @x = x
-        col = x.dot(@weight.data.transpose)
-        img_shape = [bsize, @out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1], @num_filters]
-        y = col2im(col, img_shape, *@input_shape[0..1], *@filter_size, @strides)
-        y += @bias.data if @bias
-        @padding ? zero_padding_bwd(y, @pad_size) : y
-      end
-
-      def backward_node(dy)
-        dy = zero_padding(dy, @pad_size) if @padding
-        col = im2col(dy, *@input_shape[0..1], *@filter_size, @strides)
-        if @trainable
-          @weight.grad += col.transpose.dot(@x)
-          @bias.grad += col.reshape(col.shape[0] * @filter_size.reduce(:*), @num_filters).sum(0) if @bias
-        end
-        dx = col.dot(@weight.data)
-        dx.reshape(dy.shape[0], *@input_shape)
+      def forward(x)
+        Functions::Conv2DTranspose.new(@num_filters, @out_size, @filter_size, @pad_size, strides: @strides, padding: @padding).(x, @weight, @bias)
       end
 
       def compute_output_shape
@@ -375,47 +339,14 @@ module DNN
     end
 
     class MaxPool2D < Pool2D
-      include LayerNode
-
-      def forward_node(x)
-        x = zero_padding(x, @pad_size) if @padding
-        @x_shape = x.shape
-        col = im2col(x, *@out_size, *@pool_size, @strides)
-        col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3])
-        @max_index = col.max_index(1)
-        col.max(1).reshape(x.shape[0], *@out_size, x.shape[3])
-      end
-
-      def backward_node(dy)
-        dmax = Xumo::SFloat.zeros(dy.size * @pool_size.reduce(:*))
-        dmax[@max_index.flatten] = dy.flatten
-        dcol = dmax.reshape(dy.shape[0..2].reduce(:*), @pool_size.reduce(:*) * dy.shape[3])
-        dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
-        @padding ? zero_padding_bwd(dx, @pad_size) : dx
+      def forward(x)
+        Functions::MaxPool2D.new(@pool_size, @out_size, strides: @strides, padding: @padding).(x)
       end
     end
 
     class AvgPool2D < Pool2D
-      include LayerNode
-
-      def forward_node(x)
-        x = zero_padding(x, @pad_size) if @padding
-        @x_shape = x.shape
-        col = im2col(x, *@out_size, *@pool_size, @strides)
-        col = col.reshape(x.shape[0] * @out_size.reduce(:*), @pool_size.reduce(:*), x.shape[3])
-        col.mean(1).reshape(x.shape[0], *@out_size, x.shape[3])
-      end
-
-      def backward_node(dy)
-        row_length = @pool_size.reduce(:*)
-        dy /= row_length
-        davg = Xumo::SFloat.zeros(dy.size, row_length)
-        row_length.times do |i|
-          davg[true, i] = dy.flatten
-        end
-        dcol = davg.reshape(dy.shape[0..2].reduce(:*), dy.shape[3] * @pool_size.reduce(:*))
-        dx = col2im(dcol, @x_shape, *@out_size, *@pool_size, @strides)
-        @padding ? zero_padding_bwd(dx, @pad_size) : dx
+      def forward(x)
+        Functions::AvgPool2D.new(@pool_size, @out_size, strides: @strides, padding: @padding).(x)
       end
     end
 
@@ -428,12 +359,11 @@ module DNN
       end
 
       def forward(x)
-        Flatten.(AvgPool2D.(x, @input_shape[0..1]))
+        Functions::Flatten.new.(Functions::AvgPool2D.new.(x, @input_shape[0..1]))
       end
     end
 
     class UnPool2D < Layer
-      include LayerNode
       include Conv2DUtils
 
       attr_reader :unpool_size
@@ -457,23 +387,8 @@ module DNN
         super
       end
 
-      def forward_node(x)
-        @x_shape = x.shape
-        unpool_h, unpool_w = @unpool_size
-        x2 = Xumo::SFloat.zeros(x.shape[0], x.shape[1], unpool_h, x.shape[2], unpool_w, @num_channel)
-        unpool_h.times do |i|
-          unpool_w.times do |j|
-            x2[true, true, i, true, j, true] = x
-          end
-        end
-        x2.reshape(x.shape[0], *@out_size, x.shape[3])
-      end
-
-      def backward_node(dy)
-        in_size = @input_shape[0..1]
-        col = im2col(dy, *in_size, *@unpool_size, @unpool_size)
-        col = col.reshape(dy.shape[0] * in_size.reduce(:*), @unpool_size.reduce(:*), dy.shape[3])
-        col.sum(1).reshape(dy.shape[0], *in_size, dy.shape[3])
+      def forward(x)
+        Functions::UnPool2D.new(@unpool_size).(x)
       end
 
       def compute_output_shape

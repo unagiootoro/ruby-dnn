@@ -1,17 +1,23 @@
 module DNN
   class Param
-    attr_accessor :trainable
+    attr_accessor :requires_grad
     attr_accessor :data
     attr_accessor :grad
 
     def initialize(data = nil, grad = nil)
-      @data = data
+      if data.is_a?(Integer)
+        @data = Xumo::Int32[data]
+      elsif data.is_a?(Float)
+        @data = Xumo::SFloat[data]
+      else
+        @data = data
+      end
       @grad = grad
-      @trainable = true
+      @requires_grad = true
     end
 
     def backward(grad)
-      if @trainable
+      if @requires_grad
         @grad ||= Xumo::SFloat[0]
         if @data.shape == grad.shape
           @grad += grad
@@ -38,27 +44,32 @@ module DNN
     end
 
     def +(other)
-      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
-      Layers::Add.(self, other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Add.(self, other)
     end
 
     def -(other)
-      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
-      Layers::Sub.(self, other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Sub.(self, other)
     end
 
     def *(other)
-      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
-      Layers::Mul.(self, other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Mul.(self, other)
     end
 
     def /(other)
-      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
-      Layers::Div.(self, other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Div.(self, other)
     end
 
     def **(index)
-      Layers::Pow.new(index).(self)
+      Functions::Pow.new(index).(self)
+    end
+
+    def dot(other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Dot.(self, other)
     end
   end
 end

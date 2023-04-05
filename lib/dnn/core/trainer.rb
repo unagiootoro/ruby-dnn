@@ -64,14 +64,14 @@ module DNN
           loss_opt[:loss_weight] = @loss_weights[i] if @loss_weights
           loss = model.loss_func[i].loss(out, Tensor.new(y_batch[i]), **loss_opt)
           loss_data << loss.data
-          loss.link.backward(Xumo::SFloat.ones(y_batch[i][0...1, false].shape[0], 1))
+          loss.backward(Xumo::SFloat.ones(y_batch[i][0...1, false].shape[0], 1))
         end
       else
         out = output_tensors
         output_data = out.data
         loss = model.loss_func.loss(out, Tensor.new(y_batch), layers: model.layers)
         loss_data = loss.data
-        loss.link.backward(Xumo::SFloat.ones(y_batch[0...1, false].shape[0], 1))
+        loss.backward(Xumo::SFloat.ones(y_batch[0...1, false].shape[0], 1))
       end
       model.optimizer.update(model.get_all_trainable_params)
 

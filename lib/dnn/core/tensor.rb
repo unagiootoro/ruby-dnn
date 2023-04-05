@@ -1,21 +1,44 @@
 module DNN
   class Tensor
     attr_reader :data
-    attr_accessor :link
+    attr_reader :backward_index
+    attr_reader :prev_link
+    attr_reader :next_links
 
-    def self.convert(inputs, link = nil)
-      if inputs.is_a?(Array)
-        inputs.map { |input| Tensor.new(input, link) }
-      elsif inputs.is_a?(Integer) || inputs.is_a?(Float)
-        Tensor.new(Xumo::SFloat[inputs], link)
+    def initialize(data, prev_link: nil, backward_index: nil)
+      if data.is_a?(Integer)
+        @data = Xumo::Int32[data]
+      elsif data.is_a?(Float)
+        @data = Xumo::SFloat[data]
+      elsif data.is_a?(Tensor)
+        @data = data.data
       else
-        Tensor.new(inputs, link)
+        @data = data
       end
+      @prev_link = prev_link
+      @next_links = []
+      @backward_index = backward_index
+      @hold = []
     end
 
-    def initialize(data, link = nil)
-      @data = data
-      @link = link
+    def backward(grad = Xumo::SFloat[1], index = 0)
+      @hold[index] = grad
+      return if @hold.compact.length < @next_links.length
+      return unless requires_grad
+      @prev_link.backward(@hold.reduce(&:+), @backward_index) if @prev_link
+      @hold = []
+    end
+
+    def requires_grad
+      @prev_link ? @prev_link.requires_grad : false
+    end
+
+    def add_next_link(link)
+      @next_links << link unless @next_links.include?(link)
+    end
+
+    def next_link_index(link)
+      @next_links.index(link)
     end
 
     def >>(layer)
@@ -35,27 +58,32 @@ module DNN
     end
 
     def +(other)
-      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
-      Layers::Add.(self, other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Add.(self, other)
     end
 
     def -(other)
-      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
-      Layers::Sub.(self, other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Sub.(self, other)
     end
 
     def *(other)
-      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
-      Layers::Mul.(self, other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Mul.(self, other)
     end
 
     def /(other)
-      other = Tensor.convert(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
-      Layers::Div.(self, other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Div.(self, other)
     end
 
     def **(index)
-      Layers::Pow.new(index).(self)
+      Functions::Pow.new(index).(self)
+    end
+
+    def dot(other)
+      other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+      Functions::Dot.(self, other)
     end
   end
 end

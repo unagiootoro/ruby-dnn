@@ -1,37 +1,45 @@
 module DNN
   class Link
     attr_accessor :prevs
-    attr_accessor :next
-    attr_accessor :layer_node
+    attr_accessor :node
     attr_reader :num_outputs
 
-    def initialize(prevs: nil, layer_node: nil, num_outputs: 1)
+    def initialize(prevs: nil, node: nil, num_outputs: 1)
       @prevs = prevs
-      @layer_node = layer_node
+      @node = node
       @num_outputs = num_outputs
-      @next = nil
       @hold = []
     end
 
-    def forward(x)
-      @hold << x
-      return if @hold.length < @prevs.length
-      x = @layer_node.(*@hold)
-      @hold = []
-      @next ? @next.forward(x) : x
+    def requires_grad
+      @prevs.each do |prev|
+        return true if prev && prev.requires_grad
+      end
+      false
     end
 
-    def backward(dy = Xumo::SFloat[1])
-      @hold << dy
-      return if @hold.length < @num_outputs
-      dys = @layer_node.backward_node(*@hold)
+    def backward(dy, index)
+      @hold[index] = dy
+      return if @hold.compact.length < @num_outputs
+      return unless requires_grad
+      dys = @node.backward(*@hold)
       @hold = []
       if dys.is_a?(Array)
         dys.each.with_index do |dy, i|
-          @prevs[i]&.backward(dy)
+          if @prevs[i].is_a?(Tensor)
+            link_index = @prevs[i].next_link_index(self)
+            @prevs[i].backward(dy, link_index) if @prevs[i] && @prevs[i].requires_grad
+          else
+            @prevs[i].backward(dy) if @prevs[i] && @prevs[i].requires_grad
+          end
         end
       else
-        @prevs.first&.backward(dys)
+        if @prevs.first.is_a?(Tensor)
+          link_index = @prevs.first.next_link_index(self)
+          @prevs.first.backward(dys, link_index) if @prevs.first && @prevs.first.requires_grad
+        else
+          @prevs.first.backward(dys) if @prevs.first && @prevs.first.requires_grad
+        end
       end
     end
   end
