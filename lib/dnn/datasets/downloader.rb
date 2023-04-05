@@ -35,20 +35,11 @@ module DNN
       http.use_ssl = true if @protocol == "https"
       http.start do |http|
         content_length = http.head(@path).content_length
+        progress_bar = ProgressBar.new(content_length)
         http.get(@path) do |body_segment|
           buf << body_segment
-          log = "\r"
-          40.times do |i|
-            if i < buf.size * 40 / content_length
-              log << "="
-            elsif i == buf.size * 40 / content_length
-              log << ">"
-            else
-              log << "_"
-            end
-          end
-          log << "  #{buf.size}/#{content_length}"
-          print log
+          progress_bar.progress(body_segment.size)
+          progress_bar.print
         end
         puts ""
       end

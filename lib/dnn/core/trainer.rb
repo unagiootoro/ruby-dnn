@@ -130,7 +130,10 @@ module DNN
     def start_train_epoch
       @last_logs[:epoch] = @epoch
       call_callbacks(:before_epoch)
-      @io.puts "Epoch #{@epoch}/#{@max_epochs}" if @verbose
+      if @verbose
+        @io.puts "Epoch #{@epoch}/#{@max_epochs}"
+        @progress_bar = ProgressBar.new(@num_train_datas, io: @io)
+      end
       @train_step = 1
       @train_state = :start_train_step
     end
@@ -151,26 +154,10 @@ module DNN
       train_step_met = on_train_step(x_batch, y_batch)
       @last_logs.merge!(train_step_met)
       call_callbacks(:after_train_on_batch)
-      num_trained_datas = @train_step * @train_batch_size
-      num_trained_datas = num_trained_datas > @num_train_datas ? @num_train_datas : num_trained_datas
-      if @io == $stdout
-        log = "\r["
-      else
-        @line_first_pos = @io.pos
-        log = "["
+      if @verbose
+        @progress_bar.progress(@train_batch_size)
+        @progress_bar.print(append: metrics_to_str(train_step_met))
       end
-      40.times do |i|
-        if i < num_trained_datas * 40 / @num_train_datas
-          log << "="
-        elsif i == num_trained_datas * 40 / @num_train_datas
-          log << ">"
-        else
-          log << "_"
-        end
-      end
-      log << "]  #{num_trained_datas}/#{@num_train_datas} "
-      log << metrics_to_str(train_step_met)
-      @io.print log if @verbose
       if check_early_stop_requested
         @io.puts("\nEarly stopped.") if @verbose
         @train_state = :trainer_end_training
