@@ -147,6 +147,23 @@ module DNN
       end
     end
 
+    class Softmax < FunctionNode
+      def initialize(axis: 1)
+        @axis = axis
+      end
+
+      def forward(x)
+        @y = Xumo::NMath.exp(x) / Xumo::NMath.exp(x).sum(@axis, keepdims: true)
+      end
+
+      def backward(dy)
+        dx = @y * dy
+        sum_dx = dx.sum(@axis, keepdims: true)
+        dx -= @y * sum_dx
+        dx
+      end
+    end
+
     module FunctionSpace
       module_function
 
@@ -184,6 +201,10 @@ module DNN
 
       def mish(x)
         Mish.new.(x)
+      end
+
+      def softmax(x, axis: 1)
+        Softmax.new(axis: axis).(x)
       end
     end
 

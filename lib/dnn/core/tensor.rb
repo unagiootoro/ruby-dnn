@@ -54,7 +54,7 @@ module DNN
     end
 
     def -@
-      Neg.(self)
+      Functions::Neg.(self)
     end
 
     def +(other)

@@ -2,19 +2,13 @@ module DNN
   module Functions
 
     class SoftmaxCrossEntropy < FunctionNode
-      class << self
-        def softmax(y)
-          Xumo::NMath.exp(y) / Xumo::NMath.exp(y).sum(1, keepdims: true)
-        end
-      end
-
       def initialize(eps: 1e-7)
         @eps = eps
       end
 
       def forward(y, t)
         @t = t
-        @x = SoftmaxCrossEntropy.softmax(y)
+        @x = Functions::Softmax.new.forward(y)
         -(t * Xumo::NMath.log(@x + @eps)).mean(0).sum
       end
 
@@ -24,19 +18,13 @@ module DNN
     end
 
     class SigmoidCrossEntropy < FunctionNode
-      class << self
-        def sigmoid(y)
-          Functions::Sigmoid.new.forward(y)
-        end
-      end
-
       def initialize(eps: 1e-7)
         @eps = eps
       end
 
       def forward(y, t)
         @t = t
-        @x = SigmoidCrossEntropy.sigmoid(y)
+        @x = Functions::Sigmoid.new.forward(y)
         -(t * Xumo::NMath.log(@x + @eps) + (1 - t) * Xumo::NMath.log(1 - @x + @eps)).mean(0).sum
       end
 
