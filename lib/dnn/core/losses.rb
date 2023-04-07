@@ -62,82 +62,31 @@ module DNN
     end
 
     class MeanSquaredError < Loss
-      include Layers::LayerNode
-
-      def forward_node(y, t)
-        @y = y
-        @t = t
-        0.5 * ((y - t)**2).mean(0).sum
-      end
-
-      def backward_node(d)
-        d * (@y - @t) / @y.shape[0]
+      def forward(y, t)
+        Functions::FunctionSpace.mean_squared_error(y, t)
       end
     end
 
     class MeanAbsoluteError < Loss
-      include Layers::LayerNode
-
-      def forward_node(y, t)
-        @y = y
-        @t = t
-        (y - t).abs.mean(0).sum
-      end
-
-      def backward_node(d)
-        dy = (@y - @t)
-        dy[dy >= 0] = 1
-        dy[dy < 0] = -1
-        d * dy / @y.shape[0]
+      def forward(y, t)
+        Functions::FunctionSpace.mean_absolute_error(y, t)
       end
     end
 
     class Hinge < Loss
-      include Layers::LayerNode
-
-      def forward_node(y, t)
-        @t = t
-        @a = 1 - y * t
-        Xumo::SFloat.maximum(0, @a).mean(0).sum
-      end
-
-      def backward_node(d)
-        a = Xumo::SFloat.ones(*@a.shape)
-        a[@a <= 0] = 0
-        d * (a * -@t) / a.shape[0]
+      def forward(y, t)
+        Functions::FunctionSpace.hinge(y, t)
       end
     end
 
     class HuberLoss < Loss
-      include Layers::LayerNode
-
-      def forward_node(y, t)
-        @y = y
-        @t = t
-        loss_l1_value = (y - t).abs.mean(0).sum
-        @loss_value = loss_l1_value > 1 ? loss_l1_value : 0.5 * ((y - t)**2).mean(0).sum
-      end
-
-      def backward_node(d)
-        dy = (@y - @t)
-        if @loss_value > 1
-          dy[dy >= 0] = 1
-          dy[dy < 0] = -1
-        end
-        d * dy / @y.shape[0]
+      def forward(y, t)
+        Functions::FunctionSpace.sigmoid_cross_entropy(y, t, eps: @eps)
       end
     end
 
     class SoftmaxCrossEntropy < Loss
       attr_accessor :eps
-
-      class << self
-        def softmax(y)
-          Functions::SoftmaxCrossEntropy.softmax(y)
-        end
-
-        alias activation softmax
-      end
 
       # @param [Float] eps Value to avoid nan.
       def initialize(eps: 1e-7)
@@ -159,14 +108,6 @@ module DNN
 
     class SigmoidCrossEntropy < Loss
       attr_accessor :eps
-
-      class << self
-        def sigmoid(y)
-          Functions::SigmoidCrossEntropy.sigmoid(y)
-        end
-
-        alias activation sigmoid
-      end
 
       # @param [Float] eps Value to avoid nan.
       def initialize(eps: 1e-7)

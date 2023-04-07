@@ -1,5 +1,63 @@
 module DNN
   module Functions
+    class MeanSquaredError < FunctionNode
+      def forward(y, t)
+        @y = y
+        @t = t
+        0.5 * ((y - t)**2).mean(0).sum
+      end
+
+      def backward(d)
+        d * (@y - @t) / @y.shape[0]
+      end
+    end
+
+    class MeanAbsoluteError < FunctionNode
+      def forward(y, t)
+        @y = y
+        @t = t
+        (y - t).abs.mean(0).sum
+      end
+
+      def backward(d)
+        dy = (@y - @t)
+        dy[dy >= 0] = 1
+        dy[dy < 0] = -1
+        d * dy / @y.shape[0]
+      end
+    end
+
+    class Hinge < FunctionNode
+      def forward(y, t)
+        @t = t
+        @a = 1 - y * t
+        Xumo::SFloat.maximum(0, @a).mean(0).sum
+      end
+
+      def backward(d)
+        a = Xumo::SFloat.ones(*@a.shape)
+        a[@a <= 0] = 0
+        d * (a * -@t) / a.shape[0]
+      end
+    end
+
+    class HuberLoss < FunctionNode
+      def forward(y, t)
+        @y = y
+        @t = t
+        loss_l1_value = (y - t).abs.mean(0).sum
+        @loss_value = loss_l1_value > 1 ? loss_l1_value : 0.5 * ((y - t)**2).mean(0).sum
+      end
+
+      def backward(d)
+        dy = (@y - @t)
+        if @loss_value > 1
+          dy[dy >= 0] = 1
+          dy[dy < 0] = -1
+        end
+        d * dy / @y.shape[0]
+      end
+    end
 
     class SoftmaxCrossEntropy < FunctionNode
       def initialize(eps: 1e-7)
@@ -35,6 +93,22 @@ module DNN
 
     module FunctionSpace
       module_function
+
+      def mean_squared_error(y, t)
+        MeanSquaredError.new(eps: eps).(y, t)
+      end
+
+      def mean_absolute_error(y, t)
+        MeanAbsoluteError.new(eps: eps).(y, t)
+      end
+
+      def hinge(y, t)
+        Hinge.new.(y, t)
+      end
+
+      def huber_loss(y, t)
+        HuberLoss.new.(y, t)
+      end
 
       def softmax_cross_entropy(y, t, eps: 1e-7)
         SoftmaxCrossEntropy.new(eps: eps).(y, t)
