@@ -1,7 +1,7 @@
 module DNN
   class Link
-    attr_accessor :prevs
-    attr_accessor :node
+    attr_reader :prevs
+    attr_reader :node
     attr_reader :num_outputs
 
     def initialize(prevs: nil, node: nil, num_outputs: 1)
@@ -9,9 +9,15 @@ module DNN
       @node = node
       @num_outputs = num_outputs
       @hold = []
+      @requires_grad = nil
     end
 
     def requires_grad
+      @requires_grad = check_requires_grad if @requires_grad == nil
+      @requires_grad
+    end
+
+    private def check_requires_grad
       @prevs.each do |prev|
         return true if prev && prev.requires_grad
       end
