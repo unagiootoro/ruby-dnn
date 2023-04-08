@@ -22,6 +22,7 @@ module DNN
 
       def broadcast_to(x, target_shape)
         return x if x.shape == target_shape
+        return Xumo::SFloat.new(*target_shape).fill(x[0]) if x.size == 1
         x_shape, target_shape = align_ndim(x.shape, target_shape)
         x = x.reshape(*x_shape)
         x_shape.length.times do |axis|
@@ -84,7 +85,7 @@ module DNN
       attr_reader :axis
       attr_reader :keepdims
 
-      def initialize(axis: 0, keepdims: true)
+      def initialize(axis: nil, keepdims: true)
         super()
         @axis = axis
         @keepdims = keepdims
@@ -108,7 +109,7 @@ module DNN
       attr_reader :axis
       attr_reader :keepdims
 
-      def initialize(axis: 0, keepdims: true)
+      def initialize(axis: nil, keepdims: true)
         super()
         @axis = axis
         @keepdims = keepdims
@@ -127,6 +128,19 @@ module DNN
 
       def backward(dy)
         MathUtils.broadcast_to(dy, @x_shape) / @dim
+      end
+    end
+
+    class Abs < FunctionNode
+      def forward(x)
+        @x = x
+        x.abs
+      end
+
+      def backward(dy)
+        mask = Xumo::SFloat.ones(*@x.shape)
+        mask[@x < 0] = -1
+        dy * mask
       end
     end
 
@@ -179,12 +193,16 @@ module DNN
         Sqrt.new.(x)
       end
 
-      def sum(x, axis: 0, keepdims: true)
+      def sum(x, axis: nil, keepdims: true)
         Sum.new(axis: axis, keepdims: keepdims).(x)
       end
 
-      def mean(x, axis: 0, keepdims: true)
+      def mean(x, axis: nil, keepdims: true)
         Mean.new(axis: axis, keepdims: keepdims).(x)
+      end
+
+      def abs(x)
+        Abs.new.(x)
       end
     end
 
