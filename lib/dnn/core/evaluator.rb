@@ -81,9 +81,9 @@ module DNN
     # @param [Numo::SFloat] y Output training data.
     # @return [Hash] Hash of contents to be output to log.
     def test_step
-      (x_batch, y_batch) = @test_iterator.next_batch(@batch_size)
+      batches = @test_iterator.next_batch(@batch_size)
       call_callbacks(:before_test_on_batch)
-      test_met = on_test_step(x_batch, y_batch)
+      test_met = on_test_step(*batches)
       call_callbacks(:after_test_on_batch)
       if @loss_func.is_a?(Array)
         @loss_func.each_index do |i|

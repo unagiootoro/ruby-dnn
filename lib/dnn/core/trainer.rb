@@ -149,9 +149,9 @@ module DNN
     # @param [Boolean] need_accuracy Set true to compute the accuracy.
     # @return [Hash] Hash of contents to be output to log.
     def train_step
-      (x_batch, y_batch) = @train_iterator.next_batch(@train_batch_size)
+      batches = @train_iterator.next_batch(@train_batch_size)
       call_callbacks(:before_train_on_batch)
-      train_step_met = on_train_step(x_batch, y_batch)
+      train_step_met = on_train_step(*batches)
       @last_logs.merge!(train_step_met)
       call_callbacks(:after_train_on_batch)
       if @verbose
