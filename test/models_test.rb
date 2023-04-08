@@ -7,6 +7,20 @@ include DNN::Initializers
 include DNN::Losses
 include DNN::Models
 
+class StubMultiInputModel < DNN::Models::Model
+  def initialize(dense1, dense2)
+    super()
+    @dense1 = dense1
+    @dense2 = dense2
+  end
+
+  def forward(x1, x2)
+    y1 = @dense1.(x1)
+    y2 = @dense2.(x2)
+    y1 + y2
+  end
+end
+
 class StubMultiOutputModel < DNN::Models::Model
   def initialize(dense)
     super()
@@ -62,8 +76,30 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 0, loss
   end
 
-  # Test multiple outputs.
+  # Test multiple inputs.
   def test_train_on_batch2
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Xumo::SFloat[[130, 260], [310, 620]]
+
+    dense1 = Dense.new(2)
+    dense1.build([3])
+    dense1.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense1.bias.data = Xumo::SFloat[5, 10]
+
+    dense2 = Dense.new(2)
+    dense2.build([3])
+    dense2.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense2.bias.data = Xumo::SFloat[5, 10]
+
+    model = StubMultiInputModel.new(dense1, dense2)
+    model.setup(SGD.new, MeanSquaredError.new)
+    loss = model.train_on_batch([x, x], y)
+
+    assert_equal 0, loss
+  end
+
+  # Test multiple outputs.
+  def test_train_on_batch3
     x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
     y = Xumo::SFloat[[65, 130], [155, 310]]
     dense = Dense.new(2)
@@ -92,8 +128,30 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_equal 0, loss
   end
 
-  # Test multiple outputs.
+  # Test multiple inputs.
   def test_test_on_batch2
+    x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
+    y = Xumo::SFloat[[130, 260], [310, 620]]
+
+    dense1 = Dense.new(2)
+    dense1.build([3])
+    dense1.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense1.bias.data = Xumo::SFloat[5, 10]
+
+    dense2 = Dense.new(2)
+    dense2.build([3])
+    dense2.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense2.bias.data = Xumo::SFloat[5, 10]
+
+    model = StubMultiInputModel.new(dense1, dense2)
+    model.setup(SGD.new, MeanSquaredError.new)
+    loss = model.test_on_batch([x, x], y)
+
+    assert_equal 0, loss
+  end
+
+  # Test multiple outputs.
+  def test_test_on_batch3
     x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
     y = Xumo::SFloat[[65, 130], [155, 310]]
     dense = Dense.new(2)

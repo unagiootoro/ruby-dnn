@@ -46,7 +46,7 @@ module DNN
       # Forward propagation.
       # @param [Tensor] input_tensors Input tensors.
       # @return [Tensor] Output tensor.
-      def forward(input_tensors)
+      def forward(*input_tensors)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
@@ -129,8 +129,8 @@ module DNN
         @loss_weights = nil
       end
 
-      def call(input_tensors)
-        output_tensors = forward(input_tensors)
+      def call(*input_tensors)
+        output_tensors = forward(*input_tensors)
         @built = true unless @built
         output_tensors
       end
@@ -180,7 +180,12 @@ module DNN
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
         DNN.learning_phase = true
-        output_tensors = call(Tensor.new(x))
+        if x.is_a?(Array)
+          input = x.map { |v| Tensor.new(v) }
+        else
+          input = Tensor.new(x)
+        end
+        output_tensors = call(*input)
         if output_tensors.is_a?(Array)
           loss_data = []
           output_tensors.each.with_index do |out, i|
@@ -214,7 +219,12 @@ module DNN
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
         DNN.learning_phase = false
-        output_tensors = call(Tensor.new(x))
+        if x.is_a?(Array)
+          input = x.map { |v| Tensor.new(v) }
+        else
+          input = Tensor.new(x)
+        end
+        output_tensors = call(*input)
         if output_tensors.is_a?(Array)
           loss_data = []
           output_tensors.each.with_index do |out, i|
