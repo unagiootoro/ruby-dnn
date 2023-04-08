@@ -24,7 +24,7 @@ class TestL1 < MiniTest::Unit::TestCase
     l1 = DNN::Regularizers::L1.new(0.1)
     l1.param = param
     out = l1.forward(1)
-    out.link.backward
+    out.backward
     assert_equal Xumo::SFloat[-1.1, 1.1], l1.instance_variable_get(:@param).grad.round(4)
   end
 
@@ -61,7 +61,7 @@ class TestL2 < MiniTest::Unit::TestCase
     l2 = DNN::Regularizers::L2.new(0.1)
     l2.param = param
     out = l2.forward(1)
-    out.link.backward
+    out.backward
     assert_equal Xumo::SFloat[-1.2, 1.2], l2.instance_variable_get(:@param).grad.round(4)
   end
 
@@ -100,7 +100,7 @@ class TestL1L2 < MiniTest::Unit::TestCase
     l1l2 = DNN::Regularizers::L1L2.new(0.1, 0.1)
     l1l2.param = param
     out = l1l2.forward(1)
-    out.link.backward
+    out.backward
     assert_equal Xumo::SFloat[-1.3, 1.3], l1l2.instance_variable_get(:@param).grad.round(4)
   end
 
