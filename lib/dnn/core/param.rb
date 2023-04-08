@@ -19,11 +19,12 @@ module DNN
     def backward(grad)
       if @requires_grad
         @grad ||= Xumo::SFloat[0]
-        if @data.shape == grad.shape
+        if @data.shape == grad.shape || (grad.shape[-1] == 1 && @data.shape == grad.shape[0...-1])
           @grad += grad
         elsif @data.shape == grad.shape[1..-1]
           @grad += grad.sum(0)
         else
+          p [@data.shape, grad.shape]
           raise DNNError, "Shape is missmatch."
         end
       else

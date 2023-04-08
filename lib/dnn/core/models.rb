@@ -218,7 +218,6 @@ module DNN
         if output_tensors.is_a?(Array)
           loss_data = []
           output_tensors.each.with_index do |out, i|
-            output_data << out.data
             loss = @loss_func[i].(out, Tensor.new(y[i]))
             loss_data << loss.data
           end
