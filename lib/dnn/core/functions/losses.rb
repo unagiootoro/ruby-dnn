@@ -95,11 +95,11 @@ module DNN
       module_function
 
       def mean_squared_error(y, t)
-        MeanSquaredError.new(eps: eps).(y, t)
+        MeanSquaredError.new.(y, t)
       end
 
       def mean_absolute_error(y, t)
-        MeanAbsoluteError.new(eps: eps).(y, t)
+        MeanAbsoluteError.new.(y, t)
       end
 
       def hinge(y, t)
