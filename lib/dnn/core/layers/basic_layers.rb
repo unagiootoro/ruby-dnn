@@ -311,66 +311,6 @@ module DNN
       end
     end
 
-    class Lasso < Layer
-      include LayerNode
-
-      attr_accessor :l1_lambda
-
-      # @param [Float] l1_lambda L1 regularizer coefficient.
-      def initialize(l1_lambda = 0.01)
-        super()
-        @l1_lambda = l1_lambda
-      end
-
-      def forward_node(x)
-        @x = x
-        @l1_lambda * x.abs.sum
-      end
-
-      def backward_node(dy)
-        dx = Xumo::SFloat.ones(*@x.shape)
-        dx[@x < 0] = -1
-        @l1_lambda * dx
-      end
-
-      def to_hash
-        super(l1_lambda: @l1_lambda)
-      end
-
-      def load_hash(hash)
-        initialize(hash[:l1_lambda])
-      end
-    end
-
-    class Ridge < Layer
-      include LayerNode
-
-      attr_accessor :l2_lambda
-
-      # @param [Float] l2_lambda L2 regularizer coefficient.
-      def initialize(l2_lambda = 0.01)
-        super()
-        @l2_lambda = l2_lambda
-      end
-
-      def forward_node(x)
-        @x = x
-        0.5 * @l2_lambda * (x**2).sum
-      end
-
-      def backward_node(dy)
-        @l2_lambda * @x
-      end
-
-      def to_hash
-        super(l2_lambda: @l2_lambda)
-      end
-
-      def load_hash(hash)
-        initialize(hash[:l2_lambda])
-      end
-    end
-
     class Dropout < Layer
       attr_accessor :dropout_ratio
       attr_reader :use_scale

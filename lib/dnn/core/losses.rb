@@ -37,7 +37,7 @@ module DNN
         regularizers = layers.select { |layer| layer.respond_to?(:regularizers) }
                              .map(&:regularizers).flatten
         regularizers.each do |regularizer|
-          loss = regularizer.forward(loss)
+          loss = regularizer.(loss)
         end
         loss
       end

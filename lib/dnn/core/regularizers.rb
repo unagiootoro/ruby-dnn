@@ -13,6 +13,10 @@ module DNN
         regularizer
       end
 
+      def call(x)
+        forward(x)
+      end
+
       def forward(x)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
@@ -29,21 +33,17 @@ module DNN
     end
 
     class L1 < Regularizer
+      attr_accessor :l1_lambda
+
       # @param [Float] l1_lambda L1 regularizer coefficient.
       def initialize(l1_lambda = 0.01)
-        @l1 = Layers::Lasso.new(l1_lambda)
+        @l1_lambda = l1_lambda
       end
 
       def forward(x)
-        x + @l1.(@param)
-      end
-
-      def l1_lambda
-        @l1.l1_lambda
-      end
-
-      def l1_lambda=(lam)
-        @l1.l1_lambda = lam
+        fs = Functions::FunctionSpace
+        l1 = @l1_lambda * fs.sum(fs.abs(@param))
+        x + l1
       end
 
       def to_hash
@@ -56,21 +56,17 @@ module DNN
     end
 
     class L2 < Regularizer
+      attr_accessor :l2_lambda
+
       # @param [Float] l2_lambda L2 regularizer coefficient.
       def initialize(l2_lambda = 0.01)
-        @l2 = Layers::Ridge.new(l2_lambda)
+        @l2_lambda = l2_lambda
       end
 
       def forward(x)
-        x + @l2.(@param)
-      end
-
-      def l2_lambda
-        @l2.l2_lambda
-      end
-
-      def l2_lambda=(lam)
-        @l2.l2_lambda = lam
+        fs = Functions::FunctionSpace
+        l2 = 0.5 * (@l2_lambda * fs.sum(@param**2))
+        x + l2
       end
 
       def to_hash
@@ -83,31 +79,21 @@ module DNN
     end
 
     class L1L2 < Regularizer
+      attr_accessor :l1_lambda
+      attr_accessor :l2_lambda
+
       # @param [Float] l1_lambda L1 regularizer coefficient.
       # @param [Float] l2_lambda L2 regularizer coefficient.
       def initialize(l1_lambda = 0.01, l2_lambda = 0.01)
-        @l1 = Layers::Lasso.new(l1_lambda)
-        @l2 = Layers::Ridge.new(l2_lambda)
+        @l1_lambda = l1_lambda
+        @l2_lambda = l2_lambda
       end
 
       def forward(x)
-        x + @l1.(@param) + @l2.(@param)
-      end
-
-      def l1_lambda
-        @l1.l1_lambda
-      end
-
-      def l1_lambda=(lam)
-        @l1.l1_lambda = lam
-      end
-
-      def l2_lambda
-        @l2.l2_lambda
-      end
-
-      def l2_lambda=(lam)
-        @l2.l2_lambda = lam
+        fs = Functions::FunctionSpace
+        l1 = @l1_lambda * fs.sum(fs.abs(@param))
+        l2 = 0.5 * (@l2_lambda * fs.sum(@param**2))
+        x + l1 + l2
       end
 
       def to_hash
