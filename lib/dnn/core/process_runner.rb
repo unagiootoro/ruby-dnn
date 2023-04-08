@@ -1,5 +1,5 @@
 module DNN
-  class CallbackRunner
+  class ProcessRunner
     def initialize
       @callbacks = []
       @last_logs = {}
@@ -8,7 +8,7 @@ module DNN
     # Add callback function.
     # @param [Callback] callback Callback object.
     def add_callback(callback)
-      callback.callback_runner = self
+      callback.runner = self
       @callbacks << callback
     end
 
@@ -17,7 +17,7 @@ module DNN
     # @yield Register the contents of the callback.
     def add_lambda_callback(event, &block)
       callback = Callbacks::LambdaCallback.new(event, &block)
-      callback.callback_runner = self
+      callback.runner = self
       @callbacks << callback
     end
 

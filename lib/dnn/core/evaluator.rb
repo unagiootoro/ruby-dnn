@@ -125,7 +125,7 @@ module DNN
     end
   end
 
-  class BaseEvaluator < CallbackRunner
+  class BaseEvaluator < ProcessRunner
     include EvaluatorImpl
 
     def initialize

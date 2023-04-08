@@ -2,7 +2,7 @@ module DNN
   module Callbacks
 
     class Callback
-      attr_accessor :callback_runner
+      attr_accessor :runner
 
       # Please implement the method used for callback event.
 
@@ -57,7 +57,7 @@ module DNN
 
       def after_epoch
         saver = Savers::MarshalSaver.new(@model, include_model: @include_model)
-        if @callback_runner.last_log(:epoch) % @interval == 0
+        if @runner.last_log(:epoch) % @interval == 0
           saver.save(@base_file_name + "_epoch#{model.last_log(:epoch)}.marshal")
         end
       end
@@ -74,11 +74,11 @@ module DNN
       end
 
       def after_train_on_batch
-        @callback_runner.request_early_stop if judge_early_stopping_train
+        @runner.request_early_stop if judge_early_stopping_train
       end
 
       def after_epoch
-        @callback_runner.request_early_stop if judge_early_stopping_test
+        @runner.request_early_stop if judge_early_stopping_test
       end
 
       private
@@ -86,9 +86,9 @@ module DNN
       def judge_early_stopping_train
         case @trigger
         when :loss
-          return true if @callback_runner.last_log(@trigger) <= @tolerance
+          return true if @runner.last_log(@trigger) <= @tolerance
         when :accuracy
-          return true if @callback_runner.last_log(@trigger) >= @tolerance
+          return true if @runner.last_log(@trigger) >= @tolerance
         end
         false
       end
@@ -96,9 +96,9 @@ module DNN
       def judge_early_stopping_test
         case @trigger
         when :test_loss
-          return true if @callback_runner.last_log(@trigger) <= @tolerance
+          return true if @runner.last_log(@trigger) <= @tolerance
         when :test_accuracy
-          return true if @callback_runner.last_log(@trigger) >= @tolerance
+          return true if @runner.last_log(@trigger) >= @tolerance
         end
         false
       end
@@ -107,7 +107,7 @@ module DNN
     # A callback to stop training the model if loss is NaN by after train on batch.
     class NaNStopping < Callback
       def after_train_on_batch
-        throw :stop, "loss is NaN." if @callback_runner.last_log(:loss).nan?
+        throw :stop, "loss is NaN." if @runner.last_log(:loss).nan?
       end
     end
 
@@ -154,7 +154,7 @@ module DNN
       private def logging(*tags)
         tags.each do |tag|
           @log[tag] ||= []
-          @log[tag] << @callback_runner.last_log(tag)
+          @log[tag] << @runner.last_log(tag)
         end
       end
     end

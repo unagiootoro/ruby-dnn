@@ -252,7 +252,7 @@ module DNN
     end
   end
 
-  class BaseTrainer < CallbackRunner
+  class BaseTrainer < ProcessRunner
     include TrainerImpl
     include EvaluatorImpl
 
