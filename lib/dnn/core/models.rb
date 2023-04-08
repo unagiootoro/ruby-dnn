@@ -251,40 +251,27 @@ module DNN
 
       # Predict data.
       # @param [Numo::SFloat] x Input data.
-      # @param [Boolean] use_loss_activation Use loss activation when loss has an activation.
-      def predict(x, use_loss_activation: true)
+      def predict(x)
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         DNN.learning_phase = false
-        output_tensors = call(Tensor.new(x))
-        if output_tensors.is_a?(Array)
-          lfs = @loss_func
-          ary_output_tensors = output_tensors
+        out = call(Tensor.new(x))
+        if out.is_a?(Array)
+          out.map { |tensor| tensor.data }
         else
-          lfs = [@loss_func]
-          ary_output_tensors = [output_tensors]
+          out.data
         end
-        ys = []
-        ary_output_tensors.each.with_index do |out, i|
-          y = out.data
-          lf = lfs[i]
-          if use_loss_activation && lf && lf.class.respond_to?(:activation)
-            y = lf.class.activation(y)
-          end
-          ys << y
-        end
-        output_tensors.is_a?(Array) ? ys : ys.first
       end
 
       # Predict one data.
       # @param [Numo::SFloat] x Input data. However, x is single data.
-      def predict1(x, use_loss_activation: true)
+      def predict1(x)
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         input = if x.is_a?(Array)
                   x.map { |v| v.reshape(1, *v.shape) }
                 else
                   x.reshape(1, *x.shape)
                 end
-        y = predict(input, use_loss_activation: use_loss_activation)
+        y = predict(input)
         if y.is_a?(Array)
           y.map { |v| v[0, false] }
         else
@@ -366,7 +353,7 @@ module DNN
       def set_all_params_data(params_data)
         trainable_layers.each.with_index do |layer, i|
           params_data[i].each do |(key, data)|
-            layer.get_params[key].assign(data)
+            layer.get_params[key].data = data
           end
         end
       end
