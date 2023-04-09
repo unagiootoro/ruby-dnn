@@ -21,6 +21,16 @@ module DNN
       dnn_class.from_hash(hash)
     end
 
+    # Return the result of the sigmoid function.
+    def self.sigmoid(x)
+      Functions::Sigmoid.new.forward(x)
+    end
+
+    # Return the result of the softmax function.
+    def self.softmax(x)
+      Functions::Softmax.new.forward(x)
+    end
+
     # Check training or evaluate input data type.
     def self.check_input_data_type(data_name, data, expected_type)
       if !data.is_a?(expected_type) && !data.is_a?(Array)
