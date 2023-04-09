@@ -7,5 +7,6 @@
 /spec/reports/
 /tmp/
 *.lock
-/ext/
-!/ext/extconf.rb
+/ext/rb_stb_image/
+!/ext/rb_stb_image/extconf.rb
+!/ext/rb_stb_image/rb_stb_image.c
