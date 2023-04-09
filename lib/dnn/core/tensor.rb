@@ -18,15 +18,18 @@ module DNN
       @prev_link = prev_link
       @next_links = []
       @backward_index = backward_index
-      @hold = []
+      @hold_datas = []
+      @held_flags = []
     end
 
     def backward(grad = Xumo::SFloat[1], index = 0)
-      @hold[index] = grad
-      return if @hold.compact.length < @next_links.length
+      @hold_datas[index] = grad
+      @held_flags[index] = true
+      return if @held_flags.compact.length < @next_links.length
       return unless requires_grad
-      @prev_link.backward(@hold.reduce(&:+), @backward_index) if @prev_link
-      @hold = []
+      @prev_link.backward(@hold_datas.reduce(&:+), @backward_index) if @prev_link
+      @hold_datas = []
+      @held_flags = []
     end
 
     def requires_grad

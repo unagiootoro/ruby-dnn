@@ -8,7 +8,8 @@ module DNN
       @prevs = prevs
       @node = node
       @num_outputs = num_outputs
-      @hold = []
+      @hold_datas = []
+      @held_flags = []
       @requires_grad = nil
     end
 
@@ -25,11 +26,13 @@ module DNN
     end
 
     def backward(dy, index)
-      @hold[index] = dy
-      return if @hold.compact.length < @num_outputs
+      @hold_datas[index] = dy
+      @held_flags[index] = true
+      return if @held_flags.compact.length < @num_outputs
       return unless requires_grad
-      dys = @node.backward(*@hold)
-      @hold = []
+      dys = @node.backward(*@hold_datas)
+      @hold_datas = []
+      @held_flags = []
       if dys.is_a?(Array)
         dys.each.with_index do |dy, i|
           if @prevs[i].is_a?(Tensor)
