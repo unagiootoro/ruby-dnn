@@ -280,3 +280,49 @@ class TestMean < MiniTest::Unit::TestCase
     assert_equal Xumo::SFloat[0.5, 0.5], dx.round(4)
   end
 end
+
+class TestConcatenate < MiniTest::Unit::TestCase
+  def test_forward
+    con = DNN::Functions::Concatenate.new(axis: 1)
+    y = con.forward(Xumo::SFloat[[1, 2, 3]], Xumo::SFloat[[4, 5]])
+    assert_equal Xumo::SFloat[[1, 2, 3, 4, 5]], y.round(4)
+  end
+
+  def test_backward
+    con = DNN::Functions::Concatenate.new(axis: 1)
+    con.forward(Xumo::SFloat[[1, 2, 3]], Xumo::SFloat[[4, 5]])
+    dx1, dx2 = con.backward(Xumo::SFloat[[6, 7, 8, 9, 10]])
+    assert_equal Xumo::SFloat[[6, 7, 8]], dx1
+    assert_equal Xumo::SFloat[[9, 10]], dx2
+  end
+end
+
+class TestSplit < MiniTest::Unit::TestCase
+  def test_forward
+    split = DNN::Functions::Split.new(2, axis: 1)
+    y1, y2 = split.forward(Xumo::SFloat[[1, 2, 3, 4, 5]])
+    assert_equal Xumo::SFloat[[1, 2, 3]], y1.round(4)
+    assert_equal Xumo::SFloat[[4, 5]], y2.round(4)
+  end
+
+  def test_forward2
+    split = DNN::Functions::Split.new([2, 5], axis: 1)
+    y1, y2 = split.forward(Xumo::SFloat[[1, 2, 3, 4, 5]])
+    assert_equal Xumo::SFloat[[1, 2]], y1.round(4)
+    assert_equal Xumo::SFloat[[3, 4, 5]], y2.round(4)
+  end
+
+  def test_backward
+    split = DNN::Functions::Split.new(2, axis: 1)
+    split.forward(Xumo::SFloat[[1, 2, 3, 4, 5]])
+    dx = split.backward(Xumo::SFloat[[6, 7, 8]], Xumo::SFloat[[9, 10]])
+    assert_equal Xumo::SFloat[[6, 7, 8, 9, 10]], dx
+  end
+
+  def test_backward2
+    split = DNN::Functions::Split.new([2, 5], axis: 1)
+    split.forward(Xumo::SFloat[[1, 2, 3, 4, 5]])
+    dx = split.backward(Xumo::SFloat[[6, 7]], Xumo::SFloat[[8, 9, 10]])
+    assert_equal Xumo::SFloat[[6, 7, 8, 9, 10]], dx
+  end
+end

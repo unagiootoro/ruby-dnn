@@ -144,40 +144,6 @@ module DNN
       end
     end
 
-    class Concatenate < FunctionNode
-      def initialize(axis: 0)
-        super()
-        @axis = axis
-      end
-
-      def forward(*xs)
-        @xs_shapes = xs.map { |x| x.shape }
-        Xumo::NArray.concatenate(xs, axis: @axis)
-      end
-
-      def backward(dy)
-        dims = @xs_shapes.map { |x_shape| x_shape[@axis] }
-        dy.split(dims, axis: @axis)
-      end
-    end
-
-    class Split < FunctionNode
-      def initialize(axis: 0, dim: nil)
-        super()
-        raise DNNError, "dim is nil" if dim == nil
-        @axis = axis
-        @dim = dim
-      end
-
-      def forward(x)
-        x.split(@dim, axis: @axis)
-      end
-
-      def backward(ys)
-        Xumo::NArray.concatenate(ys, axis: @axis)
-      end
-    end
-
     module FunctionSpace
       module_function
 

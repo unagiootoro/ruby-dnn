@@ -132,6 +132,44 @@ module DNN
       end
     end
 
+    class Concatenate < FunctionNode
+      def initialize(axis: 0)
+        super()
+        @axis = axis
+      end
+
+      def forward(*xs)
+        @xs_shapes = xs.map { |x| x.shape }
+        Xumo::NArray.concatenate(xs, axis: @axis)
+      end
+
+      def backward(dy)
+        sum = 0
+        indices = @xs_shapes.map do |x_shape|
+          sum += x_shape[@axis]
+          sum
+        end
+        dy.split(indices, axis: @axis)
+      end
+    end
+
+    class Split < FunctionNode
+      def initialize(indices_or_sections, axis: 0)
+        super()
+        @indices_or_sections = indices_or_sections
+        @axis = axis
+      end
+
+      def forward(x)
+        @x_shape = x.shape
+        x.split(@indices_or_sections, axis: @axis)
+      end
+
+      def backward(*ys)
+        Xumo::NArray.concatenate(ys, axis: @axis)
+      end
+    end
+
     module FunctionSpace
       module_function
 
@@ -143,8 +181,8 @@ module DNN
         Reshape.new(x.shape[1..-1].reduce(&:*)).(x)
       end
 
-      def concatenate(x, axis: 0)
-        Concatenate.new(axis: axis).(x)
+      def concatenate(x, y, axis: 0)
+        Concatenate.new(axis: axis).(x, y)
       end
 
       def split(x, axis: 0, dim: nil)
