@@ -42,6 +42,7 @@ if RUBY_PLATFORM != "wasm32-wasi"
   require_relative "functions/losses"
   require_relative "functions/dropout"
   require_relative "functions/normalizations"
+  require_relative "functions/embedding"
   require_relative "functions/cnn"
   require_relative "functions/rnn"
 end

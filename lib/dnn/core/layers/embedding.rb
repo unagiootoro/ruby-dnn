@@ -2,8 +2,6 @@ module DNN
   module Layers
 
     class Embedding < TrainableLayer
-      include LayerNode
-
       attr_reader :input_length
       attr_reader :weight
       attr_reader :weight_initializer
@@ -34,35 +32,8 @@ module DNN
         @weight_regularizer.param = @weight if @weight_regularizer
       end
 
-      def forward_node(x)
-        @x = x
-        y = Xumo::SFloat.zeros(*x.shape)
-        x.shape[0].times do |i|
-          if @mask_zero
-            x.shape[1].times do |j|
-              index = x[i, j]
-              y[i, j] = index == 0 ? 0 : @weight.data[index]
-            end
-          else
-            y[i, false] = @weight.data[x[i, false]]
-          end
-        end
-        y
-      end
-
-      def backward_node(dy)
-        @weight.grad += Xumo::SFloat.zeros(*@weight.data.shape)
-        @x.shape[0].times do |i|
-          @x.shape[1].times do |j|
-            index = @x[i, j]
-            if @mask_zero
-              @weight.grad[index] += dy[i, j] unless index == 0
-            else
-              @weight.grad[index] += dy[i, j]
-            end
-          end
-        end
-        nil
+      def forward(x)
+        Functions::Embedding.new.(x, @weight)
       end
 
       def regularizers
