@@ -254,7 +254,7 @@ class TestMean < MiniTest::Unit::TestCase
   end
 
   def test_forward2
-    mean = DNN::Functions::Mean.new(axis: nil)
+    mean = DNN::Functions::Mean.new(axis: nil, keepdims: false)
     y = mean.forward(Xumo::SFloat[1, 2])
     assert_equal 1.5, y.round(4)
   end
@@ -274,9 +274,37 @@ class TestMean < MiniTest::Unit::TestCase
   end
 
   def test_backward3
-    mean = DNN::Functions::Mean.new(axis: nil)
+    mean = DNN::Functions::Mean.new(axis: nil, keepdims: false)
     mean.forward(Xumo::SFloat[1, 2])
     dx = mean.backward(Xumo::SFloat[1, 1])
     assert_equal Xumo::SFloat[0.5, 0.5], dx.round(4)
+  end
+end
+
+class TestMax < MiniTest::Unit::TestCase
+  def test_forward
+    max = DNN::Functions::Max.new(axis: 0)
+    y = max.forward(Xumo::SFloat[1, 2])
+    assert_equal Xumo::SFloat[2], y.round(4)
+  end
+
+  def test_forward2
+    max = DNN::Functions::Max.new(axis: nil, keepdims: false)
+    y = max.forward(Xumo::SFloat[1, 2])
+    assert_equal 2, y.round(4)
+  end
+
+  def test_backward
+    max = DNN::Functions::Max.new(axis: 0)
+    max.forward(Xumo::SFloat[1, 2])
+    dx = max.backward(Xumo::SFloat[1])
+    assert_equal Xumo::SFloat[0, 1], dx.round(4)
+  end
+
+  def test_backward2
+    max = DNN::Functions::Max.new(axis: nil, keepdims: false)
+    max.forward(Xumo::SFloat[1, 2])
+    dx = max.backward(Xumo::SFloat[1])
+    assert_equal Xumo::SFloat[0, 1], dx.round(4)
   end
 end

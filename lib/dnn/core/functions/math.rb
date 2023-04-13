@@ -94,7 +94,7 @@ module DNN
       def forward(x)
         @x_shape = x.shape
         if @axis
-          x.sum(axis: @axis, keepdims: true)
+          x.sum(axis: @axis, keepdims: @keepdims)
         else
           x.sum
         end
@@ -117,13 +117,8 @@ module DNN
 
       def forward(x)
         @x_shape = x.shape
-        if @axis
-          @dim = x.shape[@axis]
-          x.mean(axis: @axis, keepdims: true)
-        else
-          @dim = x.size
-          x.mean
-        end
+        @dim = @axis ? x.shape[@axis] : x.size
+        x.mean(axis: @axis, keepdims: @keepdims)
       end
 
       def backward(dy)
@@ -141,6 +136,29 @@ module DNN
         mask = Xumo::SFloat.ones(*@x.shape)
         mask[@x < 0] = -1
         dy * mask
+      end
+    end
+
+    class Max < FunctionNode
+      def initialize(axis: nil, keepdims: true)
+        @axis = axis
+        @keepdims = keepdims
+      end
+
+      def forward(x)
+        @x_shape = x.shape
+        @max_index = x.max_index(axis: @axis)
+        x.max(axis: @axis, keepdims: @keepdims)
+      end
+
+      def backward(dy)
+        dx = Xumo::SFloat.zeros(*@x_shape)
+        if @max_index.is_a?(Integer)
+          dx[@max_index] = dy.flatten
+        else
+          dx[@max_index.flatten] = dy.flatten
+        end
+        dx
       end
     end
 
