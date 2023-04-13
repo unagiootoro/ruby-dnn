@@ -92,6 +92,29 @@ module DNN
       end
     end
 
+    class Flatten < FunctionNode
+      def forward(x)
+        @x_shape = x.shape
+        x.flatten
+      end
+
+      def backward(dy)
+        if DNN.use_cumo?
+          _backward_gpu(dy)
+        else
+          _backward_cpu(dy)
+        end
+      end
+
+      private def _backward_cpu(dy)
+        dy.reshape(*@x_shape)
+      end
+
+      private def _backward_gpu(dy)
+        dy.flatten.reshape(*@x_shape)
+      end
+    end
+
     class Reshape < FunctionNode
       def initialize(shape)
         super()
@@ -115,19 +138,19 @@ module DNN
         end
       end
 
-      def _forward_cpu(x)
-        x.reshape(x.shape[0], *@shape)
+      private def _forward_cpu(x)
+        x.reshape(*@shape)
       end
 
-      def _backward_cpu(dy)
+      private def _backward_cpu(dy)
         dy.reshape(*@x_shape)
       end
 
-      def _forward_gpu(x)
-        x.flatten.reshape(x.shape[0], *@shape)
+      private def _forward_gpu(x)
+        x.flatten.reshape(*@shape)
       end
 
-      def _backward_gpu(dy)
+      private def _backward_gpu(dy)
         dy.flatten.reshape(*@x_shape)
       end
     end

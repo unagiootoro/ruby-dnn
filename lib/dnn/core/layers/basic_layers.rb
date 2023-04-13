@@ -284,7 +284,7 @@ module DNN
 
     class Flatten < Layer
       def forward(x)
-        Functions::FunctionSpace.flatten(x)
+        Functions::FunctionSpace.reshape(x, [x.shape[0], x.shape[1..-1].reduce(:*)])
       end
     end
 
@@ -299,7 +299,7 @@ module DNN
       end
 
       def forward(x)
-        Functions::FunctionSpace.reshape(x, @shape)
+        Functions::FunctionSpace.reshape(x, [x.shape[0], *@shape])
       end
 
       def to_hash
