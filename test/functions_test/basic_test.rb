@@ -14,6 +14,14 @@ class TestAdd < MiniTest::Unit::TestCase
     assert_equal Xumo::SFloat[1, 2], dx1
     assert_equal Xumo::SFloat[1, 2], dx2
   end
+
+  def test_backward2
+    add = DNN::Functions::Add.new
+    add.forward(Xumo::SFloat[[1, 2], [3, 4]], Xumo::SFloat[5])
+    dx1, dx2 = add.backward(Xumo::SFloat[[1, 1], [1, 1]])
+    assert_equal Xumo::SFloat[[1, 1], [1, 1]], dx1
+    assert_equal Xumo::SFloat[4], dx2
+  end
 end
 
 class TestSub < MiniTest::Unit::TestCase

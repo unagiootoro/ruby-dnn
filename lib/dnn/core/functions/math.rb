@@ -4,6 +4,8 @@ module DNN
       module_function
 
       def align_ndim(shape1, shape2)
+        shape1 = shape1.clone
+        shape2 = shape2.clone
         if shape1.length < shape2.length
           shape2.length.times do |axis|
             unless shape1[axis] == shape2[axis]
@@ -23,12 +25,12 @@ module DNN
       def broadcast_to(x, target_shape)
         return x if x.shape == target_shape
         return Xumo::SFloat.new(*target_shape).fill(x[0]) if x.size == 1
-        x_shape, target_shape = align_ndim(x.shape, target_shape)
-        x = x.reshape(*x_shape)
-        x_shape.length.times do |axis|
-          unless x.shape[axis] == target_shape[axis]
+        aligned_x_shape, aligned_target_shape = align_ndim(x.shape, target_shape)
+        x = x.reshape(*aligned_x_shape)
+        aligned_x_shape.length.times do |axis|
+          unless x.shape[axis] == aligned_target_shape[axis]
             tmp = x
-            (target_shape[axis] - 1).times do
+            (aligned_target_shape[axis] - 1).times do
               x = x.concatenate(tmp, axis: axis)
             end
           end
@@ -38,14 +40,14 @@ module DNN
 
       def sum_to(x, target_shape)
         return x if x.shape == target_shape
-        x_shape, target_shape = align_ndim(x.shape, target_shape)
-        x = x.reshape(*x_shape)
-        x_shape.length.times do |axis|
-          unless x.shape[axis] == target_shape[axis]
+        aligned_x_shape, aligned_target_shape = align_ndim(x.shape, target_shape)
+        x = x.reshape(*aligned_x_shape)
+        aligned_x_shape.length.times do |axis|
+          unless x.shape[axis] == aligned_target_shape[axis]
             x = x.sum(axis: axis, keepdims: true)
           end
         end
-        x
+        x.reshape(*target_shape)
       end
     end
 

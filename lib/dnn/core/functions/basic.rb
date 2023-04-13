@@ -1,15 +1,15 @@
 module DNN
   module Functions
     class Add < FunctionNode
-      def forward(*xs)
-        (x1, x2) = xs
+      def forward(x1, x2)
+        @x1 = x1
+        @x2 = x2
         @x1_shape = x1.shape
         @x2_shape = x2.shape
         x1 + x2
       end
 
-      def backward(*dys)
-        dy = dys[0]
+      def backward(dy)
         dx1 = MathUtils.sum_to(dy, @x1_shape)
         dx2 = MathUtils.sum_to(dy, @x2_shape)
         [dx1, dx2]
