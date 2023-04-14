@@ -121,6 +121,38 @@ class TestReshape < MiniTest::Unit::TestCase
   end
 end
 
+class TestTranspose < MiniTest::Unit::TestCase
+  def test_forward
+    x = Xumo::SFloat.zeros(10, 20, 30, 40)
+    transpose = Transpose.new(2, 3, 1, 0)
+    y = transpose.forward(x)
+    assert_equal [30, 40, 20, 10], y.shape
+  end
+
+  def test_forward2
+    x = Xumo::SFloat.zeros(10, 20, 30, 40)
+    transpose = Transpose.new
+    y = transpose.forward(x)
+    assert_equal [40, 30, 20, 10], y.shape
+  end
+
+  def test_backward
+    x = Xumo::SFloat.zeros(10, 20, 30, 40)
+    transpose = Transpose.new(2, 3, 1, 0)
+    transpose.forward(x)
+    dx = transpose.backward(Xumo::SFloat.zeros(30, 40, 20, 10))
+    assert_equal [10, 20, 30, 40], dx.shape
+  end
+
+  def test_backward2
+    x = Xumo::SFloat.zeros(10, 20, 30, 40)
+    transpose = Transpose.new
+    transpose.forward(x)
+    dx = transpose.backward(Xumo::SFloat.zeros(40, 30, 20, 10))
+    assert_equal [10, 20, 30, 40], dx.shape
+  end
+end
+
 class TestConcatenate < MiniTest::Unit::TestCase
   def test_forward
     con = DNN::Functions::Concatenate.new(axis: 1)

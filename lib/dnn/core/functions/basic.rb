@@ -155,6 +155,22 @@ module DNN
       end
     end
 
+    class Transpose < FunctionNode
+      def initialize(*axes)
+        @axes = axes
+      end
+
+      def forward(x)
+        x.transpose(*@axes)
+      end
+
+      def backward(dy)
+        axes = @axes.length == 0 ? (dy.ndim - 1).downto(0).to_a : @axes
+        d_axes = (0...dy.ndim).map { |i| axes.index(i) }
+        dy.transpose(*d_axes)
+      end
+    end
+
     class Concatenate < FunctionNode
       def initialize(axis: 0)
         super()
