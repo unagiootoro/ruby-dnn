@@ -102,19 +102,19 @@ module DNN
     end
 
     def sum(axis: nil, keepdims: true)
-      Sum.new(axis: axis, keepdims: keepdims).(self)
+      Functions::Sum.new(axis: axis, keepdims: keepdims).(self)
     end
 
     def mean(axis: nil, keepdims: true)
-      Mean.new(axis: axis, keepdims: keepdims).(self)
+      Functions::Mean.new(axis: axis, keepdims: keepdims).(self)
     end
 
     def abs
-      Abs.new.(self)
+      Functions::Abs.new.(self)
     end
 
     def max(axis: nil, keepdims: true)
-      Max.new(axis: axis, keepdims: keepdims).(self)
+      Functions::Max.new(axis: axis, keepdims: keepdims).(self)
     end
   end
 end
