@@ -72,5 +72,17 @@ module DNN
       other = Tensor.new(other) unless other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
       Functions::Dot.(self, other)
     end
+
+    def flatten
+      Functions::Flatten.new.(self)
+    end
+
+    def reshape(*shape)
+      Functions::Reshape.new(shape).(self)
+    end
+
+    def transpose(*axes)
+      Functions::Transpose.new(*axes).(self)
+    end
   end
 end

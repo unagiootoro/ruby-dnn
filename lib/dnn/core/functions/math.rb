@@ -190,6 +190,10 @@ module DNN
       def abs(x)
         Abs.new.(x)
       end
+
+      def max(x, axis: nil, keepdims: true)
+        Max.new(axis: axis, keepdims: keepdims).(x)
+      end
     end
 
   end

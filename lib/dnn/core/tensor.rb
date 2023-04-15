@@ -89,6 +89,14 @@ module DNN
       Functions::Dot.(self, other)
     end
 
+    def flatten
+      Functions::Flatten.new.(self)
+    end
+
+    def reshape(*shape)
+      Functions::Reshape.new(shape).(self)
+    end
+
     def transpose(*axes)
       Functions::Transpose.new(*axes).(self)
     end

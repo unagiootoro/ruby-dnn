@@ -220,12 +220,12 @@ module DNN
         Reshape.new(x.shape[1..-1].reduce(&:*)).(x)
       end
 
-      def concatenate(x, y, axis: 0)
-        Concatenate.new(axis: axis).(x, y)
+      def concatenate(*xs, axis: 0)
+        Concatenate.new(axis: axis).(*xs)
       end
 
-      def split(x, axis: 0, dim: nil)
-        Split.new(axis: axis, dim: nil).(x)
+      def split(x, indices_or_sections, axis: 0)
+        Split.new(indices_or_sections, axis: axis).(x)
       end
     end
   end
