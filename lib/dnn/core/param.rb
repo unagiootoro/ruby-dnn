@@ -84,5 +84,21 @@ module DNN
     def transpose(*axes)
       Functions::Transpose.new(*axes).(self)
     end
+
+    def sum(axis: nil, keepdims: false)
+      Sum.new(axis: axis, keepdims: keepdims).(self)
+    end
+
+    def mean(axis: nil, keepdims: false)
+      Mean.new(axis: axis, keepdims: keepdims).(self)
+    end
+
+    def abs
+      Abs.new.(self)
+    end
+
+    def max(axis: nil, keepdims: false)
+      Max.new(axis: axis, keepdims: keepdims).(self)
+    end
   end
 end
