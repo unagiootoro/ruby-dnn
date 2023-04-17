@@ -328,7 +328,14 @@ module DNN
       end
 
       def forward(x)
-        Functions::Dropout.new(@dropout_ratio, seed: @seed, use_scale: @use_scale, learning_phase: DNN.learning_phase).(x)
+        if DNN.learning_phase
+          Xumo::SFloat.srand(@rnd.rand(1 << 31))
+          mask = Tensor.new(Xumo::SFloat.cast(Xumo::SFloat.new(*x.shape).rand >= @dropout_ratio))
+          x = x * mask
+        elsif @use_scale
+          x *= (1 - @dropout_ratio)
+        end
+        x
       end
 
       def to_hash
