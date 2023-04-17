@@ -33,11 +33,20 @@ module DNN
       end
 
       def forward(x)
-        batch_norm = Functions::BatchNormalization.new(running_mean.data, running_var.data, axis: @axis, momentum: @momentum, eps: @eps, learning_phase: DNN.learning_phase)
-        y = batch_norm.(x, @gamma, @beta)
-        @running_mean.data = batch_norm.running_mean
-        @running_var.data = batch_norm.running_var
-        y
+        fs = Functions::FunctionSpace
+        if DNN.learning_phase
+          mean = x.mean(axis: @axis, keepdims: true)
+          xc = x - mean
+          var = (xc**2).mean(axis: @axis, keepdims: true)
+          std = fs.sqrt(var + @eps)
+          xn = xc / std
+          @running_mean.data = @momentum * @running_mean.data + (1 - @momentum) * mean.data
+          @running_var.data = @momentum * @running_var.data + (1 - @momentum) * var.data
+        else
+          xc = x - Tensor.new(@running_mean.data)
+          xn = xc / fs.sqrt(Tensor.new(@running_var.data) + @eps)
+        end
+        gamma * xn + beta
       end
 
       def to_hash
