@@ -105,14 +105,14 @@ end
 
 class TestReshape < MiniTest::Unit::TestCase
   def test_forward
-    reshape = Reshape.new([10, 32, 32, 3])
+    reshape = DNN::Functions::Reshape.new([10, 32, 32, 3])
     x = Xumo::SFloat.zeros(30720)
     y = reshape.forward(x)
     assert_equal [10, 32, 32, 3], y.shape
   end
 
   def test_backward
-    reshape = Reshape.new([10, 32, 32, 3])
+    reshape = DNN::Functions::Reshape.new([10, 32, 32, 3])
     x = Xumo::SFloat.zeros(30720)
     reshape.forward(x)
     dy = Xumo::SFloat.ones(10, 32, 32, 3)
@@ -124,21 +124,21 @@ end
 class TestTranspose < MiniTest::Unit::TestCase
   def test_forward
     x = Xumo::SFloat.zeros(10, 20, 30, 40)
-    transpose = Transpose.new(2, 3, 1, 0)
+    transpose = DNN::Functions::Transpose.new(2, 3, 1, 0)
     y = transpose.forward(x)
     assert_equal [30, 40, 20, 10], y.shape
   end
 
   def test_forward2
     x = Xumo::SFloat.zeros(10, 20, 30, 40)
-    transpose = Transpose.new
+    transpose = DNN::Functions::Transpose.new
     y = transpose.forward(x)
     assert_equal [40, 30, 20, 10], y.shape
   end
 
   def test_backward
     x = Xumo::SFloat.zeros(10, 20, 30, 40)
-    transpose = Transpose.new(2, 3, 1, 0)
+    transpose = DNN::Functions::Transpose.new(2, 3, 1, 0)
     transpose.forward(x)
     dx = transpose.backward(Xumo::SFloat.zeros(30, 40, 20, 10))
     assert_equal [10, 20, 30, 40], dx.shape
@@ -146,7 +146,7 @@ class TestTranspose < MiniTest::Unit::TestCase
 
   def test_backward2
     x = Xumo::SFloat.zeros(10, 20, 30, 40)
-    transpose = Transpose.new
+    transpose = DNN::Functions::Transpose.new
     transpose.forward(x)
     dx = transpose.backward(Xumo::SFloat.zeros(40, 30, 20, 10))
     assert_equal [10, 20, 30, 40], dx.shape
