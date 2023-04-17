@@ -1,6 +1,17 @@
 module DNN
   module Functions
     class Add < FunctionNode
+      def initialize
+        @requires_dx1 = true
+        @requires_dx2 = true
+      end
+
+      def call(x1, x2)
+        @requires_dx1 = x1.requires_grad
+        @requires_dx2 = x2.requires_grad
+        super(x1, x2)
+      end
+
       def forward(x1, x2)
         @x1 = x1
         @x2 = x2
@@ -10,13 +21,24 @@ module DNN
       end
 
       def backward(dy)
-        dx1 = MathUtils.sum_to(dy, @x1_shape)
-        dx2 = MathUtils.sum_to(dy, @x2_shape)
+        dx1 = @requires_dx1 ? MathUtils.sum_to(dy, @x1_shape) : nil
+        dx2 = @requires_dx2 ? MathUtils.sum_to(dy, @x2_shape) : nil
         [dx1, dx2]
       end
     end
 
     class Sub < FunctionNode
+      def initialize
+        @requires_dx1 = true
+        @requires_dx2 = true
+      end
+
+      def call(x1, x2)
+        @requires_dx1 = x1.requires_grad
+        @requires_dx2 = x2.requires_grad
+        super(x1, x2)
+      end
+
       def forward(x1, x2)
         @x1_shape = x1.shape
         @x2_shape = x2.shape
@@ -31,27 +53,49 @@ module DNN
     end
 
     class Mul < FunctionNode
+      def initialize
+        @requires_dx1 = true
+        @requires_dx2 = true
+      end
+
+      def call(x1, x2)
+        @requires_dx1 = x1.requires_grad
+        @requires_dx2 = x2.requires_grad
+        super(x1, x2)
+      end
+
       def forward(x1, x2)
         @x1, @x2 = x1, x2
         x1 * x2
       end
 
       def backward(dy)
-        dx1 = MathUtils.sum_to(dy * @x2, @x1.shape)
-        dx2 = MathUtils.sum_to(dy * @x1, @x2.shape)
+        dx1 = @requires_dx1 ? MathUtils.sum_to(dy * @x2, @x1.shape) : nil
+        dx2 = @requires_dx2 ? MathUtils.sum_to(dy * @x1, @x2.shape) : nil
         [dx1, dx2]
       end
     end
 
     class Div < FunctionNode
+      def initialize
+        @requires_dx1 = true
+        @requires_dx2 = true
+      end
+
+      def call(x1, x2)
+        @requires_dx1 = x1.requires_grad
+        @requires_dx2 = x2.requires_grad
+        super(x1, x2)
+      end
+
       def forward(x1, x2)
         @x1, @x2 = x1, x2
         x1 / x2
       end
 
       def backward(dy)
-        dx1 = MathUtils.sum_to(dy / @x2, @x1.shape)
-        dx2 = MathUtils.sum_to(dy * -(@x1 / @x2**2), @x2.shape)
+        dx1 = @requires_dx1 ? MathUtils.sum_to(dy / @x2, @x1.shape) : nil
+        dx2 = @requires_dx2 ? MathUtils.sum_to(dy * -(@x1 / @x2**2), @x2.shape) : nil
         [dx1, dx2]
       end
     end
@@ -82,13 +126,26 @@ module DNN
     end
 
     class Dot < FunctionNode
+      def initialize
+        @requires_dx1 = true
+        @requires_dx2 = true
+      end
+
+      def call(x1, x2)
+        @requires_dx1 = x1.requires_grad
+        @requires_dx2 = x2.requires_grad
+        super(x1, x2)
+      end
+
       def forward(x1, x2)
         @x1, @x2 = x1, x2
         x1.dot(x2)
       end
 
       def backward(dy)
-        [dy.dot(@x2.transpose), @x1.transpose.dot(dy)]
+        dx1 = @requires_dx1 ? dy.dot(@x2.transpose) : nil
+        dx2 = @requires_dx2 ? @x1.transpose.dot(dy) : nil
+        [dx1, dx2]
       end
     end
 
