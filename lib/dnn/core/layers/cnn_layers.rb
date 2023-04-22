@@ -159,7 +159,12 @@ module DNN
       end
 
       def forward(x)
-        Functions::Conv2D.new(@num_filters, @out_size, @filter_size, @pad_size, strides: @strides, padding: @padding).(x, @weight, @bias)
+        batch_size = x.shape[0]
+        x = Functions::ZeroPadding2D.new(@pad_size).(x) if @padding
+        x = Functions::Im2col.new(@out_size, @filter_size, @strides).(x)
+        x = x.dot(@weight)
+        x += @bias if @bias
+        Functions::FunctionSpace.reshape(x, [batch_size, *@out_size, x.shape[3]])
       end
 
       def compute_output_shape
@@ -245,7 +250,15 @@ module DNN
       end
 
       def forward(x)
-        Functions::Conv2DTranspose.new(@num_filters, @out_size, @filter_size, @pad_size, strides: @strides, padding: @padding).(x, @weight, @bias)
+        x_shape = x.shape
+        bsize = x.shape[0]
+        x = x.reshape(x.shape[0..2].reduce(:*), x.shape[3])
+        col = x.dot(@weight.transpose)
+        img_shape = [bsize, @out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1], @num_filters]
+        y = Functions::Col2im.new(img_shape, x_shape[1..2], @filter_size, @strides).(col)
+        y += @bias if @bias
+        y = Functions::Cropping2D.new(@pad_size).(y) if @padding
+        y
       end
 
       def compute_output_shape
@@ -340,7 +353,13 @@ module DNN
 
     class MaxPool2D < Pool2D
       def forward(x)
-        Functions::MaxPool2D.new(@pool_size, @out_size, strides: @strides, padding: @padding).(x)
+        batch_size = x.shape[0]
+        ch = x.shape[3]
+        x = Functions::ZeroPadding2D.new(@pad_size).(x) if @padding
+        x = Functions::Im2col.new(@out_size, @pool_size, @strides).(x)
+        x = Functions::FunctionSpace.reshape(x, [batch_size * @out_size.reduce(:*), @pool_size.reduce(:*), ch])
+        x = Functions::FunctionSpace.max(x, axis: 1, keepdims: true)
+        Functions::FunctionSpace.reshape(x, [batch_size, *@out_size, ch])
       end
     end
 

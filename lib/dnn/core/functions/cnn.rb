@@ -254,5 +254,75 @@ module DNN
       end
     end
 
+    class ZeroPadding2D < FunctionNode
+      include Conv2DFunctionUtils
+
+      def initialize(pad_size)
+        @pad_size = pad_size
+      end
+
+      def forward(x)
+        zero_padding(x, @pad_size)
+      end
+
+      def backward(dy)
+        zero_padding_bwd(dy, @pad_size)
+      end
+    end
+
+    class Cropping2D < FunctionNode
+      include Conv2DFunctionUtils
+
+      def initialize(pad_size)
+        @pad_size = pad_size
+      end
+
+      def forward(x)
+        zero_padding_bwd(x, @pad_size)
+      end
+
+      def backward(dy)
+        zero_padding(dy, @pad_size)
+      end
+    end
+
+    class Im2col < FunctionNode
+      include Conv2DFunctionUtils
+
+      def initialize(out_size, filter_size, strides)
+        @out_size = out_size
+        @filter_size = filter_size
+        @strides = strides
+      end
+
+      def forward(x)
+        @x_shape = x.shape
+        im2col(x, *@out_size, *@filter_size, @strides)
+      end
+
+      def backward(dy)
+        col2im(dy, @x_shape, *@out_size, *@filter_size, @strides)
+      end
+    end
+
+    class Col2im < FunctionNode
+      include Conv2DFunctionUtils
+
+      def initialize(img_shape, in_size, filter_size, strides)
+        @img_shape = img_shape
+        @in_size = in_size
+        @filter_size = filter_size
+        @strides = strides
+      end
+
+      def forward(x)
+        col2im(x, @img_shape, *@in_size, *@filter_size, @strides)
+      end
+
+      def backward(dy)
+        im2col(dy, *@in_size, *@filter_size, @strides)
+      end
+    end
+
   end
 end
