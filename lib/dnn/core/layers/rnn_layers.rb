@@ -1,5 +1,84 @@
 module DNN
   module Layers
+    class SimpleRNNCell
+      def initialize(requires_weight_grad: true)
+        @requires_weight_grad = requires_weight_grad
+      end
+
+      def call(*args)
+        forward(*args)
+      end
+
+      def forward(x, h, weight, recurrent_weight, bias = nil)
+        h2 = x.dot(weight) + h.dot(recurrent_weight)
+        h2 += bias if bias
+        h2
+      end
+    end
+
+    class LSTMCell
+      def initialize(return_c: true, requires_weight_grad: true)
+        @requires_weight_grad = requires_weight_grad
+        @return_c = return_c
+      end
+
+      def call(*args)
+        forward(*args)
+      end
+
+      def forward(x, h, c, weight, recurrent_weight, bias = nil)
+        fs = Functions::FunctionSpace
+
+        num_units = h.shape[1]
+        a = x.dot(weight) + h.dot(recurrent_weight)
+        a += bias if bias
+
+        a1, a2, a3, a4 = fs.split(a, 4, axis: 1)
+
+        f = fs.sigmoid(a1)
+        g = fs.tanh(a2)
+        i = fs.sigmoid(a3)
+        o = fs.sigmoid(a4)
+
+        c2 = f * c + g * i
+        h2 = o * fs.tanh(c2)
+        @return_c ? [h2, c2] : h2
+      end
+    end
+
+    class GRUCell
+      def initialize(requires_weight_grad: true)
+        @requires_weight_grad = requires_weight_grad
+      end
+
+      def call(*args)
+        forward(*args)
+      end
+
+      def forward(x, h, weight, recurrent_weight, bias = nil)
+        fs = Functions::FunctionSpace
+
+        num_units = h.shape[1]
+        weight_a, weight_h = fs.split(weight, [num_units * 2], axis: 1)
+        weight2_a, weight2_h = fs.split(recurrent_weight, [num_units * 2], axis: 1)
+        bias_a, bias_h = fs.split(bias, [num_units * 2], axis: 0) if bias
+
+        a = x.dot(weight_a) + h.dot(weight2_a)
+        a += bias_a if bias
+        a1, a2 = fs.split(a, [num_units], axis: 1)
+        u = fs.sigmoid(a1)
+        r = fs.sigmoid(a2)
+
+        h2 = if bias
+               fs.tanh(x.dot(weight_h) + (h * r).dot(weight2_h) + bias_h)
+             else
+               fs.tanh(x.dot(weight_h) + (h * r).dot(weight2_h))
+             end
+        h2 = (1 - u) * h2 + u * h
+        h2
+      end
+    end
+
     # Super class of all RNN classes.
     class RNN < Connection
       attr_reader :num_units
@@ -139,15 +218,22 @@ module DNN
       end
 
       def forward(xs)
+        fs = Functions::FunctionSpace
         h_array = [] if @return_sequences
-        x_array = Functions::RNNTimeSplit.new.(xs)
+        x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
+          x.reshape(x.shape[0], x.shape[2])
+        end
         h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
         x_array.each.with_index do |x, t|
-          h = Functions::SimpleRNNCell.new.(x, h, @weight, @recurrent_weight, @bias)
+          h = SimpleRNNCell.new.(x, h, @weight, @recurrent_weight, @bias)
           h = Functions::FunctionSpace.send(@activation, h)
           h_array << h if @return_sequences
         end
-        @return_sequences ? Functions::RNNTimeConcatenate.new.(*h_array) : h
+        if @return_sequences
+          fs.concatenate(*h_array.map { |_h| _h.reshape(_h.shape[0], 1, _h.shape[1]) }, axis: 1)
+        else
+          h
+        end
       end
 
       def to_hash
@@ -196,19 +282,26 @@ module DNN
       end
 
       def forward(xs)
+        fs = Functions::FunctionSpace
         h_array = [] if @return_sequences
-        x_array = Functions::RNNTimeSplit.new.(xs)
+        x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
+          x.reshape(x.shape[0], x.shape[2])
+        end
         h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
         c = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
         x_array.each.with_index do |x, t|
           if t == x_array.length - 1
-            h = Functions::LSTMCell.new(return_c: false).(x, h, c, @weight, @recurrent_weight, @bias)
+            h = LSTMCell.new(return_c: false).(x, h, c, @weight, @recurrent_weight, @bias)
           else
-            h, c = Functions::LSTMCell.new.(x, h, c, @weight, @recurrent_weight, @bias)
+            h, c = LSTMCell.new.(x, h, c, @weight, @recurrent_weight, @bias)
           end
           h_array << h if @return_sequences
         end
-        @return_sequences ? Functions::RNNTimeConcatenate.new.(*h_array) : h
+        if @return_sequences
+          fs.concatenate(*h_array.map { |_h| _h.reshape(_h.shape[0], 1, _h.shape[1]) }, axis: 1)
+        else
+          h
+        end
       end
 
       def reset_state
@@ -245,14 +338,21 @@ module DNN
       end
 
       def forward(xs)
+        fs = Functions::FunctionSpace
         h_array = [] if @return_sequences
-        x_array = Functions::RNNTimeSplit.new.(xs)
+        x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
+          x.reshape(x.shape[0], x.shape[2])
+        end
         h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
         x_array.each.with_index do |x, t|
-          h = Functions::GRUCell.new.(x, h, @weight, @recurrent_weight, @bias)
+          h = GRUCell.new.(x, h, @weight, @recurrent_weight, @bias)
           h_array << h if @return_sequences
         end
-        @return_sequences ? Functions::RNNTimeConcatenate.new.(*h_array) : h
+        if @return_sequences
+          fs.concatenate(*h_array.map { |_h| _h.reshape(_h.shape[0], 1, _h.shape[1]) }, axis: 1)
+        else
+          h
+        end
       end
 
     end
