@@ -1,12 +1,52 @@
 module DNN
   module EvaluatorImpl
-    private
-
-    def init_evaluator_impl
-      @evaluate_state = :none
+    # Evaluate model and get accuracy and loss of test data.
+    # @param [Numo::SFloat] x Input test data.
+    # @param [Numo::SFloat] y Output test data.
+    # @param [Integer] batch_size Batch size used for one test.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
+    #                 If accuracy is not needed returns in the form [nil, mean_loss].
+    def evaluate(x, y, batch_size: 100, need_accuracy: true)
+      Utils.check_input_data_type("x", x, Xumo::SFloat)
+      Utils.check_input_data_type("y", y, Xumo::SFloat)
+      start_evaluate(x, y, batch_size: batch_size, need_accuracy: need_accuracy)
+      update while evaluating?
+      [@last_logs[:test_accuracy], @last_logs[:test_loss]]
     end
 
-    def start_evaluate_internal(test_iterator, batch_size: 100, need_accuracy: true)
+    # Evaluate model by iterator.
+    # @param [DNN::Iterator] test_iterator Iterator used for testing.
+    # @param [Integer] batch_size Batch size used for one test.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
+    #                 If accuracy is not needed returns in the form [nil, mean_loss].
+    def evaluate_by_iterator(test_iterator, batch_size: 100, need_accuracy: true)
+      start_evaluate_by_iterator(test_iterator, batch_size: batch_size, need_accuracy: need_accuracy)
+      update while evaluating?
+      [@last_logs[:test_accuracy], @last_logs[:test_loss]]
+    end
+
+    # Start evaluate model and get accuracy and loss of test data.
+    # @param [Numo::SFloat] x Input test data.
+    # @param [Numo::SFloat] y Output test data.
+    # @param [Integer] batch_size Batch size used for one test.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
+    #                 If accuracy is not needed returns in the form [nil, mean_loss].
+    def start_evaluate(x, y, batch_size: 100, need_accuracy: true)
+      Utils.check_input_data_type("x", x, Xumo::SFloat)
+      Utils.check_input_data_type("y", y, Xumo::SFloat)
+      start_evaluate_by_iterator(Iterator.new(x, y, random: false), batch_size: batch_size, need_accuracy: need_accuracy)
+    end
+
+    # Start Evaluate model by iterator.
+    # @param [DNN::Iterator] test_iterator Iterator used for testing.
+    # @param [Integer] batch_size Batch size used for one test.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
+    #                 If accuracy is not needed returns in the form [nil, mean_loss].
+    def start_evaluate_by_iterator(test_iterator, batch_size: 100, need_accuracy: true)
       @test_iterator = test_iterator
       @num_test_datas = test_iterator.num_datas
       @batch_size = batch_size >= @num_test_datas ? @num_test_datas : batch_size
@@ -23,8 +63,16 @@ module DNN
       @evaluate_state = :start_evaluate_step
     end
 
-    def is_evaluating_internal
+    # Check if it is currently evaluating.
+    # @return [Boolean] Returns true if currently evaluating.
+    def evaluating?
       @evaluate_state != :none
+    end
+
+    private
+
+    def init_evaluator_impl
+      @evaluate_state = :none
     end
 
     def on_test_step_internal(model, x_batch, y_batch)
@@ -131,75 +179,6 @@ module DNN
     def initialize
       super()
       init_evaluator_impl
-    end
-
-    # Evaluate model and get accuracy and loss of test data.
-    # @param [Numo::SFloat] x Input test data.
-    # @param [Numo::SFloat] y Output test data.
-    # @param [Integer] batch_size Batch size used for one test.
-    # @param [Boolean] need_accuracy Set true to compute the accuracy.
-    # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-    #                 If accuracy is not needed returns in the form [nil, mean_loss].
-    def evaluate(x, y, batch_size: 100, need_accuracy: true)
-      Utils.check_input_data_type("x", x, Xumo::SFloat)
-      Utils.check_input_data_type("y", y, Xumo::SFloat)
-      start_evaluate(x, y, batch_size: batch_size, need_accuracy: need_accuracy)
-      update while evaluating?
-      [@last_logs[:test_accuracy], @last_logs[:test_loss]]
-    end
-
-    # Evaluate model by iterator.
-    # @param [DNN::Iterator] test_iterator Iterator used for testing.
-    # @param [Integer] batch_size Batch size used for one test.
-    # @param [Boolean] need_accuracy Set true to compute the accuracy.
-    # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-    #                 If accuracy is not needed returns in the form [nil, mean_loss].
-    def evaluate_by_iterator(test_iterator, batch_size: 100, need_accuracy: true)
-      start_evaluate_by_iterator(test_iterator, batch_size: batch_size, need_accuracy: need_accuracy)
-      update while evaluating?
-      [@last_logs[:test_accuracy], @last_logs[:test_loss]]
-    end
-
-    # Start evaluate model and get accuracy and loss of test data.
-    # @param [Numo::SFloat] x Input test data.
-    # @param [Numo::SFloat] y Output test data.
-    # @param [Integer] batch_size Batch size used for one test.
-    # @param [Boolean] need_accuracy Set true to compute the accuracy.
-    # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-    #                 If accuracy is not needed returns in the form [nil, mean_loss].
-    def start_evaluate(x, y, batch_size: 100, need_accuracy: true)
-      Utils.check_input_data_type("x", x, Xumo::SFloat)
-      Utils.check_input_data_type("y", y, Xumo::SFloat)
-      start_evaluate_by_iterator(Iterator.new(x, y, random: false), batch_size: batch_size, need_accuracy: need_accuracy)
-    end
-
-    # Start Evaluate model by iterator.
-    # @param [DNN::Iterator] test_iterator Iterator used for testing.
-    # @param [Integer] batch_size Batch size used for one test.
-    # @param [Boolean] need_accuracy Set true to compute the accuracy.
-    # @return [Array] Returns the test data accuracy and mean loss in the form [accuracy, mean_loss].
-    #                 If accuracy is not needed returns in the form [nil, mean_loss].
-    def start_evaluate_by_iterator(test_iterator, batch_size: 100, need_accuracy: true)
-      @test_iterator = test_iterator
-      @num_test_datas = test_iterator.num_datas
-      @batch_size = batch_size >= @num_test_datas ? @num_test_datas : batch_size
-      @need_accuracy = need_accuracy
-      if @loss_func.is_a?(Array)
-        @total_correct = Array.new(@loss_func.length, 0)
-        @sum_test_loss = Array.new(@loss_func.length, 0)
-      else
-        @total_correct = 0
-        @sum_test_loss = 0
-      end
-      @evaluate_step = 1
-      @evaluate_max_steps = (@num_test_datas.to_f / @batch_size).ceil
-      @evaluate_state = :start_evaluate_step
-    end
-
-    # Check if it is currently evaluating.
-    # @return [Boolean] Returns true if currently evaluating.
-    def evaluating?
-      is_evaluating_internal
     end
 
     # Update evaluator status.

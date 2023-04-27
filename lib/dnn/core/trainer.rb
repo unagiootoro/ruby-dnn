@@ -1,5 +1,139 @@
 module DNN
   module TrainerImpl
+    # Start training.
+    # Setup the model before use this method.
+    # @param [Numo::SFloat] x Input training data.
+    # @param [Numo::SFloat] y Output training data.
+    # @param [Integer] epochs Number of training.
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Integer] initial_epoch Initial epoch.
+    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
+    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
+    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @param [IO] io Specifies the IO object to use for logging.
+    def fit(x, y, epochs,
+      batch_size: 1,
+      initial_epoch: 1,
+      test: nil,
+      verbose: true,
+      need_accuracy: true,
+      io: $stdout)
+      start_fit(x, y, epochs,
+                batch_size: batch_size,
+                initial_epoch: initial_epoch,
+                test: test,
+                verbose: verbose,
+                need_accuracy: need_accuracy,
+                io: io)
+      update while training?
+    end
+
+    # Start training by iterator.
+    # Setup the model before use this method.
+    # @param [DNN::Iterator] train_iterator Iterator used for training.
+    # @param [Integer] epochs Number of training.
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Integer] initial_epoch Initial epoch.
+    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
+    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
+    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @param [IO] io Specifies the IO object to use for logging.
+    def fit_by_iterator(train_iterator, epochs,
+                        batch_size: 1,
+                        initial_epoch: 1,
+                        test: nil,
+                        verbose: true,
+                        need_accuracy: true,
+                        io: $stdout)
+      start_fit_by_iterator(train_iterator, epochs,
+                            batch_size: batch_size,
+                            initial_epoch: initial_epoch,
+                            test: test,
+                            verbose: verbose,
+                            need_accuracy: need_accuracy,
+                            io: io)
+      update while training?
+    end
+
+    # Start training.
+    # Setup the model before use this method.
+    # @param [Numo::SFloat] x Input training data.
+    # @param [Numo::SFloat] y Output training data.
+    # @param [Integer] epochs Number of training.
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Integer] initial_epoch Initial epoch.
+    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
+    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
+    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @param [IO] io Specifies the IO object to use for logging.
+    def start_fit(x, y, epochs,
+                batch_size: 1,
+                initial_epoch: 1,
+                test: nil,
+                verbose: true,
+                need_accuracy: true,
+                io: $stdout)
+      Utils.check_input_data_type("x", x, Xumo::SFloat)
+      Utils.check_input_data_type("y", y, Xumo::SFloat)
+      train_iterator = Iterator.new(x, y)
+      start_fit_by_iterator(train_iterator, epochs,
+                            batch_size: batch_size,
+                            initial_epoch: initial_epoch,
+                            test: test,
+                            verbose: verbose,
+                            need_accuracy: need_accuracy,
+                            io: io)
+    end
+
+    # Start training by iterator.
+    # Setup the model before use this method.
+    # @param [DNN::Iterator] train_iterator Iterator used for training.
+    # @param [Integer] epochs Number of training.
+    # @param [Integer] batch_size Batch size used for one training.
+    # @param [Integer] initial_epoch Initial epoch.
+    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
+    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
+    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
+    # @param [Boolean] need_accuracy Set true to compute the accuracy.
+    # @param [IO] io Specifies the IO object to use for logging.
+    def start_fit_by_iterator(train_iterator, epochs,
+                              batch_size: 1,
+                              initial_epoch: 1,
+                              test: nil,
+                              verbose: true,
+                              need_accuracy: true,
+                              io: $stdout)
+                              check_model_setup_complete
+                              check_early_stop_requested # Clear early stop request.
+      @train_iterator = train_iterator
+      @max_epochs = epochs
+      @train_batch_size = batch_size
+      @epoch = initial_epoch
+      @test = test
+      @verbose = verbose
+      @need_accuracy = need_accuracy
+      @io = io
+      @train_state = :start_train_epoch
+      @train_max_steps = train_iterator.max_steps(batch_size)
+      @num_train_datas = train_iterator.num_usable_datas(batch_size)
+      @line_first_pos = 0
+      call_callbacks(:before_train)
+    end
+
+    # Check if it is currently evaluating.
+    # @return [Boolean] Returns true if currently training.
+    def training?
+      @train_state != :none
+    end
+
+    # Request training early stop.
+    def request_early_stop
+      @early_stop_requested = true
+    end
+
     private
 
     def init_trainer_impl
@@ -17,38 +151,6 @@ module DNN
       @io = nil
       @num_train_datas = 0
       @early_stop_requested = false
-    end
-
-    def start_train_internal(train_iterator, epochs,
-                             batch_size: 1,
-                             initial_epoch: 1,
-                             test: nil,
-                             verbose: true,
-                             need_accuracy: true,
-                             io: $stdout)
-      check_model_setup_complete
-      check_early_stop_requested # Clear early stop request.
-      @train_iterator = train_iterator
-      @max_epochs = epochs
-      @train_batch_size = batch_size
-      @epoch = initial_epoch
-      @test = test
-      @verbose = verbose
-      @need_accuracy = need_accuracy
-      @io = io
-      @train_state = :start_train_epoch
-      @train_max_steps = train_iterator.max_steps(batch_size)
-      @num_train_datas = train_iterator.num_usable_datas(batch_size)
-      @line_first_pos = 0
-      call_callbacks(:before_train)
-    end
-
-    def is_training_internal
-      @train_state != :none
-    end
-
-    def request_early_stop_internal
-      @early_stop_requested = true
     end
 
     def on_train_step_internal(model, x_batch, y_batch)
@@ -196,16 +298,15 @@ module DNN
 
     def trainer_start_evaluate
       if @test.is_a?(Array)
-        iter = Iterator.new(@test[0], @test[1], random: false)
+        start_evaluate(@test[0], @test[1], batch_size: @train_batch_size, need_accuracy: @need_accuracy)
       else
-        iter = @test
+        start_evaluate_by_iterator(iter, batch_size: @train_batch_size, need_accuracy: @need_accuracy)
       end
-      start_evaluate_internal(iter, batch_size: @train_batch_size, need_accuracy: @need_accuracy)
       @train_state = :trainer_evaluating
     end
 
     def trainer_evaluating
-      unless is_evaluating_internal
+      unless evaluating?
         @train_state = :trainer_end_evaluate
       end
     end
@@ -255,143 +356,20 @@ module DNN
   class BaseTrainer < ProcessRunner
     include TrainerImpl
     include EvaluatorImpl
+    include PredictorImpl
 
     def initialize
       super()
       init_trainer_impl
       init_evaluator_impl
-    end
-
-    # Start training.
-    # Setup the model before use this method.
-    # @param [Numo::SFloat] x Input training data.
-    # @param [Numo::SFloat] y Output training data.
-    # @param [Integer] epochs Number of training.
-    # @param [Integer] batch_size Batch size used for one training.
-    # @param [Integer] initial_epoch Initial epoch.
-    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
-    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
-    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-    # @param [Boolean] need_accuracy Set true to compute the accuracy.
-    # @param [IO] io Specifies the IO object to use for logging.
-    def train(x, y, epochs,
-              batch_size: 1,
-              initial_epoch: 1,
-              test: nil,
-              verbose: true,
-              need_accuracy: true,
-              io: $stdout)
-      start_train(x, y, epochs,
-                  batch_size: batch_size,
-                  initial_epoch: initial_epoch,
-                  test: test,
-                  verbose: verbose,
-                  need_accuracy: need_accuracy,
-                  io: io)
-      update while training?
-    end
-
-    # Start training by iterator.
-    # Setup the model before use this method.
-    # @param [DNN::Iterator] train_iterator Iterator used for training.
-    # @param [Integer] epochs Number of training.
-    # @param [Integer] batch_size Batch size used for one training.
-    # @param [Integer] initial_epoch Initial epoch.
-    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
-    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
-    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-    # @param [Boolean] need_accuracy Set true to compute the accuracy.
-    # @param [IO] io Specifies the IO object to use for logging.
-    def train_by_iterator(train_iterator, epochs,
-                          batch_size: 1,
-                          initial_epoch: 1,
-                          test: nil,
-                          verbose: true,
-                          need_accuracy: true,
-                          io: $stdout)
-      start_train_by_iterator(train_iterator, epochs,
-                              batch_size: batch_size,
-                              initial_epoch: initial_epoch,
-                              test: test,
-                              verbose: verbose,
-                              need_accuracy: need_accuracy,
-                              io: io)
-      update while training?
-    end
-
-    # Start training.
-    # Setup the model before use this method.
-    # @param [Numo::SFloat] x Input training data.
-    # @param [Numo::SFloat] y Output training data.
-    # @param [Integer] epochs Number of training.
-    # @param [Integer] batch_size Batch size used for one training.
-    # @param [Integer] initial_epoch Initial epoch.
-    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
-    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
-    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-    # @param [Boolean] need_accuracy Set true to compute the accuracy.
-    # @param [IO] io Specifies the IO object to use for logging.
-    def start_train(x, y, epochs,
-                    batch_size: 1,
-                    initial_epoch: 1,
-                    test: nil,
-                    verbose: true,
-                    need_accuracy: true,
-                    io: $stdout)
-      Utils.check_input_data_type("x", x, Xumo::SFloat)
-      Utils.check_input_data_type("y", y, Xumo::SFloat)
-      train_iterator = Iterator.new(x, y)
-      start_train_by_iterator(train_iterator, epochs,
-                              batch_size: batch_size,
-                              initial_epoch: initial_epoch,
-                              test: test,
-                              verbose: verbose,
-                              need_accuracy: need_accuracy,
-                              io: io)
-    end
-
-    # Start training by iterator.
-    # Setup the model before use this method.
-    # @param [DNN::Iterator] train_iterator Iterator used for training.
-    # @param [Integer] epochs Number of training.
-    # @param [Integer] batch_size Batch size used for one training.
-    # @param [Integer] initial_epoch Initial epoch.
-    # @param [Array | NilClass] test If you to test the model for every 1 epoch,
-    #                                specify [x_test, y_test]. Don't test to the model, specify nil.
-    # @param [Boolean] verbose Set true to display the log. If false is set, the log is not displayed.
-    # @param [Boolean] need_accuracy Set true to compute the accuracy.
-    # @param [IO] io Specifies the IO object to use for logging.
-    def start_train_by_iterator(train_iterator, epochs,
-                                batch_size: 1,
-                                initial_epoch: 1,
-                                test: nil,
-                                verbose: true,
-                                need_accuracy: true,
-                                io: $stdout)
-      start_train_internal(train_iterator, epochs,
-                           batch_size: batch_size,
-                           initial_epoch: initial_epoch,
-                           test: test,
-                           verbose: verbose,
-                           need_accuracy: need_accuracy,
-                           io: io)
-    end
-
-    # Check if it is currently evaluating.
-    # @return [Boolean] Returns true if currently training.
-    def training?
-      is_training_internal
+      init_predictor_impl
     end
 
     # Update trainer status.
     def update
       update_evaluator_impl
       update_trainer_impl
-    end
-
-    # Request training early stop.
-    def request_early_stop
-      request_early_stop_internal
+      update_predictor_impl
     end
   end
 
@@ -412,6 +390,10 @@ module DNN
 
     def on_test_step(x_batch, y_batch)
       on_test_step_internal(@model, x_batch, y_batch)
+    end
+
+    def on_predict_step(x_batch)
+      on_predict_step_internal(@model, x_batch)
     end
   end
 end
