@@ -59,5 +59,6 @@ if RUBY_PLATFORM != "wasm32-wasi"
   require_relative "dnn/core/utils"
   require_relative "dnn/core/process_runner"
   require_relative "dnn/core/evaluator"
+  require_relative "dnn/core/predictor"
   require_relative "dnn/core/trainer"
 end
