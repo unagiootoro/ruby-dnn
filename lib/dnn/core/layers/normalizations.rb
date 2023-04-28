@@ -34,7 +34,7 @@ module DNN
 
       def forward(x)
         fs = Functions::FunctionSpace
-        if DNN.learning_phase
+        if DNN.GlobalState.learning_phase
           mean = x.mean(axis: @axis, keepdims: true)
           xc = x - mean
           var = (xc**2).mean(axis: @axis, keepdims: true)

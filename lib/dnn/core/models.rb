@@ -179,7 +179,7 @@ module DNN
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
-        DNN.learning_phase = true
+        DNN.GlobalState.learning_phase = true
         if x.is_a?(Array)
           input = x.map { |v| Tensor.new(v) }
         else
@@ -218,7 +218,7 @@ module DNN
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
-        DNN.learning_phase = false
+        DNN.GlobalState.learning_phase = false
         if x.is_a?(Array)
           input = x.map { |v| Tensor.new(v) }
         else
@@ -263,7 +263,7 @@ module DNN
       # @param [Numo::SFloat] x Input data.
       def predict(x)
         Utils.check_input_data_type("x", x, Xumo::SFloat)
-        DNN.learning_phase = false
+        DNN.GlobalState.learning_phase = false
         out = call(Tensor.new(x))
         if out.is_a?(Array)
           out.map { |tensor| tensor.data }

@@ -308,7 +308,7 @@ module DNN
       end
 
       def forward(x)
-        if DNN.learning_phase
+        if DNN.GlobalState.learning_phase
           Xumo::SFloat.srand(@rnd.rand(1 << 31))
           mask = Tensor.new(Xumo::SFloat.cast(Xumo::SFloat.new(*x.shape).rand >= @dropout_ratio))
           x = x * mask
