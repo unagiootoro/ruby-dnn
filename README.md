@@ -126,6 +126,10 @@ By setting the environment variable `RUBY_DNN_DOWNLOADS_PATH`, you can specify t
 If you do `require "cumo/narray"` before `require "dnn"`, you can run it on GPU.
 Or, set the environment variable `RUBY_DNN_USE_CUMO` to `ENABLE` to force the GPU to be used.
 
+## Use Numo Linalg
+When running on a CPU, you can speed it up by using Numo Linalg.
+In this case, Numo Linalg is automatically loaded by setting the environment variable `RUBY_DNN_USE_CUMO` to `ENABLE`.
+
 ## TODO
 * Write a test.  
 * Write a document.  

@@ -4,6 +4,10 @@ else
   require "numo/narray"
 end
 
+if ENV["RUNY_DNN_USE_NUMO_LINALG"] == "ENABLE"
+  require "numo/linalg/autoloader"
+end
+
 module DNN
   if ENV["RUBY_DNN_USE_CUMO"] == "ENABLE"
     require "cumo/narray"
