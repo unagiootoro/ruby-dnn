@@ -46,8 +46,8 @@ module DNN
       end
 
       def backward(dy)
-        dx1 = MathUtils.sum_to(dy, @x1_shape)
-        dx2 = MathUtils.sum_to(-dy, @x2_shape)
+        dx1 = @requires_dx1 ? MathUtils.sum_to(dy, @x1_shape) : nil
+        dx2 = @requires_dx2 ? MathUtils.sum_to(-dy, @x2_shape) : nil
         [dx1, dx2]
       end
     end

@@ -29,10 +29,7 @@ module DNN
         x = x.reshape(*aligned_x_shape)
         aligned_x_shape.length.times do |axis|
           unless x.shape[axis] == aligned_target_shape[axis]
-            tmp = x
-            (aligned_target_shape[axis] - 1).times do
-              x = x.concatenate(tmp, axis: axis)
-            end
+            x = Numo::SFloat.concatenate([x] * aligned_target_shape[axis], axis: axis)
           end
         end
         x
