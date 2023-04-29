@@ -350,7 +350,7 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_forward_node
     dropout = Dropout.new(0.2, seed: 0)
     dropout.build([100])
-    DNN.GlobalState.learning_phase = true
+    DNN::GlobalState.learning_phase = true
     num = dropout.forward_node(Xumo::SFloat.ones(100)).sum.to_f.round
     assert num.between?(70, 90)
   end
@@ -358,7 +358,7 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_forward_node2
     dropout = Dropout.new(0.3, use_scale: true)
     dropout.build([1])
-    DNN.GlobalState.learning_phase = false
+    DNN::GlobalState.learning_phase = false
     num = dropout.forward_node(Xumo::SFloat.ones(10)).sum.to_f.round(1)
     assert_equal 7.0, num
   end
@@ -366,7 +366,7 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_forward_node3
     dropout = Dropout.new(0.3, use_scale: false)
     dropout.build([1])
-    DNN.GlobalState.learning_phase = false
+    DNN::GlobalState.learning_phase = false
     num = dropout.forward_node(Xumo::SFloat.ones(10)).sum.to_f.round(1)
     assert_equal 10.0, num
   end
@@ -374,7 +374,7 @@ class TestDropout < MiniTest::Unit::TestCase
   def test_backward_node
     dropout = Dropout.new
     dropout.build([1])
-    DNN.GlobalState.learning_phase = true
+    DNN::GlobalState.learning_phase = true
     y = dropout.forward_node(Xumo::SFloat.ones(10))
     dy = dropout.backward_node(Xumo::SFloat.ones(10))
     assert_equal y.round, dy.round

@@ -76,7 +76,7 @@ module DNN
     end
 
     def on_test_step_internal(model, x_batch, y_batch)
-      DNN.GlobalState.learning_phase = false
+      DNN::GlobalState.learning_phase = false
       output_tensors = model.(Tensor.new(x_batch))
       if output_tensors.is_a?(Array)
         output_data = []
