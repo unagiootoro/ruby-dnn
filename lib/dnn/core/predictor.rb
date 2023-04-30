@@ -1,5 +1,8 @@
 module DNN
   module PredictorImpl
+    attr_reader :predicted_data
+    attr_accessor :last_predicted_batch
+
     # Predict model and get accuracy and loss of predict data.
     # @param [Numo::SFloat] x Input predict data.
     # @param [Integer] batch_size Batch size used for one predict.
@@ -10,10 +13,6 @@ module DNN
       start_predict(x, batch_size: batch_size)
       update while predicting?
       predicted_data
-    end
-
-    def predicted_data
-      @predicted_data
     end
 
     # Predict model by iterator.
@@ -44,6 +43,7 @@ module DNN
     #                 If accuracy is not needed returns in the form [nil, mean_loss].
     def start_predict_by_iterator(predict_iterator, batch_size: 100)
       @predicted_data = nil
+      @last_predicted_batch = nil
       @predict_iterator = predict_iterator
       @num_predict_datas = predict_iterator.num_datas
       @batch_size = batch_size >= @num_predict_datas ? @num_predict_datas : batch_size
@@ -63,6 +63,7 @@ module DNN
     def init_predictor_impl
       @predict_state = :none
       @predicted_data = nil
+      @last_predicted_batch = nil
     end
 
     def on_predict_step_internal(model, x_batch)
@@ -105,13 +106,13 @@ module DNN
     def predict_step
       batches = @predict_iterator.next_batch(@batch_size)
       call_callbacks(:before_predict_on_batch)
-      output = on_predict_step(*batches)
-      if @predicted_data
-        @predicted_data = @predicted_data.concatenate(output, axis: 0)
-      else
-        @predicted_data = output
-      end
+      @last_predicted_batch = on_predict_step(*batches)
       call_callbacks(:after_predict_on_batch)
+      if @predicted_data
+        @predicted_data = @predicted_data.concatenate(@last_predicted_batch, axis: 0)
+      else
+        @predicted_data = @last_predicted_batch
+      end
       @predict_state = :end_predict_step
     end
 
