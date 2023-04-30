@@ -497,27 +497,28 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
     assert_equal true, pool2d.padding
   end
 
-  def test_forward_node
-    x = Xumo::SFloat.new(1, 32, 32, 3).seq
+  def test_forward
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 32, 32, 3).seq)
     pool2d = DNN::Layers::AvgPool2D.new(2)
     pool2d.build([32, 32, 3])
-    assert_equal [1, 16, 16, 3], pool2d.forward_node(x).shape
+    y = pool2d.(x)
+    assert_equal [1, 16, 16, 3], y.shape
   end
 
-  def test_backward_node
-    x = Xumo::SFloat.new(1, 32, 32, 3).seq
-    dy = Xumo::SFloat.new(1, 16, 16, 3).seq
+  def test_backward
+    x = DNN::Param.new(Xumo::SFloat.new(1, 32, 32, 3).seq)
     pool2d = DNN::Layers::AvgPool2D.new(2)
     pool2d.build([32, 32, 3])
-    pool2d.forward_node(x)
-    assert_equal [1, 32, 32, 3], pool2d.backward_node(dy).shape
+    y = pool2d.(x)
+    y.backward(Xumo::SFloat.new(1, 16, 16, 3).seq)
+    assert_equal [1, 32, 32, 3], x.grad.shape
   end
 end
 
 class TestGlobalAvgPoo2D < MiniTest::Unit::TestCase
-  def test_forward_node
+  def test_forward
     x = DNN::Tensor.new(Xumo::SFloat.new(1, 8, 8, 64).seq)
-    pool2d = GlobalAvgPool2D.new
+    pool2d = DNN::Layers::GlobalAvgPool2D.new
     pool2d.build([8, 8, 64])
     assert_equal [1, 64], pool2d.forward(x).shape
   end
@@ -533,22 +534,53 @@ class TestUnPool2D < MiniTest::Unit::TestCase
     assert_equal [2, 2], unpool2d.unpool_size
   end
 
-  def test_forward_node
-    x = Xumo::SFloat.new(1, 8, 8, 3).seq
+  def test_forward
+    x = DNN::Tensor.new(Xumo::SFloat[
+      [
+        [[1, 5], [2, 6]],
+        [[3, 7], [4, 8]],
+      ]
+    ])
     unpool2d = DNN::Layers::UnPool2D.new(2)
-    unpool2d.build([8, 8, 3])
-    y = unpool2d.forward_node(x)
-    assert_equal [1, 16, 16, 3], y.shape
+    unpool2d.build([2, 2, 1])
+    y = unpool2d.(x)
+    expected = Xumo::SFloat[
+      [
+        [[1, 5], [1, 5], [2, 6], [2, 6]],
+        [[1, 5], [1, 5], [2, 6], [2, 6]],
+        [[3, 7], [3, 7], [4, 8], [4, 8]],
+        [[3, 7], [3, 7], [4, 8], [4, 8]],
+      ]
+    ]
+    assert_equal expected, y.data
   end
 
-  def test_backward_node
-    x = Xumo::SFloat.new(1, 8, 8, 3).seq
-    dy = Xumo::SFloat.new(1, 16, 16, 3).seq
+  def test_backward
+    x = DNN::Param.new(Xumo::SFloat[
+      [
+        [[1, 5], [2, 6]],
+        [[3, 7], [4, 8]],
+      ]
+    ])
     unpool2d = DNN::Layers::UnPool2D.new(2)
-    unpool2d.build([8, 8, 3])
-    unpool2d.forward_node(x)
-    dy2 = unpool2d.backward_node(dy).round(4)
-    assert_equal [1, 8, 8, 3], dy2.shape
+    unpool2d.build([2, 2, 1])
+    y = unpool2d.(x)
+    dy = Xumo::SFloat[
+      [
+        [[1, 5], [1, 5], [2, 6], [2, 6]],
+        [[1, 5], [1, 5], [2, 6], [2, 6]],
+        [[3, 7], [3, 7], [4, 8], [4, 8]],
+        [[3, 7], [3, 7], [4, 8], [4, 8]],
+      ]
+    ]
+    y.backward(dy)
+    expected = Xumo::SFloat[
+      [
+        [[4, 20], [8, 24]],
+        [[12, 28], [16, 32]],
+      ]
+    ]
+    assert_equal expected, x.grad
   end
 
   def test_output_shape

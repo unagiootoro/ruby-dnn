@@ -308,3 +308,18 @@ class TestMax < MiniTest::Unit::TestCase
     assert_equal Xumo::SFloat[0, 1], dx.round(4)
   end
 end
+
+class TestBroadcastTo < MiniTest::Unit::TestCase
+  def test_forward
+    broadcast_to = DNN::Functions::BroadcastTo.new([3, 3])
+    y = broadcast_to.forward(Xumo::SFloat[[1, 2, 3]])
+    assert_equal Xumo::SFloat[[1, 2, 3], [1, 2, 3], [1, 2, 3]], y.round(4)
+  end
+
+  def test_backward
+    broadcast_to = DNN::Functions::BroadcastTo.new([3, 3])
+    broadcast_to.forward(Xumo::SFloat[[1, 2, 3]])
+    dx = broadcast_to.backward(Xumo::SFloat[[1, 1, 1], [2, 2, 2], [3, 3, 3]])
+    assert_equal Xumo::SFloat[[6, 6, 6]], dx.round(4)
+  end
+end

@@ -52,6 +52,10 @@ module DNN
       @data.shape
     end
 
+    def size
+      @data.size
+    end
+
     def +@
       self
     end

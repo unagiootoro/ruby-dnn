@@ -357,15 +357,21 @@ module DNN
         ch = x.shape[3]
         x = Functions::ZeroPadding2D.new(@pad_size).(x) if @padding
         x = Functions::Im2col.new(@out_size, @pool_size, @strides).(x)
-        x = Functions::FunctionSpace.reshape(x, [batch_size * @out_size.reduce(:*), @pool_size.reduce(:*), ch])
-        x = Functions::FunctionSpace.max(x, axis: 1, keepdims: true)
-        Functions::FunctionSpace.reshape(x, [batch_size, *@out_size, ch])
+        x = x.reshape(batch_size * @out_size.reduce(:*), @pool_size.reduce(:*), ch)
+        x = x.max(axis: 1, keepdims: true)
+        x.reshape(batch_size, *@out_size, ch)
       end
     end
 
     class AvgPool2D < Pool2D
       def forward(x)
-        Functions::AvgPool2D.new(@pool_size, @out_size, strides: @strides, padding: @padding).(x)
+        batch_size = x.shape[0]
+        ch = x.shape[3]
+        x = Functions::ZeroPadding2D.new(@pad_size).(x) if @padding
+        x = Functions::Im2col.new(@out_size, @pool_size, @strides).(x)
+        x = x.reshape(batch_size * @out_size.reduce(:*), @pool_size.reduce(:*), ch)
+        x = x.mean(axis: 1, keepdims: true)
+        x.reshape(batch_size, *@out_size, ch)
       end
     end
 
@@ -378,7 +384,8 @@ module DNN
       end
 
       def forward(x)
-        Functions::Flatten.new.(Functions::AvgPool2D.new.(x, @input_shape[0..1]))
+        x = AvgPool2D.new(@input_shape[0..1]).(x)
+        x.reshape(x.shape[0], x.shape[1..-1].reduce(:*))
       end
     end
 
@@ -386,11 +393,22 @@ module DNN
       include Conv2DUtils
 
       attr_reader :unpool_size
+      attr_reader :strides
+      attr_reader :padding
 
       # @param [Array | Integer] unpool_size Unpooling size. unpooling size is of the form [height, width].
-      def initialize(unpool_size)
+      # @param [Array | Integer | NilClass] strides Stride length. Stride length is of the form [height, width].
+      #                                             If you set nil, treat pool_size as strides.
+      # @param [Array | Boolean] padding Padding size or whether to padding. Padding size is of the form [height, width].
+      def initialize(unpool_size, strides: nil, padding: false)
         super()
         @unpool_size = unpool_size.is_a?(Integer) ? [unpool_size, unpool_size] : unpool_size
+        @strides = if strides
+                     strides.is_a?(Integer) ? [strides, strides] : strides
+                   else
+                     @unpool_size.clone
+                   end
+        @padding = padding.is_a?(Integer) ? [padding, padding] : padding
       end
 
       def build(input_shape)
@@ -403,11 +421,28 @@ module DNN
         out_w = prev_w * unpool_w
         @out_size = [out_h, out_w]
         @num_channel = input_shape[2]
+        @pad_size = if @padding == true
+          calc_conv2d_padding_size(prev_h, prev_w, *@pool_size, @strides)
+        elsif @padding.is_a?(Array)
+          @padding
+        else
+          [0, 0]
+        end
         super
       end
 
       def forward(x)
-        Functions::UnPool2D.new(@unpool_size).(x)
+        fs = Functions::FunctionSpace
+        x_shape = x.shape
+        bsize = x.shape[0]
+        num_filters = x.shape[3]
+        x = x.reshape(x_shape[0..2].reduce(:*), 1, num_filters)
+        x = fs.broadcast_to(x, [x_shape[0..2].reduce(:*), @unpool_size.reduce(:*), num_filters])
+        col = x.reshape(x_shape[0..2].reduce(:*), @unpool_size.reduce(:*) * num_filters)
+        img_shape = [bsize, @out_size[0] + @pad_size[0], @out_size[1] + @pad_size[1], num_filters]
+        y = Functions::Col2im.new(img_shape, x_shape[1..2], @unpool_size, @unpool_size).(col)
+        y = Functions::Cropping2D.new(@pad_size).(y) if @padding
+        y
       end
 
       def compute_output_shape

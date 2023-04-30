@@ -161,6 +161,21 @@ module DNN
       end
     end
 
+    class BroadcastTo < FunctionNode
+      def initialize(target_shape)
+        @target_shape = target_shape
+      end
+
+      def forward(x)
+        @x_shape = x.shape
+        MathUtils.broadcast_to(x, @target_shape)
+      end
+
+      def backward(dy)
+        MathUtils.sum_to(dy, @x_shape)
+      end
+    end
+
     module FunctionSpace
       module_function
 
@@ -190,6 +205,10 @@ module DNN
 
       def max(x, axis: nil, keepdims: true)
         Max.new(axis: axis, keepdims: keepdims).(x)
+      end
+
+      def broadcast_to(x, target_shape)
+        BroadcastTo.new(target_shape).(x)
       end
     end
 
