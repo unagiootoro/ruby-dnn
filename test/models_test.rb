@@ -230,17 +230,6 @@ class TestSequential < MiniTest::Unit::TestCase
     assert_kind_of Dense, model.layers.last
   end
 
-  def test_trainable_layers
-    sequential = Sequential.new
-    sequential << Dense.new(8)
-    sequential << Dense.new(1)
-    model = Sequential.new
-    model << InputLayer.new(2)
-    model << sequential
-    model.predict1(Xumo::SFloat.zeros(2))
-    assert_equal 1, model.trainable_layers[1].num_units
-  end
-
   def test_get_layer
     model = Sequential.new
     model << InputLayer.new(2)

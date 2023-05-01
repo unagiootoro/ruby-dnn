@@ -57,6 +57,21 @@ module DNN
         forward(*input_tensors)
       end
 
+      # @return [Boolean] Setting false prevents learning of parameters.
+      def trainable?
+        layers.each do |layer|
+          return true if layer.trainable?
+        end
+        false
+      end
+
+      # @param [Boolean] trainable Specifies whether to allow learning.
+      def set_trainable(trainable)
+        layers.each do |layer|
+          layer.set_trainable(trainable)
+        end
+      end
+
       # Get the all layers.
       # @return [Array] All layers array.
       def layers
@@ -315,12 +330,6 @@ module DNN
         Marshal.load(Marshal.dump(self))
       end
 
-      # Get the all trainable layers.
-      # @return [Array] All has param layers array.
-      def trainable_layers
-        layers.select { |layer| layer.is_a?(Layers::TrainableLayer) }
-      end
-
       # Get the layer that the model has.
       # @param [Symbol] name The name of the layer to get.
       # @return [DNN::Layers::Layer] Return the layer.
@@ -351,7 +360,7 @@ module DNN
       # Get parameter data of all layers.
       # @return [Array] Parameter data.
       def get_all_params_data
-        trainable_layers.map do |layer|
+        layers.map do |layer|
           layer.get_params.to_h do |key, param|
             [key, param.data]
           end
@@ -361,7 +370,7 @@ module DNN
       # Set parameter data of all layers.
       # @param [Array] params_data Parameter data obtained by get_all_params_data.
       def set_all_params_data(params_data)
-        trainable_layers.each.with_index do |layer, i|
+        layers.each.with_index do |layer, i|
           params_data[i].each do |(key, data)|
             layer.get_params[key].data = data
           end
@@ -374,7 +383,7 @@ module DNN
         params_data = get_all_params_data
         clean_layers
         set_all_params_data(params_data)
-        trainable_layers.each do |layer|
+        layers.each do |layer|
           layer.get_params.each do |key, param|
             data = param.data
             if DNN.use_cumo? && data.is_a?(Cumo::NArray)
@@ -399,7 +408,7 @@ module DNN
         params_data = get_all_params_data
         clean_layers
         set_all_params_data(params_data)
-        trainable_layers.each do |layer|
+        layers.each do |layer|
           layer.get_params.each do |(key, param)|
             data = param.data
             if DNN.use_cumo? && data.is_a?(Numo::NArray)
@@ -419,9 +428,7 @@ module DNN
       end
 
       def get_all_trainable_params
-        layers.select { |layer| layer.is_a?(Layers::TrainableLayer) && layer.trainable }
-              .map { |layer| layer.get_params.values }.flatten.compact
-              .select(&:grad)
+        layers.flat_map { |layer| layer.get_params.values }.compact.select(&:grad)
       end
     end
 

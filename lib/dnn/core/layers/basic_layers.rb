@@ -49,6 +49,43 @@ module DNN
         self.(tensor)
       end
 
+      # @return [Boolean] Setting false prevents learning of parameters.
+      def trainable?
+        get_params.each_values do |param|
+          return true if param.requires_grad
+        end
+        false
+      end
+
+      # @param [Boolean] trainable Specifies whether to allow learning.
+      def set_trainable(trainable)
+        get_params.each_values do |param|
+          param.requires_grad = trainable
+        end
+      end
+
+      # @return [Hash] The parameters of the layer.
+      def get_params
+        {}
+      end
+
+      # Clean the layer state.
+      def clean
+        input_shapes = @input_shapes
+        hash = to_hash
+        params = get_params
+        instance_variables.each do |ivar|
+          instance_variable_set(ivar, nil)
+        end
+        load_hash(hash)
+        build(*input_shapes)
+        params.each do |(key, param)|
+          param.data = nil
+          param.grad = Xumo::SFloat[0] if param.grad
+          instance_variable_set("@#{key}", param)
+        end
+      end
+
       # Layer to a hash.
       def to_hash(merge_hash = nil)
         hash = { class: self.class.name }
@@ -58,58 +95,6 @@ module DNN
 
       def load_hash(hash)
         initialize
-      end
-
-      # Clean the layer state.
-      def clean
-        input_shapes = @input_shapes
-        hash = to_hash
-        instance_variables.each do |ivar|
-          instance_variable_set(ivar, nil)
-        end
-        load_hash(hash)
-        build(input_shapes)
-      end
-    end
-
-    # This class is a superclass of all classes with learning parameters.
-    class TrainableLayer < Layer
-      def initialize
-        super()
-        @trainable = true
-      end
-
-      # @return [Boolean] Setting false prevents learning of parameters.
-      def trainable
-        @trainable
-      end
-
-      def trainable=(trainable)
-        get_params.each_values do |param|
-          param.trainable = trainable
-        end
-        @trainable = trainable
-      end
-
-      # @return [Array] The parameters of the layer.
-      def get_params
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'get_params'"
-      end
-
-      def clean
-        input_shapes = @input_shapes
-        hash = to_hash
-        params = get_params
-        instance_variables.each do |ivar|
-          instance_variable_set(ivar, nil)
-        end
-        load_hash(hash)
-        build(input_shapes)
-        params.each do |(key, param)|
-          param.data = nil
-          param.grad = Xumo::SFloat[0] if param.grad
-          instance_variable_set("@#{key}", param)
-        end
       end
     end
 
@@ -145,7 +130,7 @@ module DNN
     end
 
     # It is a superclass of all connection layers.
-    class Connection < TrainableLayer
+    class Connection < Layer
       attr_reader :weight
       attr_reader :bias
       attr_reader :weight_initializer
