@@ -3,12 +3,7 @@ module DNN
 
     # Super class of all layer classes.
     class Layer
-      attr_reader :input_shape
-      attr_reader :output_shape
-
-      def self.call(x, *args, **kwargs)
-        new(*args, **kwargs).(x)
-      end
+      attr_reader :input_shapes
 
       def self.from_hash(hash)
         return nil unless hash
@@ -24,19 +19,17 @@ module DNN
       end
 
       # Forward propagation and create a link.
-      # @param [Tensor | Param] input Input tensor or param.
+      # @param [Array] inputs Input tensor or param list.
       # @return [Tensor] Output tensor.
-      def call(input)
-        input = Tensor.new(input) if !input.is_a?(Tensor) && !input.is_a?(Param)
-        build(input.data.shape[1..-1]) unless built?
-        forward(input)
+      def call(*inputs)
+        build(*inputs.map { |input| input.shape[1..-1] }) unless built?
+        forward(*inputs)
       end
 
       # Build the layer.
-      # @param [Array] input_shape Setting the shape of the input data.
-      def build(input_shape)
-        @input_shape = input_shape
-        @output_shape = compute_output_shape
+      # @param [Array] input_shapes Setting the shape of the input datas.
+      def build(*input_shapes)
+        @input_shapes = input_shapes
         @built = true
       end
 
@@ -46,17 +39,10 @@ module DNN
       end
 
       # Forward propagation.
-      # @param [Tensor] input Input tensor or param.
-      # @return [Tensor] Output tensor.
-      def forward(input)
+      # @param [Array] inputs Input tensor or param.
+      # @return [Tensor | Array] Output tensor or it list.
+      def forward(*inputs)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
-      end
-
-      # Please reimplement this method as needed.
-      # The default implementation return input_shape.
-      # @return [Array] Return the shape of the output data.
-      def compute_output_shape
-        @input_shape
       end
 
       def <<(tensor)
@@ -76,13 +62,13 @@ module DNN
 
       # Clean the layer state.
       def clean
-        input_shape = @input_shape
+        input_shapes = @input_shapes
         hash = to_hash
         instance_variables.each do |ivar|
           instance_variable_set(ivar, nil)
         end
         load_hash(hash)
-        build(input_shape)
+        build(input_shapes)
       end
     end
 
@@ -102,14 +88,14 @@ module DNN
       end
 
       def clean
-        input_shape = @input_shape
+        input_shapes = @input_shapes
         hash = to_hash
         params = get_params
         instance_variables.each do |ivar|
           instance_variable_set(ivar, nil)
         end
         load_hash(hash)
-        build(input_shape)
+        build(input_shapes)
         params.each do |(key, param)|
           param.data = nil
           param.grad = Xumo::SFloat[0] if param.grad
@@ -126,7 +112,7 @@ module DNN
       end
 
       def build(input_shape)
-        super(@input_shape)
+        super(input_shape)
       end
 
       def forward(x)
@@ -202,10 +188,10 @@ module DNN
       end
 
       private def init_weight_and_bias
-        @weight_initializer.init_param(self, @weight)
+        @weight_initializer.init_param(@weight, @input_shapes)
         @weight_regularizer.param = @weight if @weight_regularizer
         if @bias
-          @bias_initializer.init_param(self, @bias)
+          @bias_initializer.init_param(@bias, @input_shapes)
           @bias_regularizer.param = @bias if @bias_regularizer
         end
       end
@@ -244,10 +230,6 @@ module DNN
         y
       end
 
-      def compute_output_shape
-        [@num_units]
-      end
-
       def to_hash
         super(num_units: @num_units)
       end
@@ -272,10 +254,6 @@ module DNN
       def initialize(shape)
         super()
         @shape = shape
-      end
-
-      def compute_output_shape
-        @shape
       end
 
       def forward(x)

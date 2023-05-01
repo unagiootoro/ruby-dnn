@@ -26,13 +26,16 @@ module DNN
       end
 
       def build(input_shape)
-        super(@input_shape)
+        super(input_shape)
         @weight.data = Xumo::SFloat.new(@input_length)
-        @weight_initializer.init_param(self, @weight)
+        @weight_initializer.init_param(@weight, @input_shapes)
         @weight_regularizer.param = @weight if @weight_regularizer
       end
 
       def forward(x)
+        unless x.shape[1..-1] == @input_shape
+          raise DNNShapeError, "The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}."
+        end
         Functions::Embedding.new.(x, @weight)
       end
 

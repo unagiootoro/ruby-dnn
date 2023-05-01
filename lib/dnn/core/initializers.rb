@@ -20,7 +20,7 @@ module DNN
       # Initialization of learning parameters.
       # @param [DNN::Layers::Layer] layer Layer that owns learning parameters.
       # @param [DNN::Param] param Learning parameter to be initialized.
-      def init_param(layer, param)
+      def init_param(param, input_shapes)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'init_param'"
       end
 
@@ -36,7 +36,7 @@ module DNN
     end
 
     class Zeros < Initializer
-      def init_param(layer, param)
+      def init_param(param, input_shapes)
         param.data = param.data.fill(0)
       end
     end
@@ -50,7 +50,7 @@ module DNN
         @const = const
       end
 
-      def init_param(layer, param)
+      def init_param(param, input_shapes)
         param.data = param.data.fill(@const)
       end
 
@@ -75,7 +75,7 @@ module DNN
         @std = std
       end
 
-      def init_param(layer, param)
+      def init_param(param, input_shapes)
         Xumo::SFloat.srand(@seed)
         param.data = param.data.rand_norm(@mean, @std)
       end
@@ -101,7 +101,7 @@ module DNN
         @max = max
       end
 
-      def init_param(layer, param)
+      def init_param(param, input_shapes)
         Xumo::SFloat.srand(@seed)
         param.data = param.data.rand(@min, @max)
       end
@@ -120,9 +120,9 @@ module DNN
         super
       end
 
-      def init_param(layer, param)
+      def init_param(param, input_shapes)
         Xumo::SFloat.srand(@seed)
-        num_prev_units = layer.input_shape.reduce(:*)
+        num_prev_units = input_shapes.reduce { |result, input_shape| result + input_shape.reduce(:*) }
         param.data = param.data.rand_norm / Math.sqrt(num_prev_units)
       end
     end
@@ -132,9 +132,9 @@ module DNN
         super
       end
 
-      def init_param(layer, param)
+      def init_param(param, input_shape)
         Xumo::SFloat.srand(@seed)
-        num_prev_units = layer.input_shape.reduce(:*)
+        num_prev_units = input_shapes.reduce { |result, input_shape| result + input_shape.reduce(:*) }
         param.data = param.data.rand_norm / Math.sqrt(num_prev_units) * Math.sqrt(2)
       end
     end

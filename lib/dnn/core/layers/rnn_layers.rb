@@ -126,11 +126,6 @@ module DNN
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'create_hidden_layer'"
       end
 
-      def compute_output_shape
-        @time_length = @input_shape[0]
-        @return_sequences ? [@time_length, @num_units] : [@num_units]
-      end
-
       def to_hash(merge_hash = nil)
         hash = {
           num_units: @num_units,
@@ -175,7 +170,7 @@ module DNN
 
       private def init_weight_and_bias
         super
-        @recurrent_weight_initializer.init_param(self, @recurrent_weight)
+        @recurrent_weight_initializer.init_param(@recurrent_weight, @input_shapes)
         @recurrent_weight_regularizer.param = @recurrent_weight if @recurrent_weight_regularizer
       end
     end

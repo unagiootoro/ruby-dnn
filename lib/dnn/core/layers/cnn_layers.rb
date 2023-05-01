@@ -167,10 +167,6 @@ module DNN
         Functions::FunctionSpace.reshape(x, [batch_size, *@out_size, x.shape[3]])
       end
 
-      def compute_output_shape
-        [*@out_size, @num_filters]
-      end
-
       # @return [Numo::SFloat] Convert weight to filter and return.
       def filters
         num_prev_filters = @input_shape[2]
@@ -261,10 +257,6 @@ module DNN
         y
       end
 
-      def compute_output_shape
-        [*@out_size, @num_filters]
-      end
-
       # @return [Numo::SFloat] Convert weight to filter and return.
       def filters
         num_prev_filters = @input_shape[2]
@@ -334,10 +326,6 @@ module DNN
                     end
         @out_size = calc_conv2d_out_size(prev_h, prev_w, *@pool_size, *@pad_size, @strides)
         super
-      end
-
-      def compute_output_shape
-        [*@out_size, @num_channel]
       end
 
       def to_hash
@@ -443,10 +431,6 @@ module DNN
         y = Functions::Col2im.new(img_shape, x_shape[1..2], @unpool_size, @unpool_size).(col)
         y = Functions::Cropping2D.new(@pad_size).(y) if @padding
         y
-      end
-
-      def compute_output_shape
-        [*@out_size, @num_channel]
       end
 
       def to_hash
