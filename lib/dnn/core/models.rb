@@ -2,7 +2,7 @@ module DNN
   module Models
 
     # This class is used to hold multiple layers in an array.
-    class LayersList < Array
+    class LayerList < Array
       def self.from_hash_list(hash_list)
         layers_list = new
         hash_list.each do |hash|
@@ -30,7 +30,7 @@ module DNN
         each do |layer|
           if layer.is_a?(Layers::Layer)
             layers_array << layer
-          elsif layer.is_a?(Chain) || layer.is_a?(LayersList)
+          elsif layer.is_a?(Chain) || layer.is_a?(LayerList)
             layers_array.concat(layer.layers)
           end
         end
@@ -66,7 +66,7 @@ module DNN
           obj = instance_variable_get(ivar)
           if obj.is_a?(Layers::Layer)
             layers_array << obj
-          elsif obj.is_a?(Chain) || obj.is_a?(LayersList)
+          elsif obj.is_a?(Chain) || obj.is_a?(LayerList)
             layers_array.concat(obj.layers)
           end
         end
@@ -79,7 +79,7 @@ module DNN
           obj = instance_variable_get(ivar)
           if obj.is_a?(Layers::Layer) || obj.is_a?(Chain)
             layers_hash[ivar] = obj.to_hash
-          elsif obj.is_a?(LayersList)
+          elsif obj.is_a?(LayerList)
             layers_hash[ivar] = obj.to_hash_list
           end
         end
@@ -90,7 +90,7 @@ module DNN
         instance_variables.sort.each do |ivar|
           hash_or_array = layers_hash[ivar]
           if hash_or_array.is_a?(Array)
-            instance_variable_set(ivar, LayersList.from_hash_list(hash_or_array))
+            instance_variable_set(ivar, LayerList.from_hash_list(hash_or_array))
           elsif hash_or_array.is_a?(Hash)
             obj_class = DNN.const_get(hash_or_array[:class])
             obj = obj_class.allocate
@@ -326,7 +326,7 @@ module DNN
       # @return [DNN::Layers::Layer] Return the layer.
       def get_layer(name)
         layer = instance_variable_get("@#{name}")
-        return layer if layer.is_a?(Layers::Layer) || layer.is_a?(Chain) || layer.is_a?(LayersList)
+        return layer if layer.is_a?(Layers::Layer) || layer.is_a?(Chain) || layer.is_a?(LayerList)
         nil
       end
 
@@ -431,7 +431,7 @@ module DNN
       # @param [Array] stack All layers possessed by the model.
       def initialize(stack = [])
         super()
-        @stack = LayersList.new
+        @stack = LayerList.new
         stack.each do |layer|
           add(layer)
         end
