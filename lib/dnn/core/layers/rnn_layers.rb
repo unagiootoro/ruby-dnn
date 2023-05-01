@@ -1,14 +1,6 @@
 module DNN
   module Layers
-    class SimpleRNNCell
-      def initialize(requires_weight_grad: true)
-        @requires_weight_grad = requires_weight_grad
-      end
-
-      def call(*args)
-        forward(*args)
-      end
-
+    class SimpleRNNCell < Layer
       def forward(x, h, weight, recurrent_weight, bias = nil)
         h2 = x.dot(weight) + h.dot(recurrent_weight)
         h2 += bias if bias
@@ -16,16 +8,7 @@ module DNN
       end
     end
 
-    class LSTMCell
-      def initialize(return_c: true, requires_weight_grad: true)
-        @requires_weight_grad = requires_weight_grad
-        @return_c = return_c
-      end
-
-      def call(*args)
-        forward(*args)
-      end
-
+    class LSTMCell < Layer
       def forward(x, h, c, weight, recurrent_weight, bias = nil)
         fs = Functions::FunctionSpace
 
@@ -42,19 +25,11 @@ module DNN
 
         c2 = f * c + g * i
         h2 = o * fs.tanh(c2)
-        @return_c ? [h2, c2] : h2
+        [h2, c2]
       end
     end
 
-    class GRUCell
-      def initialize(requires_weight_grad: true)
-        @requires_weight_grad = requires_weight_grad
-      end
-
-      def call(*args)
-        forward(*args)
-      end
-
+    class GRUCell < Layer
       def forward(x, h, weight, recurrent_weight, bias = nil)
         fs = Functions::FunctionSpace
 
@@ -218,12 +193,17 @@ module DNN
         x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
           x.reshape(x.shape[0], x.shape[2])
         end
-        h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
+        if @stateful
+          h = @h
+        else
+          h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
+        end
         x_array.each.with_index do |x, t|
           h = SimpleRNNCell.new.(x, h, @weight, @recurrent_weight, @bias)
           h = Functions::FunctionSpace.send(@activation, h)
           h_array << h if @return_sequences
         end
+        @h = Tensor.new(h.data) if @stateful
         if @return_sequences
           fs.concatenate(*h_array.map { |_h| _h.reshape(_h.shape[0], 1, _h.shape[1]) }, axis: 1)
         else
@@ -282,15 +262,20 @@ module DNN
         x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
           x.reshape(x.shape[0], x.shape[2])
         end
-        h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
-        c = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
+        if @stateful
+          h = @h
+          c = @c
+        else
+          h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
+          c = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
+        end
         x_array.each.with_index do |x, t|
-          if t == x_array.length - 1
-            h = LSTMCell.new(return_c: false).(x, h, c, @weight, @recurrent_weight, @bias)
-          else
-            h, c = LSTMCell.new.(x, h, c, @weight, @recurrent_weight, @bias)
-          end
+          h, c = LSTMCell.new.(x, h, c, @weight, @recurrent_weight, @bias)
           h_array << h if @return_sequences
+        end
+        if @stateful
+          @h = Tensor.new(h.data)
+          @c = Tensor.new(c.data)
         end
         if @return_sequences
           fs.concatenate(*h_array.map { |_h| _h.reshape(_h.shape[0], 1, _h.shape[1]) }, axis: 1)
@@ -338,11 +323,16 @@ module DNN
         x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
           x.reshape(x.shape[0], x.shape[2])
         end
-        h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
+        if @stateful
+          h = @h
+        else
+          h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
+        end
         x_array.each.with_index do |x, t|
           h = GRUCell.new.(x, h, @weight, @recurrent_weight, @bias)
           h_array << h if @return_sequences
         end
+        @h = Tensor.new(h.data) if @stateful
         if @return_sequences
           fs.concatenate(*h_array.map { |_h| _h.reshape(_h.shape[0], 1, _h.shape[1]) }, axis: 1)
         else
