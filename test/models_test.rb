@@ -251,6 +251,7 @@ class TestSequential < MiniTest::Unit::TestCase
     model2.predict1(Xumo::SFloat.zeros(10))
 
     dense_params_data = [
+      {},
       { weight: dense0.weight.data, bias:  dense0.bias.data},
       { weight: dense1.weight.data, bias:  dense1.bias.data},
     ]

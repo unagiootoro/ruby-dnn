@@ -122,7 +122,7 @@ module DNN
 
       def init_param(param, input_shapes)
         Xumo::SFloat.srand(@seed)
-        num_prev_units = input_shapes.reduce { |result, input_shape| result + input_shape.reduce(:*) }
+        num_prev_units = input_shapes.reduce(0) { |result, input_shape| result + input_shape.reduce(:*) }
         param.data = param.data.rand_norm / Math.sqrt(num_prev_units)
       end
     end
@@ -132,9 +132,9 @@ module DNN
         super
       end
 
-      def init_param(param, input_shape)
+      def init_param(param, input_shapes)
         Xumo::SFloat.srand(@seed)
-        num_prev_units = input_shapes.reduce { |result, input_shape| result + input_shape.reduce(:*) }
+        num_prev_units = input_shapes.reduce(0) { |result, input_shape| result + input_shape.reduce(:*) }
         param.data = param.data.rand_norm / Math.sqrt(num_prev_units) * Math.sqrt(2)
       end
     end

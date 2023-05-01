@@ -31,7 +31,7 @@ class TestConst < MiniTest::Unit::TestCase
     dense = Dense.new(10)
     dense.build([10])
     zeros = Xumo::SFloat.ones(dense.weight.data.shape)
-    initializer.init_param(self, dense.weight)
+    initializer.init_param(dense.weight, dense.input_shapes)
     assert_equal zeros, dense.weight.data
   end
 
@@ -53,7 +53,7 @@ class TestZeros < MiniTest::Unit::TestCase
     dense = Dense.new(10)
     dense.build([10])
     zeros = Xumo::SFloat.zeros(dense.weight.data.shape)
-    initializer.init_param(self, dense.weight)
+    initializer.init_param(dense.weight, dense.input_shapes)
     assert_equal zeros, dense.weight.data
   end
 end
@@ -78,7 +78,7 @@ class TestRandomNormal < MiniTest::Unit::TestCase
     initializer = RandomNormal.new(0, 0.05, seed: 0)
     dense = Dense.new(10)
     dense.build([10])
-    initializer.init_param(dense, dense.weight)
+    initializer.init_param(dense.weight, dense.input_shapes)
 
     Xumo::SFloat.srand(0)
     expected = Xumo::SFloat.new(10, 10).rand_norm(0, 0.05).round(4)
@@ -111,7 +111,7 @@ class TestRandomUniform < MiniTest::Unit::TestCase
     initializer = RandomUniform.new(-0.05, 0.05, seed: 0)
     dense = Dense.new(10)
     dense.build([10])
-    initializer.init_param(dense, dense.weight)
+    initializer.init_param(dense.weight, dense.input_shapes)
 
     Xumo::SFloat.srand(0)
     expected = Xumo::SFloat.new(10, 10).rand(-0.05, 0.05).round(4)
@@ -136,7 +136,7 @@ class TestXavier < MiniTest::Unit::TestCase
     initializer = Xavier.new(seed: 0)
     dense = Dense.new(10)
     dense.build([10])
-    initializer.init_param(dense, dense.weight)
+    initializer.init_param(dense.weight, dense.input_shapes)
 
     Xumo::SFloat.srand(0)
     expected = (Xumo::SFloat.new(10, 10).rand_norm / Math.sqrt(10)).round(4)
@@ -150,7 +150,7 @@ class TestHe < MiniTest::Unit::TestCase
     initializer = He.new(seed: 0)
     dense = Dense.new(10)
     dense.build([10])
-    initializer.init_param(dense, dense.weight)
+    initializer.init_param(dense.weight, dense.input_shapes)
 
     Xumo::SFloat.srand(0)
     expected = (Xumo::SFloat.new(10, 10).rand_norm / Math.sqrt(10) * Math.sqrt(2)).round(4)
