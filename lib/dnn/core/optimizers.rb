@@ -28,14 +28,6 @@ module DNN
         end
       end
 
-      # Update layers has params.
-      def update_layers(layers)
-        target_params = layers.select { |layer| layer.is_a?(Layers::TrainableLayer) && layer.trainable }
-                              .map { |layer| layer.get_params.values }.flatten.compact
-                              .select(&:grad)
-        update(target_params)
-      end
-
       def to_hash(merge_hash = nil)
         hash = { class: self.class.name, clip_norm: @clip_norm }
         hash.merge!(merge_hash) if merge_hash
