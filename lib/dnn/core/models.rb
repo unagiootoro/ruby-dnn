@@ -44,17 +44,17 @@ module DNN
       end
 
       # Forward propagation.
-      # @param [Tensor] input_tensors Input tensors.
+      # @param [Array] input_tensors Input tensors.
       # @return [Tensor] Output tensor.
       def forward(*input_tensors)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
       end
 
       # Forward propagation and create a link.
-      # @param [Tensor | Array] input_tensors Input tensors.
+      # @param [Array] input_tensors Input tensors.
       # @return [Tensor] Output tensor.
-      def call(input_tensors)
-        forward(input_tensors)
+      def call(*input_tensors)
+        forward(*input_tensors)
       end
 
       # Get the all layers.
