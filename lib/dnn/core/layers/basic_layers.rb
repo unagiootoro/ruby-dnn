@@ -74,12 +74,21 @@ module DNN
 
     # This class is a superclass of all classes with learning parameters.
     class TrainableLayer < Layer
-      # @return [Boolean] Setting false prevents learning of parameters.
-      attr_accessor :trainable
-
       def initialize
         super()
         @trainable = true
+      end
+
+      # @return [Boolean] Setting false prevents learning of parameters.
+      def trainable
+        @trainable
+      end
+
+      def trainable=(trainable)
+        get_params.each_values do |param|
+          param.trainable = trainable
+        end
+        @trainable = trainable
       end
 
       # @return [Array] The parameters of the layer.
