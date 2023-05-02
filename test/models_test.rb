@@ -60,6 +60,37 @@ class TestSequential < MiniTest::Unit::TestCase
     end
   end
 
+  def test_optimize
+    y = DNN::Tensor.new(Xumo::SFloat[[65, 130], [155, 310]])
+    t = y
+    dense = Dense.new(2)
+    dense.build([3])
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
+    model = Sequential.new
+    model << InputLayer.new(3)
+    model << dense
+    model.setup(SGD.new, MeanSquaredError.new)
+    loss = model.optimize(y, t)
+
+    assert_equal 0, Utils.to_f(loss.data)
+  end
+
+  # Test multiple outputs.
+  def test_optimize2
+    y = DNN::Tensor.new(Xumo::SFloat[[65, 130], [155, 310]])
+    t = y
+    dense = Dense.new(2)
+    dense.build([3])
+    dense.weight.data = Xumo::SFloat[[10, 20], [10, 20], [10, 20]]
+    dense.bias.data = Xumo::SFloat[5, 10]
+    model = StubMultiOutputModel.new(dense)
+    model.setup(SGD.new, [MeanSquaredError.new, MeanSquaredError.new])
+    losses = model.optimize([y, y], [t, t])
+
+    assert_equal [0, 0], losses.map { |loss| Utils.to_f(loss.data)}
+  end
+
   def test_train_on_batch
     x = Xumo::SFloat[[1, 2, 3], [4, 5, 6]]
     y = Xumo::SFloat[[65, 130], [155, 310]]

@@ -21,7 +21,7 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     cbk.runner = DNN::Trainer.new(DNN::Models::Sequential.new)
     cbk.runner.set_last_log(:loss, 0.11)
     cbk.after_train_on_batch
-    assert_equal cbk.runner.send(:check_stop_requested), nil
+    assert_nil cbk.runner.send(:check_stop_requested)
   end
 
   def test_after_train_on_batch3
@@ -37,7 +37,7 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     cbk.runner = DNN::Trainer.new(DNN::Models::Sequential.new)
     cbk.runner.set_last_log(:accuracy, 0.09)
     cbk.after_train_on_batch
-    assert_equal cbk.runner.send(:check_stop_requested), nil
+    assert_nil cbk.runner.send(:check_stop_requested)
   end
 
   def test_after_epoch
@@ -53,7 +53,7 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     cbk.runner = DNN::Trainer.new(DNN::Models::Sequential.new)
     cbk.runner.set_last_log(:test_loss, 0.11)
     cbk.after_epoch
-    assert_equal cbk.runner.send(:check_stop_requested), nil
+    assert_nil cbk.runner.send(:check_stop_requested)
   end
 
   def test_after_epoch3
@@ -69,7 +69,7 @@ class TestEarlyStopping < MiniTest::Unit::TestCase
     cbk.runner = DNN::Trainer.new(DNN::Models::Sequential.new)
     cbk.runner.set_last_log(:test_accuracy, 0.09)
     cbk.after_epoch
-    assert_equal cbk.runner.send(:check_stop_requested), nil
+    assert_nil cbk.runner.send(:check_stop_requested)
   end
 end
 
