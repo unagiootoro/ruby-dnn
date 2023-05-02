@@ -66,7 +66,7 @@ module DNN
       @last_predicted_batch = nil
     end
 
-    def on_predict_step_internal(model, x_batch)
+    def on_predict_step_default(model, x_batch)
       DNN::GlobalState.learning_phase = false
       output_tensors = model.(Tensor.new(x_batch))
       if output_tensors.is_a?(Array)
@@ -155,7 +155,7 @@ module DNN
     end
 
     def on_predict_step(x_batch)
-      on_predict_step_internal(@model, x_batch)
+      on_predict_step_default(@model, x_batch)
     end
   end
 end

@@ -195,34 +195,43 @@ module DNN
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
         DNN::GlobalState.learning_phase = true
-        if x.is_a?(Array)
-          input = x.map { |v| Tensor.new(v) }
+        inputs = Tensor.convert(x)
+        outputs = call(*inputs)
+        losses = optimize(outputs, Tensor.convert(y))
+        if losses.is_a?(Array)
+          losses.map { |loss| Utils.to_f(loss.data) }
         else
-          input = Tensor.new(x)
+          Utils.to_f(losses.data)
         end
-        output_tensors = call(*input)
-        if output_tensors.is_a?(Array)
-          loss_data = []
-          output_tensors.each.with_index do |out, i|
+      end
+
+      # Update model parameters using output data and teacher data.
+      # Setup the model before use this method.
+      # @param [DNN::Tensor] y Output data or it array.
+      # @param [DNN::Tensor] t Teacher data or it array.
+      # @return [DNN::Tensor | Array] Return loss tensor or it array.
+      def optimize(y, t)
+        raise DNNError, "The model is not optimizer setup complete." unless @optimizer
+        raise DNNError, "The model is not loss_func setup complete." unless @loss_func
+        Utils.check_input_data_type("y", y, DNN::Tensor)
+        Utils.check_input_data_type("t", t, DNN::Tensor)
+        if y.is_a?(Array)
+          result = []
+          y.each_index do |i|
             loss_opt = {}
             loss_opt[:layers] = layers if i == 0
             loss_opt[:loss_weight] = @loss_weights[i] if @loss_weights
-            loss = @loss_func[i].loss(out, Tensor.new(y[i]), **loss_opt)
-            loss_data << loss.data
-            loss.backward(Xumo::SFloat.ones(y[i][0...1, false].shape[0], 1))
+            loss = @loss_func[i].loss(y[i], t[i], **loss_opt)
+            result << loss
+            loss.backward(Xumo::SFloat.ones(y[i].data[0...1, false].shape[0], 1))
           end
         else
-          out = output_tensors
-          loss = @loss_func.loss(out, Tensor.new(y), layers: layers)
-          loss_data = loss.data
-          loss.backward(Xumo::SFloat.ones(y[0...1, false].shape[0], 1))
+          loss = @loss_func.loss(y, t, layers: layers)
+          result = loss
+          loss.backward(Xumo::SFloat.ones(y.data[0...1, false].shape[0], 1))
         end
         @optimizer.update(get_all_trainable_params)
-        if loss_data.is_a?(Array)
-          loss_data.map { |v| Utils.to_f(v) }
-        else
-          Utils.to_f(loss_data)
-        end
+        result
       end
 
       # Test once.

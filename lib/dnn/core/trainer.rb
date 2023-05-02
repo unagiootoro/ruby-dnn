@@ -153,40 +153,22 @@ module DNN
       @stop_requested_message = nil
     end
 
-    def on_train_step_internal(model, x_batch, y_batch)
+    def on_train_step_default(model, x_batch, y_batch)
       DNN::GlobalState.learning_phase = true
-      output_tensors = model.(Tensor.new(x_batch))
-      if output_tensors.is_a?(Array)
-        output_data = []
-        loss_data = []
-        output_tensors.each.with_index do |out, i|
-          output_data << out.data
-          loss_opt = {}
-          loss_opt[:layers] = layers if i == 0
-          loss_opt[:loss_weight] = @loss_weights[i] if @loss_weights
-          loss = model.loss_func[i].loss(out, Tensor.new(y_batch[i]), **loss_opt)
-          loss_data << loss.data
-          loss.backward(Xumo::SFloat.ones(y_batch[i][0...1, false].shape[0], 1))
-        end
-      else
-        out = output_tensors
-        output_data = out.data
-        loss = model.loss_func.loss(out, Tensor.new(y_batch), layers: model.layers)
-        loss_data = loss.data
-        loss.backward(Xumo::SFloat.ones(y_batch[0...1, false].shape[0], 1))
-      end
-      model.optimizer.update(model.get_all_trainable_params)
-
-      if loss_data.is_a?(Array)
+      x = Tensor.convert(x_batch)
+      y = Tensor.convert(y_batch)
+      outputs = model.(*x)
+      losses = model.optimize(outputs, y)
+      if losses.is_a?(Array)
         loss_value = []
         acc = [] if @need_accuracy
-        loss_data.each_index do |i|
-          loss_value << Utils.to_f(loss_data)
-          acc << accuracy(output_data[i], y_batch[i]).to_f / y_batch[i].shape[0] if @need_accuracy
+        losses.each_index do |i|
+          loss_value << Utils.to_f(losses[i].data)
+          acc << accuracy(outputs[i].data, y_batch[i]).to_f / y_batch[i].shape[0] if @need_accuracy
         end
       else
-        loss_value = Utils.to_f(loss_data)
-        acc = model.accuracy(output_data, y_batch).to_f / y_batch.shape[0] if @need_accuracy
+        loss_value = Utils.to_f(losses.data)
+        acc = model.accuracy(outputs.data, y_batch).to_f / y_batch.shape[0] if @need_accuracy
       end
       if @need_accuracy
         { loss: loss_value, accuracy: acc }
@@ -388,15 +370,15 @@ module DNN
     end
 
     def on_train_step(x_batch, y_batch)
-      on_train_step_internal(@model, x_batch, y_batch)
+      on_train_step_default(@model, x_batch, y_batch)
     end
 
     def on_test_step(x_batch, y_batch)
-      on_test_step_internal(@model, x_batch, y_batch)
+      on_test_step_default(@model, x_batch, y_batch)
     end
 
     def on_predict_step(x_batch)
-      on_predict_step_internal(@model, x_batch)
+      on_predict_step_default(@model, x_batch)
     end
   end
 end

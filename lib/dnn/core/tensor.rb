@@ -2,6 +2,10 @@ module DNN
   class Tensor < BaseTensor
     attr_reader :prev_link
 
+    def self.convert(inputs)
+      inputs.is_a?(Array) ? inputs.map { |input| self.new(input) } : self.new(inputs)
+    end
+
     def initialize(data, prev_link: nil, backward_index: nil)
       super(data)
       @prev_link = prev_link

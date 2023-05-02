@@ -75,7 +75,7 @@ module DNN
       @evaluate_state = :none
     end
 
-    def on_test_step_internal(model, x_batch, y_batch)
+    def on_test_step_default(model, x_batch, y_batch)
       DNN::GlobalState.learning_phase = false
       output_tensors = model.(Tensor.new(x_batch))
       if output_tensors.is_a?(Array)
@@ -198,7 +198,7 @@ module DNN
     end
 
     def on_test_step(x_batch, y_batch)
-      on_test_step_internal(@model, x_batch, y_batch)
+      on_test_step_default(@model, x_batch, y_batch)
     end
   end
 end
