@@ -106,8 +106,8 @@ module DNN
                               verbose: true,
                               need_accuracy: true,
                               io: $stdout)
-                              check_model_setup_complete
-                              check_early_stop_requested # Clear early stop request.
+      check_model_setup_complete
+      check_stop_requested # Clear stop request.
       @train_iterator = train_iterator
       @max_epochs = epochs
       @train_batch_size = batch_size
@@ -130,8 +130,8 @@ module DNN
     end
 
     # Request training early stop.
-    def request_early_stop
-      @early_stop_requested = true
+    def request_stop(message)
+      @stop_requested_message = message
     end
 
     private
@@ -150,7 +150,7 @@ module DNN
       @need_accuracy = false
       @io = nil
       @num_train_datas = 0
-      @early_stop_requested = false
+      @stop_requested_message = nil
     end
 
     def on_train_step_internal(model, x_batch, y_batch)
@@ -221,12 +221,13 @@ module DNN
     def check_model_setup_complete
     end
 
-    def check_early_stop_requested
-      if @early_stop_requested
-        @early_stop_requested = false
-        return true
+    def check_stop_requested
+      if @stop_requested_message
+        stop_requested_message = @stop_requested_message
+        @stop_requested_message = nil
+        return stop_requested_message
       end
-      false
+      nil
     end
 
     def start_train_epoch
@@ -260,8 +261,9 @@ module DNN
         @progress_bar.progress(@train_batch_size)
         @progress_bar.print(append: metrics_to_str(train_step_met))
       end
-      if check_early_stop_requested
-        @io.puts("\nEarly stopped.") if @verbose
+      stop_requested_message = check_stop_requested
+      if stop_requested_message
+        @io.puts("\n#{stop_requested_message}") if @verbose
         @train_state = :trainer_end_training
       else
         @train_state = :end_train_step
@@ -324,8 +326,9 @@ module DNN
       call_callbacks(:after_epoch)
       if @epoch <= @max_epochs
         @train_iterator.reset
-        if check_early_stop_requested
-          @io.puts("Early stopped.") if @verbose
+        stop_requested_message = check_stop_requested
+        if stop_requested_message
+          @io.puts(stop_requested_message) if @verbose
           @train_state = :trainer_end_training
         else
           @train_state = :start_train_epoch

@@ -74,14 +74,18 @@ module DNN
       end
 
       def after_train_on_batch
-        @runner.request_early_stop if judge_early_stopping_train
+        request_early_stop if judge_early_stopping_train
       end
 
       def after_epoch
-        @runner.request_early_stop if judge_early_stopping_test
+        request_early_stop if judge_early_stopping_test
       end
 
       private
+
+      def request_early_stop
+        @runner.request_stop("Early stopped.")
+      end
 
       def judge_early_stopping_train
         case @trigger
@@ -107,7 +111,7 @@ module DNN
     # A callback to stop training the model if loss is NaN by after train on batch.
     class NaNStopping < Callback
       def after_train_on_batch
-        throw :stop, "loss is NaN." if @runner.last_log(:loss).nan?
+        @runner.request_stop("loss is NaN.") if @runner.last_log(:loss).nan?
       end
     end
 
