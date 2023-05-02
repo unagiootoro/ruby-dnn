@@ -1,6 +1,6 @@
 module DNN
   module Functions
-    class Dropout < FunctionNode
+    class Dropout < Function
       def initialize(dropout_ratio = 0.5, seed: rand(1 << 31), use_scale: true, learning_phase: false)
         super()
         @dropout_ratio = dropout_ratio

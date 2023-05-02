@@ -1,6 +1,6 @@
 module DNN
   module Functions
-    class RNNTimeSplit < FunctionNode
+    class RNNTimeSplit < Function
       def forward(xs)
         @xs_shape = xs.shape
         y_outputs = []
@@ -19,7 +19,7 @@ module DNN
       end
     end
 
-    class RNNTimeConcatenate < FunctionNode
+    class RNNTimeConcatenate < Function
       def forward(*x_inputs)
         ys = Xumo::SFloat.zeros(x_inputs[0].shape[0], x_inputs.length, *x_inputs[0].shape[1..-1])
         x_inputs.each.with_index do |x, t|
@@ -37,7 +37,7 @@ module DNN
       end
     end
 
-    class SimpleRNNCell < FunctionNode
+    class SimpleRNNCell < Function
       def initialize(requires_weight_grad: true)
         @requires_weight_grad = requires_weight_grad
       end
@@ -73,7 +73,7 @@ module DNN
       end
     end
 
-    class LSTMCell < FunctionNode
+    class LSTMCell < Function
       def initialize(return_c: true, requires_weight_grad: true)
         @requires_weight_grad = requires_weight_grad
         @tanh = Functions::Tanh.new
@@ -138,7 +138,7 @@ module DNN
       end
     end
 
-    class GRUCell < FunctionNode
+    class GRUCell < Function
       def initialize(requires_weight_grad: true)
         @requires_weight_grad = requires_weight_grad
         @update_sigmoid = Functions::Sigmoid.new

@@ -1,6 +1,6 @@
 module DNN
   module Functions
-    class MeanSquaredError < FunctionNode
+    class MeanSquaredError < Function
       def forward(y, t)
         @y = y
         @t = t
@@ -12,7 +12,7 @@ module DNN
       end
     end
 
-    class MeanAbsoluteError < FunctionNode
+    class MeanAbsoluteError < Function
       def forward(y, t)
         @y = y
         @t = t
@@ -27,7 +27,7 @@ module DNN
       end
     end
 
-    class Hinge < FunctionNode
+    class Hinge < Function
       def forward(y, t)
         @t = t
         @a = 1 - y * t
@@ -41,7 +41,7 @@ module DNN
       end
     end
 
-    class HuberLoss < FunctionNode
+    class HuberLoss < Function
       def forward(y, t)
         @y = y
         @t = t
@@ -59,7 +59,7 @@ module DNN
       end
     end
 
-    class SoftmaxCrossEntropy < FunctionNode
+    class SoftmaxCrossEntropy < Function
       def initialize(eps: 1e-7)
         @eps = eps
       end
@@ -75,7 +75,7 @@ module DNN
       end
     end
 
-    class SigmoidCrossEntropy < FunctionNode
+    class SigmoidCrossEntropy < Function
       def initialize(eps: 1e-7)
         @eps = eps
       end

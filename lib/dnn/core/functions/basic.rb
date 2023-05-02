@@ -1,6 +1,6 @@
 module DNN
   module Functions
-    class Add < FunctionNode
+    class Add < Function
       def initialize
         @requires_dx1 = true
         @requires_dx2 = true
@@ -27,7 +27,7 @@ module DNN
       end
     end
 
-    class Sub < FunctionNode
+    class Sub < Function
       def initialize
         @requires_dx1 = true
         @requires_dx2 = true
@@ -52,7 +52,7 @@ module DNN
       end
     end
 
-    class Mul < FunctionNode
+    class Mul < Function
       def initialize
         @requires_dx1 = true
         @requires_dx2 = true
@@ -76,7 +76,7 @@ module DNN
       end
     end
 
-    class Div < FunctionNode
+    class Div < Function
       def initialize
         @requires_dx1 = true
         @requires_dx2 = true
@@ -100,7 +100,7 @@ module DNN
       end
     end
 
-    class Neg < FunctionNode
+    class Neg < Function
       def forward(x)
         -x
       end
@@ -110,7 +110,7 @@ module DNN
       end
     end
 
-    class Pow < FunctionNode
+    class Pow < Function
       def initialize(index)
         @index = index
       end
@@ -125,7 +125,7 @@ module DNN
       end
     end
 
-    class Dot < FunctionNode
+    class Dot < Function
       def initialize
         @requires_dx1 = true
         @requires_dx2 = true
@@ -149,7 +149,7 @@ module DNN
       end
     end
 
-    class Flatten < FunctionNode
+    class Flatten < Function
       def forward(x)
         @x_shape = x.shape
         x.flatten
@@ -172,7 +172,7 @@ module DNN
       end
     end
 
-    class Reshape < FunctionNode
+    class Reshape < Function
       def initialize(shape)
         super()
         @shape = shape
@@ -212,7 +212,7 @@ module DNN
       end
     end
 
-    class Transpose < FunctionNode
+    class Transpose < Function
       def initialize(*axes)
         @axes = axes
       end
@@ -228,7 +228,7 @@ module DNN
       end
     end
 
-    class Concatenate < FunctionNode
+    class Concatenate < Function
       def initialize(axis: 0)
         super()
         @axis = axis
@@ -249,7 +249,7 @@ module DNN
       end
     end
 
-    class Split < FunctionNode
+    class Split < Function
       def initialize(indices_or_sections, axis: 0)
         super()
         @indices_or_sections = indices_or_sections

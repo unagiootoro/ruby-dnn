@@ -48,7 +48,7 @@ module DNN
       end
     end
 
-    class Exp < FunctionNode
+    class Exp < Function
       def forward(x)
         @y = Xumo::NMath.exp(x)
       end
@@ -58,7 +58,7 @@ module DNN
       end
     end
 
-    class Log < FunctionNode
+    class Log < Function
       def forward(x)
         @x = x
         Xumo::NMath.log(x)
@@ -69,7 +69,7 @@ module DNN
       end
     end
 
-    class Sqrt < FunctionNode
+    class Sqrt < Function
       def forward(x)
         @x = x
         Xumo::NMath.sqrt(x)
@@ -80,7 +80,7 @@ module DNN
       end
     end
 
-    class Sum < FunctionNode
+    class Sum < Function
       attr_reader :axis
       attr_reader :keepdims
 
@@ -104,7 +104,7 @@ module DNN
       end
     end
 
-    class Mean < FunctionNode
+    class Mean < Function
       attr_reader :axis
       attr_reader :keepdims
 
@@ -125,7 +125,7 @@ module DNN
       end
     end
 
-    class Abs < FunctionNode
+    class Abs < Function
       def forward(x)
         @x = x
         x.abs
@@ -138,7 +138,7 @@ module DNN
       end
     end
 
-    class Max < FunctionNode
+    class Max < Function
       def initialize(axis: nil, keepdims: true)
         @axis = axis
         @keepdims = keepdims
@@ -161,7 +161,7 @@ module DNN
       end
     end
 
-    class BroadcastTo < FunctionNode
+    class BroadcastTo < Function
       def initialize(target_shape)
         @target_shape = target_shape
       end

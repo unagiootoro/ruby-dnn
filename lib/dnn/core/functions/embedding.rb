@@ -1,7 +1,7 @@
 module DNN
   module Functions
 
-    class Embedding < FunctionNode
+    class Embedding < Function
       def forward(x, weight)
         @x = x
         @weight = weight

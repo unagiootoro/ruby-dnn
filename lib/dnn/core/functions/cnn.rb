@@ -82,7 +82,7 @@ module DNN
       end
     end
 
-    class Conv2D < FunctionNode
+    class Conv2D < Function
       include Conv2DFunctionUtils
 
       def initialize(num_filters, out_size, filter_size, pad_size,
@@ -125,7 +125,7 @@ module DNN
       end
     end
 
-    class Conv2DTranspose < FunctionNode
+    class Conv2DTranspose < Function
       include Conv2DFunctionUtils
 
       def initialize(num_filters, out_size, filter_size, pad_size,
@@ -171,7 +171,7 @@ module DNN
       end
     end
 
-    class Pool2D < FunctionNode
+    class Pool2D < Function
       include Conv2DFunctionUtils
 
       def initialize(pool_size, out_size, strides: nil, padding: false)
@@ -228,7 +228,7 @@ module DNN
       end
     end
 
-    class UnPool2D < FunctionNode
+    class UnPool2D < Function
       def initialize(unpool_size)
         super()
         @unpool_size = unpool_size.is_a?(Integer) ? [unpool_size, unpool_size] : unpool_size
@@ -254,7 +254,7 @@ module DNN
       end
     end
 
-    class ZeroPadding2D < FunctionNode
+    class ZeroPadding2D < Function
       include Conv2DFunctionUtils
 
       def initialize(pad_size)
@@ -270,7 +270,7 @@ module DNN
       end
     end
 
-    class Cropping2D < FunctionNode
+    class Cropping2D < Function
       include Conv2DFunctionUtils
 
       def initialize(pad_size)
@@ -286,7 +286,7 @@ module DNN
       end
     end
 
-    class Im2col < FunctionNode
+    class Im2col < Function
       include Conv2DFunctionUtils
 
       def initialize(out_size, filter_size, strides)
@@ -305,7 +305,7 @@ module DNN
       end
     end
 
-    class Col2im < FunctionNode
+    class Col2im < Function
       include Conv2DFunctionUtils
 
       def initialize(img_shape, in_size, filter_size, strides)

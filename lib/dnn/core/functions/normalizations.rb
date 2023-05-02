@@ -1,7 +1,7 @@
 module DNN
   module Functions
 
-    class BatchNormalization < FunctionNode
+    class BatchNormalization < Function
       attr_reader :running_mean
       attr_reader :running_var
 

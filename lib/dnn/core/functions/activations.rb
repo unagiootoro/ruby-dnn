@@ -1,7 +1,7 @@
 module DNN
   module Functions
 
-    class Sigmoid < FunctionNode
+    class Sigmoid < Function
       def forward(x)
         @y = 1 / (1 + Xumo::NMath.exp(-x))
       end
@@ -11,7 +11,7 @@ module DNN
       end
     end
 
-    class Tanh < FunctionNode
+    class Tanh < Function
       def forward(x)
         @y = Xumo::NMath.tanh(x)
       end
@@ -21,7 +21,7 @@ module DNN
       end
     end
 
-    class Softsign < FunctionNode
+    class Softsign < Function
       def forward(x)
         @x = x
         x / (1 + x.abs)
@@ -32,7 +32,7 @@ module DNN
       end
     end
 
-    class Softplus < FunctionNode
+    class Softplus < Function
       def forward(x)
         @x = x
         Xumo::NMath.log(1 + Xumo::NMath.exp(x))
@@ -43,7 +43,7 @@ module DNN
       end
     end
 
-    class Swish < FunctionNode
+    class Swish < Function
       def forward(x)
         @x = x
         @y = x * (1 / (1 + Xumo::NMath.exp(-x)))
@@ -54,7 +54,7 @@ module DNN
       end
     end
 
-    class ReLU < FunctionNode
+    class ReLU < Function
       def forward(x)
         @x = x
         Xumo::SFloat.maximum(0, x)
@@ -65,7 +65,7 @@ module DNN
       end
     end
 
-    class LeakyReLU < FunctionNode
+    class LeakyReLU < Function
       attr_reader :alpha
 
       # @param [Float] alpha The slope when the output value is negative.
@@ -96,7 +96,7 @@ module DNN
       end
     end
 
-    class ELU < FunctionNode
+    class ELU < Function
       attr_reader :alpha
 
       # @param [Float] alpha The slope when the output value is negative.
@@ -134,7 +134,7 @@ module DNN
       end
     end
 
-    class Mish < FunctionNode
+    class Mish < Function
       def forward(x)
         @x = x
         x * Xumo::NMath.tanh(Softplus.new.forward(x))
@@ -147,7 +147,7 @@ module DNN
       end
     end
 
-    class Softmax < FunctionNode
+    class Softmax < Function
       def initialize(axis: 1)
         @axis = axis
       end

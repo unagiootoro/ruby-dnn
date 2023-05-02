@@ -1,6 +1,6 @@
 module DNN
   module Functions
-    class FunctionNode
+    class Function
       def self.call(*inputs)
         new.(*inputs)
       end
