@@ -81,7 +81,7 @@ module DNN
 
     class HuberLoss < Loss
       def forward(y, t)
-        Functions::FunctionSpace.sigmoid_cross_entropy(y, t, eps: @eps)
+        Functions::FunctionSpace.huber_loss(y, t)
       end
     end
 
