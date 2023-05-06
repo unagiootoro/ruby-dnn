@@ -57,6 +57,13 @@ module DNN
         forward(*input_tensors)
       end
 
+      # @return [Boolean] learning_phase Specifies whether it is in the learning phase.
+      def set_learning_phase(learning_phase)
+        layers.each do |layer|
+          layer.set_learning_phase(learning_phase)
+        end
+      end
+
       # @return [Boolean] Setting false prevents learning of parameters.
       def trainable?
         layers.each do |layer|
@@ -194,7 +201,7 @@ module DNN
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
-        DNN::GlobalState.learning_phase = true
+        set_learning_phase(true)
         inputs = Tensor.convert(x)
         outputs = call(*inputs)
         losses = optimize(outputs, Tensor.convert(y))
@@ -242,7 +249,7 @@ module DNN
         raise DNNError, "The model is not loss_func setup complete." unless @loss_func
         Utils.check_input_data_type("x", x, Xumo::SFloat)
         Utils.check_input_data_type("y", y, Xumo::SFloat)
-        DNN::GlobalState.learning_phase = false
+        set_learning_phase(false)
         if x.is_a?(Array)
           input = x.map { |v| Tensor.new(v) }
         else
@@ -287,7 +294,7 @@ module DNN
       # @param [Numo::SFloat] x Input data.
       def predict(x)
         Utils.check_input_data_type("x", x, Xumo::SFloat)
-        DNN::GlobalState.learning_phase = false
+        set_learning_phase(false)
         out = call(Tensor.new(x))
         if out.is_a?(Array)
           out.map { |tensor| tensor.data }

@@ -154,7 +154,7 @@ module DNN
     end
 
     def on_train_step_default(model, x_batch, y_batch)
-      DNN::GlobalState.learning_phase = true
+      model.set_learning_phase(true)
       x = Tensor.convert(x_batch)
       y = Tensor.convert(y_batch)
       outputs = model.(*x)

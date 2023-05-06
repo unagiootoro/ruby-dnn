@@ -16,6 +16,7 @@ module DNN
 
       def initialize
         @built = false
+        @learning_phase = false
       end
 
       # Forward propagation and create a link.
@@ -47,6 +48,16 @@ module DNN
 
       def <<(tensor)
         self.(tensor)
+      end
+
+      # @return [Boolean] Returns whether the layer is in the learning phase.
+      def learning_phase?
+        @learning_phase
+      end
+
+      # @return [Boolean] learning_phase Specifies whether it is in the learning phase.
+      def set_learning_phase(learning_phase)
+        @learning_phase = learning_phase
       end
 
       # @return [Boolean] Setting false prevents learning of parameters.
@@ -280,7 +291,7 @@ module DNN
       end
 
       def forward(x)
-        if DNN::GlobalState.learning_phase
+        if learning_phase?
           Xumo::SFloat.srand(@rnd.rand(1 << 31))
           mask = Tensor.new(Xumo::SFloat.cast(Xumo::SFloat.new(*x.shape).rand >= @dropout_ratio))
           x = x * mask
