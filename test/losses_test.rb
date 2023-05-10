@@ -13,7 +13,7 @@ class TestMeanSquaredError < MiniTest::Unit::TestCase
   # It is matches the expected value of backward.
   def test_backward
     loss = DNN::Losses::MeanSquaredError.new
-    y = DNN::Param.new(Xumo::SFloat[[0, 1]])
+    y = DNN::Variable.new(Xumo::SFloat[[0, 1]])
     t = DNN::Tensor.new(Xumo::SFloat[[2, 4]])
     out_y = loss.(y, t)
     out_y.backward
@@ -38,7 +38,7 @@ class TestMeanAbsoluteError < MiniTest::Unit::TestCase
 
   def test_backward
     loss = DNN::Losses::MeanAbsoluteError.new
-    y = DNN::Param.new(Xumo::SFloat[[0, 1]])
+    y = DNN::Variable.new(Xumo::SFloat[[0, 1]])
     t = DNN::Tensor.new(Xumo::SFloat[[2, 4]])
     out_y = loss.(y, t)
     out_y.backward
@@ -58,7 +58,7 @@ class TestHinge < MiniTest::Unit::TestCase
 
   def test_backward
     loss = DNN::Losses::Hinge.new
-    y = DNN::Param.new(Xumo::SFloat[[1, 1]])
+    y = DNN::Variable.new(Xumo::SFloat[[1, 1]])
     t = DNN::Tensor.new(Xumo::SFloat[[0.7, 1.5]])
     out_y = loss.(y, t)
     out_y.backward
@@ -86,7 +86,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
 
   def test_backward
     loss = DNN::Losses::HuberLoss.new
-    y = DNN::Param.new(Xumo::SFloat[[-1, 2]])
+    y = DNN::Variable.new(Xumo::SFloat[[-1, 2]])
     t = DNN::Tensor.new(Xumo::SFloat[[-3, 4]])
     out_y = loss.(y, t)
     out_y.backward
@@ -95,7 +95,7 @@ class TestHuberLoss < MiniTest::Unit::TestCase
 
   def test_backward2
     loss = DNN::Losses::HuberLoss.new
-    y = DNN::Param.new(Xumo::SFloat[[-1, 2]])
+    y = DNN::Variable.new(Xumo::SFloat[[-1, 2]])
     t = DNN::Tensor.new(Xumo::SFloat[[-0.5, 1.7]])
     out_y = loss.(y, t)
     out_y.backward
@@ -121,7 +121,7 @@ class TestSoftmaxCrossEntropy < MiniTest::Unit::TestCase
 
   def test_backward
     loss = DNN::Losses::SoftmaxCrossEntropy.new
-    y = DNN::Param.new(Xumo::SFloat[[0, 1, 2]])
+    y = DNN::Variable.new(Xumo::SFloat[[0, 1, 2]])
     t = DNN::Tensor.new(Xumo::SFloat[[0, 0, 1]])
     out_y = loss.(y, t)
     out_y.backward
@@ -152,7 +152,7 @@ class TestSigmoidCrossEntropy < MiniTest::Unit::TestCase
 
   def test_backward
     loss = DNN::Losses::SigmoidCrossEntropy.new
-    y = DNN::Param.new(Xumo::SFloat[[0, 1]])
+    y = DNN::Variable.new(Xumo::SFloat[[0, 1]])
     t = DNN::Tensor.new(Xumo::SFloat[[1, 0]])
     out_y = loss.(y, t)
     out_y.backward

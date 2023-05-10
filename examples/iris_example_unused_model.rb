@@ -23,10 +23,10 @@ lf = SoftmaxCrossEntropy.new
 train_iter = DNN::Iterator.new(x_train, y_train)
 test_iter = DNN::Iterator.new(x_test, y_test, random: false)
 
-w1 = DNN::Param.new(Numo::SFloat.new(4, 16).rand_norm)
-b1 = DNN::Param.new(Numo::SFloat.zeros(16))
-w2 = DNN::Param.new(Numo::SFloat.new(16, 3).rand_norm)
-b2 = DNN::Param.new(Numo::SFloat.zeros(3))
+w1 = DNN::Variable.new(Numo::SFloat.new(4, 16).rand_norm)
+b1 = DNN::Variable.new(Numo::SFloat.zeros(16))
+w2 = DNN::Variable.new(Numo::SFloat.new(16, 3).rand_norm)
+b2 = DNN::Variable.new(Numo::SFloat.zeros(3))
 
 net = -> x, y do
   h = Dot.(x, w1) + b1

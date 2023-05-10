@@ -88,7 +88,7 @@ class TestRNN < MiniTest::Unit::TestCase
       bias: rnn.bias,
       hidden: rnn.hidden,
     }
-    assert_equal expected_hash, rnn.get_params
+    assert_equal expected_hash, rnn.get_variables
   end
 end
 
@@ -98,11 +98,11 @@ class TestSimpleRNNCell < MiniTest::Unit::TestCase
   def test_forward
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16).fill(1)
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16).fill(1)
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16).fill(0)
 
     cell = SimpleRNNCell.new(w, w2, b, Tanh.new)
@@ -113,13 +113,13 @@ class TestSimpleRNNCell < MiniTest::Unit::TestCase
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
     dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16).fill(0)
     b.grad = 0
 
@@ -134,10 +134,10 @@ class TestSimpleRNNCell < MiniTest::Unit::TestCase
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
     dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
 
@@ -151,13 +151,13 @@ class TestSimpleRNNCell < MiniTest::Unit::TestCase
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
     dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16).fill(1)
     w2.grad = 0
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16).fill(0)
     b.grad = 0
 
@@ -301,11 +301,11 @@ class TestLSTMCell < MiniTest::Unit::TestCase
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
     c = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 4).fill(0)
 
     cell = LSTMCell.new(w, w2, b)
@@ -320,13 +320,13 @@ class TestLSTMCell < MiniTest::Unit::TestCase
     dh2 = Xumo::SFloat.new(1, 16).seq
     c = Xumo::SFloat.new(1, 16).seq
     dc2 = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
@@ -344,10 +344,10 @@ class TestLSTMCell < MiniTest::Unit::TestCase
     dh2 = Xumo::SFloat.new(1, 16).seq
     c = Xumo::SFloat.new(1, 16).seq
     dc2 = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
 
@@ -363,13 +363,13 @@ class TestLSTMCell < MiniTest::Unit::TestCase
     dh2 = Xumo::SFloat.new(1, 16).seq
     c = Xumo::SFloat.new(1, 16).seq
     dc2 = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
     w2.grad = 0
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 4).fill(0)
     b.grad = 0
 
@@ -523,7 +523,7 @@ class TestLSTM < MiniTest::Unit::TestCase
       hidden: lstm.hidden,
       cell: lstm.cell,
     }
-    assert_equal expected_hash, lstm.get_params
+    assert_equal expected_hash, lstm.get_variables
   end
 end
 
@@ -532,11 +532,11 @@ class TestGRUCell < MiniTest::Unit::TestCase
   def test_forward
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
 
     cell = GRUCell.new(w, w2, b)
@@ -547,13 +547,13 @@ class TestGRUCell < MiniTest::Unit::TestCase
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
     dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
     cell = GRUCell.new(w, w2, b)
@@ -567,13 +567,13 @@ class TestGRUCell < MiniTest::Unit::TestCase
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
     dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
 
@@ -587,13 +587,13 @@ class TestGRUCell < MiniTest::Unit::TestCase
     x = Xumo::SFloat.new(1, 64).seq
     h = Xumo::SFloat.new(1, 16).seq
     dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Param.new
+    w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
     w.grad = 0
-    w2 = DNN::Param.new
+    w2 = DNN::Variable.new
     w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
     w2.grad = 0
-    b = DNN::Param.new
+    b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
     b.grad = 0
     cell = GRUCell.new(w, w2, b)

@@ -1,7 +1,7 @@
 class Integer
   alias dnn__add +
   def +(other)
-    if other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+    if other.is_a?(DNN::BaseTensor)
       DNN::Functions::Add.(DNN::Tensor.new(self), other)
     else
       dnn__add(other)
@@ -10,7 +10,7 @@ class Integer
 
   alias dnn__sub -
   def -(other)
-    if other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+    if other.is_a?(DNN::BaseTensor)
       DNN::Functions::Sub.(DNN::Tensor.new(self), other)
     else
       dnn__sub(other)
@@ -19,7 +19,7 @@ class Integer
 
   alias dnn__mul *
   def *(other)
-    if other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+    if other.is_a?(DNN::BaseTensor)
       DNN::Functions::Mul.(DNN::Tensor.new(self), other)
     else
       dnn__mul(other)
@@ -28,7 +28,7 @@ class Integer
 
   alias dnn__div /
   def /(other)
-    if other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+    if other.is_a?(DNN::BaseTensor)
       DNN::Functions::Div.(DNN::Tensor.new(self), other)
     else
       dnn__div(other)
@@ -39,7 +39,7 @@ end
 class Float
   alias dnn__add +
   def +(other)
-    if other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+    if other.is_a?(DNN::BaseTensor)
       DNN::Functions::Add.(DNN::Tensor.new(self), other)
     else
       dnn__add(other)
@@ -48,7 +48,7 @@ class Float
 
   alias dnn__sub -
   def -(other)
-    if other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+    if other.is_a?(DNN::BaseTensor)
       DNN::Functions::Sub.(DNN::Tensor.new(self), other)
     else
       dnn__sub(other)
@@ -57,7 +57,7 @@ class Float
 
   alias dnn__mul *
   def *(other)
-    if other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+    if other.is_a?(DNN::BaseTensor)
       DNN::Functions::Mul.(DNN::Tensor.new(self), other)
     else
       dnn__mul(other)
@@ -66,7 +66,7 @@ class Float
 
   alias dnn__div /
   def /(other)
-    if other.is_a?(DNN::Tensor) || other.is_a?(DNN::Param)
+    if other.is_a?(DNN::BaseTensor)
       DNN::Functions::Div.(DNN::Tensor.new(self), other)
     else
       dnn__div(other)

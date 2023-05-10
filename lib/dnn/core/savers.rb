@@ -49,7 +49,7 @@ module DNN
           params_data[i].each do |(key, (shape, base64_data))|
             bin = Base64.decode64(base64_data)
             data = Xumo::SFloat.from_binary(bin).reshape(*shape)
-            layer.get_params[key].data = data
+            layer.get_variables[key].data = data
           end
         end
       end
@@ -111,7 +111,7 @@ module DNN
 
       private def get_all_params_base64_data
         @model.layers.map do |layer|
-          layer.get_params.to_h do |key, param|
+          layer.get_variables.to_h do |key, param|
             base64_data = Base64.encode64(param.data.to_binary)
             [key, [param.data.shape, base64_data]]
           end

@@ -11,7 +11,7 @@ class TestL1 < MiniTest::Unit::TestCase
   end
 
   def test_forward
-    param = DNN::Param.new(Xumo::SFloat[-2, 2])
+    param = DNN::Variable.new(Xumo::SFloat[-2, 2])
     l1 = DNN::Regularizers::L1.new(0.1)
     l1.param = param
     assert_equal 1.4, l1.forward(1).data.to_a.first.round(4)
@@ -20,7 +20,7 @@ class TestL1 < MiniTest::Unit::TestCase
   def test_backward
     x = Xumo::SFloat.new(10).fill(-1)
     x[0..4] = 1
-    param = DNN::Param.new(Xumo::SFloat[-2, 2], Xumo::SFloat[-1, 1])
+    param = DNN::Variable.new(Xumo::SFloat[-2, 2], Xumo::SFloat[-1, 1])
     l1 = DNN::Regularizers::L1.new(0.1)
     l1.param = param
     out = l1.forward(1)
@@ -50,14 +50,14 @@ class TestL2 < MiniTest::Unit::TestCase
   end
 
   def test_forward
-    param = DNN::Param.new(Xumo::SFloat[-2, 2])
+    param = DNN::Variable.new(Xumo::SFloat[-2, 2])
     l2 = DNN::Regularizers::L2.new(0.1)
     l2.param = param
     assert_equal 1.4, l2.forward(1).data.to_a.first.round(4)
   end
 
   def test_backward
-    param = DNN::Param.new(Xumo::SFloat[-2, 2], Xumo::SFloat[-1, 1])
+    param = DNN::Variable.new(Xumo::SFloat[-2, 2], Xumo::SFloat[-1, 1])
     l2 = DNN::Regularizers::L2.new(0.1)
     l2.param = param
     out = l2.forward(1)
@@ -89,14 +89,14 @@ class TestL1L2 < MiniTest::Unit::TestCase
   end
 
   def test_forward
-    param = DNN::Param.new(Xumo::SFloat[-2, 2])
+    param = DNN::Variable.new(Xumo::SFloat[-2, 2])
     l1l2 = DNN::Regularizers::L1L2.new(0.1, 0.1)
     l1l2.param = param
     assert_in_delta 1.8, l1l2.forward(1).data.to_a.first.round(4)
   end
 
   def test_backward
-    param = DNN::Param.new(Xumo::SFloat[-2, 2], Xumo::SFloat[-1, 1])
+    param = DNN::Variable.new(Xumo::SFloat[-2, 2], Xumo::SFloat[-1, 1])
     l1l2 = DNN::Regularizers::L1L2.new(0.1, 0.1)
     l1l2.param = param
     out = l1l2.forward(1)

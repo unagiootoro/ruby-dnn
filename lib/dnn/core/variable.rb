@@ -1,13 +1,25 @@
 module DNN
-  class Param < BaseTensor
+  class Variable < BaseTensor
     attr_accessor :requires_grad
     attr_accessor :grad
     attr_writer :data
 
-    def initialize(data = nil, grad = nil)
+    def initialize(*args, requires_grad: true)
+      if args.length == 0
+        data = nil
+        grad = nil
+      elsif args.length == 1
+        data = args[0]
+        grad = nil
+      elsif args.length == 2
+        data = args[0]
+        grad = args[1]
+      else
+        raise ArgumentError, "wrong number of arguments (given #{args.length}, expected 0 or 1 or 2)"
+      end
       super(data)
       @grad = grad
-      @requires_grad = true
+      @requires_grad = requires_grad
     end
 
     private def backward_internal(grad)

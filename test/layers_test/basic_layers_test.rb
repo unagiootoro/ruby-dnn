@@ -215,7 +215,7 @@ class TestDense < MiniTest::Unit::TestCase
       weight: dense.weight,
       bias: dense.bias,
     }
-    assert_equal expected_hash, dense.get_params
+    assert_equal expected_hash, dense.get_variables
   end
 end
 

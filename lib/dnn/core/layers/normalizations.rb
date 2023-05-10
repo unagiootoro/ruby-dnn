@@ -18,10 +18,10 @@ module DNN
         @axis = axis
         @momentum = momentum
         @eps = eps
-        @gamma = Param.new(nil, Xumo::SFloat[0])
-        @beta = Param.new(nil, Xumo::SFloat[0])
-        @running_mean = Param.new
-        @running_var = Param.new
+        @gamma = Variable.new(nil, Xumo::SFloat[0])
+        @beta = Variable.new(nil, Xumo::SFloat[0])
+        @running_mean = Variable.new(requires_grad: false)
+        @running_var = Variable.new(requires_grad: false)
       end
 
       def build(input_shape)
@@ -57,8 +57,12 @@ module DNN
         initialize(axis: hash[:axis], momentum: hash[:momentum])
       end
 
-      def get_params
+      def get_variables
         { gamma: @gamma, beta: @beta, running_mean: @running_mean, running_var: @running_var }
+      end
+
+      def get_trainable_variables
+        { gamma: @gamma, beta: @beta }
       end
     end
 

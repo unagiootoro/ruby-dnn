@@ -506,7 +506,7 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
   end
 
   def test_backward
-    x = DNN::Param.new(Xumo::SFloat.new(1, 32, 32, 3).seq)
+    x = DNN::Variable.new(Xumo::SFloat.new(1, 32, 32, 3).seq)
     pool2d = DNN::Layers::AvgPool2D.new(2)
     pool2d.build([32, 32, 3])
     y = pool2d.(x)
@@ -556,7 +556,7 @@ class TestUnPool2D < MiniTest::Unit::TestCase
   end
 
   def test_backward
-    x = DNN::Param.new(Xumo::SFloat[
+    x = DNN::Variable.new(Xumo::SFloat[
       [
         [[1, 5], [2, 6]],
         [[3, 7], [4, 8]],

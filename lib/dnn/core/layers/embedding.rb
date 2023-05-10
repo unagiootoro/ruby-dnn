@@ -21,7 +21,7 @@ module DNN
         @input_length = input_length
         @weight_initializer = weight_initializer
         @weight_regularizer = weight_regularizer
-        @weight = Param.new(nil, Xumo::SFloat[0])
+        @weight = Variable.new(nil, Xumo::SFloat[0])
         @mask_zero = mask_zero
       end
 
@@ -56,7 +56,7 @@ module DNN
                    mask_zero: hash[:mask_zero])
       end
 
-      def get_params
+      def get_variables
         { weight: @weight }
       end
     end

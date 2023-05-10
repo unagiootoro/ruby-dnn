@@ -62,21 +62,26 @@ module DNN
 
       # @return [Boolean] Setting false prevents learning of parameters.
       def trainable?
-        get_params.each_values do |param|
-          return true if param.requires_grad
+        get_trainable_variables.each_values do |variable|
+          return true if variable.requires_grad
         end
         false
       end
 
       # @param [Boolean] trainable Specifies whether to allow learning.
       def set_trainable(trainable)
-        get_params.each_values do |param|
-          param.requires_grad = trainable
+        get_trainable_variables.each_values do |variable|
+          variable.requires_grad = trainable
         end
       end
 
-      # @return [Hash] The parameters of the layer.
-      def get_params
+      # @return [Hash] The variables of the layer.
+      def get_variables
+        {}
+      end
+
+      # @return [Hash] The trainable variables of the layer.
+      def get_trainable_variables
         {}
       end
 
@@ -84,7 +89,7 @@ module DNN
       def clean
         input_shapes = @input_shapes
         hash = to_hash
-        params = get_params
+        params = get_variables
         instance_variables.each do |ivar|
           instance_variable_set(ivar, nil)
         end
@@ -164,8 +169,8 @@ module DNN
         @bias_initializer = bias_initializer
         @weight_regularizer = weight_regularizer
         @bias_regularizer = bias_regularizer
-        @weight = Param.new(nil, Xumo::SFloat[0])
-        @bias = use_bias ? Param.new(nil, Xumo::SFloat[0]) : nil
+        @weight = Variable.new(nil, Xumo::SFloat[0])
+        @bias = use_bias ? Variable.new(nil, Xumo::SFloat[0]) : nil
       end
 
       def regularizers
@@ -188,7 +193,11 @@ module DNN
                 use_bias: use_bias }.merge(merge_hash))
       end
 
-      def get_params
+      def get_variables
+        { weight: @weight, bias: @bias }
+      end
+
+      def get_trainable_variables
         { weight: @weight, bias: @bias }
       end
 

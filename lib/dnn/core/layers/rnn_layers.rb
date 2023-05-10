@@ -84,8 +84,8 @@ module DNN
         @num_units = num_units
         @stateful = stateful
         @return_sequences = return_sequences
-        @hidden = Param.new
-        @recurrent_weight = Param.new(nil, Xumo::SFloat[0])
+        @hidden = Variable.new
+        @recurrent_weight = Variable.new(nil, Xumo::SFloat[0])
         @recurrent_weight_initializer = recurrent_weight_initializer
         @recurrent_weight_regularizer = recurrent_weight_regularizer
       end
@@ -126,8 +126,12 @@ module DNN
                    use_bias: hash[:use_bias])
       end
 
-      def get_params
+      def get_variables
         { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden }
+      end
+
+      def get_trainable_variables
+        { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias }
       end
 
       # Reset the state of RNN.
@@ -244,7 +248,7 @@ module DNN
                      bias_regularizer: nil,
                      use_bias: true)
         super
-        @cell = Param.new
+        @cell = Variable.new
       end
 
       def build(input_shape)
@@ -289,7 +293,7 @@ module DNN
         @cell.data = @cell.data.fill(0) if @cell.data
       end
 
-      def get_params
+      def get_variables
         { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden, cell: @cell }
       end
     end

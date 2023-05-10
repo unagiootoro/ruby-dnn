@@ -19,7 +19,7 @@ module DNN
 
       # Initialization of learning parameters.
       # @param [DNN::Layers::Layer] layer Layer that owns learning parameters.
-      # @param [DNN::Param] param Learning parameter to be initialized.
+      # @param [DNN::Variable] param Learning parameter to be initialized.
       def init_param(param, input_shapes)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'init_param'"
       end

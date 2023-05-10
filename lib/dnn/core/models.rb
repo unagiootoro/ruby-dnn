@@ -237,7 +237,7 @@ module DNN
           result = loss
           loss.backward(Xumo::SFloat.ones(y.data[0...1, false].shape[0], 1))
         end
-        @optimizer.update(get_all_trainable_params)
+        @optimizer.update(get_all_trainable_variables)
         result
       end
 
@@ -377,7 +377,7 @@ module DNN
       # @return [Array] Parameter data.
       def get_all_params_data
         layers.map do |layer|
-          layer.get_params.to_h do |key, param|
+          layer.get_variables.to_h do |key, param|
             [key, param.data]
           end
         end
@@ -388,7 +388,7 @@ module DNN
       def set_all_params_data(params_data)
         layers.each.with_index do |layer, i|
           params_data[i].each do |(key, data)|
-            layer.get_params[key].data = data
+            layer.get_variables[key].data = data
           end
         end
       end
@@ -400,7 +400,7 @@ module DNN
         clean_layers
         set_all_params_data(params_data)
         layers.each do |layer|
-          layer.get_params.each do |key, param|
+          layer.get_variables.each do |key, param|
             data = param.data
             if DNN.use_cumo? && data.is_a?(Cumo::NArray)
               param.data = Utils.cumo2numo(data)
@@ -425,7 +425,7 @@ module DNN
         clean_layers
         set_all_params_data(params_data)
         layers.each do |layer|
-          layer.get_params.each do |(key, param)|
+          layer.get_variables.each do |(key, param)|
             data = param.data
             if DNN.use_cumo? && data.is_a?(Numo::NArray)
               param.data = Utils.numo2cumo(data)
@@ -443,8 +443,8 @@ module DNN
         self
       end
 
-      def get_all_trainable_params
-        layers.flat_map { |layer| layer.get_params.values }.compact.select(&:grad)
+      def get_all_trainable_variables
+        layers.flat_map { |layer| layer.get_trainable_variables.values }.compact.select(&:grad)
       end
     end
 

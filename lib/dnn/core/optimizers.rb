@@ -20,10 +20,10 @@ module DNN
         @clip_norm = clip_norm
       end
 
-      def update(params)
-        clip_grads(params) if @clip_norm
-        update_params(params)
-        params.each do |param|
+      def update(variables)
+        clip_grads(variables) if @clip_norm
+        update_variables(variables)
+        variables.each do |param|
           param.grad = Xumo::SFloat[0]
         end
       end
@@ -34,16 +34,16 @@ module DNN
         hash
       end
 
-      # Update params.
-      private def update_params(params)
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'update_params'"
+      # Update variables.
+      private def update_variables(variables)
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'update_variables'"
       end
 
-      private def clip_grads(params)
-        norm = Math.sqrt(params.reduce(0) { |total, param| total + (param.grad**2).sum.to_f })
+      private def clip_grads(variables)
+        norm = Math.sqrt(variables.reduce(0) { |total, param| total + (param.grad**2).sum.to_f })
         return if norm <= @clip_norm
         rate = @clip_norm / (norm + 1e-7)
-        params.each do |param|
+        variables.each do |param|
           param.grad *= rate
         end
       end
@@ -71,8 +71,8 @@ module DNN
         super(lr: @lr, momentum: @momentum)
       end
 
-      private def update_params(params)
-        params.each do |param|
+      private def update_variables(variables)
+        variables.each do |param|
           amount = param.grad * @lr
           if @momentum > 0
             @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
@@ -93,8 +93,8 @@ module DNN
         super(lr: lr, momentum: momentum, clip_norm: clip_norm)
       end
 
-      private def update_params(params)
-        params.each do |param|
+      private def update_variables(variables)
+        variables.each do |param|
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           amount = param.grad * @lr
           @v[param] = @v[param] * @momentum - amount
@@ -117,8 +117,8 @@ module DNN
         @status = { g: @g }
       end
 
-      private def update_params(params)
-        params.each do |param|
+      private def update_variables(variables)
+        variables.each do |param|
           @g[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @g[param] += param.grad**2
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
@@ -155,8 +155,8 @@ module DNN
         super(lr: @lr, alpha: @alpha, eps: @eps)
       end
 
-      private def update_params(params)
-        params.each do |param|
+      private def update_variables(variables)
+        variables.each do |param|
           @g[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @g[param] = @alpha * @g[param] + (1 - @alpha) * param.grad**2
           param.data -= (@lr / Xumo::NMath.sqrt(@g[param] + @eps)) * param.grad
@@ -187,8 +187,8 @@ module DNN
         super(rho: @rho, eps: @eps)
       end
 
-      private def update_params(params)
-        params.each do |param|
+      private def update_variables(variables)
+        variables.each do |param|
           @h[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @s[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @h[param] = @rho * @h[param] + (1 - @rho) * param.grad**2
@@ -225,8 +225,8 @@ module DNN
         super(lr: @lr, alpha: @alpha, eps: @eps)
       end
 
-      private def update_params(params)
-        params.each do |param|
+      private def update_variables(variables)
+        variables.each do |param|
           @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param] = @alpha * @m[param] + (1 - @alpha) * param.grad
@@ -273,10 +273,10 @@ module DNN
         }
       end
 
-      private def update_params(params)
+      private def update_variables(variables)
         @t += 1
         lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t)
-        params.each do |param|
+        variables.each do |param|
           @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param] += (1 - @beta1) * (param.grad - @m[param])
@@ -316,13 +316,13 @@ module DNN
         }
       end
 
-      private def update_params(params)
+      private def update_variables(variables)
         @t += 1
         lr = @alpha * Math.sqrt(1 - @beta2**@t) / (1 - @beta1**@t)
         final_lr = @final_lr * lr / @alpha
         lower_bound = final_lr * (1 - 1 / (@gamma * @t + 1))
         upper_bound = final_lr * (1 + 1 / (@gamma * @t))
-        params.each do |param|
+        variables.each do |param|
           @m[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @v[param] ||= Xumo::SFloat.zeros(*param.data.shape)
           @m[param] += (1 - @beta1) * (param.grad - @m[param])

@@ -99,6 +99,6 @@ class TestEmbedding < MiniTest::Unit::TestCase
     expected_hash = {
       weight: embed.weight,
     }
-    assert_equal expected_hash, embed.get_params
+    assert_equal expected_hash, embed.get_variables
   end
 end

@@ -21,7 +21,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.build([10])
     batch_norm.gamma.data = Xumo::SFloat.new(10).fill(3)
     batch_norm.beta.data = Xumo::SFloat.new(10).fill(10)
-    x = DNN::Param.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
+    x = DNN::Variable.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
     expected = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(7), Xumo::SFloat.new(10).fill(13)])
     batch_norm.set_learning_phase(true)
     assert_equal expected, batch_norm.(x).data.round(4)
@@ -34,7 +34,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm.beta.data = Xumo::SFloat.new(10).fill(10)
     batch_norm.running_mean.data = Xumo::SFloat.new(10).fill(15)
     batch_norm.running_var.data = Xumo::SFloat.new(10).fill(25)
-    x = DNN::Param.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
+    x = DNN::Variable.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
     expected = Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(7), Xumo::SFloat.new(10).fill(13)])
     batch_norm.set_learning_phase(false)
     assert_equal expected, batch_norm.(x).data.round(4)
@@ -43,7 +43,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_call3
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
-    x = DNN::Param.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
+    x = DNN::Variable.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
     batch_norm.set_learning_phase(true)
     y = batch_norm.(x)
     y.backward(Xumo::SFloat.ones(*x.shape))
@@ -56,7 +56,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
     batch_norm.trainable = false
-    x = DNN::Param.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
+    x = DNN::Variable.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
     batch_norm.set_learning_phase(true)
     y = batch_norm.(x)
     y.backward(Xumo::SFloat.ones(*x.shape))
@@ -86,6 +86,6 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
       running_mean: batch_norm.running_mean,
       running_var: batch_norm.running_var,
     }
-    assert_equal expected_hash, batch_norm.get_params
+    assert_equal expected_hash, batch_norm.get_variables
   end
 end
