@@ -23,6 +23,7 @@ module DNN
       # @param [Array] inputs Input tensor or param list.
       # @return [Tensor] Output tensor.
       def call(*inputs)
+        inputs.compact!
         build(*inputs.map { |input| input.shape[1..-1] }) unless built?
         forward(*inputs)
       end

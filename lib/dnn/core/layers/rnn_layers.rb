@@ -58,7 +58,6 @@ module DNN
     class RNN < Connection
       attr_reader :num_units
       attr_reader :recurrent_weight
-      attr_reader :hidden
       attr_reader :stateful
       attr_reader :return_sequences
       attr_reader :recurrent_weight_initializer
@@ -84,7 +83,6 @@ module DNN
         @num_units = num_units
         @stateful = stateful
         @return_sequences = return_sequences
-        @hidden = Variable.new
         @recurrent_weight = Variable.new(nil, Xumo::SFloat[0])
         @recurrent_weight_initializer = recurrent_weight_initializer
         @recurrent_weight_regularizer = recurrent_weight_regularizer
@@ -95,10 +93,6 @@ module DNN
           raise DNNShapeError, "Input shape is #{input_shape}. But input shape must be 2 dimensional."
         end
         super
-      end
-
-      private def create_hidden_layer
-        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'create_hidden_layer'"
       end
 
       def to_hash(merge_hash = nil)
@@ -127,7 +121,7 @@ module DNN
       end
 
       def get_variables
-        { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden }
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'get_variables'"
       end
 
       def get_trainable_variables
@@ -136,7 +130,7 @@ module DNN
 
       # Reset the state of RNN.
       def reset_state
-        @hidden.data = @hidden.data.fill(0) if @hidden.data
+        raise NotImplementedError, "Class '#{self.class.name}' has implement method 'reset_state'"
       end
 
       def regularizers
@@ -197,11 +191,7 @@ module DNN
         x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
           x.reshape(x.shape[0], x.shape[2])
         end
-        if @stateful
-          h = @h
-        else
-          h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
-        end
+        h = (@stateful && @h) ? @h : Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
         x_array.each.with_index do |x, t|
           h = SimpleRNNCell.new.(x, h, @weight, @recurrent_weight, @bias)
           h = Functions::FunctionSpace.send(@activation, h)
@@ -215,15 +205,23 @@ module DNN
         end
       end
 
+      def reset_state
+        @h = Tensor.new(Xumo::SFloat.zeros(*@h.shape)) if @h
+      end
+
+      def get_variables
+        { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, h: @h }
+      end
+
       def to_hash
-        super(activation: @activation.to_hash)
+        super(activation: @activation)
       end
 
       def load_hash(hash)
         initialize(hash[:num_units],
                    stateful: hash[:stateful],
                    return_sequences: hash[:return_sequences],
-                   activation: Layers::Layer.from_hash(hash[:activation]),
+                   activation: hash[:activation],
                    weight_initializer: Initializers::Initializer.from_hash(hash[:weight_initializer]),
                    recurrent_weight_initializer: Initializers::Initializer.from_hash(hash[:recurrent_weight_initializer]),
                    bias_initializer: Initializers::Initializer.from_hash(hash[:bias_initializer]),
@@ -266,13 +264,8 @@ module DNN
         x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
           x.reshape(x.shape[0], x.shape[2])
         end
-        if @stateful
-          h = @h
-          c = @c
-        else
-          h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
-          c = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
-        end
+        h = (@stateful && @h) ? @h : Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
+        c = (@stateful && @c) ? @c : Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
         x_array.each.with_index do |x, t|
           h, c = LSTMCell.new.(x, h, c, @weight, @recurrent_weight, @bias)
           h_array << h if @return_sequences
@@ -289,12 +282,12 @@ module DNN
       end
 
       def reset_state
-        super()
-        @cell.data = @cell.data.fill(0) if @cell.data
+        @h = Tensor.new(Xumo::SFloat.zeros(*@h.shape)) if @h
+        @c = Tensor.new(Xumo::SFloat.zeros(*@c.shape)) if @c
       end
 
       def get_variables
-        { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, hidden: @hidden, cell: @cell }
+        { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, h: @h, c: @c }
       end
     end
 
@@ -327,11 +320,7 @@ module DNN
         x_array = fs.split(xs, xs.shape[1], axis: 1).map do |x|
           x.reshape(x.shape[0], x.shape[2])
         end
-        if @stateful
-          h = @h
-        else
-          h = Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
-        end
+        h = (@stateful && @h) ? @h : Tensor.new(Xumo::SFloat.zeros(xs.shape[0], @num_units))
         x_array.each.with_index do |x, t|
           h = GRUCell.new.(x, h, @weight, @recurrent_weight, @bias)
           h_array << h if @return_sequences
@@ -342,6 +331,14 @@ module DNN
         else
           h
         end
+      end
+
+      def reset_state
+        @h = Tensor.new(Xumo::SFloat.zeros(*@h.shape)) if @h
+      end
+
+      def get_variables
+        { weight: @weight, recurrent_weight: @recurrent_weight, bias: @bias, h: @h }
       end
 
     end
