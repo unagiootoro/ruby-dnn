@@ -16,54 +16,51 @@ class TestEmbedding < MiniTest::Unit::TestCase
       mask_zero: true,
     }
     embed = Embedding.from_hash(hash)
-    assert_equal [10], embed.input_shape
     assert_equal 5, embed.input_length
     assert_kind_of RandomNormal, embed.weight_initializer
     assert_kind_of L2, embed.weight_regularizer
     assert_equal true, embed.mask_zero
   end
 
-  def test_forward_node
+  def test_forward
     embed = Embedding.new(2, 3)
     embed.build([2])
     embed.weight.data = Xumo::SFloat.cast([0.1, 0.2, 0.3])
-    x = Xumo::Int32.cast([[0, 1], [0, 2]])
+    x = DNN::Tensor.new(Xumo::Int32.cast([[0, 1], [0, 2]]))
     expected = Xumo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
-    assert_equal expected, embed.forward_node(x).round(4)
+    assert_equal expected, embed.(x).data.round(4)
   end
 
   # Test mask zero.
-  def test_forward_node2
+  def test_forward2
     embed = Embedding.new(2, 3, mask_zero: true)
     embed.build([2])
     embed.weight.data = Xumo::SFloat.cast([0.1, 0.2, 0.3])
-    x = Xumo::Int32.cast([[0, 1], [0, 2]])
+    x = DNN::Tensor.new(Xumo::Int32.cast([[0, 1], [0, 2]]))
     expected = Xumo::SFloat.cast([[0, 0.2], [0, 0.3]])
-    assert_equal expected, embed.forward_node(x).round(4)
+    assert_equal expected, embed.(x).data.round(4)
   end
 
-  def test_backward_node
+  def test_backward
     embed = Embedding.new(2, 3)
     embed.build([2])
     embed.weight.data = Xumo::SFloat.cast([0.1, 0.2, 0.3])
-    x = Xumo::Int32.cast([[0, 1], [2, 2]])
-    dy = Xumo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
+    x = DNN::Tensor.new(Xumo::Int32.cast([[0, 1], [2, 2]]))
     expected = Xumo::SFloat.cast([0.1, 0.2, 0.4])
-    embed.forward_node(x)
-    embed.backward_node(dy)
+    y = embed.(x)
+    y.backward(Xumo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]]))
     assert_equal expected, embed.weight.grad.round(4)
   end
 
   # Test mask zero.
-  def test_backward_node2
+  def test_backward2
     embed = Embedding.new(2, 3, mask_zero: true)
     embed.build([2])
     embed.weight.data = Xumo::SFloat.cast([0.1, 0.2, 0.3])
-    x = Xumo::Int32.cast([[0, 1], [2, 2]])
-    dy = Xumo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]])
+    x = DNN::Tensor.new(Xumo::Int32.cast([[0, 1], [2, 2]]))
     expected = Xumo::SFloat.cast([0, 0.2, 0.4])
-    embed.forward_node(x)
-    embed.backward_node(dy)
+    y = embed.(x)
+    y.backward(Xumo::SFloat.cast([[0.1, 0.2], [0.1, 0.3]]))
     assert_equal expected, embed.weight.grad.round(4)
   end
 
@@ -93,7 +90,7 @@ class TestEmbedding < MiniTest::Unit::TestCase
     assert_equal expected_hash, embed.to_hash
   end
 
-  def test_get_params
+  def test_get_variables
     embed = Embedding.new(10, 5)
     embed.build([10])
     expected_hash = {

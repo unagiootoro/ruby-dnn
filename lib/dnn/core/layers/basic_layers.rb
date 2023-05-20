@@ -63,7 +63,7 @@ module DNN
 
       # @return [Boolean] Setting false prevents learning of parameters.
       def trainable?
-        get_trainable_variables.each_values do |variable|
+        get_trainable_variables.each_value do |variable|
           return true if variable.requires_grad
         end
         false
@@ -71,7 +71,7 @@ module DNN
 
       # @param [Boolean] trainable Specifies whether to allow learning.
       def set_trainable(trainable)
-        get_trainable_variables.each_values do |variable|
+        get_trainable_variables.each_value do |variable|
           variable.requires_grad = trainable
         end
       end

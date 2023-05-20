@@ -2,6 +2,10 @@ module DNN
   module Functions
 
     class Embedding < Function
+      def initialize(mask_zero)
+        @mask_zero = mask_zero
+      end
+
       def forward(x, weight)
         @x = x
         @weight = weight

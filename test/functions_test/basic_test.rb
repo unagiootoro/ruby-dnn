@@ -82,9 +82,9 @@ class TestDot < MiniTest::Unit::TestCase
   def test_backward
     dot = DNN::Functions::Dot.new
     dot.forward(Xumo::SFloat[[1, 2, 3], [4, 5, 6]], Xumo::SFloat[[10, 20], [10, 20], [10, 20]])
-    dx1, dx2 = dot.backward(Xumo::SFloat[1])
-    assert_equal Xumo::SFloat[30, 30, 30], dx1
-    assert_equal Xumo::SFloat[5, 7, 9], dx2
+    dx1, dx2 = dot.backward(Xumo::SFloat[[1, 1], [1, 1]])
+    assert_equal Xumo::SFloat[[30, 30, 30], [30, 30, 30]], dx1
+    assert_equal Xumo::SFloat[[5, 5], [7, 7], [9, 9]], dx2
   end
 end
 

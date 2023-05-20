@@ -189,28 +189,28 @@ class TestELU < MiniTest::Unit::TestCase
     grad = elu.backward(1)
     assert_equal DNN::Utils.numerical_grad(x, elu.method(:forward)).round(4), grad.round(4)
   end
+end
 
-  class TestMish < MiniTest::Unit::TestCase
-    def test_forward
-      mish = DNN::Functions::Mish.new
-      y = mish.forward(Xumo::SFloat[0, 1])
-      assert_equal Xumo::SFloat[0, 0.8651], y.round(4)
-    end
-  
-    def test_backward
-      mish = DNN::Functions::Mish.new
-      x = Xumo::SFloat[0, 1]
-      mish.forward(x)
-      grad = mish.backward(1)
-      assert_equal Xumo::SFloat[0.6, 1.049], grad.round(4)
-    end
+class TestMish < MiniTest::Unit::TestCase
+  def test_forward
+    mish = DNN::Functions::Mish.new
+    y = mish.forward(Xumo::SFloat[0, 1])
+    assert_equal Xumo::SFloat[0, 0.8651], y.round(4)
+  end
 
-    def test_backward2
-      mish = DNN::Functions::Mish.new
-      x = Xumo::DFloat[0, 1]
-      mish.forward(x)
-      grad = mish.backward(1)
-      assert_equal DNN::Utils.numerical_grad(x, mish.method(:forward)).round(4), grad.round(4)
-    end
+  def test_backward
+    mish = DNN::Functions::Mish.new
+    x = Xumo::SFloat[0, 1]
+    mish.forward(x)
+    grad = mish.backward(1)
+    assert_equal Xumo::SFloat[0.6, 1.049], grad.round(4)
+  end
+
+  def test_backward2
+    mish = DNN::Functions::Mish.new
+    x = Xumo::DFloat[0, 1]
+    mish.forward(x)
+    grad = mish.backward(1)
+    assert_equal DNN::Utils.numerical_grad(x, mish.method(:forward)).round(4), grad.round(4)
   end
 end

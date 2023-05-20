@@ -36,7 +36,7 @@ module DNN
         unless x.shape[1..-1] == @input_shape
           raise DNNShapeError, "The shape of x does not match the input shape. input shape is #{@input_shape}, but x shape is #{x.shape[1..-1]}."
         end
-        Functions::Embedding.new.(x, @weight)
+        Functions::Embedding.new(@mask_zero).(x, @weight)
       end
 
       def regularizers

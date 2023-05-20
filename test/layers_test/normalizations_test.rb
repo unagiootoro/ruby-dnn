@@ -55,7 +55,7 @@ class TestBatchNormalization < MiniTest::Unit::TestCase
   def test_call4
     batch_norm = BatchNormalization.new
     batch_norm.build([10])
-    batch_norm.trainable = false
+    batch_norm.set_trainable(false)
     x = DNN::Variable.new(Xumo::SFloat.cast([Xumo::SFloat.new(10).fill(10), Xumo::SFloat.new(10).fill(20)]))
     batch_norm.set_learning_phase(true)
     y = batch_norm.(x)
