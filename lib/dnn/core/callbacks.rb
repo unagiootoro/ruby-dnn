@@ -29,6 +29,16 @@ module DNN
 
       # Set the proc to be performed after test on batch processing.
       # def after_test_on_batch; end
+
+      # Set the proc to run when adding a log.
+      # The following logs will be recorded.
+      # epoch:          Current epoch.
+      # step:           Current step in epoch.
+      # loss:           Batch training loss.
+      # accuracy:       Batch training accuracy.
+      # test_loss:      Mean test loss.
+      # test_accuracy:  Test accuracy.
+      # def on_log_added(tag, valud); end
     end
 
     # This callback wrap the lambda function.
@@ -125,41 +135,23 @@ module DNN
     # test_accuracy:  Test accuracy.
     class Logger < Callback
       def initialize
-        @log = {
-          epoch: [],
-          step: [],
-          loss: [],
-          accuracy: [],
-          test_loss: [],
-          test_accuracy: [],
-        }
+        @log = {}
       end
 
-      def after_epoch
-        logging(:epoch, :test_loss, :test_accuracy)
-      end
-
-      def after_train_on_batch
-        logging(:loss, :step)
+      def on_log_added(tag, value)
+        if @log[tag]
+          @log[tag] << value
+        else
+          @log[tag] = [value]
+        end
       end
 
       # Get a log.
       # @param [Symbol] tag Tag indicating the type of Log.
-      # @return [Numo::NArray] Return the recorded log.
+      # @return [Array] Return the recorded log.
       def get_log(tag)
-        case tag
-        when :epoch, :step
-          Xumo::UInt32.cast(@log[tag])
-        else
-          Xumo::SFloat.cast(@log[tag])
-        end
-      end
-
-      private def logging(*tags)
-        tags.each do |tag|
-          @log[tag] ||= []
-          @log[tag] << @runner.last_log(tag)
-        end
+        @log[tag] ||= []
+        @log[tag]
       end
     end
 

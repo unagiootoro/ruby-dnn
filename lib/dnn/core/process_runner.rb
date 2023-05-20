@@ -26,14 +26,15 @@ module DNN
       @callbacks = []
     end
 
-    def call_callbacks(event)
+    def call_callbacks(event, *args)
       @callbacks.each do |callback|
-        callback.send(event) if callback.respond_to?(event)
+        callback.send(event, *args) if callback.respond_to?(event)
       end
     end
 
-    def set_last_log(tag, data)
-      @last_logs[tag] = data
+    def add_log(tag, value)
+      @last_logs[tag] = value
+      call_callbacks(:on_log_added, tag, value)
     end
 
     def last_log(tag)
