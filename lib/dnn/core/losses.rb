@@ -19,27 +19,8 @@ module DNN
         forward(y, t)
       end
 
-      def loss(y, t, layers: nil, loss_weight: nil)
-        unless y.shape == t.shape
-          raise DNNShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
-        end
-        loss = call(y, t)
-        loss *= loss_weight if loss_weight
-        loss = regularizers_forward(loss, layers) if layers
-        loss
-      end
-
       def forward(y, t)
         raise NotImplementedError, "Class '#{self.class.name}' has implement method 'forward'"
-      end
-
-      def regularizers_forward(loss, layers)
-        regularizers = layers.select { |layer| layer.respond_to?(:regularizers) }
-                             .map(&:regularizers).flatten
-        regularizers.each do |regularizer|
-          loss = regularizer.(loss)
-        end
-        loss
       end
 
       def to_hash(merge_hash = nil)
