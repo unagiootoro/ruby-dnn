@@ -17,6 +17,7 @@ model << Dense.new(1)
 
 model.setup(SGD.new, SigmoidCrossEntropy.new)
 
-model.train(x, y, 20000, batch_size: 4, verbose: false)
+trainer = DNN::Trainer.new(model)
+trainer.fit(x, y, 20000, batch_size: 4, verbose: false)
 
 p model.predict(x)

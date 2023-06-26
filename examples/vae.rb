@@ -1,14 +1,13 @@
 require "dnn"
 require "dnn/datasets/mnist"
 require "dnn/image"
-require "numo/linalg/autoloader"
 
 include DNN::Models
 include DNN::Layers
 include DNN::Optimizers
 include DNN::Losses
 
-x_train, y_train = DNN::MNIST.load_train
+x_train, * = DNN::MNIST.load_train
 
 x_train = Numo::SFloat.cast(x_train).reshape(x_train.shape[0], 784)
 
@@ -17,13 +16,6 @@ x_train /= 255
 $z_dim = 2
 $z_mean = nil
 $z_sigma = nil
-
-class Sampling < MergeLayer
-  def forward(z_mean, z_sigma)
-    epsilon = DNN::Tensor.new(Numo::SFloat.new($z_dim).rand_norm(0, 1))
-    Tanh.(z_mean + z_sigma * epsilon)
-  end
-end
 
 class Encoder < Model
   def initialize
@@ -80,16 +72,23 @@ class VAE < Model
   def forward(x)
     z_mean, z_sigma = @enc.(x)
     $z_mean, $z_sigma = z_mean, z_sigma
-    z = Sampling.(z_mean, z_sigma)
+    z = sampling(z_mean, z_sigma)
     x = @dec.(z)
     x
+  end
+
+  def sampling(z_mean, z_sigma)
+    fs = DNN::Functions::FunctionSpace
+    epsilon = DNN::Tensor.new(Numo::SFloat.new($z_dim).rand_norm(0, 1))
+    fs.tanh(z_mean + z_sigma * epsilon)
   end
 end
 
 class VAELoss < Loss
   def forward(y, t)
-    kl = -0.5 * Mean.(Sum.(1 + Log.($z_sigma**2) - $z_mean**2 - $z_sigma**2, axis: 1), axis: 0)
-    SigmoidCrossEntropy.(y, t) + kl
+    fs = DNN::Functions::FunctionSpace
+    kl = -0.5 * ((1 + fs.log($z_sigma**2) - $z_mean**2 - $z_sigma**2).sum(axis: 1)).mean(axis: 0)
+    fs.sigmoid_cross_entropy(y, t) + kl
   end
 end
 
@@ -97,7 +96,8 @@ model = VAE.new
 dec = model.dec
 model.setup(Adam.new, VAELoss.new)
 
-model.train(x_train, x_train, 10, batch_size: 128, need_accuracy: false)
+trainer = DNN::Trainer.new(model)
+trainer.fit(x_train, x_train, 10, batch_size: 128, need_accuracy: false)
 
 images = []
 10.times do |i|

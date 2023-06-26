@@ -89,8 +89,7 @@ class Discriminator < Model
     @bn4 = BatchNormalization.new
   end
 
-  def forward(inputs)
-    input, images = *inputs
+  def forward(input, images)
     x = InputLayer.new(@gen_input_shape).(input)
     x = @cv1_1.(x)
     x = @bn1_1.(x)
@@ -148,7 +147,7 @@ class DCGAN < Model
   def forward(input)
     images = @gen.(input)
     @dis.disable_training
-    out = @dis.([input, images])
+    out = @dis.(input, images)
     [images, out]
   end
 end

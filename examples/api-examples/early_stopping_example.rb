@@ -1,7 +1,5 @@
 require "dnn"
 require "dnn/datasets/mnist"
-# If you use numo/linalg then please uncomment out.
-# require "numo/linalg/autoloader"
 
 include DNN::Models
 include DNN::Layers
@@ -50,8 +48,10 @@ end
 model = MLP.new
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
+trainer = DNN::Trainer.new(model)
+
 # Add EarlyStopping callback for model.
 # This callback is stop the training when test accuracy is over 0.9.
-model.add_callback(EarlyStopping.new(:test_accuracy, 0.9))
+trainer.add_callback(EarlyStopping.new(:test_accuracy, 0.9))
 
-model.train(x_train, y_train, EPOCHS, batch_size: BATCH_SIZE, test: [x_test, y_test])
+trainer.fit(x_train, y_train, EPOCHS, batch_size: BATCH_SIZE, test: [x_test, y_test])

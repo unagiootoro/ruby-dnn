@@ -1,6 +1,5 @@
 require "dnn"
 require "dnn/image"
-require "numo/linalg/autoloader"
 require_relative "dcgan"
 
 include DNN::Loaders

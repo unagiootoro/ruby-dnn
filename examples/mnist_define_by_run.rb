@@ -1,7 +1,5 @@
 require "dnn"
 require "dnn/datasets/mnist"
-# If you use numo/linalg then please uncomment out.
-# require "numo/linalg/autoloader"
 
 include DNN::Models
 include DNN::Layers
@@ -42,8 +40,8 @@ end
 model = MLP.new
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
-model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
-
-accuracy, loss = model.evaluate(x_test, y_test)
+trainer = DNN::Trainer.new(model)
+trainer.fit(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
+accuracy, loss = trainer.evaluate(x_test, y_test)
 puts "accuracy: #{accuracy}"
 puts "loss: #{loss}"

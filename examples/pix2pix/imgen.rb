@@ -1,7 +1,6 @@
 require "dnn"
 require "dnn/image"
 require "dnn/datasets/cifar10"
-require "numo/linalg/autoloader"
 require_relative "dcgan"
 
 def load_dataset

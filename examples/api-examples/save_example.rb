@@ -1,7 +1,5 @@
 require "dnn"
 require "dnn/datasets/mnist"
-# If you use numo/linalg then please uncomment out.
-# require "numo/linalg/autoloader"
 
 include DNN::Models
 include DNN::Layers
@@ -60,7 +58,9 @@ end
 
 model = MLP.new
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
-model.train(x_train, y_train, EPOCHS, batch_size: BATCH_SIZE, test: [x_test, y_test])
+
+trainer = DNN::Trainer.new(model)
+trainer.train(x_train, y_train, EPOCHS, batch_size: BATCH_SIZE, test: [x_test, y_test])
 
 if SAVE_STYLE == USE_MARSHAL
   saver = MarshalSaver.new(model, include_model: INCLUDE_MODEL)
@@ -83,4 +83,5 @@ elsif SAVE_STYLE == USE_JSON
   loader.load("trained_mnist.json")
 end
 
-puts model2.evaluate(x_test, y_test)
+evaluator = DNN::Evaluator.new(model2)
+puts evaluator.evaluate(x_test, y_test)
