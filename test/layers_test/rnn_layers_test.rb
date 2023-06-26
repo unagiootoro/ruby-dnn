@@ -16,32 +16,6 @@ class TestRNN < MiniTest::Unit::TestCase
     assert_equal false, rnn.return_sequences
   end
 
-  def test_build
-    rnn = RNN.new(64, return_sequences: false)
-    rnn.build([16, 64])
-    assert_equal 16, rnn.instance_variable_get(:@time_length)
-  end
-
-  def test_output_shape
-    rnn = RNN.new(64)
-    rnn.build([16, 64])
-    assert_equal [16, 64], rnn.output_shape
-  end
-
-  def test_output_shape2
-    rnn = RNN.new(64, return_sequences: false)
-    rnn.build([16, 64])
-    assert_equal [64], rnn.output_shape
-  end
-
-  def test_reset_state
-    rnn = RNN.new(64)
-    rnn.build([16, 64])
-    rnn.hidden.data = Xumo::SFloat.ones(16, 64)
-    rnn.reset_state
-    assert_equal Xumo::SFloat.zeros(16, 64), rnn.hidden.data
-  end
-
   def test_to_hash
     rnn = RNN.new(64, stateful: true, return_sequences: false, use_bias: false,
                   weight_regularizer: DNN::Regularizers::L1.new,
@@ -78,26 +52,13 @@ class TestRNN < MiniTest::Unit::TestCase
     rnn.build([1, 10])
     assert_equal [], rnn.regularizers
   end
-
-  def test_get_params
-    rnn = RNN.new(1)
-    rnn.build([1, 10])
-    expected_hash = {
-      weight: rnn.weight,
-      recurrent_weight: rnn.recurrent_weight,
-      bias: rnn.bias,
-      hidden: rnn.hidden,
-    }
-    assert_equal expected_hash, rnn.get_variables
-  end
 end
-
 
 
 class TestSimpleRNNCell < MiniTest::Unit::TestCase
   def test_forward
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 64).seq)
+    h = DNN::Tensor.new(Xumo::SFloat.new(1, 16).seq)
     w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16).fill(1)
     w2 = DNN::Variable.new
@@ -105,75 +66,22 @@ class TestSimpleRNNCell < MiniTest::Unit::TestCase
     b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16).fill(0)
 
-    cell = SimpleRNNCell.new(w, w2, b, Tanh.new)
-    assert_equal [1, 16], cell.forward(x, h).shape
-  end
-
-  def test_backward
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16).fill(1)
-    w2.grad = 0
-    b = DNN::Variable.new
-    b.data = Xumo::SFloat.new(16).fill(0)
-    b.grad = 0
-
-    cell = SimpleRNNCell.new(w, w2, b, Tanh.new)
-    cell.forward(x, h)
-    dx, dh = cell.backward(dh2)
-    assert_equal [1, 64], dx.shape
-    assert_equal [1, 16], dh.shape
-  end
-
-  def test_backward2
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16).fill(1)
-    w2.grad = 0
-
-    cell = SimpleRNNCell.new(w, w2, nil, Tanh.new)
-    cell.forward(x, h)
-    cell.backward(dh2)
-    assert_nil cell.instance_variable_get(:@bias)
-  end
-
-  def test_backward3
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16).fill(1)
-    w2.grad = 0
-    b = DNN::Variable.new
-    b.data = Xumo::SFloat.new(16).fill(0)
-    b.grad = 0
-
-    cell = SimpleRNNCell.new(w, w2, b, Tanh.new)
-    cell.trainable = false
-    cell.forward(x, h)
-    cell.backward(dh2)
-    assert_equal 0, cell.instance_variable_get(:@weight).grad
-    assert_equal 0, cell.instance_variable_get(:@recurrent_weight).grad
-    assert_equal 0, cell.instance_variable_get(:@bias).grad
+    cell = SimpleRNNCell.new
+    assert_equal [1, 16], cell.forward(x, h, w, w2, b).shape
   end
 end
 
 
 class TestSimpleRNN < MiniTest::Unit::TestCase
-  
+  def test_reset_state
+    rnn = SimpleRNN.new(64)
+    rnn.build([16, 64])
+    h = DNN::Variable.new(Xumo::SFloat.ones(16, 64))
+    rnn.instance_variable_set(:@h, h)
+    rnn.reset_state
+    assert_equal Xumo::SFloat.zeros(16, 64), rnn.instance_variable_get(:@h).data
+  end
+
   def test_from_hash
     hash = {
       class: "DNN::Layers::SimpleRNN",
@@ -187,7 +95,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
       use_bias: false,
       stateful: true,
       return_sequences: false,
-      activation: ReLU.new.to_hash,
+      activation: :ReLU,
     }
     rnn = SimpleRNN.from_hash(hash)
     assert_equal 64, rnn.num_units
@@ -200,70 +108,26 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal false, rnn.use_bias
     assert_equal true, rnn.stateful
     assert_equal false, rnn.return_sequences
-    assert_kind_of ReLU, rnn.activation
+    assert_equal :ReLU, rnn.activation
   end
 
-  def test_forward_node
-    x = Xumo::SFloat.new(1, 16, 64).seq
+  def test_forward
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 16, 64).seq)
     rnn = SimpleRNN.new(64)
     rnn.build([16, 64])
-    assert_equal [1, 16, 64], rnn.forward_node(x).shape
-    assert_kind_of SimpleRNNCell, rnn.instance_variable_get(:@hidden_layers)[15]
+    assert_equal [1, 16, 64], rnn.forward(x).shape
   end
 
-  def test_forward_node2
-    x = Xumo::SFloat.new(1, 16, 64).seq
+  def test_forward2
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 16, 64).seq)
     rnn = SimpleRNN.new(64, stateful: true)
     rnn.build([16, 64])
-    rnn.forward_node(x)
-    assert_equal [1, 16, 64], rnn.forward_node(x).shape
-  end
-
-  def test_backward_node
-    x = Xumo::SFloat.new(1, 16, 64).seq
-    y = Xumo::SFloat.new(1, 16, 64).seq
-    rnn = SimpleRNN.new(64)
-    rnn.build([16, 64])
-    rnn.forward_node(x)
-    assert_equal [1, 16, 64], rnn.backward_node(y).shape
-  end
-
-  def test_backward_node2
-    x = Xumo::SFloat.new(1, 16, 64).seq
-    y = Xumo::SFloat.new(1, 16, 64).seq
-    rnn = SimpleRNN.new(64, use_bias: false)
-    rnn.build([16, 64])
-    rnn.forward_node(x)
-    rnn.backward_node(y)
-    assert_nil rnn.bias
-  end
-
-  def test_backward_node3
-    x = Xumo::SFloat.new(1, 16, 64).seq
-    y = Xumo::SFloat.new(1, 16, 64).seq
-    rnn = SimpleRNN.new(64)
-    rnn.trainable = false
-    rnn.build([16, 64])
-    rnn.forward_node(x)
-    rnn.backward_node(y)
-    assert_equal Xumo::SFloat[0], rnn.weight.grad
-    assert_equal Xumo::SFloat[0], rnn.recurrent_weight.grad
-    assert_equal Xumo::SFloat[0], rnn.bias.grad
-  end
-
-  def test_backward_node4
-    x = Xumo::SFloat.new(1, 16, 64).seq
-    y = Xumo::SFloat.new(1, 16, 64).seq
-    rnn = SimpleRNN.new(64, stateful: true)
-    rnn.build([16, 64])
-    rnn.forward_node(x)
-    rnn.backward_node(y)
-    rnn.forward_node(x)
-    assert_equal [1, 16, 64], rnn.backward_node(y).shape
+    rnn.forward(x)
+    assert_equal [1, 16, 64], rnn.forward(x).shape
   end
 
   def test_to_hash
-    rnn = SimpleRNN.new(64, stateful: true, return_sequences: false, use_bias: false, activation: ReLU.new,
+    rnn = SimpleRNN.new(64, stateful: true, return_sequences: false, use_bias: false, activation: :ReLU,
                         weight_regularizer: DNN::Regularizers::L1.new,
                         recurrent_weight_regularizer: DNN::Regularizers::L2.new,
                         bias_regularizer: DNN::Regularizers::L1L2.new)
@@ -279,7 +143,7 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
       use_bias: false,
       stateful: true,
       return_sequences: false,
-      activation: rnn.activation.to_hash,
+      activation: :ReLU,
     }
     assert_equal expected_hash, rnn.to_hash
   end
@@ -293,14 +157,26 @@ class TestSimpleRNN < MiniTest::Unit::TestCase
     assert_equal Xumo::SFloat.new(64, 64).fill(2), rnn.recurrent_weight.data
     assert_equal Xumo::SFloat.new(64).fill(2), rnn.bias.data
   end
+
+  def test_get_variables
+    rnn = SimpleRNN.new(1)
+    rnn.build([1, 10])
+    expected_hash = {
+      weight: rnn.weight,
+      recurrent_weight: rnn.recurrent_weight,
+      bias: rnn.bias,
+      h: rnn.instance_variable_get(:@h),
+    }
+    assert_equal expected_hash, rnn.get_variables
+  end
 end
 
 
 class TestLSTMCell < MiniTest::Unit::TestCase
   def test_forward
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    c = Xumo::SFloat.new(1, 16).seq
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 64).seq)
+    h = DNN::Tensor.new(Xumo::SFloat.new(1, 16).seq)
+    c = DNN::Tensor.new(Xumo::SFloat.new(1, 16).seq)
     w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
     w2 = DNN::Variable.new
@@ -308,84 +184,15 @@ class TestLSTMCell < MiniTest::Unit::TestCase
     b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 4).fill(0)
 
-    cell = LSTMCell.new(w, w2, b)
-    h2, c2 = cell.forward(x, h, c)
+    cell = LSTMCell.new
+    h2, c2 = cell.forward(x, h, c, w, w2, b)
     assert_equal [1, 16], h2.shape
     assert_equal [1, 16], c2.shape
-  end
-
-  def test_backward
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(1, 16).seq
-    c = Xumo::SFloat.new(1, 16).seq
-    dc2 = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
-    w2.grad = 0
-    b = DNN::Variable.new
-    b.data = Xumo::SFloat.new(16 * 4).fill(0)
-    b.grad = 0
-
-    cell = LSTMCell.new(w, w2, b)
-    cell.forward(x, h, c)
-    dx, dh, dc = cell.backward(dh2, dc2)
-    assert_equal [1, 64], dx.shape
-    assert_equal [1, 16], dh.shape
-    assert_equal [1, 16], dc.shape
-  end
-
-  def test_backward2
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(1, 16).seq
-    c = Xumo::SFloat.new(1, 16).seq
-    dc2 = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
-    w2.grad = 0
-
-    cell = LSTMCell.new(w, w2, nil)
-    cell.forward(x, h, c)
-    cell.backward(dh2, dc2)
-    assert_nil cell.instance_variable_get(:@bias)
-  end
-
-  def test_backward3
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(1, 16).seq
-    c = Xumo::SFloat.new(1, 16).seq
-    dc2 = Xumo::SFloat.new(1, 16).seq
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16 * 4).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16 * 4).fill(1)
-    w2.grad = 0
-    b = DNN::Variable.new
-    b.data = Xumo::SFloat.new(16 * 4).fill(0)
-    b.grad = 0
-
-    cell = LSTMCell.new(w, w2, b)
-    cell.trainable = false
-    cell.forward(x, h, c)
-    cell.backward(dh2, dc2)
-    assert_equal 0, cell.instance_variable_get(:@weight).grad
-    assert_equal 0, cell.instance_variable_get(:@recurrent_weight).grad
-    assert_equal 0, cell.instance_variable_get(:@bias).grad
   end
 end
 
 
 class TestLSTM < MiniTest::Unit::TestCase
-  
   def test_from_hash
     hash = {
       class: "DNN::Layers::LSTM",
@@ -413,73 +220,31 @@ class TestLSTM < MiniTest::Unit::TestCase
     assert_equal false, lstm.return_sequences
   end
 
-  def test_forward_node
-    x = Xumo::SFloat.new(1, 16, 64).seq
+  def test_forward
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 16, 64).seq)
     lstm = LSTM.new(64)
     lstm.build([16, 64])
-    assert_equal [1, 16, 64], lstm.forward_node(x).shape
-    assert_kind_of LSTMCell, lstm.instance_variable_get(:@hidden_layers)[15]
+    assert_equal [1, 16, 64], lstm.forward(x).shape
   end
 
-  def test_forward_node2
-    x = Xumo::SFloat.new(1, 16, 64).seq
+  def test_forward2
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 16, 64).seq)
     lstm = LSTM.new(64, stateful: true)
     lstm.build([16, 64])
-    lstm.forward_node(x)
-    assert_equal [1, 16, 64], lstm.forward_node(x).shape
-  end
-
-  def test_backward_node
-    x = Xumo::SFloat.new(1, 16, 64).seq
-    y = Xumo::SFloat.new(1, 16, 64).seq
-    lstm = LSTM.new(64)
-    lstm.build([16, 64])
-    lstm.forward_node(x)
-    assert_equal [1, 16, 64], lstm.backward_node(y).shape
-  end
-
-  def test_backward_node2
-    x = Xumo::SFloat.new(1, 16, 64).seq
-    y = Xumo::SFloat.new(1, 16, 64).seq
-    lstm = LSTM.new(64, use_bias: false)
-    lstm.build([16, 64])
-    lstm.forward_node(x)
-    lstm.backward_node(y)
-    assert_nil lstm.bias
-  end
-
-  def test_backward_node3
-    x = Xumo::SFloat.new(1, 16, 64).seq
-    y = Xumo::SFloat.new(1, 16, 64).seq
-    lstm = LSTM.new(64)
-    lstm.trainable = false
-    lstm.build([16, 64])
-    lstm.forward_node(x)
-    lstm.backward_node(y)
-    assert_equal Xumo::SFloat[0], lstm.weight.grad
-    assert_equal Xumo::SFloat[0], lstm.recurrent_weight.grad
-    assert_equal Xumo::SFloat[0], lstm.bias.grad
-  end
-
-  def test_backward_node4
-    x = Xumo::SFloat.new(1, 16, 64).seq
-    y = Xumo::SFloat.new(1, 16, 64).seq
-    lstm = LSTM.new(64, stateful: true)
-    lstm.build([16, 64])
-    lstm.forward_node(x)
-    lstm.backward_node(y)
-    lstm.forward_node(x)
-    assert_equal [1, 16, 64], lstm.backward_node(y).shape
+    lstm.forward(x)
+    assert_equal [1, 16, 64], lstm.forward(x).shape
   end
 
   def test_reset_state
     lstm = LSTM.new(64)
     lstm.build([16, 64])
-    lstm.hidden.data = Xumo::SFloat.ones(16, 64)
-    lstm.cell.data = Xumo::SFloat.ones(16, 64)
+    h = DNN::Variable.new(Xumo::SFloat.ones(16, 64))
+    lstm.instance_variable_set(:@h, h)
+    c = DNN::Variable.new(Xumo::SFloat.ones(16, 64))
+    lstm.instance_variable_set(:@c, c)
     lstm.reset_state
-    assert_equal Xumo::SFloat.zeros(16, 64), lstm.hidden.data
-    assert_equal Xumo::SFloat.zeros(16, 64), lstm.cell.data
+    assert_equal Xumo::SFloat.zeros(16, 64), lstm.instance_variable_get(:@h).data
+    assert_equal Xumo::SFloat.zeros(16, 64), lstm.instance_variable_get(:@c).data
   end
 
   def test_build
@@ -520,8 +285,8 @@ class TestLSTM < MiniTest::Unit::TestCase
       weight: lstm.weight,
       recurrent_weight: lstm.recurrent_weight,
       bias: lstm.bias,
-      hidden: lstm.hidden,
-      cell: lstm.cell,
+      h: lstm.instance_variable_get(:@h),
+      c: lstm.instance_variable_get(:@c),
     }
     assert_equal expected_hash, lstm.get_variables
   end
@@ -530,8 +295,8 @@ end
 
 class TestGRUCell < MiniTest::Unit::TestCase
   def test_forward
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 64).seq)
+    h = DNN::Tensor.new(Xumo::SFloat.new(1, 16).seq)
     w = DNN::Variable.new
     w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
     w2 = DNN::Variable.new
@@ -539,75 +304,64 @@ class TestGRUCell < MiniTest::Unit::TestCase
     b = DNN::Variable.new
     b.data = Xumo::SFloat.new(16 * 3).fill(0)
 
-    cell = GRUCell.new(w, w2, b)
-    assert_equal [1, 16], cell.forward(x, h).shape
-  end
-
-  def test_backward
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
-    w2.grad = 0
-    b = DNN::Variable.new
-    b.data = Xumo::SFloat.new(16 * 3).fill(0)
-    b.grad = 0
-    cell = GRUCell.new(w, w2, b)
-    cell.forward(x, h)
-    dx, dh = cell.backward(dh2)
-    assert_equal [1, 64], dx.shape
-    assert_equal [1, 16], dh.shape
-  end
-
-  def test_backward2
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
-    w2.grad = 0
-    b = DNN::Variable.new
-    b.data = Xumo::SFloat.new(16 * 3).fill(0)
-    b.grad = 0
-
-    cell = GRUCell.new(w, w2, nil)
-    cell.forward(x, h)
-    cell.backward(dh2)
-    assert_nil cell.instance_variable_get(:@bias)
-  end
-
-  def test_backward3
-    x = Xumo::SFloat.new(1, 64).seq
-    h = Xumo::SFloat.new(1, 16).seq
-    dh2 = Xumo::SFloat.new(2, 16).seq[1, false].reshape(1, 16)
-    w = DNN::Variable.new
-    w.data = Xumo::SFloat.new(64, 16 * 3).fill(1)
-    w.grad = 0
-    w2 = DNN::Variable.new
-    w2.data = Xumo::SFloat.new(16, 16 * 3).fill(1)
-    w2.grad = 0
-    b = DNN::Variable.new
-    b.data = Xumo::SFloat.new(16 * 3).fill(0)
-    b.grad = 0
-    cell = GRUCell.new(w, w2, b)
-    cell.trainable = false
-    cell.forward(x, h)
-    cell.backward(dh2)
-    assert_equal 0, cell.instance_variable_get(:@weight).grad
-    assert_equal 0, cell.instance_variable_get(:@recurrent_weight).grad
-    assert_equal 0, cell.instance_variable_get(:@bias).grad
+    cell = GRUCell.new
+    assert_equal [1, 16], cell.forward(x, h, w, w2, b).shape
   end
 end
 
 
 class TestGRU < MiniTest::Unit::TestCase
+  def test_reset_state
+    gru = GRU.new(64)
+    gru.build([16, 64])
+    h = DNN::Variable.new(Xumo::SFloat.ones(16, 64))
+    gru.instance_variable_set(:@h, h)
+    gru.reset_state
+    assert_equal Xumo::SFloat.zeros(16, 64), gru.instance_variable_get(:@h).data
+  end
+
+  def test_from_hash
+    hash = {
+      class: "DNN::Layers::GRU",
+      num_units: 64,
+      weight_initializer: DNN::Initializers::RandomUniform.new.to_hash,
+      recurrent_weight_initializer: DNN::Initializers::RandomUniform.new.to_hash,
+      bias_initializer: DNN::Initializers::RandomUniform.new.to_hash,
+      weight_regularizer: DNN::Regularizers::L1.new.to_hash,
+      recurrent_weight_regularizer: DNN::Regularizers::L2.new.to_hash,
+      bias_regularizer: DNN::Regularizers::L1L2.new.to_hash,
+      use_bias: false,
+      stateful: true,
+      return_sequences: false,
+    }
+    gru = GRU.from_hash(hash)
+    assert_equal 64, gru.num_units
+    assert_kind_of DNN::Initializers::RandomUniform, gru.weight_initializer
+    assert_kind_of DNN::Initializers::RandomUniform, gru.recurrent_weight_initializer
+    assert_kind_of DNN::Initializers::RandomUniform, gru.bias_initializer
+    assert_kind_of DNN::Regularizers::L1, gru.weight_regularizer
+    assert_kind_of DNN::Regularizers::L2, gru.recurrent_weight_regularizer
+    assert_kind_of DNN::Regularizers::L1L2, gru.bias_regularizer
+    assert_equal false, gru.use_bias
+    assert_equal true, gru.stateful
+    assert_equal false, gru.return_sequences
+  end
+
+  def test_forward
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 16, 64).seq)
+    gru = GRU.new(64)
+    gru.build([16, 64])
+    assert_equal [1, 16, 64], gru.forward(x).shape
+  end
+
+  def test_forward2
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 16, 64).seq)
+    gru = GRU.new(64, stateful: true)
+    gru.build([16, 64])
+    gru.forward(x)
+    assert_equal [1, 16, 64], gru.forward(x).shape
+  end
+
   def test_to_hash
     gru = GRU.new(64, stateful: true, return_sequences: false, use_bias: false,
                   weight_regularizer: DNN::Regularizers::L1.new,
@@ -637,5 +391,17 @@ class TestGRU < MiniTest::Unit::TestCase
     assert_equal Xumo::SFloat.new(32, 192).fill(2), gru.weight.data
     assert_equal Xumo::SFloat.new(64, 192).fill(2), gru.recurrent_weight.data
     assert_equal Xumo::SFloat.new(192).fill(2), gru.bias.data
+  end
+
+  def test_get_variables
+    gru = GRU.new(1)
+    gru.build([1, 10])
+    expected_hash = {
+      weight: gru.weight,
+      recurrent_weight: gru.recurrent_weight,
+      bias: gru.bias,
+      h: gru.instance_variable_get(:@h),
+    }
+    assert_equal expected_hash, gru.get_variables
   end
 end

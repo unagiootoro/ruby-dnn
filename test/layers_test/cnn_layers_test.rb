@@ -220,48 +220,11 @@ class TestConv2D < MiniTest::Unit::TestCase
   end
 
 
-  def test_forward_node
-    x = Xumo::SFloat.new(1, 32, 32, 3).seq
+  def test_forward
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 32, 32, 3).seq)
     conv2d = DNN::Layers::Conv2D.new(16, 5)
     conv2d.build([32, 32, 3])
-    assert_equal [1, 28, 28, 16], conv2d.forward_node(x).shape
-  end
-
-  def test_backward_node
-    x = Xumo::SFloat.new(1, 32, 32, 3).seq
-    dy = Xumo::SFloat.new(1, 28, 28, 16).seq
-    conv2d = DNN::Layers::Conv2D.new(16, 5)
-    conv2d.build([32, 32, 3])
-    conv2d.forward_node(x)
-    assert_equal [1, 32, 32, 3], conv2d.backward_node(dy).shape
-  end
-
-  def test_backward_node2
-    x = Xumo::SFloat.new(1, 32, 32, 3).seq
-    dy = Xumo::SFloat.new(1, 28, 28, 16).seq
-    conv2d = DNN::Layers::Conv2D.new(16, 5, use_bias: false)
-    conv2d.build([32, 32, 3])
-    conv2d.forward_node(x)
-    conv2d.backward_node(dy)
-    assert_nil conv2d.bias
-  end
-
-  def test_backward_node3
-    x = Xumo::SFloat.new(1, 32, 32, 3).seq
-    dy = Xumo::SFloat.new(1, 28, 28, 16).seq
-    conv2d = DNN::Layers::Conv2D.new(16, 5)
-    conv2d.trainable = false
-    conv2d.build([32, 32, 3])
-    conv2d.forward_node(x)
-    conv2d.backward_node(dy)
-    assert_equal Xumo::SFloat[0], conv2d.weight.grad
-    assert_equal Xumo::SFloat[0], conv2d.bias.grad
-  end
-
-  def test_output_shape
-    conv2d = DNN::Layers::Conv2D.new(16, [4, 5], strides: [1, 2])
-    conv2d.build([32, 32, 3])
-    assert_equal [29, 14, 16], conv2d.output_shape
+    assert_equal [1, 28, 28, 16], conv2d.forward(x).shape
   end
 
   def test_filters
@@ -354,28 +317,11 @@ class TestConv2DTranspose < MiniTest::Unit::TestCase
     assert_equal [32, 32], conv2d_t.instance_variable_get(:@out_size)
   end
 
-  def test_forward_node
-    x = Xumo::SFloat.new(1, 16, 16, 3).seq
+  def test_forward
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 16, 16, 3).seq)
     conv2d_t = DNN::Layers::Conv2DTranspose.new(8, 2, strides: 2)
     conv2d_t.build([16, 16, 3])
-    assert_equal [1, 32, 32, 8], conv2d_t.forward_node(x).shape
-  end
-
-  def test_backward_node
-    x = Xumo::SFloat.new(1, 16, 16, 3).seq
-    dy = Xumo::SFloat.new(1, 32, 32, 8).seq
-    conv2d_t = DNN::Layers::Conv2DTranspose.new(8, 2, strides: 2)
-    conv2d_t.build([16, 16, 3])
-    conv2d_t.forward_node(x)
-    assert_equal [1, 16, 16, 3], conv2d_t.backward_node(dy).shape
-    assert_equal conv2d_t.weight.data.shape, conv2d_t.weight.grad.shape
-    assert_equal conv2d_t.bias.data.shape, conv2d_t.bias.grad.shape
-  end
-
-  def test_output_shape
-    conv2d_t = DNN::Layers::Conv2DTranspose.new(16, [4, 6], strides: [1, 2])
-    conv2d_t.build([29, 14, 3])
-    assert_equal [32, 32, 16], conv2d_t.output_shape
+    assert_equal [1, 32, 32, 8], conv2d_t.forward(x).shape
   end
 
   def test_filters
@@ -459,26 +405,11 @@ class TestMaxPool2D < MiniTest::Unit::TestCase
     assert_equal [32, 16], pool2d.instance_variable_get(:@out_size)
   end
 
-  def test_forward_node
-    x = Xumo::SFloat.new(1, 32, 32, 3).seq
+  def test_forward
+    x = DNN::Tensor.new(Xumo::SFloat.new(1, 32, 32, 3).seq)
     pool2d = DNN::Layers::MaxPool2D.new(2)
     pool2d.build([32, 32, 3])
-    assert_equal [1, 16, 16, 3], pool2d.forward_node(x).shape
-  end
-
-  def test_backward_node
-    x = Xumo::SFloat.new(1, 32, 32, 3).seq
-    dy = Xumo::SFloat.new(1, 16, 16, 3).seq
-    pool2d = DNN::Layers::MaxPool2D.new(2)
-    pool2d.build([32, 32, 3])
-    pool2d.forward_node(x)
-    assert_equal [1, 32, 32, 3], pool2d.backward_node(dy).shape
-  end
-
-  def test_output_shape
-    pool2d = DNN::Layers::MaxPool2D.new([4, 5], strides: [1, 2])
-    pool2d.build([32, 32, 3])
-    assert_equal [29, 14, 3], pool2d.output_shape
+    assert_equal [1, 16, 16, 3], pool2d.forward(x).shape
   end
 end
 
@@ -503,15 +434,6 @@ class TestAvgPoo2D < MiniTest::Unit::TestCase
     pool2d.build([32, 32, 3])
     y = pool2d.(x)
     assert_equal [1, 16, 16, 3], y.shape
-  end
-
-  def test_backward
-    x = DNN::Variable.new(Xumo::SFloat.new(1, 32, 32, 3).seq)
-    pool2d = DNN::Layers::AvgPool2D.new(2)
-    pool2d.build([32, 32, 3])
-    y = pool2d.(x)
-    y.backward(Xumo::SFloat.new(1, 16, 16, 3).seq)
-    assert_equal [1, 32, 32, 3], x.grad.shape
   end
 end
 
@@ -581,12 +503,6 @@ class TestUnPool2D < MiniTest::Unit::TestCase
       ]
     ]
     assert_equal expected, x.grad
-  end
-
-  def test_output_shape
-    unpool2d = DNN::Layers::UnPool2D.new(2)
-    unpool2d.build([8, 8, 3])
-    assert_equal [16, 16, 3], unpool2d.output_shape
   end
 
   def test_to_hash
