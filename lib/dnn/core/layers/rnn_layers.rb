@@ -12,7 +12,6 @@ module DNN
       def forward(x, h, c, weight, recurrent_weight, bias = nil)
         fs = Functions::FunctionSpace
 
-        num_units = h.shape[1]
         a = x.dot(weight) + h.dot(recurrent_weight)
         a += bias if bias
 
@@ -234,20 +233,6 @@ module DNN
 
     class LSTM < RNN
       attr_reader :cell
-
-      def initialize(num_units,
-                     stateful: false,
-                     return_sequences: true,
-                     weight_initializer: Initializers::RandomNormal.new,
-                     recurrent_weight_initializer: Initializers::RandomNormal.new,
-                     bias_initializer: Initializers::Zeros.new,
-                     weight_regularizer: nil,
-                     recurrent_weight_regularizer: nil,
-                     bias_regularizer: nil,
-                     use_bias: true)
-        super
-        @cell = Variable.new
-      end
 
       def build(input_shape)
         super

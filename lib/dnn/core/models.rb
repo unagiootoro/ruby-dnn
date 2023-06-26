@@ -225,12 +225,13 @@ module DNN
         if y.is_a?(Array)
           result = []
           y.each_index do |i|
-            loss = compute_loss(y[i], t[i], loss_weight: @loss_weights[i])
+            loss_weight = @loss_weights ? @loss_weights[i] : nil
+            loss = compute_train_loss(y[i], t[i], @loss_func[i], loss_weight)
             result << loss
             loss.backward(Xumo::SFloat.ones(y[i].data[0...1, false].shape[0], 1))
           end
         else
-          loss = compute_loss(y, t)
+          loss = compute_train_loss(y, t, @loss_func)
           result = loss
           loss.backward(Xumo::SFloat.ones(y.data[0...1, false].shape[0], 1))
         end
@@ -238,11 +239,11 @@ module DNN
         result
       end
 
-      private def compute_loss(y, t, loss_weight: nil)
+      private def compute_train_loss(y, t, loss_func, loss_weight = nil)
         unless y.shape == t.shape
           raise DNNShapeError, "The shape of y does not match the t shape. y shape is #{y.shape}, but t shape is #{t.shape}."
         end
-        loss = @loss_func.(y, t)
+        loss = loss_func.(y, t)
         loss *= loss_weight if loss_weight
         regularizers = layers.select { |layer| layer.respond_to?(:regularizers) }
                             .map(&:regularizers).flatten

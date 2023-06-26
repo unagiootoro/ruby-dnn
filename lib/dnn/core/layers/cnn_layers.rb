@@ -169,13 +169,13 @@ module DNN
 
       # @return [Numo::SFloat] Convert weight to filter and return.
       def filters
-        num_prev_filters = @input_shape[2]
+        num_prev_filters = @input_shapes[0][2]
         @weight.data.reshape(*@filter_size, num_prev_filters, @num_filters)
       end
 
       # @param [Numo::SFloat] filters Convert weight to filters and set.
       def filters=(filters)
-        num_prev_filters = @input_shape[2]
+        num_prev_filters = @input_shapes[0][2]
         @weight.data = filters.reshape(@filter_size.reduce(:*) * num_prev_filters, @num_filters)
       end
 
@@ -259,13 +259,13 @@ module DNN
 
       # @return [Numo::SFloat] Convert weight to filter and return.
       def filters
-        num_prev_filters = @input_shape[2]
+        num_prev_filters = @input_shapes[0][2]
         @weight.data.reshape(*@filter_size, @num_filters, num_prev_filters)
       end
 
       # @param [Numo::SFloat] filters Convert weight to filters and set.
       def filters=(filters)
-        num_prev_filters = @input_shape[2]
+        num_prev_filters = @input_shapes[0][2]
         @weight.data = filters.reshape(@filter_size.reduce(:*) * @num_filters, num_prev_filters)
       end
 
@@ -372,7 +372,7 @@ module DNN
       end
 
       def forward(x)
-        x = AvgPool2D.new(@input_shape[0..1]).(x)
+        x = AvgPool2D.new(@input_shapes[0][0..1]).(x)
         x.reshape(x.shape[0], x.shape[1..-1].reduce(:*))
       end
     end
