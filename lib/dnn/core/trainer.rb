@@ -241,7 +241,13 @@ module DNN
       call_callbacks(:after_train_on_batch)
       if @verbose
         @progress_bar.progress(@train_batch_size)
-        @progress_bar.print(append: metrics_to_str(train_step_met))
+        metrics = metrics_to_str(train_step_met)
+        if @io == $stdout
+          @progress_bar.print(prepare: "\r", append: metrics)
+        else
+          @line_first_pos = @io.pos
+          @progress_bar.print(append: metrics)
+        end
       end
       stop_requested_message = check_stop_requested
       if stop_requested_message

@@ -14,13 +14,8 @@ class ProgressBar
     end
   end
 
-  def print(append: nil)
-    if @io == $stdout
-      log = "\r["
-    else
-      @line_first_pos = @io.pos
-      log = "["
-    end
+  def print(prepare: nil, append: nil)
+    log = prepare ? "#{prepare}[" : "["
     @length.times do |i|
       if i < @current_size * @length / @max_size
         log << "="
