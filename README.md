@@ -42,11 +42,12 @@ model << Dense.new(10)
 
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
-model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
-
-accuracy, loss = model.evaluate(x_test, y_test)
+trainer = DNN::Trainer.new(model)
+trainer.fit(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
+accuracy, loss = trainer.evaluate(x_test, y_test)
 puts "accuracy: #{accuracy}"
 puts "loss: #{loss}"
+
 ```
 
 When create a model with 'define by run' style:  
@@ -61,11 +62,12 @@ class MLP < Model
   end
 
   def forward(x)
+    fs = DNN::Functions::FunctionSpace
     x = InputLayer.new(784).(x)
     x = @d1.(x)
-    x = ReLU.(x)
+    x = fs.relu(x)
     x = @d2.(x)
-    x = ReLU.(x)
+    x = fs.relu(x)
     x = @d3.(x)
     x
   end
@@ -75,9 +77,9 @@ model = MLP.new
 
 model.setup(Adam.new, SoftmaxCrossEntropy.new)
 
-model.train(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
-
-accuracy, loss = model.evaluate(x_test, y_test)
+trainer = DNN::Trainer.new(model)
+trainer.fit(x_train, y_train, 10, batch_size: 128, test: [x_test, y_test])
+accuracy, loss = trainer.evaluate(x_test, y_test)
 puts "accuracy: #{accuracy}"
 puts "loss: #{loss}"
 ```
@@ -128,7 +130,7 @@ Or, set the environment variable `RUBY_DNN_USE_CUMO` to `ENABLE` to force the GP
 
 ## Use Numo Linalg
 When running on a CPU, you can speed it up by using Numo Linalg.
-In this case, Numo Linalg is automatically loaded by setting the environment variable `RUBY_DNN_USE_CUMO` to `ENABLE`.
+In this case, Numo Linalg is automatically loaded by setting the environment variable `RUNY_DNN_USE_NUMO_LINALG` to `ENABLE`.
 
 ## TODO
 * Write a test.  
